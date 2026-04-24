@@ -1,0 +1,93 @@
+using System;
+using System.Collections.Generic;
+using LitJson;
+using System.IO;
+using UnityEngine;
+
+namespace CarrotFantasy
+{
+    public class BattleParamServer : BaseServer
+    {
+        public static BattleParamServer battleParamServer;
+        public SingleMapInfo curSingleMapInfo;
+        public Stage curStage;
+
+        public LevelInfo info;
+
+        public int curBigLevel;
+        public int curLevel;
+
+        public bool isPVE = false;
+
+        public static BattleParamServer Instance
+        {
+            get
+            {
+                if (battleParamServer == null)
+                {
+                    battleParamServer = new BattleParamServer();
+                }
+                return battleParamServer;
+            }
+        }
+
+        public override void LoadModule()
+        {
+            base.LoadModule();
+            this.AddListener();
+        }
+
+        private void AddListener()
+        {
+            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVE_GAME, this.getPVEBattleParams);
+            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVP_GAME, this.getPVPBattleParams);
+        }
+
+        private void getPVEBattleParams()
+        {
+            this.isPVE = true;
+            this.curBigLevel = MapServer.Instance.curBigLevel;
+            this.curLevel = MapServer.Instance.curLevel;
+
+            this.curStage = MapServer.Instance.mapModel.getStage(this.curBigLevel, curLevel);
+            this.curSingleMapInfo = MapServer.Instance.mapModel.getSingleMapInfo(this.curBigLevel, curLevel);
+
+            String path = "Level" + this.curBigLevel.ToString() + "_" + this.curLevel.ToString() + ".json";
+            this.info = LoadLevelInfoFile(path);
+        }
+
+        private void getPVPBattleParams()
+        {
+
+        }
+
+        private void RemoveListener()
+        {
+            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVE_GAME, this.getPVEBattleParams);
+            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVP_GAME, this.getPVPBattleParams);
+        }
+
+        public override void Dispose()
+        {
+            this.RemoveListener();
+            base.Dispose();
+        }
+
+        //读取关卡文件解析json转化为LevelInfo对象
+        public LevelInfo LoadLevelInfoFile(string fileName)
+        {
+            LevelInfo levelInfo = new LevelInfo();
+            string filePath = Application.streamingAssetsPath + "/Json/Level/" + fileName;
+            if (File.Exists(filePath))
+            {
+                StreamReader sr = new StreamReader(filePath);
+                string jsonStr = sr.ReadToEnd();
+                sr.Close();
+                levelInfo = JsonMapper.ToObject<LevelInfo>(jsonStr);
+                return levelInfo;
+            }
+            Debug.Log("文件加载失败，加载路径是" + filePath);
+            return null;
+        }
+    }
+}
