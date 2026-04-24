@@ -19,6 +19,7 @@
 
 # =============== IDE / OS ===============
 /.vs/
+.vs/
 /CarrotFantasy/.vs/
 /.vscode/
 /.idea/
