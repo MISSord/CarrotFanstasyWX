@@ -8,6 +8,9 @@
 /CarrotFantasy/[Uu]ser[Ss]ettings/
 /CarrotFantasy/[Mm]emoryCaptures/
 /CarrotFantasy/[Rr]ecordings/
+# 所有层级的构建缓存目录（.NET/Unity 工具链）
+[Oo]bj/
+[Ll]ogs/
 
 # =============== Unity cache / generated files ===============
 /CarrotFantasy/Assets/AssetStoreTools*
