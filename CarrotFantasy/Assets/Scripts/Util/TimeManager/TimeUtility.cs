@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class TimeUtility : MonoBehaviour
 {
@@ -141,7 +141,7 @@ public class TimeUtility : MonoBehaviour
     public void RemoveTimeout(string id)
     {
         if (id == null || id == "") return;
-        for(int i = delayTasks.Count - 1; i >= 0; --i)
+        for (int i = delayTasks.Count - 1; i >= 0; --i)
         {
             if (delayTasks[i].taskid == id)
             {

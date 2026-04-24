@@ -1,13 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-
 namespace CarrotFantasy
 {
-    public class HitTestShape_ObbRect:HitTestShape_Base
+    public class HitTestShape_ObbRect : HitTestShape_Base
     {
         public Fix64 centerX;
         public Fix64 centerY;

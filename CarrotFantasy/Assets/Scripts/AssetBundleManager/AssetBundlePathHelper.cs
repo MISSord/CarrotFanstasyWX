@@ -23,22 +23,22 @@ public static class AssetBundlePathHelper
         return Application.persistentDataPath + "/" + localSavePath + "/" + bundleName;
     }
 
-//    /// <summary>
-//    /// 获取AssetBundle根目录
-//    /// </summary>
-//    public static string GetAssetBundleRootPath()
-//    {
-//#if UNITY_EDITOR
-//        // 在编辑器中，使用项目目录
-//        return Path.Combine(Application.dataPath, "..", localSavePath);
-//#elif UNITY_STANDALONE
-//        return Path.Combine(Application.dataPath, "..", localSavePath);
-//#elif UNITY_ANDROID || UNITY_IOS
-//        return Path.Combine(Application.persistentDataPath, localSavePath);
-//#else
-//        return Path.Combine(Application.streamingAssetsPath, localSavePath);
-//#endif
-//    }
+    //    /// <summary>
+    //    /// 获取AssetBundle根目录
+    //    /// </summary>
+    //    public static string GetAssetBundleRootPath()
+    //    {
+    //#if UNITY_EDITOR
+    //        // 在编辑器中，使用项目目录
+    //        return Path.Combine(Application.dataPath, "..", localSavePath);
+    //#elif UNITY_STANDALONE
+    //        return Path.Combine(Application.dataPath, "..", localSavePath);
+    //#elif UNITY_ANDROID || UNITY_IOS
+    //        return Path.Combine(Application.persistentDataPath, localSavePath);
+    //#else
+    //        return Path.Combine(Application.streamingAssetsPath, localSavePath);
+    //#endif
+    //    }
 
     /// <summary>
     /// 获取运行时加载路径

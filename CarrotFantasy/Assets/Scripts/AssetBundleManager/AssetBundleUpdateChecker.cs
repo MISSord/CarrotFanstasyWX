@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Networking;
-using System.Security.Cryptography;
 
 /// <summary>
 /// 记录单个AB包信息
@@ -33,7 +33,7 @@ public class CustomManifest
     /// <summary>
     /// 压缩格式 0为LZMA，1为LZ4，2为无压缩
     /// </summary>
-    public int CompressedFormat = 0; 
+    public int CompressedFormat = 0;
     public List<CustomAssetBundleInfo> AssetBundles = new List<CustomAssetBundleInfo>();
 }
 
@@ -155,7 +155,7 @@ public class AssetBundleUpdateChecker
         Debug.Log($"状态转换: {m_CurrentState} -> {newState}");
         m_CurrentState = newState;
 
-        if(newState == CheckerState.LoadingLocalManifest)
+        if (newState == CheckerState.LoadingLocalManifest)
         {
             m_CurrentOperation = "加载本地清单...";
             ExecuteLoadLocalManifest();
@@ -415,7 +415,7 @@ public class AssetBundleUpdateChecker
     {
         try
         {
-            if(verifyMethod == VerifyMethod.CRCOnly)
+            if (verifyMethod == VerifyMethod.CRCOnly)
             {
                 return !CheckCRC(localFilePath, remoteBundle);
             }

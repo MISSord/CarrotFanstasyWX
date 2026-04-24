@@ -42,12 +42,12 @@ namespace CarrotFantasy
             if (curTime - lastResetTime > RESET_SCHE_INTERVAL_TIME || curUnscheCount * 20 >= scheList.Count)
             {
                 lastResetTime = curTime;
-                if(curUnscheCount > 0)
+                if (curUnscheCount > 0)
                 {
                     List<ScheObject> schelist = new List<ScheObject>();
-                    foreach(ScheObject even in scheList)
+                    foreach (ScheObject even in scheList)
                     {
-                        if(even.isUnscheduled == false)
+                        if (even.isUnscheduled == false)
                         {
                             schelist.Add(even);
                         }
@@ -84,7 +84,7 @@ namespace CarrotFantasy
         public static void silenceSingleSche(int id)
         {
             ScheObject sche;
-            if(scheDic.TryGetValue(id, out sche))
+            if (scheDic.TryGetValue(id, out sche))
             {
                 sche.isUnscheduled = true;
                 scheDic.Remove(id);

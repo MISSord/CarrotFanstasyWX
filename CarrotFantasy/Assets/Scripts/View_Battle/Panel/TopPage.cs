@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 
-namespace CarrotFantasy 
+namespace CarrotFantasy
 {
     /// <summary>
     /// 顶部UI显示页面

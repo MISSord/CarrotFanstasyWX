@@ -1,11 +1,5 @@
-
-
-using System;
 using System.Collections.Generic;
-using System.Xml;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 class UIDownInfo
 {
@@ -17,7 +11,7 @@ class UIDownInfo
     public int loadIndex;
 }
 
-enum LoadState 
+enum LoadState
 {
     None,
     Loading,
@@ -53,7 +47,7 @@ public abstract class BaseView
     private Canvas rootCanvas; // 根节点的Canvas
     private int layerOrder = 0;
     private bool isInitData = false;
-    private bool isLoadRoot = false; 
+    private bool isLoadRoot = false;
     private string delayReleaseId;
 
     private Dictionary<int, List<UIDownInfo>> uiLoadInfoDic = new Dictionary<int, List<UIDownInfo>>();
@@ -68,7 +62,7 @@ public abstract class BaseView
 
     public void RegisterData()
     {
-        if(isInitData == false)
+        if (isInitData == false)
         {
             nameTableDic = new UINameTableDic();
             this.InitData();
@@ -89,7 +83,7 @@ public abstract class BaseView
         //移除界面实例数据
         foreach (var list in uiLoadInfoDic)
         {
-            for(int i = 0; i < list.Value.Count; ++i)
+            for (int i = 0; i < list.Value.Count; ++i)
             {
                 UIDownInfo info = list.Value[i];
                 info.gameObject = null;
@@ -102,13 +96,13 @@ public abstract class BaseView
         rootView = null;
 
         //移除AB包加载信息
-        foreach(var info in uiLoadInfoDic)
+        foreach (var info in uiLoadInfoDic)
         {
             List<UIDownInfo> list = info.Value;
-            for(int i = 0; i < list.Count; ++i)
+            for (int i = 0; i < list.Count; ++i)
             {
                 UIDownInfo downInfo = list[i];
-                if(downInfo.isLoaded == LoadState.Loaded)
+                if (downInfo.isLoaded == LoadState.Loaded)
                 {
                     AssetBundleManager.Instance.UnloadAsset(downInfo.bundleName, downInfo.assetName);
                 }
@@ -258,7 +252,7 @@ public abstract class BaseView
 
     public void ChangeCurCanvaseOrder(int order)
     {
-        if(rootCanvas != null) { rootCanvas.sortingOrder = order; }
+        if (rootCanvas != null) { rootCanvas.sortingOrder = order; }
     }
 
     public virtual void Open(int index = 0)
@@ -383,7 +377,7 @@ public abstract class BaseView
             {
                 UIDownInfo info = infos[i];
                 info.isLoaded = LoadState.Loading;
-                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(info.bundleName, info.assetName, 
+                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(info.bundleName, info.assetName,
                     (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });
             }
         }
@@ -461,7 +455,7 @@ public abstract class BaseView
 
     private void FlushShowView(int index)
     {
-        if(CurShowIndex == index)
+        if (CurShowIndex == index)
         {
             TryFlushViewShow(index, true);
             this.ShowIndexCallBack(index);

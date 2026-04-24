@@ -27,7 +27,7 @@ namespace ETModel
                     redirectStandardError = true;
                     useShellExecute = false;
                 }
-                
+
                 ProcessStartInfo info = new ProcessStartInfo
                 {
                     FileName = exe,
@@ -38,7 +38,7 @@ namespace ETModel
                     RedirectStandardOutput = redirectStandardOutput,
                     RedirectStandardError = redirectStandardError,
                 };
-                
+
                 Process process = Process.Start(info);
 
                 if (waitExit)

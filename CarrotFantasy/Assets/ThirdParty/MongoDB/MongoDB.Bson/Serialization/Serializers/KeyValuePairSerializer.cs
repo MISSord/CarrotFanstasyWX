@@ -15,10 +15,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using MongoDB.Bson.IO;
-using MongoDB.Bson.Serialization.Conventions;
-using MongoDB.Bson.Serialization.Options;
 
 namespace MongoDB.Bson.Serialization.Serializers
 {

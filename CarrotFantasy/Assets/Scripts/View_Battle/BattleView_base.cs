@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -38,16 +35,16 @@ namespace CarrotFantasy
 
         public virtual void RemoveListener() { }
 
-        public virtual void init() 
+        public virtual void init()
         {
             this.AddListener();
         }
 
         public virtual void initComponents() //最后调用
         {
-            for(int i = 0; i < this.componentList.Count; i++)
+            for (int i = 0; i < this.componentList.Count; i++)
             {
-               this.componentList[i].init();
+                this.componentList[i].init();
             }
         }
 
@@ -64,10 +61,10 @@ namespace CarrotFantasy
             component.Dispose();
             bool isSuc1 = this.componentDic.Remove(component.componentType);
             bool isSuc2 = this.componentList.Remove(component);
-            if(isSuc1 == false || isSuc2 == false)
+            if (isSuc1 == false || isSuc2 == false)
             {
                 //出问题
-                
+
             }
         }
 
@@ -79,7 +76,7 @@ namespace CarrotFantasy
         public void onTick(float time)
         {
             if (this.battle.isPause == true) return;
-            for(int i = 0; i <= componentList.Count - 1; i++)
+            for (int i = 0; i <= componentList.Count - 1; i++)
             {
                 this.componentList[i].onTick(time);
             }
@@ -88,7 +85,7 @@ namespace CarrotFantasy
         public virtual void startGame()
         {
             if (this.isStart == true) return;
-            for(int i = 0; i<= this.componentList.Count - 1; i++)
+            for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
                 this.componentList[i].start();
             }
@@ -109,7 +106,7 @@ namespace CarrotFantasy
         public virtual void Dispose()
         {
             this.RemoveListener();
-            for(int i = this.componentList.Count - 1; i >= 0; i--)
+            for (int i = this.componentList.Count - 1; i >= 0; i--)
             {
                 this.componentList[i].Dispose();
             }

@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -24,12 +21,12 @@ namespace CarrotFantasy
         {
             get
             {
-            if(languageUtil == null)
-            {
-                languageUtil = new LanguageUtil();
-                languageUtil.loadLanguageBag();
-            }
-            return languageUtil;
+                if (languageUtil == null)
+                {
+                    languageUtil = new LanguageUtil();
+                    languageUtil.loadLanguageBag();
+                }
+                return languageUtil;
             }
         }
 
@@ -41,7 +38,7 @@ namespace CarrotFantasy
             //systemLanguageList.Add(UnityEngine.SystemLanguage.ChineseTraditional, new zh_cn());
 
             UnityEngine.SystemLanguage sys = UnityEngine.Application.systemLanguage;
-            if(sys == UnityEngine.SystemLanguage.Chinese) //暂时这样写
+            if (sys == UnityEngine.SystemLanguage.Chinese) //暂时这样写
             {
                 curType = LanguageType.zh_cn;
                 curLanguageBag = systemLanguageList[UnityEngine.SystemLanguage.Chinese];

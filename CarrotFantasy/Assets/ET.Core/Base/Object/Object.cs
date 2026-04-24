@@ -2,14 +2,14 @@
 
 namespace ETModel
 {
-	public abstract class Object: ISupportInitialize
-	{
-		public virtual void BeginInit()
-		{
-		}
+    public abstract class Object : ISupportInitialize
+    {
+        public virtual void BeginInit()
+        {
+        }
 
-		public virtual void EndInit()
-		{
-		}
-	}
+        public virtual void EndInit()
+        {
+        }
+    }
 }

@@ -4,7 +4,7 @@ using UnityEngine;
 public class SRPScheduler : MonoBehaviour
 {
     private static SRPScheduler _instance;
-    
+
     public static SRPScheduler Instance
     {
         get { return _instance; }
@@ -20,7 +20,7 @@ public class SRPScheduler : MonoBehaviour
 
     public static void StartRunCoroutine(IEnumerator coroutine)
     {
-        if(_instance != null)
+        if (_instance != null)
         {
             _instance.StartCoroutine(coroutine);
         }
@@ -36,7 +36,7 @@ public class SRPScheduler : MonoBehaviour
 
     public void DeleteMe()
     {
-        if(_instance != null)
+        if (_instance != null)
         {
             _instance.StopAllCoroutines();
         }

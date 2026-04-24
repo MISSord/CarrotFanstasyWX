@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -16,12 +12,12 @@ namespace CarrotFantasy
         {
             get
             {
-            if (localStorageManager == null)
-            {
-                localStorageManager = new LocalStorageManager();
-                localStorageManager.account = AccountServer.Instance.getAccountId();
-            }
-            return localStorageManager;
+                if (localStorageManager == null)
+                {
+                    localStorageManager = new LocalStorageManager();
+                    localStorageManager.account = AccountServer.Instance.getAccountId();
+                }
+                return localStorageManager;
             }
         }
 
@@ -81,7 +77,7 @@ namespace CarrotFantasy
             else if (valueType == LocalStorageSaveType.BoolType)
             {
                 String dfValue;
-                if((bool)defaultValue == true)
+                if ((bool)defaultValue == true)
                 {
                     dfValue = "true";
                 }

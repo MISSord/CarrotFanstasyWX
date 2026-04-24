@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -7,11 +5,11 @@ namespace CarrotFantasy
     public struct Fix64Vector2
     {
         public Fix64 X;
-        public Fix64 Y ;
+        public Fix64 Y;
 
         public static Fix64Vector2 Zero = new Fix64Vector2(0, 0);
 
-        public static Fix64Vector2 operator / (Fix64Vector2 a,Fix64 cs)
+        public static Fix64Vector2 operator /(Fix64Vector2 a, Fix64 cs)
         {
             return new Fix64Vector2(a.X / cs, a.Y / cs);
         }
@@ -34,7 +32,7 @@ namespace CarrotFantasy
 
         public static Fix64Vector2 operator -(Fix64Vector2 a)
         {
-            return new Fix64Vector2(-a.X , -a.Y);
+            return new Fix64Vector2(-a.X, -a.Y);
         }
 
         public static Fix64Vector2 operator +(Fix64Vector2 a, Fix64Vector2 cs)
@@ -67,7 +65,7 @@ namespace CarrotFantasy
 
         public Fix64Vector2 Nomalize()
         {
-           return this / this.Magnitude();
+            return this / this.Magnitude();
         }
 
         public Vector2 ToVector2()
@@ -77,7 +75,7 @@ namespace CarrotFantasy
 
         public Vector3 ToVector3()
         {
-            return new Vector3((float)X ,1f ,(float)Y);
+            return new Vector3((float)X, 1f, (float)Y);
         }
 
         public Vector3 ToVector3Zero()
@@ -108,14 +106,14 @@ namespace CarrotFantasy
             degrees *= Fix64.DegreeToRad;
             Fix64Vector2 A = new Fix64Vector2(0, 0);
             A.X = (iA.X * Fix64.Cos(degrees) - iA.Y * Fix64.Sin(degrees));
-            A.Y = (iA.X  * Fix64.Sin(degrees) + iA.Y * Fix64.Cos(degrees));
-            
+            A.Y = (iA.X * Fix64.Sin(degrees) + iA.Y * Fix64.Cos(degrees));
+
             return A;
         }
 
         public static Fix64Vector2 SetVertex(Fix64 X, Fix64 Y)
         {
-            return  new Fix64Vector2(X, Y);
+            return new Fix64Vector2(X, Y);
         }
 
         public override string ToString()

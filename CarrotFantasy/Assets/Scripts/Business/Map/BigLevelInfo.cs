@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace CarrotFantasy
 {
     public class BigLevelInfo
-    { 
+    {
         public int bigLevel { get; set; }
         public int count { get; set; }
         public int unlockCount { get; set; }

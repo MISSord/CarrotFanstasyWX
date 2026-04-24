@@ -8,8 +8,8 @@ namespace ETModel
     /// <summary>
     /// Lightweight unity specified task-like object.
     /// </summary>
-    [AsyncMethodBuilder(typeof (AsyncETTaskMethodBuilder))]
-    public partial struct ETTask: IEquatable<ETTask>
+    [AsyncMethodBuilder(typeof(AsyncETTaskMethodBuilder))]
+    public partial struct ETTask : IEquatable<ETTask>
     {
         private readonly IAwaiter awaiter;
 
@@ -33,7 +33,7 @@ namespace ETModel
                 awaiter.GetResult();
             }
         }
-        
+
         public void Coroutine()
         {
         }
@@ -71,12 +71,12 @@ namespace ETModel
 
         public override string ToString()
         {
-            return this.awaiter == null? "()"
-                    : this.awaiter.Status == AwaiterStatus.Succeeded? "()"
+            return this.awaiter == null ? "()"
+                    : this.awaiter.Status == AwaiterStatus.Succeeded ? "()"
                     : "(" + this.awaiter.Status + ")";
         }
 
-        public struct Awaiter: IAwaiter
+        public struct Awaiter : IAwaiter
         {
             private readonly ETTask task;
 
@@ -129,8 +129,8 @@ namespace ETModel
     /// <summary>
     /// Lightweight unity specified task-like object.
     /// </summary>
-    [AsyncMethodBuilder(typeof (ETAsyncTaskMethodBuilder<>))]
-    public struct ETTask<T>: IEquatable<ETTask<T>>
+    [AsyncMethodBuilder(typeof(ETAsyncTaskMethodBuilder<>))]
+    public struct ETTask<T> : IEquatable<ETTask<T>>
     {
         private readonly T result;
         private readonly IAwaiter<T> awaiter;
@@ -168,7 +168,7 @@ namespace ETModel
                 return this.awaiter.GetResult();
             }
         }
-        
+
         public void Coroutine()
         {
         }
@@ -211,8 +211,8 @@ namespace ETModel
 
         public override string ToString()
         {
-            return this.awaiter == null? result.ToString()
-                    : this.awaiter.Status == AwaiterStatus.Succeeded? this.awaiter.GetResult().ToString()
+            return this.awaiter == null ? result.ToString()
+                    : this.awaiter.Status == AwaiterStatus.Succeeded ? this.awaiter.GetResult().ToString()
                     : "(" + this.awaiter.Status + ")";
         }
 
@@ -226,7 +226,7 @@ namespace ETModel
             return new ETTask();
         }
 
-        public struct Awaiter: IAwaiter<T>
+        public struct Awaiter : IAwaiter<T>
         {
             private readonly ETTask<T> task;
 

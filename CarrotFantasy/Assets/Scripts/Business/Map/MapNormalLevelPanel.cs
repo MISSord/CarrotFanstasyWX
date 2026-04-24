@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -108,7 +105,7 @@ namespace CarrotFantasy
 
         private void updateLevelUI()
         {
-            for(int i = 0; i < levelInfoList.Length; i++)
+            for (int i = 0; i < levelInfoList.Length; i++)
             {
                 SingleMapInfo info = this.levelInfoList[i];
                 if (info.unLocked == MapInfoType.UNLOCK_LEVEL)
@@ -158,7 +155,7 @@ namespace CarrotFantasy
             this.txtTotalWaves.text = stage.mTotalRound.ToString();
             for (int i = 0; i < stage.mTowerIDListLength; i++)
             {
-                towerContentImageGos[i].GetComponent<Image>().sprite = 
+                towerContentImageGos[i].GetComponent<Image>().sprite =
                     ResourceLoader.Instance.loadRes<Sprite>(filePath + "Tower/Tower_" + stage.mTowerIDList[i].ToString());
                 towerContentImageGos[i].SetActive(true);
             }
@@ -198,7 +195,7 @@ namespace CarrotFantasy
 
         public void toLastLevel()
         {
-            if(currentLevelID <= 1)
+            if (currentLevelID <= 1)
             {
                 return;
             }

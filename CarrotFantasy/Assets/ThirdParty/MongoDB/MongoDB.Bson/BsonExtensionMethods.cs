@@ -13,10 +13,10 @@
 * limitations under the License.
 */
 
-using System;
-using System.IO;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
+using System;
+using System.IO;
 
 namespace MongoDB.Bson
 {
@@ -103,7 +103,7 @@ namespace MongoDB.Bson
         /// <param name="args">The serialization args.</param>
         /// <returns>A BsonDocument.</returns>
         public static BsonDocument ToBsonDocument<TNominalType>(
-            this TNominalType obj, 
+            this TNominalType obj,
             IBsonSerializer<TNominalType> serializer = null,
             Action<BsonSerializationContext.Builder> configurator = null,
             BsonSerializationArgs args = default(BsonSerializationArgs))
@@ -185,9 +185,9 @@ namespace MongoDB.Bson
         /// A JSON string.
         /// </returns>
         public static string ToJson<TNominalType>(
-            this TNominalType obj, 
+            this TNominalType obj,
             JsonWriterSettings writerSettings = null,
-            IBsonSerializer<TNominalType> serializer = null, 
+            IBsonSerializer<TNominalType> serializer = null,
             Action<BsonSerializationContext.Builder> configurator = null,
             BsonSerializationArgs args = default(BsonSerializationArgs))
         {

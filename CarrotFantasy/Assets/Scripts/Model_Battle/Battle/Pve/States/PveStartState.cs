@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace CarrotFantasy
 {
     public class PveStartState : BaseBattleState
@@ -18,14 +12,14 @@ namespace CarrotFantasy
         public override void stateIn()
         {
             base.stateIn();
-            BattleSchedulerComponent sch =  (BattleSchedulerComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
+            BattleSchedulerComponent sch = (BattleSchedulerComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
             this.scheId = sch.delayExeOnceTimes(() => { this.isTimeToPreFighting = true; }, 4.0f);
             GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
         }
 
         public override string onTick(Fix64 time)
         {
-            if(this.isTimeToPreFighting == true)
+            if (this.isTimeToPreFighting == true)
             {
                 return BattleStateType.PRE_FIGHTINT;
             }

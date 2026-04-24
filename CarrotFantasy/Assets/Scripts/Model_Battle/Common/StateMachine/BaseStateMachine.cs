@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -77,7 +74,7 @@ namespace CarrotFantasy
 
         public void clearGameInfo()
         {
-            if(this.currentState != null)
+            if (this.currentState != null)
             {
                 this.currentState.stateOut();
             }

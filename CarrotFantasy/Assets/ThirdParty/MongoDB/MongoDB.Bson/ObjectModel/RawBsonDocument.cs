@@ -13,15 +13,13 @@
 * limitations under the License.
 */
 
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.Serializers;
+using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace MongoDB.Bson
 {
@@ -102,7 +100,7 @@ namespace MongoDB.Bson
                 using (var stream = new ByteBufferStream(_slice, ownsBuffer: false))
                 using (var bsonReader = new BsonBinaryReader(stream, _readerSettings))
                 {
-                    var context = BsonDeserializationContext.CreateRoot(bsonReader); 
+                    var context = BsonDeserializationContext.CreateRoot(bsonReader);
 
                     bsonReader.ReadStartDocument();
                     while (bsonReader.ReadBsonType() != BsonType.EndOfDocument)
@@ -533,7 +531,7 @@ namespace MongoDB.Bson
             using (var bsonReader = new BsonBinaryReader(stream, _readerSettings))
             {
                 var context = BsonDeserializationContext.CreateRoot(bsonReader);
-                
+
                 bsonReader.ReadStartDocument();
                 var i = 0;
                 while (bsonReader.ReadBsonType() != BsonType.EndOfDocument)
@@ -619,7 +617,7 @@ namespace MongoDB.Bson
             using (var bsonReader = new BsonBinaryReader(stream, _readerSettings))
             {
                 var context = BsonDeserializationContext.CreateRoot(bsonReader);
-                
+
                 bsonReader.ReadStartDocument();
                 var i = 0;
                 while (bsonReader.ReadBsonType() != BsonType.EndOfDocument)
@@ -824,7 +822,7 @@ namespace MongoDB.Bson
             using (var bsonReader = new BsonBinaryReader(stream, _readerSettings))
             {
                 var context = BsonDeserializationContext.CreateRoot(bsonReader);
-                
+
                 bsonReader.ReadStartDocument();
                 while (bsonReader.ReadBsonType() != BsonType.EndOfDocument)
                 {
@@ -859,7 +857,7 @@ namespace MongoDB.Bson
             using (var bsonReader = new BsonBinaryReader(stream, _readerSettings))
             {
                 var context = BsonDeserializationContext.CreateRoot(bsonReader);
-                
+
                 bsonReader.ReadStartDocument();
                 while (bsonReader.ReadBsonType() != BsonType.EndOfDocument)
                 {
@@ -915,7 +913,7 @@ namespace MongoDB.Bson
                 throw new ObjectDisposedException("RawBsonDocument");
             }
         }
-        
+
         // private methods
         private IByteBuffer CloneSlice()
         {

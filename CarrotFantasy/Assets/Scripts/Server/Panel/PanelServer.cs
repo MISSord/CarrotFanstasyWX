@@ -55,7 +55,7 @@ namespace CarrotFantasy
 
         public void ShowPanel(BasePanel targetPanel)
         {
-            if(targetPanel == null)
+            if (targetPanel == null)
             {
                 Debug.Log("面板类不可用");
                 return;
@@ -72,7 +72,7 @@ namespace CarrotFantasy
             this.eventDispatcher.DispatchEvent(PanelEventType.OPEN_PANEL_PREPARE, msg);
             if ((bool)msg["enableShow"] == false)
             {
-                Debug.Log(String.Format("{0}面板打开被打断,原因{1}", curPath,msg["reason"]));
+                Debug.Log(String.Format("{0}面板打开被打断,原因{1}", curPath, msg["reason"]));
                 return;
             }
             if (ServerProvision.sceneServer.GetCurScene() == null)
@@ -82,26 +82,26 @@ namespace CarrotFantasy
             }
             foreach (BasePanel panel in panelList)
             {
-                if(String.Equals(curPath, panel.prefabUrl))
+                if (String.Equals(curPath, panel.prefabUrl))
                 {
                     Debug.Log(String.Format("已存在当前相同面板——{0}", curPath));
                     return;
                 }
             }
             GameObject item = ResourceLoader.Instance.getGameObject(curPath);
-            if(item != null)
+            if (item != null)
             {
                 GameObject tranPanel = GameObject.Instantiate(item);
-                if(tranPanel == null)
+                if (tranPanel == null)
                 {
                     Debug.Log(String.Format("打开面板失败,prefab加载失败：{0}", curPath));
                     return;
                 }
                 tranPanel.layer = SceneLayerData.layerType[1]; //UI层
                 targetPanel.InitContainer();
-                if(curPanlInfo[targetPanel.panelLayerType] == null)
+                if (curPanlInfo[targetPanel.panelLayerType] == null)
                 {
-                    Debug.Log(String.Format("当前UI层级不可用——{0}{1}", curPath,targetPanel.panelLayerType));
+                    Debug.Log(String.Format("当前UI层级不可用——{0}{1}", curPath, targetPanel.panelLayerType));
                     return;
                 }
                 targetPanel.SetLayerTran(curPanlInfo[targetPanel.panelLayerType].transform);
@@ -128,11 +128,11 @@ namespace CarrotFantasy
             BasePanel targetPanel;
             if (panelDic.TryGetValue(uid, out targetPanel))
             {
-                if(targetPanel.isPreLoadOpen == true)
+                if (targetPanel.isPreLoadOpen == true)
                 {
                     this.addToPreLoadPanelList(targetPanel);
                 }
-                if(closeReason != PanelCloseReasonType.SCENE_CHANGE)
+                if (closeReason != PanelCloseReasonType.SCENE_CHANGE)
                 {
                     panelList.Remove(targetPanel);
                 }
@@ -158,7 +158,7 @@ namespace CarrotFantasy
 
         public void CloseAllPanel(int closeReason, BaseSceneType nextSceneType)
         {
-            for(int i = panelList.Count - 1; i >= 0; i--)
+            for (int i = panelList.Count - 1; i >= 0; i--)
             {
                 if (closeReason == PanelCloseReasonType.SCENE_CHANGE && panelList[i].IsCloseBySceneChange())
                 {

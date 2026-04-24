@@ -49,7 +49,7 @@ namespace ETModel
             tcs.TrySetException(new OperationCanceledException(token));
             return tcs.Task;
         }
-        
+
         private static class CanceledETTaskCache
         {
             public static readonly ETTask Task;

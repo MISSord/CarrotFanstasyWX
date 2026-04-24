@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace CarrotFantasy
@@ -63,7 +62,7 @@ namespace CarrotFantasy
         private void loadMapInfo()
         {
             this.monsterPathList = new List<Fix64Vector2>();
-            for(int i = 0; i < this.levelInfo.monsterPath.Count; i++)
+            for (int i = 0; i < this.levelInfo.monsterPath.Count; i++)
             {
                 BattleMapGrid mapGrid = this.gridsList[this.levelInfo.monsterPath[i].xIndex, this.levelInfo.monsterPath[i].yIndex];
                 monsterPathList.Add(new Fix64Vector2(mapGrid.realX, mapGrid.realY));

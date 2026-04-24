@@ -4,7 +4,7 @@ using System.Runtime.ExceptionServices;
 
 namespace ETModel
 {
-    public class ETTaskCompletionSource: IAwaiter
+    public class ETTaskCompletionSource : IAwaiter
     {
         // State(= AwaiterStatus)
         private const int Pending = 0;
@@ -16,7 +16,7 @@ namespace ETModel
         private ExceptionDispatchInfo exception;
         private Action continuation; // action or list
 
-        AwaiterStatus IAwaiter.Status => (AwaiterStatus) state;
+        AwaiterStatus IAwaiter.Status => (AwaiterStatus)state;
 
         bool IAwaiter.IsCompleted => state != Pending;
 
@@ -33,11 +33,11 @@ namespace ETModel
                     this.exception = null;
                     return;
                 case Canceled:
-                {
-                    this.exception?.Throw(); // guranteed operation canceled exception.
-                    this.exception = null;
-                    throw new OperationCanceledException();
-                }
+                    {
+                        this.exception?.Throw(); // guranteed operation canceled exception.
+                        this.exception = null;
+                        throw new OperationCanceledException();
+                    }
                 default:
                     throw new NotSupportedException("ETTask does not allow call GetResult directly when task not completed. Please use 'await'.");
             }
@@ -138,11 +138,11 @@ namespace ETModel
 
         void INotifyCompletion.OnCompleted(Action action)
         {
-            ((ICriticalNotifyCompletion) this).UnsafeOnCompleted(action);
+            ((ICriticalNotifyCompletion)this).UnsafeOnCompleted(action);
         }
     }
 
-    public class ETTaskCompletionSource<T>: IAwaiter<T>
+    public class ETTaskCompletionSource<T> : IAwaiter<T>
     {
         // State(= AwaiterStatus)
         private const int Pending = 0;
@@ -159,7 +159,7 @@ namespace ETModel
 
         public ETTask<T> Task => new ETTask<T>(this);
 
-        AwaiterStatus IAwaiter.Status => (AwaiterStatus) state;
+        AwaiterStatus IAwaiter.Status => (AwaiterStatus)state;
 
         T IAwaiter<T>.GetResult()
         {
@@ -172,11 +172,11 @@ namespace ETModel
                     this.exception = null;
                     return default;
                 case Canceled:
-                {
-                    this.exception?.Throw(); // guranteed operation canceled exception.
-                    this.exception = null;
-                    throw new OperationCanceledException();
-                }
+                    {
+                        this.exception?.Throw(); // guranteed operation canceled exception.
+                        this.exception = null;
+                        throw new OperationCanceledException();
+                    }
                 default:
                     throw new NotSupportedException("ETTask does not allow call GetResult directly when task not completed. Please use 'await'.");
             }
@@ -278,12 +278,12 @@ namespace ETModel
 
         void IAwaiter.GetResult()
         {
-            ((IAwaiter<T>) this).GetResult();
+            ((IAwaiter<T>)this).GetResult();
         }
 
         void INotifyCompletion.OnCompleted(Action action)
         {
-            ((ICriticalNotifyCompletion) this).UnsafeOnCompleted(action);
+            ((ICriticalNotifyCompletion)this).UnsafeOnCompleted(action);
         }
     }
 }

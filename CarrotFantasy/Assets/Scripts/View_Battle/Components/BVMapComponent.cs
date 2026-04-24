@@ -1,8 +1,4 @@
-using System;
 using UnityEngine;
-using UnityEngine.UI;
-using LitJson;
-using System.IO;
 
 namespace CarrotFantasy
 {
@@ -58,7 +54,7 @@ namespace CarrotFantasy
                     itemGo.transform.SetParent(gridList.transform);
                     this.gridPointList[x, y] = itemGo.transform.GetComponent<GridPoint>();
                     this.gridPointList[x, y].initTrans(this.battleView);
-                    this.gridPointList[x, y].initInfo(x,y);
+                    this.gridPointList[x, y].initInfo(x, y);
                 }
             }
         }

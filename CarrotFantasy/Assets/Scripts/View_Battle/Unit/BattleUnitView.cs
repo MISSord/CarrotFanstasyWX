@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
@@ -70,7 +66,7 @@ namespace CarrotFantasy
 
         public virtual void initComponents() //子类调用
         {
-            for(int i = 0; i<= this.componentList.Count - 1; i++)
+            for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
                 this.componentList[i].init();
             }
@@ -119,7 +115,7 @@ namespace CarrotFantasy
         {
             //for (int i = 0; i <= this.componentList.Count - 1; i++)
             //{
-                //this.componentList[i].setUnitScale(this.transformComponent.scale * this.unit.define.scale);
+            //this.componentList[i].setUnitScale(this.transformComponent.scale * this.unit.define.scale);
             //}
             //this.updateUnityScale();
         }
@@ -155,7 +151,7 @@ namespace CarrotFantasy
             this.getLastPosition();
             this.curViewPosition = this.lastPosition;
             this.refreshUnityTransform();
-            for(int i = 0; i <= this.componentList.Count - 1; i++)
+            for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
                 this.componentList[i].setUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
             }
@@ -168,7 +164,7 @@ namespace CarrotFantasy
 
         private void refreshUnityTransform()
         {
-            if(this.isVisible == true)
+            if (this.isVisible == true)
             {
                 this.updateUnityPosition();
             }

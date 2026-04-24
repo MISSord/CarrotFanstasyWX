@@ -60,7 +60,7 @@ namespace CarrotFantasy
 
             this.audioSourceMusic.loop = true;
 
-            
+
             this.musicEnable = LocalStorageManager.Instance.getDataFromLocal<bool>
                 (LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
             this.musicVolume = LocalStorageManager.Instance.getDataFromLocal<float>
@@ -74,7 +74,7 @@ namespace CarrotFantasy
             this.refreshMusicVolume();
             this.refreshEffectActiveState();
             this.refreshEffectVolume();
-            
+
         }
 
         public void refreshMusicActiveState()
@@ -102,12 +102,12 @@ namespace CarrotFantasy
             uid = uid + 1;
             MusicInfo musicInfo = new MusicInfo(path, priority, uid);
             this.uid2MusicInfo.Add(uid, musicInfo);
-            if(this.musicProrityGroupMap.ContainsKey(priority) == false)
+            if (this.musicProrityGroupMap.ContainsKey(priority) == false)
             {
                 bool insertSuc = false;
-                for(int i = 0; i <= this.orderOfPriority.Count - 1; i++)
+                for (int i = 0; i <= this.orderOfPriority.Count - 1; i++)
                 {
-                    if(priority > orderOfPriority[i])
+                    if (priority > orderOfPriority[i])
                     {
                         orderOfPriority.Add(priority);
                         insertSuc = true;
@@ -125,12 +125,12 @@ namespace CarrotFantasy
 
         private void checkMusic()
         {
-            for(int i = 0; i <= this.orderOfPriority.Count - 1; i++)
+            for (int i = 0; i <= this.orderOfPriority.Count - 1; i++)
             {
-                if(this.musicProrityGroupMap[orderOfPriority[i]].Count > 0)
+                if (this.musicProrityGroupMap[orderOfPriority[i]].Count > 0)
                 {
                     MusicInfo musicInfo = this.musicProrityGroupMap[orderOfPriority[i]][0];
-                    if(musicInfo.uid != this.currentUid)
+                    if (musicInfo.uid != this.currentUid)
                     {
                         AudioClip clip = ResourceLoader.Instance.loadRes<AudioClip>(musicInfo.path);
                         this.audioSourceMusic.clip = clip;
@@ -149,7 +149,7 @@ namespace CarrotFantasy
         public void stopMusic(int uuid)
         {
             MusicInfo musicInfo;
-            if(this.uid2MusicInfo.TryGetValue(uuid, out musicInfo))
+            if (this.uid2MusicInfo.TryGetValue(uuid, out musicInfo))
             {
                 this.uid2MusicInfo.Remove(uuid);
                 this.musicProrityGroupMap[musicInfo.prority].Remove(musicInfo);
@@ -159,9 +159,9 @@ namespace CarrotFantasy
 
         public void playEffect(String path, int volumeScale = 1)
         {
-            if(this.effectEnable == false) { return; }
+            if (this.effectEnable == false) { return; }
             float curTime = Time.realtimeSinceStartup;
-            if(this.timeCurrent + RESET_PLAYING_EFFECT_INTERVAL < curTime)
+            if (this.timeCurrent + RESET_PLAYING_EFFECT_INTERVAL < curTime)
             {
                 this.timeCurrent = curTime;
                 AudioClip clip = ResourceLoader.Instance.loadRes<AudioClip>(path);
@@ -209,10 +209,10 @@ namespace CarrotFantasy
 
         public void setMusicEnable(bool isActive)
         {
-            if(this.musicEnable != isActive)
+            if (this.musicEnable != isActive)
             {
                 this.musicEnable = isActive;
-                if(isActive == true)
+                if (isActive == true)
                 {
                     LocalStorageManager.Instance.setDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
                 }
@@ -220,7 +220,7 @@ namespace CarrotFantasy
                 {
                     LocalStorageManager.Instance.setDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
                 }
-                
+
             }
             this.refreshMusicActiveState();
         }

@@ -13,9 +13,6 @@
 * limitations under the License.
 */
 
-using System;
-using System.Reflection;
-
 namespace MongoDB.Bson.Serialization.Conventions
 {
     /// <summary>

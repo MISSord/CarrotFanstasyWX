@@ -1,15 +1,13 @@
-using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity;
-using System;
 
 [Serializable]
 public struct UINameEntry
 {
     public string name;
     public GameObject uiReference;
-}; 
+};
 
 public class UINameTable : MonoBehaviour
 {

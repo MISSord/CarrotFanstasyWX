@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -29,22 +25,22 @@ namespace CarrotFantasy
         {
             if (this.curNoProcessDic.Count == 0) return;
             //严格来说一帧只可能会有一个操作
-            for (int i = 0; i < this.curNoProcessDic.Count; i++) 
+            for (int i = 0; i < this.curNoProcessDic.Count; i++)
             {
-                if(this.curNoProcessDic[i].frameId == this.baseBattle.curFrameId)
+                if (this.curNoProcessDic[i].frameId == this.baseBattle.curFrameId)
                 {
                     this.towerComponent.exePlayerOrder(this.curNoProcessDic[i]);
                     this.mapComponent.exePlayerOrder(this.curNoProcessDic[i]);
                     this.shouldRemoveList.Add(i);
                 }
-                else if(this.curNoProcessDic[i].frameId < this.baseBattle.curFrameId)
+                else if (this.curNoProcessDic[i].frameId < this.baseBattle.curFrameId)
                 {
                     this.shouldRemoveList.Add(i);
                 }
             }
-            if(this.shouldRemoveList.Count != 0)
+            if (this.shouldRemoveList.Count != 0)
             {
-                for(int i = 0; i < this.shouldRemoveList.Count; i++)
+                for (int i = 0; i < this.shouldRemoveList.Count; i++)
                 {
                     this.curNoProcessDic.RemoveAt(this.shouldRemoveList[i]);
                 }

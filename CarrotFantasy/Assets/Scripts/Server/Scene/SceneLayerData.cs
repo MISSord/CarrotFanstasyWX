@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -33,8 +30,8 @@ namespace CarrotFantasy
 
     }
 
-    public enum PanelLayerType 
-    { 
+    public enum PanelLayerType
+    {
         Default = 1,
         Hud = 2,
         UI = 3,

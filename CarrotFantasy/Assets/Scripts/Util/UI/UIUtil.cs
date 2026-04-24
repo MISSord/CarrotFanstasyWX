@@ -13,7 +13,8 @@ namespace CarrotFantasy
 
         public static UIUtil Instance
         {
-            get {
+            get
+            {
                 if (uiUtil == null)
                 {
                     uiUtil = new UIUtil();
@@ -37,7 +38,7 @@ namespace CarrotFantasy
 
         public int getMatchWidthOrHeighRatio()
         {
-            if(SCREEN_RADIO > 1.75)
+            if (SCREEN_RADIO > 1.75)
             {
                 return 0;
             }
@@ -49,10 +50,10 @@ namespace CarrotFantasy
 
         public Vector2 getReferenceResolution()
         {
-            if(REAL_REFERENCE_RESOLUTION == Vector2.zero)
+            if (REAL_REFERENCE_RESOLUTION == Vector2.zero)
             {
                 int radio = this.getMatchWidthOrHeighRatio();
-                if(radio == 0)
+                if (radio == 0)
                 {
                     REAL_REFERENCE_RESOLUTION = new Vector2(GameConfig.DEVELOPMENT_SCREEN_SIZE.x, GameConfig.DEVELOPMENT_SCREEN_SIZE.x * SCREEN_RADIO);
                 }

@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -36,7 +32,7 @@ namespace CarrotFantasy
         {
             Fix64 curTime = this.onClock();
             int curUnscheCount = 0; //当前不参与延时调用方法的数量
-            for(int i = 0; i < scheList.Count; i++)
+            for (int i = 0; i < scheList.Count; i++)
             {
                 if (scheList[i].isUnscheduled == true)
                 {

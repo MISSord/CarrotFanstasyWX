@@ -1,10 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-
-namespace ETModel
+﻿namespace ETModel
 {
-    public class Core 
+    public class Core
     {
-        void Start(){}
+        void Start() { }
     }
 }

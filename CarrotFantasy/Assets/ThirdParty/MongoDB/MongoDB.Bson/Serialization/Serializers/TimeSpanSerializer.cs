@@ -13,11 +13,8 @@
 * limitations under the License.
 */
 
-using System;
-using System.IO;
-using MongoDB.Bson.IO;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson.Serialization.Options;
+using System;
 
 namespace MongoDB.Bson.Serialization.Serializers
 {
@@ -267,7 +264,7 @@ namespace MongoDB.Bson.Serialization.Serializers
         {
             if (units == TimeSpanUnits.Nanoseconds)
             {
-                return (int)(timeSpan.Ticks * 100); 
+                return (int)(timeSpan.Ticks * 100);
             }
             else
             {

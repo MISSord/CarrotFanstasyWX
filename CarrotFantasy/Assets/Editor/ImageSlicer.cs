@@ -1,8 +1,6 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using System.IO;
 using UnityEditor;
-using System.IO;
-using System.Collections.Generic;
+using UnityEngine;
 
 public static class ImageSlicer
 {

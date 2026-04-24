@@ -17,14 +17,14 @@ namespace ETModel
         Canceled = 3
     }
 
-    public interface IAwaiter: ICriticalNotifyCompletion
+    public interface IAwaiter : ICriticalNotifyCompletion
     {
         AwaiterStatus Status { get; }
         bool IsCompleted { get; }
         void GetResult();
     }
 
-    public interface IAwaiter<out T>: IAwaiter
+    public interface IAwaiter<out T> : IAwaiter
     {
         new T GetResult();
     }

@@ -1,12 +1,12 @@
 
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using DG.Tweening;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class SlideScrollView : MonoBehaviour, IBeginDragHandler, IEndDragHandler 
+    public class SlideScrollView : MonoBehaviour, IBeginDragHandler, IEndDragHandler
     {
         private RectTransform contentTrans;
         private float beginMousePositionX;

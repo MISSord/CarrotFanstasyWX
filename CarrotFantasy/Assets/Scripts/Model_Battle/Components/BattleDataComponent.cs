@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-namespace CarrotFantasy 
+namespace CarrotFantasy
 {
     public class BattleDataComponent : BaseBattleComponent
     {
@@ -30,7 +26,7 @@ namespace CarrotFantasy
 
         public override void init()
         {
-            if(BattleParamServer.Instance.isPVE == true)
+            if (BattleParamServer.Instance.isPVE == true)
             {
                 this.bigLevel = BattleParamServer.Instance.curBigLevel;
                 this.level = BattleParamServer.Instance.curLevel;
@@ -68,13 +64,13 @@ namespace CarrotFantasy
 
         private void CoinCountNumberChange(int change)
         {
-            if(this.CoinCount + change >= 0)
+            if (this.CoinCount + change >= 0)
             {
                 this.CoinCount += change;
             }
             else
             {
-                Debug.LogError(String.Format("数量扣除不合法，原{0},改变{1}",this.CoinCount, change));
+                Debug.LogError(String.Format("数量扣除不合法，原{0},改变{1}", this.CoinCount, change));
             }
         }
 
@@ -91,7 +87,7 @@ namespace CarrotFantasy
 
         public bool CarrotIsDead()
         {
-            if(this.carrotLive <= 0)
+            if (this.carrotLive <= 0)
             {
                 return true;
             }
@@ -113,7 +109,7 @@ namespace CarrotFantasy
             unSaveMapInfo.levelId = this.level;
 
             BattleItemComponent itemComponent = (BattleItemComponent)this.baseBattle.getComponent(BattleComponentType.ItemComponent);
-            if(itemComponent.battleItemList.Count == 0)
+            if (itemComponent.battleItemList.Count == 0)
             {
                 unSaveMapInfo.isAllClear = MapInfoType.ALL_CLEAR;
             }

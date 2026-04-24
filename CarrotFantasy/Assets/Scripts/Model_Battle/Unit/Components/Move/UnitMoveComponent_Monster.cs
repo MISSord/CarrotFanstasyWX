@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -71,7 +66,7 @@ namespace CarrotFantasy
             {
                 this.moveSpeed = this.speedX;
             }
-            else if(this.moveTotalTime == moveXTime)
+            else if (this.moveTotalTime == moveXTime)
             {
                 this.moveSpeed = this.speedY;
             }
@@ -87,7 +82,7 @@ namespace CarrotFantasy
                 this.unitTransform.getLastFramePosition(out x, out y, out z);
                 Fix64 DiffDeltaTime = Fix64.Zero;
 
-                if(this.moveCurTime + deltaTime >= this.moveTotalTime)
+                if (this.moveCurTime + deltaTime >= this.moveTotalTime)
                 {
                     deltaTime = this.moveTotalTime - this.moveCurTime;
 
@@ -97,7 +92,7 @@ namespace CarrotFantasy
 
                 this.moveCurTime += deltaTime;
                 Fix64 speed = this.speed;
-                if(speed >= Fix64.Zero)
+                if (speed >= Fix64.Zero)
                 {
                     this.EndPointDistance -= this.speed;
                 }
@@ -105,7 +100,7 @@ namespace CarrotFantasy
                 {
                     this.EndPointDistance += this.speed;
                 }
-                
+
                 this.unitTransform.setPosition(x, y, z);
                 if (this.moveCurTime >= this.moveTotalTime)
                 {

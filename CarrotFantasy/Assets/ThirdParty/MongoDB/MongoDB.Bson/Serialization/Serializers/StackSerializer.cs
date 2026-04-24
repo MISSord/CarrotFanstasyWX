@@ -17,8 +17,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using MongoDB.Bson.Serialization.Conventions;
-using MongoDB.Bson.Serialization.Options;
 
 namespace MongoDB.Bson.Serialization.Serializers
 {
@@ -67,7 +65,7 @@ namespace MongoDB.Bson.Serialization.Serializers
             return new StackSerializer(itemSerializer);
         }
 
-       // protected methods
+        // protected methods
         /// <summary>
         /// Adds the item.
         /// </summary>

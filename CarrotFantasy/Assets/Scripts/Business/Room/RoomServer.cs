@@ -1,8 +1,8 @@
-using System;
 using ETModel;
+using System;
 using UnityEngine;
 
-namespace CarrotFantasy 
+namespace CarrotFantasy
 {
     public class RoomServer : BaseServer
     {
@@ -62,7 +62,7 @@ namespace CarrotFantasy
         {
             Debug.Log("有人加入房间");
             Actor_GamerEnterRoom_Ntt msg = (Actor_GamerEnterRoom_Ntt)message;
-            if(this.isMatching == true)
+            if (this.isMatching == true)
             {
                 this.isMatching = false;
             }
@@ -94,7 +94,7 @@ namespace CarrotFantasy
         {
             Actor_GamerReady_Landlords msg = (Actor_GamerReady_Landlords)message;
             bool isChange = false;
-            if(partner != null)
+            if (partner != null)
             {
                 if (msg.UserID == partner.UserID)
                 {
@@ -107,15 +107,16 @@ namespace CarrotFantasy
                 myself.isReady = true;
                 isChange = true;
             }
-            if(isChange == true)
+            if (isChange == true)
             {
                 this.eventDispatcher.DispatchEvent(RoomEventType.USER_INFO_CHANGE);
-            }else
+            }
+            else
             {
                 if (partner == null) return;
                 Debug.Log(String.Format("发送的账号有问题，我{0}，同伴{1}，发送的{2}", myself.UserID, partner.UserID, msg.UserID));
             }
-            
+
         }
 
         public void sendStartMatch()

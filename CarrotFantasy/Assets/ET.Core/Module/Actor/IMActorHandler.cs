@@ -2,9 +2,9 @@
 
 namespace ETModel
 {
-	public interface IMActorHandler
-	{
-		ETTask Handle(Session session, Entity entity, object actorMessage);
-		Type GetMessageType();
-	}
+    public interface IMActorHandler
+    {
+        ETTask Handle(Session session, Entity entity, object actorMessage);
+        Type GetMessageType();
+    }
 }

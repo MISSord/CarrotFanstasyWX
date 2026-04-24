@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -50,7 +47,7 @@ namespace CarrotFantasy
 
         public void addComponent(BaseUnitComponent unitComponent)
         {
-            if(this.componentDic.ContainsKey(unitComponent.unitComponentType))
+            if (this.componentDic.ContainsKey(unitComponent.unitComponentType))
             {
                 Debug.Log(String.Format("添加单元组件出错{0}{1}", this.unitType, unitComponent.unitComponentType));
             }
@@ -64,7 +61,7 @@ namespace CarrotFantasy
 
         public void removeComponent(BaseUnitComponent unitComponent)
         {
-            if(unitComponent == null)
+            if (unitComponent == null)
             {
                 //出错了
                 Debug.Log(String.Format("移除单元组件出错{0}{1}", this.unitType, unitComponent.unitComponentType));
@@ -80,7 +77,7 @@ namespace CarrotFantasy
 
         public virtual void start()
         {
-            for(int i = 0; i <= componentList.Count - 1; i++)
+            for (int i = 0; i <= componentList.Count - 1; i++)
             {
                 componentList[i].start();
             }

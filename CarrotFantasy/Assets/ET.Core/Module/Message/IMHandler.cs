@@ -2,9 +2,9 @@
 
 namespace ETModel
 {
-	public interface IMHandler
-	{
-		ETVoid Handle(Session session, object message);
-		Type GetMessageType();
-	}
+    public interface IMHandler
+    {
+        ETVoid Handle(Session session, object message);
+        Type GetMessageType();
+    }
 }

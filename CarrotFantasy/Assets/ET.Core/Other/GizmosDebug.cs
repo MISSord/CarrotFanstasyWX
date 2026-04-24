@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace ETModel
 {
-    public class GizmosDebug: MonoBehaviour
+    public class GizmosDebug : MonoBehaviour
     {
         public static GizmosDebug Instance { get; private set; }
 

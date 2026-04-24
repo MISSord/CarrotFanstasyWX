@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-
 namespace CarrotFantasy
 {
     public class UnitBeHitComponent : BaseUnitComponent
@@ -23,7 +16,7 @@ namespace CarrotFantasy
 
         public override void onTick(Fix64 deltaTime)
         {
-            
+
         }
     }
 }

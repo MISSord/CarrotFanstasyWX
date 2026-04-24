@@ -269,7 +269,7 @@ public class BundleInfo
 }
 
 #if UNITY_EDITOR
-public struct AssetBaseLoadInfo 
+public struct AssetBaseLoadInfo
 {
     public string bundleName;
     public string assetName;
@@ -428,11 +428,11 @@ public class AssetBundleManager
     private void UpdateAssetBaseLoad()
     {
         if (assetBaseLoadInfos.Count <= 0) return;
-        for(int i = 0; i < assetBaseLoadInfos.Count; ++i)
+        for (int i = 0; i < assetBaseLoadInfos.Count; ++i)
         {
             AssetBaseLoadInfo info = assetBaseLoadInfos[i];
             UnityEngine.Object asset = EditorAssetLoader.LoadAssetAtPath(info.bundleName, info.assetName);
-            if(asset != null && info._callback != null)
+            if (asset != null && info._callback != null)
             {
                 info._callback(asset);
             }
@@ -502,7 +502,7 @@ public class AssetBundleManager
             bundleInfo.AddPendingAsset(assetName);
         }
 
-        
+
         return callbackId;
     }
 

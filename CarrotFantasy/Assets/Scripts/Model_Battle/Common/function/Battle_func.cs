@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-
 namespace CarrotFantasy
 {
     public class Battle_func
@@ -14,7 +7,7 @@ namespace CarrotFantasy
             return new Fix64Vector2(x, y);
         }
 
-        public static Fix64Vector2 pAdd(Fix64Vector2 one,Fix64Vector2 two)
+        public static Fix64Vector2 pAdd(Fix64Vector2 one, Fix64Vector2 two)
         {
             return one + two;
         }
@@ -56,15 +49,15 @@ namespace CarrotFantasy
         public static Fix64 min(Fix64 min1, Fix64 min2, Fix64 min3, Fix64 min4)
         {
             Fix64 min = min1;
-            if(min > min2)
+            if (min > min2)
             {
                 min = min2;
             }
-            if(min > min3)
+            if (min > min3)
             {
                 min = min3;
             }
-            if(min > min4)
+            if (min > min4)
             {
                 min = min4;
             }
@@ -123,7 +116,7 @@ namespace CarrotFantasy
         public static bool rectContainsPoint(Fix64 rectX, Fix64 rectY, Fix64 rectWidth, Fix64 rectHeight, Fix64 pointX, Fix64 pointY)
         {
             bool ret = false;
-            if((pointX >= rectX) && (pointX <= rectX + rectWidth) 
+            if ((pointX >= rectX) && (pointX <= rectX + rectWidth)
                 && (pointY >= rectY) && (pointY <= rectY + rectHeight))
             {
                 ret = true;
@@ -131,7 +124,7 @@ namespace CarrotFantasy
             return ret;
         }
 
-        public static bool rectIntersectsRect(Fix64 x1, Fix64 y1, Fix64 width1, Fix64 height1, 
+        public static bool rectIntersectsRect(Fix64 x1, Fix64 y1, Fix64 width1, Fix64 height1,
             Fix64 x2, Fix64 y2, Fix64 width2, Fix64 height2)
         {
             //未来定点数

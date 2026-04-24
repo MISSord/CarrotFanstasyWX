@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -156,7 +152,7 @@ namespace CarrotFantasy
         public override void Dispose()
         {
             base.Dispose();
-            if(this.audioManager != null)
+            if (this.audioManager != null)
             {
                 this.audioManager.dipose();
             }

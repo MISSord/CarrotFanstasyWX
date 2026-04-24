@@ -2,8 +2,8 @@
 
 namespace ETModel
 {
-	public class LocationProxyComponent : Component
-	{
-		public IPEndPoint LocationAddress;
-	}
+    public class LocationProxyComponent : Component
+    {
+        public IPEndPoint LocationAddress;
+    }
 }

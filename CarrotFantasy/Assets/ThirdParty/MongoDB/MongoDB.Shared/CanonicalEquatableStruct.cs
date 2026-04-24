@@ -63,7 +63,7 @@ namespace MongoDB.Shared
         }
 
         // public methods
-         /// <summary>
+        /// <summary>
         /// Determines whether the specified <see cref="CanonicalEquatableStruct" /> is equal to this instance.
         /// </summary>
         /// <param name="rhs">The <see cref="CanonicalEquatableStruct" /> to compare with this instance.</param>
@@ -72,10 +72,10 @@ namespace MongoDB.Shared
         /// </returns>
         public bool Equals(CanonicalEquatableStruct rhs)
         {
-           // actual work done here to avoid boxing
+            // actual work done here to avoid boxing
             // be sure x and y implement ==, otherwise use Equals
             return
-                _x == rhs._x && 
+                _x == rhs._x &&
                 _y == rhs._y;
         }
 

@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -16,9 +12,9 @@ namespace CarrotFantasy
             this.unit = unit;
         }
 
-        public virtual void init(){}
+        public virtual void init() { }
 
-        public virtual void start(){}
+        public virtual void start() { }
 
         public abstract void onTick(Fix64 deltaTime);
 

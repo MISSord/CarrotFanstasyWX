@@ -56,8 +56,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="D:\Work\CarrotFantasyClient1\CarrotFantasy\Assets\ThirdParty\DOTween\DOTween.dll" />
-    <Analyzer Include="D:\Work\CarrotFantasyClient1\CarrotFantasy\Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\Business\Map\BigLevelInfo.cs" />
@@ -74,15 +72,18 @@
     <Compile Include="Assets\Scripts\Helper\ResourcesHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\PositionInfo.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Event\BattleEventDispatcher.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\XUI.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BaseBattle.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\BattlePveJudgeComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\InputOrderType.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\ResPath.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionServer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleSimpleHitTestComponent.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\BaseScene.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\HitTestShape_Base.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\LocatedInfo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Item.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundlePathHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Handle\Handler\HitTestHandler.cs" />
     <Compile Include="Assets\Scripts\Business\UI\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\BaseUnitComponent.cs" />
@@ -97,11 +98,16 @@
     <Compile Include="Assets\Scripts\Business\UI\UIServer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\GameObjectPool.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\Shapes\HitTestShape_ObbRect.cs" />
+    <Compile Include="Assets\Scripts\Component\BaseComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFightingState.cs" />
     <Compile Include="Assets\Scripts\Server\Panel\PanelCloseReasonType.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Battle\Pve\PveBattleView.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\IConnectionTransport.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\BaseView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView_Item.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Scene\BattleSceneDefine.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\EditorConnectionTransport.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\NullWechatSocketBridge.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView_MapGrid.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Business\Hud\MainPanel.cs" />
@@ -111,9 +117,11 @@
     <Compile Include="Assets\Scripts\View_Battle\Battle\GameViewObjectPool.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\NormalModelPanel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\ListenerObj.cs" />
+    <Compile Include="Assets\Scripts\GameStateMachine.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\UnitComponentType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\PanelLifeCycleType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattleResult.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\WechatMiniGameConnectionTransport.cs" />
     <Compile Include="Assets\Scripts\Business\BusinessType.cs" />
     <Compile Include="Assets\Scripts\Business\BattleParam\BattleParamServer.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\BaseSceneType.cs" />
@@ -129,13 +137,16 @@
     <Compile Include="Assets\Scripts\View_Battle\Panel\TopPage.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpBattle.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneServer.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleUpdateChecker.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapEventType.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\FileDownloadHandler.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpModelBattleParams.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleSchedulerComponent.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneLayerData.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleMonsterComponent.cs" />
     <Compile Include="Assets\Scripts\Helper\PathHelper.cs" />
+    <Compile Include="Assets\Scripts\SRPScheduler.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\BattleScene.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapModel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\V4.cs" />
@@ -147,10 +158,12 @@
     <Compile Include="Assets\Scripts\Model_Battle\GameManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Monster.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BaseBattleComponent.cs" />
+    <Compile Include="Assets\Scripts\Util\MD5Checker.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpJudgeComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleItemComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Item.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleDataComponent.cs" />
+    <Compile Include="Assets\Scripts\Other\Define.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\Components\BUVTransformComponent.cs" />
     <Compile Include="Assets\Scripts\Business\UI\FpsNode.cs" />
     <Compile Include="Assets\Scripts\Util\MapInfo\MapInfoHelper.cs" />
@@ -160,10 +173,12 @@
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\InputOrder.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\StateMachine\BaseBattleState.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\MonsterConfigReader.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionMessageCodec.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapNormalLevelPanel.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\GameWinPage.cs" />
     <Compile Include="Assets\Scripts\Business\Map\SingleMapInfo.cs" />
     <Compile Include="Assets\Scripts\Business\Base\BaseServer.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleManager.cs" />
     <Compile Include="Assets\Scripts\View_Battle\BattleView_base.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64Vector2.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Enum\BattleUnitViewType.cs" />
@@ -173,6 +188,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleUnitType.cs" />
     <Compile Include="Assets\Scripts\Business\Account\StartLoadPanel.cs" />
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageSaveType.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\ViewManager.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\MainScene.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\GameOverPage.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\UnitEvent.cs" />
@@ -185,12 +201,14 @@
     <Compile Include="Assets\Scripts\Server\Panel\PanelEventType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\BattlePveDataComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveStateMachine.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\UINameTableDic.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpFightingState.cs" />
     <Compile Include="Assets\Scripts\Util\GameConfig.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnitProperty.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomPanel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64SinLut.cs" />
+    <Compile Include="Assets\Scripts\Util\TimeManager\TimeUtility.cs" />
     <Compile Include="Assets\Scripts\Helper\ActionHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFinishState.cs" />
     <Compile Include="Assets\Scripts\Component\GlobalProto.cs" />
@@ -202,6 +220,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Common\StateMachine\BaseStateMachine.cs" />
     <Compile Include="Assets\Scripts\Business\Account\LoginPanel.cs" />
     <Compile Include="Assets\Scripts\Util\Sche\Sche.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\WechatSocketBridgeProvider.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapConfigReader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\Round.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleInputComponent.cs" />
@@ -209,14 +228,18 @@
     <Compile Include="Assets\Scripts\View_Battle\Class\GridPoint.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Map\BattleMapGrid.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Monster.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\EditorAssetLoader.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVMapComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveStartState.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpFinishState.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\WechatSocketCallbackReceiver.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Result_verify\ModelBattleResultVerify.cs" />
     <Compile Include="Assets\Scripts\Helper\GameObjectHelper.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\IWechatSocketBridge.cs" />
     <Compile Include="Assets\Scripts\Util\Lang\Config\zh_cn.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpBattleResult.cs" />
     <Compile Include="Assets\Scripts\Entity\Gamer.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\WechatJsBridgeSocket.cs" />
     <Compile Include="Assets\Scripts\Server\ServerProvision.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\Shapes\HitTestShape_Circle.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Bullet.cs" />
@@ -228,12 +251,14 @@
     <Compile Include="Assets\Scripts\Business\Room\RoomEventType.cs" />
     <Compile Include="Assets\Scripts\Util\UI\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\Util\Network\ConnectEventDispatcher.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Stat\BattleStatInfo.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\PanelManagerUnit.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Carrot.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleMapComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\V2.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PvePreFightingState.cs" />
+    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleDownloader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\UnitStatusComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Config\MapUIConfigReader.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView.cs" />
@@ -253,34 +278,8 @@
     <Compile Include="Assets\Scripts\Util\Sche\ScheObject.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\BasePanel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
-    <Compile Include="Assets\Scripts\Other\Define.cs" />
-    <Compile Include="Assets\Scripts\Component\BaseComponent.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\EditorConnectionTransport.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\WechatJsBridgeSocket.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\NullWechatSocketBridge.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\WechatMiniGameConnectionTransport.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\WechatSocketCallbackReceiver.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\IWechatSocketBridge.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\WechatSocketBridgeProvider.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\ConnectionMessageCodec.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\IConnectionTransport.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\ViewManager.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\BaseView.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\UINameTableDic.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\XUI.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
-    <Compile Include="Assets\Scripts\Util\TimeManager\TimeUtility.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\EditorAssetLoader.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundlePathHelper.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\ResPath.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleUpdateChecker.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleDownloader.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleManager.cs" />
-    <Compile Include="Assets\Scripts\AssetBundleManager\FileDownloadHandler.cs" />
-    <Compile Include="Assets\Scripts\GameStateMachine.cs" />
-    <Compile Include="Assets\Scripts\SRPScheduler.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />
@@ -650,16 +649,16 @@
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="DOTweenEditor">
+      <HintPath>Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Plastic.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Tracker.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="DOTweenEditor">
-      <HintPath>Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DOTween">

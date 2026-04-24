@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    public class SceneServer 
+    public class SceneServer
     {
         private EventDispatcher eventDispatcher;
         private Camera uiCamera; //固定的
@@ -49,7 +49,7 @@ namespace CarrotFantasy
         public bool LoadScene(BaseSceneType sceneType, Dictionary<String, dynamic> param)
         {
             bool isLoad = false;
-            if(this.currentScene != null)
+            if (this.currentScene != null)
             {
                 if (this.currentScene.sceneType == sceneType) return isLoad;
                 this.RemoveScene();
@@ -62,7 +62,8 @@ namespace CarrotFantasy
         private bool LoadSceneProgress(BaseSceneType sceneType, Dictionary<String, dynamic> param)
         {
             BaseScene targetScene = null;
-            switch (sceneType) {
+            switch (sceneType)
+            {
                 case BaseSceneType.MainScene:
                     targetScene = new MainScene(sceneType, "MainScene", param);
                     break;
@@ -73,7 +74,7 @@ namespace CarrotFantasy
                     Debug.Log("场景加载失败");
                     break;
             }
-            if(targetScene == null)
+            if (targetScene == null)
             {
                 return false;
             }

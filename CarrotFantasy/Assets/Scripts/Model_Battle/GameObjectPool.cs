@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -17,12 +14,12 @@ namespace CarrotFantasy
         {
             get
             {
-            if(gamePool == null)
-            {
-                gamePool = new GameObjectPool();
-                gamePool.init();
-            }
-            return gamePool;
+                if (gamePool == null)
+                {
+                    gamePool = new GameObjectPool();
+                    gamePool.init();
+                }
+                return gamePool;
             }
         }
 
@@ -57,10 +54,10 @@ namespace CarrotFantasy
             }
         }
 
-        public T getNewBattleUnit<T>(String name) where T :BattleUnit
+        public T getNewBattleUnit<T>(String name) where T : BattleUnit
         {
             List<BattleUnit> curList;
-            if(!curObjectDic.TryGetValue(name, out curList))
+            if (!curObjectDic.TryGetValue(name, out curList))
             {
                 Debug.LogError(String.Format("没有注册{0}", name));
                 return null;

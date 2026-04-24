@@ -56,8 +56,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="D:\Work\CarrotFantasyClient1\CarrotFantasy\Assets\ThirdParty\DOTween\DOTween.dll" />
-    <Analyzer Include="D:\Work\CarrotFantasyClient1\CarrotFantasy\Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\ThirdParty\FairyGUI\Scripts\Utils\Html\HtmlSelect.cs" />
@@ -938,16 +936,16 @@
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="DOTweenEditor">
+      <HintPath>Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Plastic.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Tracker.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="DOTweenEditor">
-      <HintPath>Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DOTween">

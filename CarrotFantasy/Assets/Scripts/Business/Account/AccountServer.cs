@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -39,7 +35,7 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            
+
         }
 
         public override void AddSocketListener()

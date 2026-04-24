@@ -1,14 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 using DG.Tweening;
-using UnityEngine.EventSystems;
-using System;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
     public class GridPoint : MonoBehaviour
-    { 
+    {
         //属性
         private SpriteRenderer spriteRenderer;
 

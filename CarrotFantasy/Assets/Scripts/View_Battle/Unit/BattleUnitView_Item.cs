@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -36,7 +31,7 @@ namespace CarrotFantasy
         public override void RemoveListener()
         {
             base.RemoveListener();
-            if(this.unitEventDispatcher != null)
+            if (this.unitEventDispatcher != null)
             {
                 this.unitEventDispatcher.RemoveListener(BattleEvent.ITEM_LIVE_REDUCE, this.updateLiveNumber);
             }

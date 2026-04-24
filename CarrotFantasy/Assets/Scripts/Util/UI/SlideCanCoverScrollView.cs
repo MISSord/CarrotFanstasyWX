@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using DG.Tweening;
+using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
-namespace CarrotFantasy 
+namespace CarrotFantasy
 {
     public class SlideCanCoverScrollView : MonoBehaviour, IBeginDragHandler, IEndDragHandler
     {
@@ -116,7 +114,7 @@ namespace CarrotFantasy
 
             }
 
-            DOTween.To(() => scrollRect.horizontalNormalizedPosition, lerpValue => scrollRect.horizontalNormalizedPosition = lerpValue, 
+            DOTween.To(() => scrollRect.horizontalNormalizedPosition, lerpValue => scrollRect.horizontalNormalizedPosition = lerpValue,
                 lastProportion, 0.5f).SetEase(Ease.OutQuint);
             UIServer.Instance.playPagingEffect();
         }

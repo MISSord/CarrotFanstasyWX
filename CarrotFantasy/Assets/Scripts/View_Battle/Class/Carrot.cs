@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
 
 
 
@@ -10,7 +8,7 @@ using System;
 /// 萝卜
 /// </summary>
 
-namespace CarrotFantasy 
+namespace CarrotFantasy
 {
     public class Carrot : MonoBehaviour
     {
@@ -62,7 +60,7 @@ namespace CarrotFantasy
                 animator.Play("Touch");
                 int randomNum = UnityEngine.Random.Range(1, 4);
                 UIServer.Instance.audioManager.playEffect(
-                    String.Format("NormalMordel/Carrot/{0}",randomNum.ToString()));
+                    String.Format("NormalMordel/Carrot/{0}", randomNum.ToString()));
             }
         }
 

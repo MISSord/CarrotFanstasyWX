@@ -40,7 +40,7 @@ namespace Google.Protobuf
     public sealed partial class CodedOutputStream
     {
         private const int LittleEndian64Size = 8;
-        private const int LittleEndian32Size = 4;        
+        private const int LittleEndian32Size = 4;
 
         /// <summary>
         /// Computes the number of bytes that would be needed to encode a
@@ -75,7 +75,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeInt64Size(long value)
         {
-            return ComputeRawVarint64Size((ulong) value);
+            return ComputeRawVarint64Size((ulong)value);
         }
 
         /// <summary>
@@ -86,7 +86,7 @@ namespace Google.Protobuf
         {
             if (value >= 0)
             {
-                return ComputeRawVarint32Size((uint) value);
+                return ComputeRawVarint32Size((uint)value);
             }
             else
             {
@@ -222,7 +222,7 @@ namespace Google.Protobuf
         /// </summary>
         public static int ComputeLengthSize(int length)
         {
-            return ComputeRawVarint32Size((uint) length);
+            return ComputeRawVarint32Size((uint)length);
         }
 
         /// <summary>

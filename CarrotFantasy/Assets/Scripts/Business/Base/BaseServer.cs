@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace CarrotFantasy
 {
     public abstract class BaseServer
@@ -12,18 +6,18 @@ namespace CarrotFantasy
 
         public BaseServer()
         {
-            
+
         }
 
         public virtual void Init() //初始化
         {
-            
+
         }
-        public virtual void LoadModule() 
+        public virtual void LoadModule()
         {
             isFirstLoad = true;
         }
-        public virtual void ReloadModule() 
+        public virtual void ReloadModule()
         {
             isFirstLoad = false;
         }

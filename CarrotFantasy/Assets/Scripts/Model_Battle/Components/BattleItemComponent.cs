@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -29,7 +26,7 @@ namespace CarrotFantasy
 
             for (int x = 0; x <= dataOne.xColumn - 1; x++)
             {
-                for(int y = 0; y <= dataOne.yRow - 1; y++)
+                for (int y = 0; y <= dataOne.yRow - 1; y++)
                 {
                     if (gridsList[x, y].state.hasItem)
                     {
@@ -50,7 +47,7 @@ namespace CarrotFantasy
             item.initComponents();
             item.loadInfo1();
             this.battleItemList.Add(item);
-            this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD,BattleUnitType.ITEM, item);
+            this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.ITEM, item);
         }
 
         private Fix64Vector2 getPosition(BattleMapGrid mapGrid)

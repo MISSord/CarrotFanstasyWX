@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -17,28 +14,28 @@ namespace CarrotFantasy
         {
             get
             {
-            if(assetObjectPool == null)
-            {
-                assetObjectPool = new AssetObjectPool();
-            }
-            return assetObjectPool;
+                if (assetObjectPool == null)
+                {
+                    assetObjectPool = new AssetObjectPool();
+                }
+                return assetObjectPool;
             }
         }
 
         public GameObject getAsset(String path)
         {
-            if(this.path2Asset[path] == null)
+            if (this.path2Asset[path] == null)
             {
                 this.path2Asset[path] = ResourceLoader.Instance.getGameObject(path);
             }
             return this.path2Asset[path];
         }
 
-        public T getAsset<T>(String path) where T: UnityEngine.Object
+        public T getAsset<T>(String path) where T : UnityEngine.Object
         {
             if (this.path2Asset2[path] == null)
             {
-                this.path2Asset2[path] = ResourceLoader.Instance.loadRes<T> (path);
+                this.path2Asset2[path] = ResourceLoader.Instance.loadRes<T>(path);
             }
             return (T)this.path2Asset2[path];
         }

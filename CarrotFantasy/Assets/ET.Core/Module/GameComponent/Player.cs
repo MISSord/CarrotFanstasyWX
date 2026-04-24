@@ -19,21 +19,21 @@
 		}
 		
 	}
-#endif	
-	public sealed class Player : Entity
-	{
-		
-		public long UnitId { get; set; }
+#endif
+    public sealed class Player : Entity
+    {
 
-		public override void Dispose()
-		{
-			if (this.IsDisposed)
-			{
-				return;
-			}
+        public long UnitId { get; set; }
 
-			base.Dispose();
-		}
-	}
+        public override void Dispose()
+        {
+            if (this.IsDisposed)
+            {
+                return;
+            }
+
+            base.Dispose();
+        }
+    }
 }
 

@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
@@ -83,11 +80,11 @@ namespace CarrotFantasy
 
         private void registerEvent()
         {
-            if(this.isResigterState == true)
+            if (this.isResigterState == true)
             {
                 this.registerAccount();
             }
-            else if(this.isResigterState == false)
+            else if (this.isResigterState == false)
             {
                 this.enterRegisterAccountState();
             }

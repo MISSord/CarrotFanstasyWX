@@ -13,9 +13,9 @@
 * limitations under the License.
 */
 
+using MongoDB.Bson.Serialization.Serializers;
 using System;
 using System.Collections.Generic;
-using MongoDB.Bson.Serialization.Serializers;
 
 namespace MongoDB.Bson.Serialization
 {

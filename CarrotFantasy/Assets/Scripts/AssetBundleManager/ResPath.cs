@@ -1,7 +1,4 @@
-using System;
-using UnityEngine;
-
-public class ResPath 
+public class ResPath
 {
     //public static string GetPlayerModelPath(VoType type, string name)
     //{

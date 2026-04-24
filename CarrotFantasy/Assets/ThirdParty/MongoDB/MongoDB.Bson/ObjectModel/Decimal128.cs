@@ -808,7 +808,7 @@ namespace MongoDB.Bson
                 ulong value;
                 if (Decimal128.TryTruncateToUInt64(d, maxNegativeValue, (ulong)short.MaxValue, out value))
                 {
-                    return Decimal128.IsNegative(d) ? (value == maxNegativeValue ? short.MinValue : (short )(-(short)value)) : (short)value;
+                    return Decimal128.IsNegative(d) ? (value == maxNegativeValue ? short.MinValue : (short)(-(short)value)) : (short)value;
                 }
                 else
                 {

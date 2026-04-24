@@ -69,7 +69,7 @@ namespace CarrotFantasy
                 layerData.Value.transform.SetAsLastSibling();
                 layerData.Value.transform.localPosition = Vector3.zero;
             }
-            
+
         }
 
         public void initSceneObject()
@@ -95,7 +95,7 @@ namespace CarrotFantasy
 
         public virtual GameObject getLayerGameObj(PanelLayerType type)
         {
-            if(layerDic[type] != null)
+            if (layerDic[type] != null)
             {
                 return layerDic[type];
             }

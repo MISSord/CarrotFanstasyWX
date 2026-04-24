@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -104,14 +100,17 @@ namespace CarrotFantasy
 
             this.nodeStartUI.SetActive(true);
             BattleSchedulerComponent sche = (BattleSchedulerComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
-            this.schId = sche.delayExeOnceTimes(()=> { 
+            this.schId = sche.delayExeOnceTimes(() =>
+            {
                 this.nodeStartUI.SetActive(false);
                 UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Go");
-            },3.0f);
-            this.schId_startGame = sche.delayExeMultipleTimes(() =>{
+            }, 3.0f);
+            this.schId_startGame = sche.delayExeMultipleTimes(() =>
+            {
                 UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/CountDown");
-            },1.0f);
-            sche.delayExeOnceTimes(() => {
+            }, 1.0f);
+            sche.delayExeOnceTimes(() =>
+            {
                 sche.silenceSingleSche(this.schId_startGame);
             }, 3.5f);
         }

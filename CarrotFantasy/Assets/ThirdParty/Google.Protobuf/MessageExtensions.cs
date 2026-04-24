@@ -41,7 +41,7 @@ namespace Google.Protobuf
     {
         public static CodedInputStream inputStream = new CodedInputStream(new byte[0]);
         public static CodedOutputStream outputStream = new CodedOutputStream(new byte[0]);
-        
+
         /// <summary>
         /// Merges data from the given byte array into an existing message.
         /// </summary>
@@ -56,7 +56,7 @@ namespace Google.Protobuf
             message.MergeFrom(input);
             input.CheckReadEndOfStreamTag();
         }
-        
+
         /// <summary>
         /// Merges data from the given byte array into an existing message.
         /// </summary>
@@ -114,7 +114,7 @@ namespace Google.Protobuf
         {
             ProtoPreconditions.CheckNotNull(message, "message");
             ProtoPreconditions.CheckNotNull(input, "input");
-            int size = (int) CodedInputStream.ReadRawVarint32(input);
+            int size = (int)CodedInputStream.ReadRawVarint32(input);
             Stream limitedStream = new LimitedInputStream(input, size);
             message.MergeFrom(limitedStream);
         }
@@ -173,6 +173,6 @@ namespace Google.Protobuf
         {
             ProtoPreconditions.CheckNotNull(message, "message");
             return ByteString.AttachBytes(message.ToByteArray());
-        }        
+        }
     }
 }

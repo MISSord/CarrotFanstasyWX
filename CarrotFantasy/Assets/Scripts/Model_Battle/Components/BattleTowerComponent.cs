@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -41,15 +38,15 @@ namespace CarrotFantasy
 
         public bool isHaveTower(int x, int y) //地图模块用
         {
-            return this.curTowerDic.ContainsKey(this.getExChangeInt(x,y));
+            return this.curTowerDic.ContainsKey(this.getExChangeInt(x, y));
         }
 
         public void exePlayerOrder(InputOrder order)
         {
-            if(order.order == InputOrderType.ADD_ORDER)
+            if (order.order == InputOrderType.ADD_ORDER)
             {
                 int price = (int)this.configReader.getSingleTowerConfig(order.towerId)["price0"];
-                if(price > dataComponent.CoinCount)
+                if (price > dataComponent.CoinCount)
                 {
                     UIServer.Instance.showTip(LanguageUtil.Instance.getString(1004));
                     return;
@@ -64,11 +61,11 @@ namespace CarrotFantasy
                 tower.loadInfo1(order.x, order.y);
                 tower.init();
                 tower.initComponents();
-                this.curTowerDic.Add(this.getExChangeInt(order.x, order.y),tower);
+                this.curTowerDic.Add(this.getExChangeInt(order.x, order.y), tower);
                 this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.TOWER, tower);
                 this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, -tower.price[tower.curLevel]);
             }
-            else if(order.order == InputOrderType.UPDATE_ORDER)
+            else if (order.order == InputOrderType.UPDATE_ORDER)
             {
                 BattleUnit_Tower tower;
                 int id = this.getExChangeInt(order.x, order.y);
@@ -86,7 +83,7 @@ namespace CarrotFantasy
                     Debug.Log(String.Format("执行升级操作失败，没有{0}塔", id));
                 }
             }
-            else if(order.order == InputOrderType.REMOVE_ORDER)
+            else if (order.order == InputOrderType.REMOVE_ORDER)
             {
                 BattleUnit_Tower tower;
                 int id = this.getExChangeInt(order.x, order.y);
@@ -107,7 +104,7 @@ namespace CarrotFantasy
 
         public override void onTick(Fix64 time)
         {
-            foreach(KeyValuePair<int, BattleUnit_Tower> info in this.curTowerDic)
+            foreach (KeyValuePair<int, BattleUnit_Tower> info in this.curTowerDic)
             {
                 info.Value.onTick(time);
             }

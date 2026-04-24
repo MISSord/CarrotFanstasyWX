@@ -1,9 +1,9 @@
 ﻿namespace ETModel
 {
-	public class ServerFrameComponent: Component
-	{
-		public int Frame;
+    public class ServerFrameComponent : Component
+    {
+        public int Frame;
 
-		public FrameMessage FrameMessage;
-	}
+        public FrameMessage FrameMessage;
+    }
 }

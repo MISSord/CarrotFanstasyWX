@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -86,7 +83,7 @@ namespace CarrotFantasy
             {
                 this.curShouldCallBackDic.Remove(battle);
             }
-            if(this.targetUnit == battle)
+            if (this.targetUnit == battle)
             {
                 this.setTarget(null);
             }
@@ -98,7 +95,7 @@ namespace CarrotFantasy
             this.chooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.TOWER);
             this.chooseSingleBeHit(BattleUnitType.ITEM, BattleUnitType.BULLET);
 
-            if(this.targetUnit != null)
+            if (this.targetUnit != null)
             {
                 this.chooseSingleBeHit();
             }

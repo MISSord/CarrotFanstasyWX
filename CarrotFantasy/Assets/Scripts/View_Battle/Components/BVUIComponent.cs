@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -168,7 +165,7 @@ namespace CarrotFantasy
             {
                 if (isRight == true)
                 {
-                    this.nodeMonsterPoint.transform.position = new Vector3((float)startPosition.X , (float)startPosition.Y + 0.5f, 0);
+                    this.nodeMonsterPoint.transform.position = new Vector3((float)startPosition.X, (float)startPosition.Y + 0.5f, 0);
                 }
                 else
                 {
@@ -223,21 +220,21 @@ namespace CarrotFantasy
 
         private void refreshButtonInfo(int coin)
         {
-            for(int i = 0; i < this.buttonTowerList.Length; i++)
+            for (int i = 0; i < this.buttonTowerList.Length; i++)
             {
                 this.buttonTowerList[i].updateButtonSprite(dataComponent.CoinCount);
             }
             if (this.selectGrid == null) return;
             BattleUnit_Tower tower = towerComponent.getTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
             if (tower == null) return;
-            if(tower.isMaxLevel == true)
+            if (tower.isMaxLevel == true)
             {
                 this.imgButtonUp.sprite = this.spriteButtonUpList[2];
                 this.txtButtonUp.text = "";
             }
             else
             {
-                if(dataComponent.CoinCount >= tower.price[tower.curLevel + 1])
+                if (dataComponent.CoinCount >= tower.price[tower.curLevel + 1])
                 {
                     this.imgButtonUp.sprite = this.spriteButtonUpList[1];
                 }
@@ -391,13 +388,13 @@ namespace CarrotFantasy
             this.selectGrid.HideGrid();
         }
 
-        private void updateNodeState(String type,BattleUnit unit)
+        private void updateNodeState(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER))
             {
                 this.fadeHandleTowerCanvas();
                 this.fadeTowerList();
-                if(this.selectGrid != null)
+                if (this.selectGrid != null)
                 {
                     this.selectGrid.HideGrid();
                     this.selectGrid = null;
@@ -409,7 +406,7 @@ namespace CarrotFantasy
         {
             if (type.Equals(BattleUnitType.ITEM))
             {
-                if(unit == this.tranTarget)
+                if (unit == this.tranTarget)
                 {
                     this.fadeTargetSignal();
                 }

@@ -1,10 +1,7 @@
-using System;
 using System.Collections.Generic;
-using Unity;
 using UnityEngine;
-using UnityEngine.UIElements;
 
-public enum UILayer 
+public enum UILayer
 {
     Normal = 1,
     Mid = 2,
@@ -18,7 +15,7 @@ public class ViewManager
     private static ViewManager _instance;
     public static ViewManager Instance
     {
-        get { return _instance; } 
+        get { return _instance; }
     }
 
     public ViewManager()
@@ -96,7 +93,7 @@ public class ViewManager
 
     public void OpenView(string name)
     {
-        if(viewDic.TryGetValue(name, out BaseView view) == false)
+        if (viewDic.TryGetValue(name, out BaseView view) == false)
         {
             return;
         }
@@ -105,7 +102,7 @@ public class ViewManager
 
     public void FlushView(string name, int index, string key, string value)
     {
-        if(viewDic.TryGetValue(name, out BaseView view))
+        if (viewDic.TryGetValue(name, out BaseView view))
         {
             view.TryFlushTargetIndex(index, key, value);
             view.Flush();
@@ -130,7 +127,7 @@ public class ViewManager
 
     public void Update()
     {
-        if(isNeedFlushViewOrder == true)
+        if (isNeedFlushViewOrder == true)
         {
             FlushViewOrder();
         }
@@ -143,7 +140,7 @@ public class ViewManager
         {
             sort = i * layerIntervalOrder + 10000;
             List<BaseView> list = viewList[(UILayer)i];
-            if (list.Count >= 15) 
+            if (list.Count >= 15)
                 Debug.LogError($"{i}层界面目前达到{list.Count}个了，按道理不应该有这么多个同时打开，查查界面逻辑");
             for (int j = 0; j < list.Count; ++j)
             {

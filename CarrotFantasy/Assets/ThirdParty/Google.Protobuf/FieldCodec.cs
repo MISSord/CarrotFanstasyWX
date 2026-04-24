@@ -304,7 +304,7 @@ namespace Google.Protobuf
         internal readonly T DefaultValue;
 
         private readonly int tagSize;
-        
+
         internal FieldCodec(
                 Func<CodedInputStream, T> reader,
                 Action<CodedOutputStream, T> writer,

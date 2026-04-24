@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
+using UnityEngine;
 
 public static class EditorAssetLoader
 {
@@ -20,7 +20,7 @@ public static class EditorAssetLoader
         }
 
         var strings = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(assetPathUnderAssets, assetName);
-        if(strings.Length > 0)
+        if (strings.Length > 0)
         {
             // 加载资源
             UnityEngine.Object loadedAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(strings[0]);

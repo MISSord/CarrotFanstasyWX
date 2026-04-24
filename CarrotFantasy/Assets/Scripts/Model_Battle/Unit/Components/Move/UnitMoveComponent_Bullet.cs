@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-
 namespace CarrotFantasy
 {
     public class UnitMoveComponent_Bullet : BaseUnitComponent
@@ -14,7 +7,7 @@ namespace CarrotFantasy
         public Fix64 moveSpeedX { get; protected set; }
         public Fix64 moveSpeedY { get; protected set; }
 
- 
+
         protected Fix64Vector2 mapLeftBottomPosition;
         protected Fix64Vector2 mapRightTopPosition;
 
@@ -44,7 +37,7 @@ namespace CarrotFantasy
             this.calcuMoveSpeed();
         }
 
-        public virtual void removeMoveDirect(BattleUnit unit) 
+        public virtual void removeMoveDirect(BattleUnit unit)
         {
             if (unit == unitTarget) this.unitTarget = null;
         }
@@ -73,7 +66,7 @@ namespace CarrotFantasy
             y += deltaTime * this.moveSpeedY;
             this.unitTran.setPosition(x, y, z);
 
-            if (x <= (this.mapLeftBottomPosition.X) || x >= (this.mapRightTopPosition.X) 
+            if (x <= (this.mapLeftBottomPosition.X) || x >= (this.mapRightTopPosition.X)
                 || y <= (this.mapLeftBottomPosition.Y) || y >= (this.mapRightTopPosition.Y))
             {
                 this.unit.eventDipatcher.DispatchEvent<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, (BattleUnit_Bullet)this.unit);

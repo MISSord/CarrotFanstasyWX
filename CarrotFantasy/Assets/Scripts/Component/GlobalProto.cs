@@ -1,13 +1,13 @@
 namespace CarrotFantasy
 {
-	public class GlobalProto
-	{
-		public string AssetBundleServerUrl;
-		public string Address;
+    public class GlobalProto
+    {
+        public string AssetBundleServerUrl;
+        public string Address;
 
-		public string GetUrl()
-		{
-			string url = this.AssetBundleServerUrl;
+        public string GetUrl()
+        {
+            string url = this.AssetBundleServerUrl;
 #if UNITY_ANDROID
 			url += "Android/";
 #elif UNITY_IOS
@@ -17,10 +17,10 @@ namespace CarrotFantasy
 #elif UNITY_STANDALONE_OSX
 			url += "MacOS/";
 #else
-			url += "PC/";
+            url += "PC/";
 #endif
-			UnityEngine.Debug.LogError(url);
-			return url;
-		}
-	}
+            UnityEngine.Debug.LogError(url);
+            return url;
+        }
+    }
 }

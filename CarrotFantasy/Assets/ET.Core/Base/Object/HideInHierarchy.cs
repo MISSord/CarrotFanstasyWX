@@ -2,7 +2,7 @@ using System;
 
 namespace ETModel
 {
-    public class HideInHierarchy: Attribute
+    public class HideInHierarchy : Attribute
     {
     }
 }

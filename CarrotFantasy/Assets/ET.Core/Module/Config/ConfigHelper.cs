@@ -1,22 +1,19 @@
-﻿using System;
-using System.IO;
-using UnityEngine;
-
-namespace ETModel
+﻿namespace ETModel
 {
-    public static class ConfigHelper 
+    public static class ConfigHelper
     {
-        public  delegate string GT(string key);
-        public  delegate string GG();
+        public delegate string GT(string key);
+        public delegate string GG();
 
         public static GT gText;
         public static GG gGlobal;
 
-        public static void SetHelper(GT a,GG b){
+        public static void SetHelper(GT a, GG b)
+        {
             gText = a;
-			gGlobal = b;
+            gGlobal = b;
         }
-        
+
 #if SERVER
         public static string GetText(string key)
 		{
@@ -40,7 +37,7 @@ namespace ETModel
         {
             return gText(key);
         }
-        
+
         public static string GetGlobal()
         {
             return gGlobal();
@@ -50,6 +47,6 @@ namespace ETModel
             return JsonHelper.FromJson<T>(str);
         }
 #endif
-        
+
     }
 }

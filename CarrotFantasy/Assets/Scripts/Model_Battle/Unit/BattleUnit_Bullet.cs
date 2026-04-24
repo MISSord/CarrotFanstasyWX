@@ -1,9 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -42,7 +37,7 @@ namespace CarrotFantasy
 
         public override void init()
         {
-            if(this.towerId == 4)
+            if (this.towerId == 4)
             {
                 this.moveComponent = GameObjectPool.Instance.getNewUnitComponent<UnitMoveComponent_Bullet>(UnitComponentType.MOVE_BULLET);
                 if (this.moveComponent == null)
@@ -58,7 +53,7 @@ namespace CarrotFantasy
                     this.moveComponent = new UnitMoveComponent_Bullet_One();
                 }
             }
-            
+
             this.tranComponent = GameObjectPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.tranComponent == null)
             {

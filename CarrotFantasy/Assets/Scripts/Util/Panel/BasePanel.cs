@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
@@ -45,9 +42,9 @@ namespace CarrotFantasy
             this.container = new GameObject("panel_container");
             this.container.layer = SceneLayerData.layerType[1];
             Canvas canvas = container.AddComponent<Canvas>();
-            
+
             GraphicRaycaster graphic = container.AddComponent<GraphicRaycaster>();
-            this.canvasGroup =  container.AddComponent<CanvasGroup>();
+            this.canvasGroup = container.AddComponent<CanvasGroup>();
 
             if (this.isShowGray)
             {
@@ -80,7 +77,7 @@ namespace CarrotFantasy
         public void InitTran(Transform tran)
         {
             this.transform = tran;
-            this.transform.SetParent(container.transform,false);
+            this.transform.SetParent(container.transform, false);
             this.panelManagerUnit = new PanelManagerUnit(this.transform.gameObject);
         }
 

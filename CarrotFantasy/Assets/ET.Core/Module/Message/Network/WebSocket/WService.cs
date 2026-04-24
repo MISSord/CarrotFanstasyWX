@@ -1,32 +1,32 @@
+using Microsoft.IO;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.WebSockets;
-using Microsoft.IO;
 
 namespace ETModel
 {
-    public class WService: AService
+    public class WService : AService
     {
         private readonly HttpListener httpListener;
-        
+
         private readonly Dictionary<long, WChannel> channels = new Dictionary<long, WChannel>();
-        
+
         public RecyclableMemoryStreamManager MemoryStreamManager = new RecyclableMemoryStreamManager();
 
         public WService(IEnumerable<string> prefixs, Action<AChannel> acceptCallback)
         {
             this.AcceptCallback += acceptCallback;
-            
+
             this.httpListener = new HttpListener();
 
             StartAccept(prefixs).Coroutine();
         }
-        
+
         public WService()
         {
         }
-        
+
         public override AChannel GetChannel(long id)
         {
             WChannel channel;
@@ -41,7 +41,7 @@ namespace ETModel
 
         public override AChannel ConnectChannel(string address)
         {
-			ClientWebSocket webSocket = new ClientWebSocket();
+            ClientWebSocket webSocket = new ClientWebSocket();
             WChannel channel = new WChannel(webSocket, this);
             this.channels[channel.Id] = channel;
             channel.ConnectAsync(address).Coroutine();
@@ -62,7 +62,7 @@ namespace ETModel
 
         public override void Update()
         {
-            
+
         }
 
         public async ETVoid StartAccept(IEnumerable<string> prefixs)
@@ -73,7 +73,7 @@ namespace ETModel
                 {
                     this.httpListener.Prefixes.Add(prefix);
                 }
-                
+
                 httpListener.Start();
 
                 while (true)

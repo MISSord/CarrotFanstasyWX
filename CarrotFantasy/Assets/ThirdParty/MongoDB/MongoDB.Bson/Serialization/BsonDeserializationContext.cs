@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-using System;
 using MongoDB.Bson.IO;
+using System;
 
 namespace MongoDB.Bson.Serialization
 {
@@ -97,7 +97,7 @@ namespace MongoDB.Bson.Serialization
         /// A root context.
         /// </returns>
         public static BsonDeserializationContext CreateRoot(
-            IBsonReader reader, 
+            IBsonReader reader,
             Action<Builder> configurator = null)
         {
             var builder = new Builder(null, reader);

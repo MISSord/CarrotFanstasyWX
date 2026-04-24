@@ -56,8 +56,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
-    <Analyzer Include="D:\Work\CarrotFantasyClient1\CarrotFantasy\Assets\ThirdParty\DOTween\DOTween.dll" />
-    <Analyzer Include="D:\Work\CarrotFantasyClient1\CarrotFantasy\Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\ET.Core\Module\GameComponent\GateSessionKeyComponent.cs" />
@@ -246,8 +244,8 @@
     <Compile Include="Assets\ET.Core\Module\FrameSync\FrameOpcode.cs" />
     <Compile Include="Assets\ET.Core\Module\Message\MessageHandlerAttribute.cs" />
     <Compile Include="Assets\ET.Core\Base\Async\AsyncETTaskMethodBuilder.cs" />
-    <Compile Include="Assets\ET.Core\Base\LogType.cs" />
     <Compile Include="Assets\ET.Core\Base\Object\IDestroySystem.cs" />
+    <Compile Include="Assets\ET.Core\Base\LogType.cs" />
     <Compile Include="Assets\ET.Core\Base\Helper\ObjectHelper.cs" />
     <Compile Include="Assets\ET.Core\Module\Message\ProtobufHelper.cs" />
     <Compile Include="Assets\ET.Core\Module\Actor\MailboxHandlerAttribute.cs" />
@@ -625,16 +623,16 @@
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Editor.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="DOTweenEditor">
+      <HintPath>Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Unity.Plastic.Antlr3.Runtime">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Tracker.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="DOTweenEditor">
-      <HintPath>Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DOTween">

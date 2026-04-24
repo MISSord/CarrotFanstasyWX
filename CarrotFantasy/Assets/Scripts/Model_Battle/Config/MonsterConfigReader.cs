@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -12,7 +9,7 @@ namespace CarrotFantasy
 
         public void init()
         {
-            this.monsterBirthParam.Add(101, new Dictionary<String, Fix64>() { 
+            this.monsterBirthParam.Add(101, new Dictionary<String, Fix64>() {
                 { "faceDirection", Fix64.Zero},
                 { "bodyRadius", new Fix64(0.3f)},
                 { "scale", Fix64.One},

@@ -13,13 +13,13 @@
 * limitations under the License.
 */
 
+using MongoDB.Bson.IO;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using MongoDB.Bson.IO;
 
 namespace MongoDB.Bson
 {

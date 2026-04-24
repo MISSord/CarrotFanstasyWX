@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ETModel;
 
 namespace CarrotFantasy
 {
@@ -60,7 +59,7 @@ namespace CarrotFantasy
 
         public void Dispose()
         {
-            for(int i = this.businessList.Count - 1; i >= 0; i--)
+            for (int i = this.businessList.Count - 1; i >= 0; i--)
             {
                 this.businessList[i].RemoveSocketListener();
                 this.businessList[i].Dispose();

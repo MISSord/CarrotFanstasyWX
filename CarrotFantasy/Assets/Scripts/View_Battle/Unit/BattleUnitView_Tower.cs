@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -51,7 +46,7 @@ namespace CarrotFantasy
 
         private void showRange(GridPoint grid)
         {
-            if(grid.mapGrid.x == ((BattleUnit_Tower)this.unit).x && grid.mapGrid.y == ((BattleUnit_Tower)this.unit).y)
+            if (grid.mapGrid.x == ((BattleUnit_Tower)this.unit).x && grid.mapGrid.y == ((BattleUnit_Tower)this.unit).y)
             {
                 this.nodeAttackRange.SetActive(true);
             }
@@ -59,7 +54,7 @@ namespace CarrotFantasy
 
         private void fadeRange()
         {
-            if(this.nodeAttackRange.activeSelf == true)
+            if (this.nodeAttackRange.activeSelf == true)
             {
                 this.nodeAttackRange.SetActive(false);
             }

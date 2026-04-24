@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -34,7 +30,7 @@ namespace CarrotFantasy
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<BattleUnit_Tower,BattleUnit>(BattleEvent.BULLET_BUILD, this.buildNewBullet);
+            this.eventDispatcher.RemoveListener<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this.buildNewBullet);
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.updateBullInfo);
         }
 
@@ -75,7 +71,7 @@ namespace CarrotFantasy
         private void updateBullInfo(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER)) return;
-            for(int i = 0; i <= this.curBulletList.Count - 1; i++)
+            for (int i = 0; i <= this.curBulletList.Count - 1; i++)
             {
                 this.curBulletList[i].moveComponent.removeMoveDirect(unit);
             }

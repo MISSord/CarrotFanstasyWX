@@ -12,13 +12,13 @@ namespace CarrotFantasy
     public partial struct Fix64 : IEquatable<Fix64>, IComparable<Fix64>
     {
         readonly long m_rawValue;
-        
+
         // Precision of this type is 2^-32, that is 2,3283064365386962890625E-10
         public static readonly decimal Precision = (decimal)(new Fix64(1L));//0.00000000023283064365386962890625m;
         public static readonly Fix64 MaxValue = new Fix64(MAX_VALUE);
         public static readonly Fix64 MinValue = new Fix64(MIN_VALUE);
         public static readonly Fix64 One = new Fix64(ONE);
-        public static readonly Fix64 Two = new Fix64(ONE*2);
+        public static readonly Fix64 Two = new Fix64(ONE * 2);
         public static readonly Fix64 Zero = new Fix64();
         /// <summary>
         /// The value of Pi
@@ -146,7 +146,7 @@ namespace CarrotFantasy
                        : integralPart + One;
         }
 
-        
+
 
         /// <summary>
         /// Adds x and y. Performs saturating addition, i.e. in case of overflow, 
@@ -675,7 +675,7 @@ namespace CarrotFantasy
         public static Fix64 Sin(Fix64 x)
         {
             bool flipHorizontal, flipVertical;
-            var clampedL = ClampSinValue(x.m_rawValue, out  flipHorizontal, out  flipVertical);
+            var clampedL = ClampSinValue(x.m_rawValue, out flipHorizontal, out flipVertical);
             var clamped = new Fix64(clampedL);
 
             // Find the two closest values in the LUT and perform linear interpolation
@@ -705,7 +705,7 @@ namespace CarrotFantasy
         public static Fix64 FastSin(Fix64 x)
         {
             bool flipHorizontal, flipVertical;
-            var clampedL = ClampSinValue(x.m_rawValue, out  flipHorizontal, out  flipVertical);
+            var clampedL = ClampSinValue(x.m_rawValue, out flipHorizontal, out flipVertical);
 
             // Here we use the fact that the SinLut table has a number of entries
             // equal to (PI_OVER_2 >> 15) to use the angle to index directly into it
@@ -1097,7 +1097,7 @@ namespace CarrotFantasy
             m_rawValue = rawValue;
         }
 
-        public Fix64(long val,bool yu)
+        public Fix64(long val, bool yu)
         {
             m_rawValue = val;
         }

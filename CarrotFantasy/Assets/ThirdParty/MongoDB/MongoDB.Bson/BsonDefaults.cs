@@ -13,9 +13,9 @@
 * limitations under the License.
 */
 
+using MongoDB.Bson.Serialization;
 using System.Collections.Generic;
 using System.Dynamic;
-using MongoDB.Bson.Serialization;
 namespace MongoDB.Bson
 {
     /// <summary>
@@ -27,7 +27,7 @@ namespace MongoDB.Bson
         private static bool __dynamicArraySerializerWasSet;
         private static IBsonSerializer __dynamicArraySerializer;
         private static bool __dynamicDocumentSerializerWasSet;
-        private static IBsonSerializer __dynamicDocumentSerializer; 
+        private static IBsonSerializer __dynamicDocumentSerializer;
         private static GuidRepresentation __guidRepresentation = GuidRepresentation.CSharpLegacy;
         private static int __maxDocumentSize = int.MaxValue;
         private static int __maxSerializationDepth = 100;
@@ -46,10 +46,10 @@ namespace MongoDB.Bson
                 }
                 return __dynamicArraySerializer;
             }
-            set 
+            set
             {
                 __dynamicArraySerializerWasSet = true;
-                __dynamicArraySerializer = value; 
+                __dynamicArraySerializer = value;
             }
         }
 
@@ -58,18 +58,18 @@ namespace MongoDB.Bson
         /// </summary>
         public static IBsonSerializer DynamicDocumentSerializer
         {
-            get 
+            get
             {
                 if (!__dynamicDocumentSerializerWasSet)
                 {
                     __dynamicDocumentSerializer = BsonSerializer.LookupSerializer<ExpandoObject>();
                 }
-                return __dynamicDocumentSerializer; 
+                return __dynamicDocumentSerializer;
             }
-            set 
+            set
             {
                 __dynamicDocumentSerializerWasSet = true;
-                __dynamicDocumentSerializer = value; 
+                __dynamicDocumentSerializer = value;
             }
         }
 

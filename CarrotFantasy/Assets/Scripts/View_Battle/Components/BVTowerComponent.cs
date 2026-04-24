@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -56,7 +53,7 @@ namespace CarrotFantasy
             if (type.Equals(BattleUnitType.TOWER) == false) return;
             BattleUnit_Tower tower = (BattleUnit_Tower)unit;
             BattleUnitView_Tower towerView = GameViewObjectPool.Instance.getNewBattleUnitView<BattleUnitView_Tower>(BattleUnitViewType.Tower);
-            if(towerView == null)
+            if (towerView == null)
             {
                 towerView = new BattleUnitView_Tower();
             }
@@ -133,7 +130,7 @@ namespace CarrotFantasy
         }
 
         public override void Dispose()
-        {            
+        {
             this.clearGameInfo();
             base.Dispose();
         }

@@ -19,13 +19,13 @@ namespace CarrotFantasy
         {
             get
             {
-            if (mapServer == null)
-            {
-                mapServer = new MapServer();
-                mapServer.eventDispatcher = new EventDispatcher();
-                mapServer.mapModel = new MapModel(mapServer.eventDispatcher);
-            }
-            return mapServer;
+                if (mapServer == null)
+                {
+                    mapServer = new MapServer();
+                    mapServer.eventDispatcher = new EventDispatcher();
+                    mapServer.mapModel = new MapModel(mapServer.eventDispatcher);
+                }
+                return mapServer;
             }
         }
 

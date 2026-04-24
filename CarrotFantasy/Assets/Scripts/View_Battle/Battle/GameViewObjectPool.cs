@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
@@ -136,7 +132,7 @@ namespace CarrotFantasy
         {
             List<BaseUnitViewComponent> curList = this.curUnitObjectDic[name];
             curList.Add(unit);
-           //Debug.Log(String.Format("{0}放回到视图组件对象池，目前长度{1}", name, curList.Count));
+            //Debug.Log(String.Format("{0}放回到视图组件对象池，目前长度{1}", name, curList.Count));
         }
 
         public void pushGameObjectToPool(String name, GameObject node)

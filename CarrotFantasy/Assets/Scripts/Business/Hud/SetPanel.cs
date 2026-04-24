@@ -1,8 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -110,7 +106,7 @@ namespace CarrotFantasy
 
         private void updateMusicState()
         {
-            if(UIServer.Instance.audioManager.musicEnable == true)
+            if (UIServer.Instance.audioManager.musicEnable == true)
             {
                 this.Img_Btn_BGAudio.sprite = this.btnSpritesList[3];
                 UIServer.Instance.audioManager.setMusicEnable(false);

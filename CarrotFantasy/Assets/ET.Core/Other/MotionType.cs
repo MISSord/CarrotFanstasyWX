@@ -1,9 +1,9 @@
 ﻿namespace ETModel
 {
-	public enum MotionType
-	{
-		None,
-		Idle,
-		Run,
-	}
+    public enum MotionType
+    {
+        None,
+        Idle,
+        Run,
+    }
 }

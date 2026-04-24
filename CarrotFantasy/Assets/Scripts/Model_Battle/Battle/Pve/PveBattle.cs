@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -10,7 +7,7 @@ namespace CarrotFantasy
     {
         public PveBattle() : base()
         {
-            
+
         }
 
         public override void init()
@@ -49,7 +46,7 @@ namespace CarrotFantasy
 
         public override void initComponent()
         {
-            foreach(KeyValuePair<String, BaseBattleComponent> info in this.componentDic)
+            foreach (KeyValuePair<String, BaseBattleComponent> info in this.componentDic)
             {
                 info.Value.init();
             }

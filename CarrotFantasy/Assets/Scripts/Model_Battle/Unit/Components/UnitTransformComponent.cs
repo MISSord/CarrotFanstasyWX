@@ -1,9 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -23,7 +19,7 @@ namespace CarrotFantasy
         public BattleEventDispatcher battleEventDispatcher;
         public HitTestShape_Circle bodyHitTestShape { get; private set; }
 
-        public Fix64 bodyRadius; 
+        public Fix64 bodyRadius;
 
         public UnitTransformComponent()
         {
@@ -41,7 +37,7 @@ namespace CarrotFantasy
             this.faceDirection = birthParam["faceDirection"]; //度数
             this.rotation = Fix64.Zero; // 0 - 1 貌似
             this.scale = birthParam["scale"];
-            this.bodyHitTestShape = new HitTestShape_Circle(HitShapeType.CIRCLE,Fix64.Zero, Fix64.Zero, Fix64.Zero);
+            this.bodyHitTestShape = new HitTestShape_Circle(HitShapeType.CIRCLE, Fix64.Zero, Fix64.Zero, Fix64.Zero);
             Fix64 x = birthPosition.X; // + (birthParam["offsetX"] != null ? birthParam["offsetX"] : Fix64.Zero);
             Fix64 y = birthPosition.Y; // + (birthParam["offsetY"] != null ? birthParam["offsetY"] : Fix64.Zero);
             Fix64 z = Fix64.Zero;
@@ -86,7 +82,7 @@ namespace CarrotFantasy
         public bool setPosition(Fix64 x, Fix64 y, Fix64 z)
         {
             //定点数
-            if(this.x == x && this.y == y && this.z == z)
+            if (this.x == x && this.y == y && this.z == z)
             {
                 return false;
             }
@@ -116,7 +112,7 @@ namespace CarrotFantasy
         public void setFaceDirection(Fix64 faceDirection)
         {
             //定点数
-            if(this.faceDirection == faceDirection)
+            if (this.faceDirection == faceDirection)
             {
                 return;
             }
@@ -126,7 +122,7 @@ namespace CarrotFantasy
 
         public override void onTick(Fix64 deltaTime)
         {
-            
+
         }
     }
 }

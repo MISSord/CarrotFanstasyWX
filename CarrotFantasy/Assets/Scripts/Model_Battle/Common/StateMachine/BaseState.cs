@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarrotFantasy
 {
@@ -14,15 +10,15 @@ namespace CarrotFantasy
             statetype = btype;
         }
 
-        public virtual void init(){ }
+        public virtual void init() { }
 
-        public virtual void stateIn(){ } // 参数由各状态自己去获取
+        public virtual void stateIn() { } // 参数由各状态自己去获取
 
         public abstract String onTick(Fix64 time);
 
-        public virtual void stateOut(){ }
+        public virtual void stateOut() { }
 
-        public virtual void Dispose() 
+        public virtual void Dispose()
         {
             this.statetype = null;
         }

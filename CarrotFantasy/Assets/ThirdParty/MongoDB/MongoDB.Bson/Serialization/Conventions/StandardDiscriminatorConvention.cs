@@ -13,10 +13,10 @@
 * limitations under the License.
 */
 
-using System;
-using System.Linq;
 using MongoDB.Bson.IO;
 using MongoDB.Bson.Serialization.Serializers;
+using System;
+using System.Linq;
 
 namespace MongoDB.Bson.Serialization.Conventions
 {

@@ -14,12 +14,7 @@
 */
 
 using System;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using MongoDB.Bson.IO;
-using MongoDB.Bson.Serialization.Attributes;
-using MongoDB.Bson.Serialization.Options;
 
 namespace MongoDB.Bson.Serialization.Serializers
 {

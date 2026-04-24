@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -13,7 +8,7 @@ namespace CarrotFantasy
 
         private BattleMonsterComponent monsterComponent;
         private BattleSchedulerComponent scheComponent;
-        private BattleDataComponent dataComponent; 
+        private BattleDataComponent dataComponent;
 
         public PvePreFightingState(BaseStateMachine bstateMachine, string btype) : base(bstateMachine, btype)
         {
@@ -44,7 +39,7 @@ namespace CarrotFantasy
 
         public override string onTick(Fix64 time)
         {
-            if(this.isEnterFighting == true)
+            if (this.isEnterFighting == true)
             {
                 return BattleStateType.FIGHTINT;
             }

@@ -17,7 +17,7 @@ namespace CarrotFantasy
             this.battle = battle;
         }
 
-        private  void OnListeneradding(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
+        private void OnListeneradding(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
         {
             if (!eventList.ContainsKey(eventType))
             {
@@ -29,7 +29,7 @@ namespace CarrotFantasy
                 throw new Exception(string.Format("尝试为事件{0}添加不同类型的委托，当前事件所对应的委托是{1}，要添加的委托类型为{2}", eventType, d.GetType(), callBack.GetType()));
             }
         }
-        private  void OnListenerRemoving(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
+        private void OnListenerRemoving(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
         {
             if (eventList.ContainsKey(eventType))
             {
@@ -48,7 +48,7 @@ namespace CarrotFantasy
                 throw new Exception(string.Format("移除监听错误：没有事件码{0}", eventType));
             }
         }
-        private  void OnListenerremoved(String eventType, Dictionary<String, Delegate> eventList)
+        private void OnListenerremoved(String eventType, Dictionary<String, Delegate> eventList)
         {
             if (eventList[eventType] == null)
             {
@@ -56,37 +56,37 @@ namespace CarrotFantasy
             }
         }
         //no parameters
-        public  void AddListener(String eventType, CallBack callBack)
+        public void AddListener(String eventType, CallBack callBack)
         {
-            OnListeneradding(eventType, callBack,this.event2ListenerList);
+            OnListeneradding(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack)this.event2ListenerList[eventType] + callBack;
         }
         //Single parameters
-        public  void AddListener<T>(String eventType, CallBack<T> callBack)
+        public void AddListener<T>(String eventType, CallBack<T> callBack)
         {
             OnListeneradding(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T>)this.event2ListenerList[eventType] + callBack;
         }
         //two parameters
-        public  void AddListener<T, X>(String eventType, CallBack<T, X> callBack)
+        public void AddListener<T, X>(String eventType, CallBack<T, X> callBack)
         {
             OnListeneradding(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X>)this.event2ListenerList[eventType] + callBack;
         }
         //three parameters
-        public  void AddListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
+        public void AddListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
         {
             OnListeneradding(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X, Y>)this.event2ListenerList[eventType] + callBack;
         }
         //four parameters
-        public  void AddListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
+        public void AddListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
         {
             OnListeneradding(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X, Y, Z>)this.event2ListenerList[eventType] + callBack;
         }
         //five parameters
-        public  void AddListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
+        public void AddListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
         {
             OnListeneradding(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X, Y, Z, W>)this.event2ListenerList[eventType] + callBack;
@@ -130,44 +130,44 @@ namespace CarrotFantasy
 
 
         //no parameters
-        public  void RemoveListener(String eventType, CallBack callBack)
+        public void RemoveListener(String eventType, CallBack callBack)
         {
-            OnListenerRemoving(eventType, callBack,this.event2ListenerList);
+            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //single parameters
-        public  void RemoveListener<T>(String eventType, CallBack<T> callBack)
+        public void RemoveListener<T>(String eventType, CallBack<T> callBack)
         {
-            OnListenerRemoving(eventType, callBack,this.event2ListenerList);
+            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //two parameters
-        public  void RemoveListener<T, X>(String eventType, CallBack<T, X> callBack)
+        public void RemoveListener<T, X>(String eventType, CallBack<T, X> callBack)
         {
-            OnListenerRemoving(eventType, callBack,this.event2ListenerList);
+            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //three parameters
-        public  void RemoveListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
+        public void RemoveListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
         {
-            OnListenerRemoving(eventType, callBack,this.event2ListenerList);
+            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X, Y>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //four parameters
-        public  void RemoveListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
+        public void RemoveListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
         {
-            OnListenerRemoving(eventType, callBack,this.event2ListenerList);
+            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X, Y, Z>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //five parameters
-        public  void RemoveListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
+        public void RemoveListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
         {
-            OnListenerRemoving(eventType, callBack,this.event2ListenerList);
+            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
             this.event2ListenerList[eventType] = (CallBack<T, X, Y, Z, W>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
@@ -216,7 +216,7 @@ namespace CarrotFantasy
 
 
         //no parameters
-        public  void DispatchEvent(String eventType)
+        public void DispatchEvent(String eventType)
         {
             Delegate d;
             if (this.event2ListenerList.TryGetValue(eventType, out d))
@@ -231,7 +231,7 @@ namespace CarrotFantasy
                     throw new Exception(string.Format("广播事件错误：事件{0}对应委托具有不同的类型", eventType));
                 }
             }
-            if(this.battle.isIgnoreViewListener == false)
+            if (this.battle.isIgnoreViewListener == false)
             {
                 if (this.event2ViewListenerList.TryGetValue(eventType, out d))
                 {
@@ -248,7 +248,7 @@ namespace CarrotFantasy
             }
         }
         //single parameters
-        public  void DispatchEvent<T>(String eventType, T arg)
+        public void DispatchEvent<T>(String eventType, T arg)
         {
             Delegate d;
             if (this.event2ListenerList.TryGetValue(eventType, out d))
@@ -280,7 +280,7 @@ namespace CarrotFantasy
             }
         }
         //two parameters
-        public  void DispatchEvent<T, X>(String eventType, T arg1, X arg2)
+        public void DispatchEvent<T, X>(String eventType, T arg1, X arg2)
         {
             Delegate d;
             if (this.event2ListenerList.TryGetValue(eventType, out d))
@@ -312,7 +312,7 @@ namespace CarrotFantasy
             }
         }
         //three parameters
-        public  void DispatchEvent<T, X, Y>(String eventType, T arg1, X arg2, Y arg3)
+        public void DispatchEvent<T, X, Y>(String eventType, T arg1, X arg2, Y arg3)
         {
             Delegate d;
             if (this.event2ListenerList.TryGetValue(eventType, out d))
@@ -344,7 +344,7 @@ namespace CarrotFantasy
             }
         }
         //four parameters
-        public  void DispatchEvent<T, X, Y, Z>(String eventType, T arg1, X arg2, Y arg3, Z arg4)
+        public void DispatchEvent<T, X, Y, Z>(String eventType, T arg1, X arg2, Y arg3, Z arg4)
         {
             Delegate d;
             if (this.event2ListenerList.TryGetValue(eventType, out d))
@@ -376,7 +376,7 @@ namespace CarrotFantasy
             }
         }
         //five parameters
-        public  void DispatchEvent<T, X, Y, Z, W>(String eventType, T arg1, X arg2, Y arg3, Z arg4, W arg5)
+        public void DispatchEvent<T, X, Y, Z, W>(String eventType, T arg1, X arg2, Y arg3, Z arg4, W arg5)
         {
             Delegate d;
             if (this.event2ListenerList.TryGetValue(eventType, out d))

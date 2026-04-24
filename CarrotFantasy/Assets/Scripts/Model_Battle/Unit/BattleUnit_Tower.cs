@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -119,7 +116,7 @@ namespace CarrotFantasy
                 }
                 else
                 {
-                    if(this.monsterList.Count != 0)
+                    if (this.monsterList.Count != 0)
                     {
                         BattleUnit_Monster curMonster = this.monsterList[0];
                         for (int i = 0; i <= monsterList.Count - 1; i++)
@@ -132,7 +129,7 @@ namespace CarrotFantasy
                         targetOne = curMonster;
                     }
                 }
-                if(targetOne != null)
+                if (targetOne != null)
                 {
                     this.eventDipatcher.DispatchEvent<BattleUnit>(BattleEvent.TOWER_ATTACK, targetOne);
                     this.baseBattle.eventDispatcher.DispatchEvent<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this, targetOne);

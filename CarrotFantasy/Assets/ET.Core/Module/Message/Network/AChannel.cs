@@ -4,84 +4,84 @@ using System.Net;
 
 namespace ETModel
 {
-	public enum ChannelType
-	{
-		Connect,
-		Accept,
-	}
+    public enum ChannelType
+    {
+        Connect,
+        Accept,
+    }
 
-	public abstract class AChannel: ComponentWithId
-	{
-		public ChannelType ChannelType { get; }
+    public abstract class AChannel : ComponentWithId
+    {
+        public ChannelType ChannelType { get; }
 
-		public AService Service { get; }
+        public AService Service { get; }
 
-		public abstract MemoryStream Stream { get; }
-		
-		public int Error { get; set; }
+        public abstract MemoryStream Stream { get; }
 
-		public IPEndPoint RemoteAddress { get; protected set; }
+        public int Error { get; set; }
 
-		private Action<AChannel, int> errorCallback;
+        public IPEndPoint RemoteAddress { get; protected set; }
 
-		public event Action<AChannel, int> ErrorCallback
-		{
-			add
-			{
-				this.errorCallback += value;
-			}
-			remove
-			{
-				this.errorCallback -= value;
-			}
-		}
-		
-		private Action<MemoryStream> readCallback;
+        private Action<AChannel, int> errorCallback;
 
-		public event Action<MemoryStream> ReadCallback
-		{
-			add
-			{
-				this.readCallback += value;
-			}
-			remove
-			{
-				this.readCallback -= value;
-			}
-		}
-		
-		protected void OnRead(MemoryStream memoryStream)
-		{
-			this.readCallback.Invoke(memoryStream);
-		}
+        public event Action<AChannel, int> ErrorCallback
+        {
+            add
+            {
+                this.errorCallback += value;
+            }
+            remove
+            {
+                this.errorCallback -= value;
+            }
+        }
 
-		protected void OnError(int e)
-		{
-			this.Error = e;
-			this.errorCallback?.Invoke(this, e);
-		}
+        private Action<MemoryStream> readCallback;
 
-		protected AChannel(AService service, ChannelType channelType)
-		{
-			this.Id = IdGenerater.GenerateId();
-			this.ChannelType = channelType;
-			this.Service = service;
-		}
+        public event Action<MemoryStream> ReadCallback
+        {
+            add
+            {
+                this.readCallback += value;
+            }
+            remove
+            {
+                this.readCallback -= value;
+            }
+        }
 
-		public abstract void Start();
-		
-		public abstract void Send(MemoryStream stream);
-		
-		public override void Dispose()
-		{
-			if (this.IsDisposed)
-			{
-				return;
-			}
+        protected void OnRead(MemoryStream memoryStream)
+        {
+            this.readCallback.Invoke(memoryStream);
+        }
 
-			base.Dispose();
+        protected void OnError(int e)
+        {
+            this.Error = e;
+            this.errorCallback?.Invoke(this, e);
+        }
 
-			this.Service.Remove(this.Id);
-		}
-	}
+        protected AChannel(AService service, ChannelType channelType)
+        {
+            this.Id = IdGenerater.GenerateId();
+            this.ChannelType = channelType;
+            this.Service = service;
+        }
+
+        public abstract void Start();
+
+        public abstract void Send(MemoryStream stream);
+
+        public override void Dispose()
+        {
+            if (this.IsDisposed)
+            {
+                return;
+            }
+
+            base.Dispose();
+
+            this.Service.Remove(this.Id);
+        }
+    }
 }

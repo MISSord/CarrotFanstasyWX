@@ -1,7 +1,7 @@
 ﻿namespace ETModel
 {
-	public class ClientConfig: AConfigComponent
-	{
-		public string Address { get; set; }
-	}
+    public class ClientConfig : AConfigComponent
+    {
+        public string Address { get; set; }
+    }
 }

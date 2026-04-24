@@ -30,14 +30,12 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endregion
 
+using MongoDB.Bson.Serialization.Attributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
-using Google.Protobuf.Compatibility;
-using MongoDB.Bson.Serialization.Attributes;
 
 namespace Google.Protobuf
 {
@@ -81,9 +79,9 @@ namespace Google.Protobuf
         {
             return new ByteString(bytes);
         }
-        
+
         public ByteString()
-        {}
+        { }
 
         public ByteString(List<byte> list)
         {
@@ -131,7 +129,7 @@ namespace Google.Protobuf
         /// <returns>A byte array with the same data as this <c>ByteString</c>.</returns>
         public byte[] ToByteArray()
         {
-            return (byte[]) bytes.Clone();
+            return (byte[])bytes.Clone();
         }
 
         /// <summary>
@@ -163,7 +161,7 @@ namespace Google.Protobuf
         public static ByteString FromStream(Stream stream)
         {
             ProtoPreconditions.CheckNotNull(stream, "stream");
-            int capacity = stream.CanSeek ? checked((int) (stream.Length - stream.Position)) : 0;
+            int capacity = stream.CanSeek ? checked((int)(stream.Length - stream.Position)) : 0;
             var memoryStream = new MemoryStream(capacity);
             stream.CopyTo(memoryStream);
 
@@ -182,7 +180,7 @@ namespace Google.Protobuf
         /// </summary>
         public static ByteString CopyFrom(params byte[] bytes)
         {
-            return new ByteString((byte[]) bytes.Clone());
+            return new ByteString((byte[])bytes.Clone());
         }
 
         /// <summary>
@@ -254,7 +252,7 @@ namespace Google.Protobuf
         /// <returns>An iterator over the bytes in this object.</returns>
         public IEnumerator<byte> GetEnumerator()
         {
-            return ((IEnumerable<byte>) bytes).GetEnumerator();
+            return ((IEnumerable<byte>)bytes).GetEnumerator();
         }
 
         /// <summary>

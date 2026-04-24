@@ -1,11 +1,8 @@
+using LitJson;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
-using LitJson;
 using System.IO;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -34,7 +31,7 @@ namespace CarrotFantasy
 
         public static Stage getSingleStage(int bigLevel, int level)
         {
-            if(((bigLevel - 1) * 5 + level - 1) <= (stageList.Count - 1))
+            if (((bigLevel - 1) * 5 + level - 1) <= (stageList.Count - 1))
             {
                 return stageList[(bigLevel - 1) * 5 + level - 1];
             }

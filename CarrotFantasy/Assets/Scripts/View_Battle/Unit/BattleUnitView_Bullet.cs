@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
@@ -15,7 +9,7 @@ namespace CarrotFantasy
         public override void init()
         {
             base.init();
-            if(((BattleUnit_Bullet)this.unit).towerId == 4)
+            if (((BattleUnit_Bullet)this.unit).towerId == 4)
             {
                 this.moveComponent = (UnitMoveComponent_Bullet)this.unit.getComponent(UnitComponentType.MOVE_BULLET);
             }
@@ -23,7 +17,7 @@ namespace CarrotFantasy
             {
                 this.moveComponent = (UnitMoveComponent_Bullet)this.unit.getComponent(UnitComponentType.MOVE_BULLET_ONE);
             }
-            
+
         }
 
         public override void onTick(float deltaTime)
@@ -32,7 +26,7 @@ namespace CarrotFantasy
             Fix64 arcsinOne = Fix64.Zero;
             if (moveComponent.moveSpeedX == Fix64.Zero)
             {
-                if(moveComponent.moveSpeedY > Fix64.Zero)
+                if (moveComponent.moveSpeedY > Fix64.Zero)
                 {
                     arcsinOne = Fix64.Pi / Fix64.Two;
                 }

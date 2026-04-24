@@ -1,8 +1,6 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity;
-using System;
 
 
 public class UINameTableDic

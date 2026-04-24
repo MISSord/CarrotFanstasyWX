@@ -13,9 +13,9 @@
 * limitations under the License.
 */
 
+using MongoDB.Bson.IO;
 using System;
 using System.Reflection;
-using MongoDB.Bson.IO;
 
 namespace MongoDB.Bson.Serialization.Serializers
 {

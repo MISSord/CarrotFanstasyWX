@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -77,7 +74,8 @@ namespace CarrotFantasy
                 sell.transform.GetComponent<Animator>().enabled = true;
                 UnitTransformComponent tran = (UnitTransformComponent)obj.getComponent(UnitComponentType.TRANSFORM);
                 sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-                Sche.delayExeOnceTimes(() => {
+                Sche.delayExeOnceTimes(() =>
+                {
                     sell.transform.GetComponent<Animator>().enabled = false;
                     GameViewObjectPool.Instance.pushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
                 }, 0.5f);
@@ -86,7 +84,7 @@ namespace CarrotFantasy
 
         public override void clearGameInfo()
         {
-            foreach(KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
+            foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
             {
                 GameObject.Destroy(info.Value.transform.gameObject);
                 info.Value.clearUnitInfo();

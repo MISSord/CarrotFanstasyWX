@@ -1,10 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine.UI;
-using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -44,7 +39,7 @@ namespace CarrotFantasy
 
             this.txt_tips = this.transform.Find("node_up/txt_tips").GetComponent<Text>();
             this.txt_tips.text = LanguageUtil.Instance.getString(103);
-            
+
             this.initUserInfoUI();
             this.AddListener();
             this.scheId = Sche.delayExeMultipleTimes(this.updateTipTxt, 1.0f);
@@ -78,7 +73,7 @@ namespace CarrotFantasy
         {
             this.matchTime += 1;
             this.txt_tips.text = LanguageUtil.Instance.getFormatString(104, this.matchTime.ToString());
-            if(this.matchTime >= 31)
+            if (this.matchTime >= 31)
             {
                 this.canelFight();
             }
@@ -86,10 +81,10 @@ namespace CarrotFantasy
 
         private void changeUserInfo()
         {
-            if(RoomServer.Instance.partner != null)
+            if (RoomServer.Instance.partner != null)
             {
                 this.txt_userName.text = RoomServer.Instance.partner.UserID.ToString();
-                if(RoomServer.Instance.partner.isReady == true)
+                if (RoomServer.Instance.partner.isReady == true)
                 {
                     this.txt_userState.text = LanguageUtil.Instance.getString(101);
                 }
@@ -103,7 +98,7 @@ namespace CarrotFantasy
                 this.txt_userName.text = LanguageUtil.Instance.getString(102);
                 this.txt_userState.text = LanguageUtil.Instance.getString(100);
             }
-            this.txt_myState.text = LanguageUtil.Instance.getString(RoomServer.Instance.myself.isReady ? 101:100);
+            this.txt_myState.text = LanguageUtil.Instance.getString(RoomServer.Instance.myself.isReady ? 101 : 100);
         }
 
         private void stateToFight()

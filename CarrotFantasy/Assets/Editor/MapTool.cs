@@ -1,10 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor; 
-using System.IO;
-
-#if Tool
+﻿#if Tool
 [CustomEditor(typeof(MapMaker))]
 public class MapTool : Editor {
 

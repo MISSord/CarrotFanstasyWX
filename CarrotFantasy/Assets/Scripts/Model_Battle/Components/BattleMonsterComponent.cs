@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -57,12 +54,12 @@ namespace CarrotFantasy
 
         public void buildNewWavesMonster()
         {
-            if(this.curNoRegisterList.Count != 0)
+            if (this.curNoRegisterList.Count != 0)
             {
                 Debug.LogError("当前怪物注册列表没有清空");
                 return;
             }
-            else if(this.curMonsterDic.Count != 0)
+            else if (this.curMonsterDic.Count != 0)
             {
                 Debug.LogError("当前怪物字典没有清空");
                 return;
@@ -70,7 +67,7 @@ namespace CarrotFantasy
             int curWaves = this.battleDataComponent.curWaves;
             Round.RoundInfo curMonsterList = this.roundInfo[curWaves - 1];
 
-            for(int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
+            for (int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
             {
                 BattleUnit_Monster monster = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
                 if (monster == null)
@@ -97,7 +94,7 @@ namespace CarrotFantasy
                 if (i + 1 >= this.monsterPointList.Count) break;
                 if (this.monsterPointList[i].X == this.monsterPointList[i + 1].X)
                 {
-                    if(this.monsterPointList[i].Y >= this.monsterPointList[i + 1].Y)
+                    if (this.monsterPointList[i].Y >= this.monsterPointList[i + 1].Y)
                     {
                         this.distance += this.monsterPointList[i].Y - this.monsterPointList[i + 1].Y;
                     }
@@ -132,7 +129,7 @@ namespace CarrotFantasy
             this.curMonsterDic.Add(monster.uid, monster);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.MONSTER, monster);
             //Debug.Log(String.Format("注册新的怪兽,怪兽id{0}_{1}",monster.curLevel,monster.monsterId));
-            if(this.curNoRegisterList.Count == 0)
+            if (this.curNoRegisterList.Count == 0)
             {
                 this.isHaveNoRegisterMonster = false;
                 this.removeSchId();
@@ -176,9 +173,9 @@ namespace CarrotFantasy
 
         public void updateCurMonsterWavesState()
         {
-            if(this.curDeadMonsterList.Count != 0)
+            if (this.curDeadMonsterList.Count != 0)
             {
-                for(int i = 0; i < this.curDeadMonsterList.Count; i++)
+                for (int i = 0; i < this.curDeadMonsterList.Count; i++)
                 {
                     this.checkSingleMonsterState(this.curDeadMonsterList[i]);
                 }
@@ -196,7 +193,7 @@ namespace CarrotFantasy
 
         public void removeSchId()
         {
-            if(this.scheId != 0)
+            if (this.scheId != 0)
             {
                 BattleSchedulerComponent sche = (BattleSchedulerComponent)this.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
                 sche.silenceSingleSche(this.scheId);
@@ -206,11 +203,11 @@ namespace CarrotFantasy
 
         public bool CheckIsHaveAnyMonsterSurvive()
         {
-            if(this.curMonsterDic.Count != 0)
+            if (this.curMonsterDic.Count != 0)
             {
                 return true;
             }
-            if(this.curNoRegisterList.Count != 0)
+            if (this.curNoRegisterList.Count != 0)
             {
                 return true;
             }
@@ -219,7 +216,7 @@ namespace CarrotFantasy
 
         public bool isCanNewMonsterWaves()
         {
-            if(this.battleDataComponent.curWaves >= this.roundInfo.Count)
+            if (this.battleDataComponent.curWaves >= this.roundInfo.Count)
             {
                 return false;
             }
@@ -229,12 +226,12 @@ namespace CarrotFantasy
         public override void clearInfo()
         {
             base.clearInfo();
-            foreach(KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
+            foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
                 info.Value.ClearInfo();
-                GameObjectPool.Instance.pushObjectToPool(BattleUnitType.MONSTER,info.Value);
+                GameObjectPool.Instance.pushObjectToPool(BattleUnitType.MONSTER, info.Value);
             }
-            for(int i = 0; i <= this.curNoRegisterList.Count - 1; i++)
+            for (int i = 0; i <= this.curNoRegisterList.Count - 1; i++)
             {
                 this.curNoRegisterList[i].ClearInfo();
                 GameObjectPool.Instance.pushObjectToPool(BattleUnitType.MONSTER, this.curNoRegisterList[i]);

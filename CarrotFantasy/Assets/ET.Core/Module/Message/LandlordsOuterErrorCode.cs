@@ -7,7 +7,7 @@
         //自定义错误
 
         //登录功能
-        public const int ERR_AccountAlreadyRegisted = 200101; 
+        public const int ERR_AccountAlreadyRegisted = 200101;
         public const int ERR_AccountOrPasswordError = 200102;
         public const int ERR_RepeatedAccountExist = 200103;
 

@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
@@ -76,7 +72,7 @@ namespace CarrotFantasy
 
         public override void onTick(float time)
         {
-            foreach(KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
+            foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
                 info.Value.onTick(time);
             }
@@ -87,7 +83,7 @@ namespace CarrotFantasy
             if (type.Equals(BattleUnitType.MONSTER) == false) return;
             BattleUnit_Monster monster = (BattleUnit_Monster)unit;
             BattleUnitView_Monster monsterView;
-            if(!this.monsterDic.TryGetValue(monster, out monsterView))
+            if (!this.monsterDic.TryGetValue(monster, out monsterView))
             {
                 Debug.Log("移除怪兽视图出错");
                 return;
@@ -96,18 +92,19 @@ namespace CarrotFantasy
             monsterView.clearUnitInfo();
             this.monsterDic.Remove(monster);
             GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
-            UIServer.Instance.audioManager.playEffect(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}",monster.curLevel,monster.monsterId));
+            UIServer.Instance.audioManager.playEffect(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
 
             //特效
             GameObject sell = GameViewObjectPool.Instance.getNewGameObject(BattleUnitViewType.DestroyEffect);
-            if(sell == null)
+            if (sell == null)
             {
                 sell = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/DestoryEffect"));
             }
             sell.transform.GetComponent<Animator>().enabled = true;
             UnitTransformComponent tran = (UnitTransformComponent)unit.getComponent(UnitComponentType.TRANSFORM);
             sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-            Sche.delayExeOnceTimes(() => {
+            Sche.delayExeOnceTimes(() =>
+            {
                 sell.transform.GetComponent<Animator>().enabled = false;
                 GameViewObjectPool.Instance.pushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
             }, 0.5f);

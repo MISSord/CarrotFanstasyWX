@@ -1,16 +1,15 @@
 ﻿#if !SERVER
-using UnityEngine;
 #endif
 
 namespace ETModel
 {
-	/// <summary>
-	/// 每个Config的基类
-	/// </summary>
+    /// <summary>
+    /// 每个Config的基类
+    /// </summary>
 #if !SERVER
-	[HideInHierarchy]
+    [HideInHierarchy]
 #endif
-	public abstract class AConfigComponent: Component, ISerializeToEntity
-	{
-	}
+    public abstract class AConfigComponent : Component, ISerializeToEntity
+    {
+    }
 }

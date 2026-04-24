@@ -56,7 +56,8 @@ namespace Google.Protobuf.Compatibility
 
             byte[] buffer = new byte[BUFFER_SIZE];
             int numBytesRead;
-            while ((numBytesRead = source.Read(buffer, 0, buffer.Length)) > 0) {
+            while ((numBytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
+            {
                 destination.Write(buffer, 0, numBytesRead);
             }
         }

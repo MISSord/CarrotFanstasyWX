@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace ETModel
 {
-    public class WChannel: AChannel
+    public class WChannel : AChannel
     {
         public HttpListenerWebSocketContext WebSocketContext { get; }
 
@@ -24,7 +24,7 @@ namespace ETModel
 
         private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
 
-        public WChannel(HttpListenerWebSocketContext webSocketContext, AService service): base(service, ChannelType.Accept)
+        public WChannel(HttpListenerWebSocketContext webSocketContext, AService service) : base(service, ChannelType.Accept)
         {
             this.WebSocketContext = webSocketContext;
 
@@ -36,7 +36,7 @@ namespace ETModel
             isConnected = true;
         }
 
-        public WChannel(WebSocket webSocket, AService service): base(service, ChannelType.Connect)
+        public WChannel(WebSocket webSocket, AService service) : base(service, ChannelType.Connect)
         {
             this.webSocket = webSocket;
 
@@ -85,14 +85,14 @@ namespace ETModel
 
         private WService GetService()
         {
-            return (WService) this.Service;
+            return (WService)this.Service;
         }
 
         public async ETVoid ConnectAsync(string url)
         {
             try
             {
-                await ((ClientWebSocket) this.webSocket).ConnectAsync(new Uri(url), cancellationTokenSource.Token);
+                await ((ClientWebSocket)this.webSocket).ConnectAsync(new Uri(url), cancellationTokenSource.Token);
                 isConnected = true;
                 this.Start();
             }
@@ -187,7 +187,7 @@ namespace ETModel
                             cancellationTokenSource.Token);
 #else
                         receiveResult = await this.webSocket.ReceiveAsync(
-                            new ArraySegment<byte>(this.recvStream.GetBuffer(), receiveCount, this.recvStream.Capacity - receiveCount), 
+                            new ArraySegment<byte>(this.recvStream.GetBuffer(), receiveCount, this.recvStream.Capacity - receiveCount),
                             cancellationTokenSource.Token);
 #endif
                         if (this.IsDisposed)

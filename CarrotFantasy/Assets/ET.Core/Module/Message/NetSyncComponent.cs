@@ -1,26 +1,26 @@
 namespace ETModel
 {
     public enum SyncType
-	{
-		State,
-		Frame,
-	}
+    {
+        State,
+        Frame,
+    }
 
-	[ObjectSystem]
-	public class NetSyncComponentAwakeSystem : AwakeSystem<NetSyncComponent, SyncType>
-	{
-		public override void Awake(NetSyncComponent self, SyncType syncType)
-		{
-			self.Awake(syncType);
-		}
-	}
-    
+    [ObjectSystem]
+    public class NetSyncComponentAwakeSystem : AwakeSystem<NetSyncComponent, SyncType>
+    {
+        public override void Awake(NetSyncComponent self, SyncType syncType)
+        {
+            self.Awake(syncType);
+        }
+    }
+
     public class NetSyncComponent : Component
-	{
-		public SyncType type {get;set;}
+    {
+        public SyncType type { get; set; }
 
         public void Awake(SyncType syncType)
-		{
+        {
             this.type = syncType;
 
 #if SERVER
@@ -32,13 +32,14 @@ namespace ETModel
 				Game.Scene.AddComponent<PathfindingComponent>();
 			}
 #else
-			if(this.type == SyncType.Frame){
-				// frameSync 帧同步组件
-				Game.Scene.AddComponent<ClientFrameComponent>();
-			}
+            if (this.type == SyncType.Frame)
+            {
+                // frameSync 帧同步组件
+                Game.Scene.AddComponent<ClientFrameComponent>();
+            }
 #endif
-			
+
         }
 
-	}
+    }
 }

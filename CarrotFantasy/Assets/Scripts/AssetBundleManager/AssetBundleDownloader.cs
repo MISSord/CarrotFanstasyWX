@@ -20,7 +20,8 @@ public class AssetBundleDownloader
 
     public static AssetBundleDownloader Instance
     {
-        get{
+        get
+        {
             if (_instance == null)
             {
                 _instance = new AssetBundleDownloader();
@@ -177,7 +178,7 @@ public class AssetBundleDownloader
         }
 
         //全部下载完，切换到解压状态
-        if(loaderState == LoaderState.Loading && pendingDownloads.Count == 0 && activeDownloads.Count == 0)
+        if (loaderState == LoaderState.Loading && pendingDownloads.Count == 0 && activeDownloads.Count == 0)
         {
             loaderState = LoaderState.Convert;
             //这里加个回调，告诉外面进入解压状态，刷新界面
@@ -201,7 +202,7 @@ public class AssetBundleDownloader
         }
 
         //全部解压完成，进入idle状态，告诉外面处理完毕
-        if(loaderState == LoaderState.Convert && activeConverts.Count == 0 && pendingConverts.Count == 0)
+        if (loaderState == LoaderState.Convert && activeConverts.Count == 0 && pendingConverts.Count == 0)
         {
             loaderState = LoaderState.Idle;
         }
@@ -245,7 +246,7 @@ public class AssetBundleDownloader
     /// <summary>
     /// 批量下载并转换AB包
     /// </summary>
-    public void DownloadBundles(string[] bundleNames, CustomManifest custom, System.Action<int, int> progressCallback = null, 
+    public void DownloadBundles(string[] bundleNames, CustomManifest custom, System.Action<int, int> progressCallback = null,
         System.Action<bool> completeCallback = null)
     {
         bool isNeedConvert = custom.CompressedFormat == 0;
@@ -255,7 +256,7 @@ public class AssetBundleDownloader
     /// <summary>
     /// 批量下载协程
     /// </summary>
-    private IEnumerator DownloadBundlesCoroutine(string[] bundleNames, bool isNeedConvert, System.Action<int, int> progressCallback, 
+    private IEnumerator DownloadBundlesCoroutine(string[] bundleNames, bool isNeedConvert, System.Action<int, int> progressCallback,
         System.Action<bool> completeCallback)
     {
         int completedCount = 0;
@@ -274,7 +275,8 @@ public class AssetBundleDownloader
         // 添加所有下载任务
         foreach (string bundleName in bundleNames)
         {
-            DownloadBundle(bundleName, isNeedConvert, (success, message) => {
+            DownloadBundle(bundleName, isNeedConvert, (success, message) =>
+            {
                 completionFlags[bundleName] = true;
                 if (!success) allSuccess = false;
                 completedCount++;
@@ -399,7 +401,7 @@ public class AssetBundleDownloader
     {
         Log($"下载成功: {task.bundleName}, 文件大小: {new FileInfo(task.tempPath).Length} bytes");
 
-        if(task.isNeedConvert == true)
+        if (task.isNeedConvert == true)
         {
             // 创建转换任务
             var convertTask = new ConvertTask

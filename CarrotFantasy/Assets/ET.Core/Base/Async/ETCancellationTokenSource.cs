@@ -3,16 +3,16 @@ using System.Threading;
 namespace ETModel
 {
     [ObjectSystem]
-    public class ETCancellationTokenSourceAwakeSystem: AwakeSystem<ETCancellationTokenSource>
+    public class ETCancellationTokenSourceAwakeSystem : AwakeSystem<ETCancellationTokenSource>
     {
         public override void Awake(ETCancellationTokenSource self)
         {
             self.CancellationTokenSource = new CancellationTokenSource();
         }
     }
-    
+
     [ObjectSystem]
-    public class ETCancellationTokenSourceAwake2System: AwakeSystem<ETCancellationTokenSource, long>
+    public class ETCancellationTokenSourceAwake2System : AwakeSystem<ETCancellationTokenSource, long>
     {
         public override void Awake(ETCancellationTokenSource self, long afterTimeCancel)
         {
@@ -20,8 +20,8 @@ namespace ETModel
             self.CancelAfter(afterTimeCancel).Coroutine();
         }
     }
-    
-    public class ETCancellationTokenSource: Component
+
+    public class ETCancellationTokenSource : Component
     {
         public CancellationTokenSource CancellationTokenSource;
 
@@ -52,9 +52,9 @@ namespace ETModel
             {
                 return;
             }
-            
+
             base.Dispose();
-            
+
             this.CancellationTokenSource?.Dispose();
             this.CancellationTokenSource = null;
         }

@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-using System;
 using MongoDB.Bson.IO;
+using System;
 
 namespace MongoDB.Bson.Serialization.Conventions
 {

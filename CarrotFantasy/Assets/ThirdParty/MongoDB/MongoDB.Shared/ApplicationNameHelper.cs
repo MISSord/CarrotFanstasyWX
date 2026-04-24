@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-using System;
 using MongoDB.Bson.IO;
+using System;
 
 namespace MongoDB.Shared
 {
@@ -24,7 +24,7 @@ namespace MongoDB.Shared
         {
             string message;
             if (!IsApplicationNameValid(applicationName, out message))
-            { 
+            {
                 throw new ArgumentException(message, paramName);
             }
 

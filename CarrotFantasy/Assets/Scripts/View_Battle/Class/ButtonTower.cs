@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -45,7 +40,7 @@ namespace CarrotFantasy
 
         public void updateButtonSprite(int coin)
         {
-            if(coin >= this.curPrice)
+            if (coin >= this.curPrice)
             {
                 this.image.sprite = this.canClickSprite;
             }
@@ -55,10 +50,10 @@ namespace CarrotFantasy
             }
         }
 
-        
+
         public void buildTower()
         {
-            if(this.uiComponent.selectGrid != null)
+            if (this.uiComponent.selectGrid != null)
             {
                 InputOrder curOrder = new InputOrder();
                 curOrder.setOrder(this.uiComponent.battle.curFrameId + 1,

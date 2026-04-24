@@ -2,27 +2,27 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-	public class GameMain : MonoBehaviour  //游戏开始脚本(作为业务层，游戏层可能有所调整)
-	{
+    public class GameMain : MonoBehaviour  //游戏开始脚本(作为业务层，游戏层可能有所调整)
+    {
         private GameStateMachine gameStateMachine; // 游戏状态机，主要是管理游戏一些主要流程
 
         private void Awake()
         {
-			//开始游戏前的工作
-			Screen.sleepTimeout = SleepTimeout.NeverSleep;
+            //开始游戏前的工作
+            Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
-			// //加载底层模块和逻辑
-			// this.StartAsync().Coroutine();
+            // //加载底层模块和逻辑
+            // this.StartAsync().Coroutine();
 
-			UIUtil.Instance.Init();
-			ServerProvision.Instance.Init();
+            UIUtil.Instance.Init();
+            ServerProvision.Instance.Init();
 
-			//加载业务
-			BusinessProvision.Instance.Init();
-			BusinessProvision.Instance.LoadBusiness();
+            //加载业务
+            BusinessProvision.Instance.Init();
+            BusinessProvision.Instance.LoadBusiness();
 
-			//加载登录场景
-			ServerProvision.sceneServer.LoadScene(BaseSceneType.MainScene, null);
+            //加载登录场景
+            ServerProvision.sceneServer.LoadScene(BaseSceneType.MainScene, null);
 
             gameStateMachine = new GameStateMachine();
 
@@ -34,31 +34,31 @@ namespace CarrotFantasy
         }
 
         private void Update()
-		{
-			//OneThreadSynchronizationContext.Instance.Update();
-			//Game.EventSystem.Update();
+        {
+            //OneThreadSynchronizationContext.Instance.Update();
+            //Game.EventSystem.Update();
 
-			Sche.tick(new Fix64(Time.deltaTime));
-			if(BusinessProvision.Instance.IsGameQuit == true)
+            Sche.tick(new Fix64(Time.deltaTime));
+            if (BusinessProvision.Instance.IsGameQuit == true)
             {
-				OnApplicationQuit();
+                OnApplicationQuit();
             }
-		}
+        }
 
-		private void LateUpdate()
-		{
-			//Game.EventSystem.LateUpdate();
-		}
+        private void LateUpdate()
+        {
+            //Game.EventSystem.LateUpdate();
+        }
 
         private void OnApplicationQuit()
         {
-			//Game.Close();
+            //Game.Close();
 #if UNITY_EDITOR//在编辑器模式退出
-			UnityEditor.EditorApplication.isPlaying = false;
+            UnityEditor.EditorApplication.isPlaying = false;
 #else//发布后退出
         Application.Quit();
 #endif
-		}
+        }
 
         public void ChangeMachineState(GameState state)
         {

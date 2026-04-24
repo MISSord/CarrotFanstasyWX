@@ -18,7 +18,7 @@ namespace CarrotFantasy
         public int getPriority()
         {
             return this.priority;
-        } 
+        }
 
         public String getEventName()
         {

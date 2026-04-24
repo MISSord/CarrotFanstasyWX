@@ -15,7 +15,7 @@ namespace ETModel
         {
             List<string> paths = new List<string>();
             FileHelper.GetAllFiles(paths, srcPath);
-            
+
             List<string> files = new List<string>();
             foreach (string str in paths)
             {
@@ -26,7 +26,7 @@ namespace ETModel
             }
             return files;
         }
-        
+
         /// <summary>
         /// 获取文件夹内所有资源路径
         /// </summary>

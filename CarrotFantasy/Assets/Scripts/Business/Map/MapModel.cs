@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -27,7 +24,7 @@ namespace CarrotFantasy
             this.levelCount = map.Length;
             this.allMapInfo = new SingleMapInfo[this.levelCount - 1];
             this.bigLevelInfo.Clear();
-            for(int i = 1; i < map.Length; i++)
+            for (int i = 1; i < map.Length; i++)
             {
                 this.parseSingleMapInfo(map[i]);
             }
@@ -101,7 +98,7 @@ namespace CarrotFantasy
 
         public void updateSingleMapInfo(SingleMapInfo unSave)
         {
-            if(unSave != null)
+            if (unSave != null)
             {
                 SingleMapInfo info = this.allMapInfo[this.getMapNumber(unSave)];
                 info.carrotState = info.carrotState >= unSave.carrotState ? info.carrotState : unSave.carrotState;
@@ -130,9 +127,9 @@ namespace CarrotFantasy
         public SingleMapInfo[] getOnceBigLevelMapInfo(int level)
         {
             SingleMapInfo[] mapInfoList = new SingleMapInfo[5];
-            for(int i = 0; i < allMapInfo.Length; i++)
+            for (int i = 0; i < allMapInfo.Length; i++)
             {
-                if(allMapInfo[i].bigLevelId == level)
+                if (allMapInfo[i].bigLevelId == level)
                 {
                     mapInfoList[allMapInfo[i].levelId - 1] = allMapInfo[i];
                 }

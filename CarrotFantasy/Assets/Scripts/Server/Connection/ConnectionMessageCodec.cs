@@ -1,7 +1,7 @@
+using ETModel;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ETModel;
 
 namespace CarrotFantasy
 {

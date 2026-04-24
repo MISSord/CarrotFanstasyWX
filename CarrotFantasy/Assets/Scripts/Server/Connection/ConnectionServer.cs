@@ -1,6 +1,6 @@
+using ETModel;
 using System;
 using System.Collections.Generic;
-using ETModel;
 using UnityEngine;
 
 namespace CarrotFantasy

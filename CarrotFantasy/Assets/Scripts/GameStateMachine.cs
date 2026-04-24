@@ -1,6 +1,4 @@
 using CarrotFantasy;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -162,10 +160,10 @@ public class CheckUpdateState : BaseGameState
             }
 
             //完成检查
-            if(isFinishCheck == true)
+            if (isFinishCheck == true)
             {
                 //有需要更新，进入下载模式
-                if(context.result.hasChanges == true)
+                if (context.result.hasChanges == true)
                 {
                     root?.ChangeMachineState(GameState.Download);
                 }
@@ -192,7 +190,7 @@ public class DownloadState : BaseGameState
     private AssetBundleDownloader downloader;
     private bool isSetABMainifest = false;
 
-    public DownloadState(GameContext gameContext) : base (gameContext)
+    public DownloadState(GameContext gameContext) : base(gameContext)
     {
         this.downloader = AssetBundleDownloader.Instance;
         this.downloader.Init();
