@@ -14,26 +14,7 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         if (importer == null)
             return;
 
-        if ((assetPath.Contains("UI/View") || assetPath.Contains("Models")) && assetPath.EndsWith(".prefab"))
-        {
-            string bundleName = GenerateBundleNameFromFolder(assetPath);
-            if (string.IsNullOrEmpty(bundleName))
-                return;
-
-            importer.assetBundleName = bundleName.ToLower().Replace('\\', '/') + "_prefab";
-        }
-        else if(assetPath.Contains("UI/RawImage"))
-        {
-            string bundleName = GenerateBundleNameFromFolder(assetPath);
-            if (string.IsNullOrEmpty(bundleName))
-                return;
-            string name = bundleName.ToLower().Replace('\\', '/') + "/" + Path.GetFileNameWithoutExtension(assetPath);
-            importer.assetBundleName = name + "_prefab";
-        }
-        else
-        {
-            importer.assetBundleName = string.Empty;
-        }
+        importer.assetBundleName = BuildAssetBundleName(assetPath);
     }
 
     private static string GenerateBundleNameFromFolder(string assetPath)
@@ -62,18 +43,85 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
     {
         foreach (string movedAsset in movedAssets)
         {
-            if (movedAsset.EndsWith(".prefab"))
+            if (ShouldAssignAssetBundle(movedAsset))
             {
                 AssetImporter importer = AssetImporter.GetAtPath(movedAsset);
                 if (importer != null)
                 {
-                    string newBundleName = GenerateBundleNameFromFolder(movedAsset);
-                    if (!string.IsNullOrEmpty(newBundleName))
-                    {
-                        importer.assetBundleName = newBundleName.ToLower().Replace('\\', '/');
-                    }
+                    importer.assetBundleName = BuildAssetBundleName(movedAsset);
                 }
             }
         }
+    }
+
+    private static bool ShouldAssignAssetBundle(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        bool isPrefab = (path.Contains("UI/View") || path.Contains("Models")) && path.EndsWith(".prefab");
+        bool isRawImage = path.Contains("UI/RawImage");
+        bool isSpriteAtlas = path.EndsWith(".spriteatlas");
+        bool isImageInImagesFolder = IsImageInImagesFolder(path);
+        bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
+        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder;
+    }
+
+    private static string BuildAssetBundleName(string path)
+    {
+        if (!ShouldAssignAssetBundle(path))
+            return string.Empty;
+
+        string bundleName = GenerateBundleNameFromFolder(path);
+        if (string.IsNullOrEmpty(bundleName))
+            return string.Empty;
+
+        string normalizedBundleName = bundleName.ToLower().Replace('\\', '/');
+
+        if ((path.Contains("UI/View") || path.Contains("Models")) && path.EndsWith(".prefab"))
+            return normalizedBundleName + "_prefab";
+
+        if (path.EndsWith(".spriteatlas"))
+        {
+            string atlasBundleRoot = normalizedBundleName;
+            if (atlasBundleRoot.EndsWith("/images"))
+            {
+                atlasBundleRoot = atlasBundleRoot.Substring(0, atlasBundleRoot.Length - "/images".Length);
+            }
+            return atlasBundleRoot + "/" + Path.GetFileNameWithoutExtension(path);
+        }
+
+        if (IsImageInImagesFolder(path))
+        {
+            string atlasBundleRoot = normalizedBundleName;
+            if (atlasBundleRoot.EndsWith("/images"))
+            {
+                atlasBundleRoot = atlasBundleRoot.Substring(0, atlasBundleRoot.Length - "/images".Length);
+            }
+            return atlasBundleRoot + "/images_atlas";
+        }
+
+        if (IsImageInRawImagesFolder(path))
+        {
+            string imageName = Path.GetFileNameWithoutExtension(path).ToLower();
+            return "ui/rawimages/" + imageName;
+        }
+
+        string name = normalizedBundleName + "/" + Path.GetFileNameWithoutExtension(path);
+        return name + "_prefab";
+    }
+
+    private static bool IsImageInImagesFolder(string path)
+    {
+        string normalizedPath = path.ToLower().Replace('\\', '/');
+        bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
+        return isImage && normalizedPath.Contains("/images/");
+    }
+
+    private static bool IsImageInRawImagesFolder(string path)
+    {
+        string normalizedPath = path.ToLower().Replace('\\', '/');
+        bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
+        return isImage && normalizedPath.Contains("/rawimages/");
     }
 }

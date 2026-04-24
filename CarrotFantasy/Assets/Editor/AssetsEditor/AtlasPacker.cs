@@ -10,7 +10,7 @@ public class AtlasPacker : EditorWindow
 {
     private string targetFolderPath = "Assets";
     private bool includeSubdirectories = true;
-    private string atlasNameSuffix = "_Atlas";
+    private string atlasNameSuffix = "_atlas";
     private int maxAtlasSize = 2048;
     private bool generateForEachSubfolder = false;
 
@@ -176,31 +176,19 @@ public class AtlasPacker : EditorWindow
         };
         atlas.SetTextureSettings(textureSettings);
 
-        // 收集所有Sprite
-        List<Sprite> sprites = new List<Sprite>();
+        // 收集图片主资源，避免同一路径被Sprite和Texture重复加入
         List<Texture2D> textures = new List<Texture2D>();
 
         foreach (string imagePath in imagePaths)
         {
-            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(imagePath);
-            foreach (Object asset in assets)
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(imagePath);
+            if (texture != null)
             {
-                if (asset is Sprite sprite)
-                {
-                    sprites.Add(sprite);
-                }
-                else if (asset is Texture2D texture)
-                {
-                    textures.Add(texture);
-                }
+                textures.Add(texture);
             }
         }
 
         // 添加对象到图集
-        if (sprites.Count > 0)
-        {
-            atlas.Add(sprites.ToArray());
-        }
         if (textures.Count > 0)
         {
             atlas.Add(textures.ToArray());
@@ -218,8 +206,7 @@ public class AtlasPacker : EditorWindow
     /// </summary>
     private string GetAtlasNameFromPath(string folderPath)
     {
-        string folderName = Path.GetFileName(folderPath);
-        return folderName + atlasNameSuffix;
+        return "images_atlas";
     }
 
     /// <summary>
