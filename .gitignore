@@ -1,21 +1,24 @@
 # =============== Unity generated folders ===============
-CarrotFantasy/[Ll]ibrary/
-CarrotFantasy/[Tt]emp/
-CarrotFantasy/[Oo]bj/
-CarrotFantasy/[Bb]uild/
-CarrotFantasy/[Bb]uilds/
-CarrotFantasy/[Ll]ogs/
-CarrotFantasy/[Uu]ser[Ss]ettings/
-CarrotFantasy/[Mm]emoryCaptures/
-CarrotFantasy/[Rr]ecordings/
+/CarrotFantasy/[Ll]ibrary/
+/CarrotFantasy/[Tt]emp/
+/CarrotFantasy/[Oo]bj/
+/CarrotFantasy/[Bb]uild/
+/CarrotFantasy/[Bb]uilds/
+/CarrotFantasy/[Ll]ogs/
+/CarrotFantasy/[Uu]ser[Ss]ettings/
+/CarrotFantasy/[Mm]emoryCaptures/
+/CarrotFantasy/[Rr]ecordings/
+
 # =============== Unity cache / generated files ===============
-Assets/AssetStoreTools*
-Assets/StreamingAssets/aa.meta
-Assets/StreamingAssets/aa/*
+/CarrotFantasy/Assets/AssetStoreTools*
+/CarrotFantasy/Assets/StreamingAssets/aa.meta
+/CarrotFantasy/Assets/StreamingAssets/aa/
+
 # =============== IDE / OS ===============
-.vs/
-.vscode/
-.idea/
+/.vs/
+/CarrotFantasy/.vs/
+/.vscode/
+/.idea/
 *.csproj
 *.sln
 *.suo
@@ -28,12 +31,11 @@ Assets/StreamingAssets/aa/*
 *.mdb
 *.opendb
 *.VC.db
-# Rider / JetBrains
 *.DotSettings.user
-# OS files
 .DS_Store
 Thumbs.db
+
 # =============== Optional: packages lock (按团队策略) ===============
 # 如果你希望锁定依赖版本，保留 Packages/packages-lock.json（不要忽略）
 # 如果不锁定，可以取消注释下一行
-# Packages/packages-lock.json
+# /CarrotFantasy/Packages/packages-lock.json
