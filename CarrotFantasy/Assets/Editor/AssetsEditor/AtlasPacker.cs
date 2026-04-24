@@ -86,7 +86,7 @@ public class AtlasPacker : EditorWindow
             string relativeFolderPath = folderPath.Replace("\\", "/");
 
             // 检查是否包含Image文件夹
-            string imageFolderPath = Path.Combine(folderPath, "Image").Replace("\\", "/");
+            string imageFolderPath = Path.Combine(folderPath, "Images").Replace("\\", "/");
             if (Directory.Exists(imageFolderPath))
             {
                 processedCount++;

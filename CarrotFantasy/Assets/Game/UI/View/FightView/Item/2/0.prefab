@@ -87,7 +87,6 @@ GameObject:
   - component: {fileID: 212007347400334362}
   - component: {fileID: 61377875624023796}
   - component: {fileID: 50285990855091200}
-  - component: {fileID: 114155599284261268}
   m_Layer: 0
   m_Name: 0
   m_TagString: Item
@@ -104,8 +103,6 @@ GameObject:
   m_Component:
   - component: {fileID: 224095590092904970}
   - component: {fileID: 223613931195308514}
-  - component: {fileID: 114032560361430084}
-  - component: {fileID: 114253734957091942}
   m_Layer: 5
   m_Name: ItemCanvas
   m_TagString: Untagged
@@ -215,40 +212,6 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1.49, y: 1.6, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &114032560361430084
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1461517244720988}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1980459831, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
-  m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
-  m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
-  m_PhysicalUnit: 3
-  m_FallbackScreenDPI: 96
-  m_DefaultSpriteDPI: 96
-  m_DynamicPixelsPerUnit: 1
---- !u!114 &114155599284261268
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1417745621882266}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c8bb6aa28039402458d072166b54e58c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gridPoint: {fileID: 0}
-  itemID: 0
 --- !u!114 &114225760804039682
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -276,22 +239,6 @@ MonoBehaviour:
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
---- !u!114 &114253734957091942
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1461517244720988}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 1301386320, guid: f70555f144d8491a825f0804e09c671c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!114 &114770222263113502
 MonoBehaviour:
   m_ObjectHideFlags: 1

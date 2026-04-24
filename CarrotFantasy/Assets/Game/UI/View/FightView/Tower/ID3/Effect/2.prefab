@@ -22,8 +22,6 @@ GameObject:
   - component: {fileID: 212103309359932882}
   - component: {fileID: 95839224130756180}
   - component: {fileID: 61367383470745688}
-  - component: {fileID: 114963731553338474}
-  - component: {fileID: 114330792560323158}
   m_Layer: 0
   m_Name: 2
   m_TagString: Untagged
@@ -86,31 +84,6 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
---- !u!114 &114330792560323158
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1322981285633870}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 12517e6ed2dbee5468b004bb1a2b5b89, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  attackValue: 20
---- !u!114 &114963731553338474
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1322981285633870}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5a88e0f08830aa4bb1e35349f38f000, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animationTime: 0.53
-  resourcePath: Tower/ID3/Effect/2
 --- !u!212 &212103309359932882
 SpriteRenderer:
   m_ObjectHideFlags: 1

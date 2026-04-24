@@ -21,7 +21,6 @@ GameObject:
   - component: {fileID: 4910644825437832}
   - component: {fileID: 212835259297125860}
   - component: {fileID: 95760687305112388}
-  - component: {fileID: 114223075331144360}
   m_Layer: 0
   m_Name: 2
   m_TagString: Untagged
@@ -59,19 +58,6 @@ Animator:
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
---- !u!114 &114223075331144360
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1368380656544320}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a5a88e0f08830aa4bb1e35349f38f000, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animationTime: 0.167
-  resourcePath: Tower/ID5/Effect/2
 --- !u!212 &212835259297125860
 SpriteRenderer:
   m_ObjectHideFlags: 1
