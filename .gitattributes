@@ -1,2 +1,49 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# 默认：文本自动规范为 LF 存储
+* text=auto eol=lf
+# C# / Unity 文本资源
+*.cs text eol=lf
+*.shader text eol=lf
+*.compute text eol=lf
+*.cginc text eol=lf
+*.hlsl text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.txt text eol=lf
+*.md text eol=lf
+*.asmdef text eol=lf
+*.asmref text eol=lf
+*.meta text eol=lf
+*.unity text eol=lf
+*.prefab text eol=lf
+*.mat text eol=lf
+*.anim text eol=lf
+*.controller text eol=lf
+*.playable text eol=lf
+*.asset text eol=lf
+# 二进制资源（禁止行尾转换）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.tga binary
+*.psd binary
+*.exr binary
+*.tif binary
+*.tiff binary
+*.fbx binary
+*.obj binary
+*.blend binary
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.mp4 binary
+*.mov binary
+*.unitypackage binary
+*.dll binary
+*.so binary
+*.a binary
+*.lib binary
+*.zip binary
+*.7z binary

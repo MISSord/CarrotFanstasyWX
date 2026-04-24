@@ -1,2 +1,39 @@
-
-CarrotFantasy/Temp/__Backupscenes/0.backup
+# =============== Unity generated folders ===============
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+# =============== Unity cache / generated files ===============
+Assets/AssetStoreTools*
+Assets/StreamingAssets/aa.meta
+Assets/StreamingAssets/aa/*
+# =============== IDE / OS ===============
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+# Rider / JetBrains
+*.DotSettings.user
+# OS files
+.DS_Store
+Thumbs.db
+# =============== Optional: packages lock (按团队策略) ===============
+# 如果你希望锁定依赖版本，保留 Packages/packages-lock.json（不要忽略）
+# 如果不锁定，可以取消注释下一行
+# Packages/packages-lock.json
