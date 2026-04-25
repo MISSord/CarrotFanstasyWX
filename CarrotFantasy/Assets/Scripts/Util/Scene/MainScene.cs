@@ -4,7 +4,6 @@ namespace CarrotFantasy
 {
     public class MainScene : BaseScene
     {
-
         public MainScene(BaseSceneType type, string name, Dictionary<string, dynamic> param) : base(type, name, param)
         {
             this.prefabUrl = null;
