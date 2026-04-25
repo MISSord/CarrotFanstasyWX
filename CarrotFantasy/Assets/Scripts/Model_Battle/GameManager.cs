@@ -24,7 +24,7 @@ namespace CarrotFantasy
             instance = this;
         }
 
-        public void init()
+        public void Init()
         {
             UIServer.Instance.audioManager.playMusic("AudioClips/NormalMordel/BGMusic");
             if (BattleParamServer.Instance.isPVE == true)
@@ -54,42 +54,42 @@ namespace CarrotFantasy
         private void restartGame()
         {
             UIServer.Instance.showLoadingPanel();
-            this.baseBattleView.clearGameInfo();
-            this.baseBattle.clearGameInfo();
+            this.baseBattleView.ClearGameInfo();
+            this.baseBattle.ClearGameInfo();
 
 
             if (this.panel != null)
             {
-                this.panel.Finish();
+                this.panel.Close();
                 this.panel = null;
             }
 
             this.initBattle();
-            Sche.delayExeOnceTimes(this.startGame, 2.0f);
+            Sche.delayExeOnceTimes(this.StartGame, 2.0f);
         }
 
         public void initBattle()
         {
-            this.baseBattle.init();
+            this.baseBattle.Init();
             this.baseBattle.initComponent();
-            this.baseBattleView.init();
-            this.baseBattleView.initComponents();
+            this.baseBattleView.Init();
+            this.baseBattleView.InitComponents();
 
-            this.panel = new NormalModelPanel(null);
-            ServerProvision.panelServer.ShowPanel(this.panel);
+            UIViewService.OpenNormalModelPanel();
+            this.panel = NormalModelPanel.Instance;
         }
 
-        public void startGame()
+        public void StartGame()
         {
-            this.baseBattle.startGame();
-            this.baseBattleView.startGame();
+            this.baseBattle.StartGame();
+            this.baseBattleView.StartGame();
             UIServer.Instance.fadeLoadingPanel();
         }
 
         public void Update()
         {
             this.baseBattle.tick(new Fix64(Time.deltaTime));
-            this.baseBattleView.onTick(Time.deltaTime);
+            this.baseBattleView.OnTick(Time.deltaTime);
         }
 
         public void Dispose()

@@ -14,10 +14,10 @@ namespace CarrotFantasy
         {
             this.componentType = BattleComponentType.BulletComponent;
             this.configReader = new BulletConfigReader();
-            this.configReader.init();
+            this.configReader.Init();
         }
 
-        public override void init()
+        public override void Init()
         {
             this.AddListener();
         }
@@ -42,10 +42,10 @@ namespace CarrotFantasy
                 bullet = new BattleUnit_Bullet(this.baseBattle);
             }
             bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.addDeadList);
-            bullet.loadInfo(this.baseBattle.getUid(), this.configReader.getSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
+            bullet.LoadInfo(this.baseBattle.getUid(), this.configReader.getSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
             bullet.loadInfo2(tower, target);
-            bullet.init();
-            bullet.initComponents();
+            bullet.Init();
+            bullet.InitComponents();
             this.curBulletList.Add(bullet);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.BULLET, bullet);
             //Debug.Log("注册新的子弹");
@@ -56,9 +56,9 @@ namespace CarrotFantasy
             this.bulletDeadList.Add(monster);
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
-            base.onTick(time);
+            base.OnTick(time);
             this.updateCurBulletState(time);
         }
 
@@ -83,7 +83,7 @@ namespace CarrotFantasy
             {
                 for (int i = 0; i < this.curBulletList.Count; i++)
                 {
-                    this.curBulletList[i].onTick(time);
+                    this.curBulletList[i].OnTick(time);
                 }
             }
             if (this.bulletDeadList.Count != 0)

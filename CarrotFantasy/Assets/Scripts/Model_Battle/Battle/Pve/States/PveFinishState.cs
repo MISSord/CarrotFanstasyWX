@@ -12,10 +12,10 @@ namespace CarrotFantasy
 
         }
 
-        public override void init()
+        public override void Init()
         {
-            this.monsterComponent = (BattleMonsterComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.MonsterComponent);
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.DataComponent);
+            this.monsterComponent = (BattleMonsterComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.MonsterComponent);
+            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
         public override void stateIn()
@@ -38,7 +38,7 @@ namespace CarrotFantasy
             }
         }
 
-        public override string onTick(Fix64 time)
+        public override string OnTick(Fix64 time)
         {
             return BattleStateType.END_GAME;
         }

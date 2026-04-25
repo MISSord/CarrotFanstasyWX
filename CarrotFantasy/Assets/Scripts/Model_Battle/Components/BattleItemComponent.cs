@@ -14,14 +14,14 @@ namespace CarrotFantasy
         public BattleItemComponent(BaseBattle bBattle) : base(bBattle)
         {
             this.itemConfigReader = new ItemConfigReader();
-            this.itemConfigReader.init();
+            this.itemConfigReader.Init();
             this.componentType = BattleComponentType.ItemComponent;
         }
 
-        public override void init()
+        public override void Init()
         {
-            this.mapComponent = (BattleMapComponent)(this.baseBattle.getComponent(BattleComponentType.MapComponent));
-            BattleDataComponent dataOne = (BattleDataComponent)this.baseBattle.getComponent(BattleComponentType.DataComponent);
+            this.mapComponent = (BattleMapComponent)(this.baseBattle.GetComponent(BattleComponentType.MapComponent));
+            BattleDataComponent dataOne = (BattleDataComponent)this.baseBattle.GetComponent(BattleComponentType.DataComponent);
             BattleMapGrid[,] gridsList = mapComponent.gridsList;
 
             for (int x = 0; x <= dataOne.xColumn - 1; x++)
@@ -42,9 +42,9 @@ namespace CarrotFantasy
             BattleUnit_Item item = new BattleUnit_Item(this.baseBattle);
             item.eventDipatcher.AddListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.addDeadList);
             int itemId = this.mapComponent.levelInfo.bigLevelID * 100 + mapGrid.state.itemID;
-            item.loadInfo(this.baseBattle.getUid(), this.itemConfigReader.getSingleItemConfig(itemId), this.getPosition(mapGrid), mapGrid.state.itemID);
-            item.init();
-            item.initComponents();
+            item.LoadInfo(this.baseBattle.getUid(), this.itemConfigReader.getSingleItemConfig(itemId), this.getPosition(mapGrid), mapGrid.state.itemID);
+            item.Init();
+            item.InitComponents();
             item.loadInfo1();
             this.battleItemList.Add(item);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.ITEM, item);
@@ -69,9 +69,9 @@ namespace CarrotFantasy
             this.deadItemList.Add(item);
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
-            base.onTick(time);
+            base.OnTick(time);
             this.updateItemState();
         }
 

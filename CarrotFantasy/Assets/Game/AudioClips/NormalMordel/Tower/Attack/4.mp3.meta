@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: e20db5f9edf77064089b6759ca1e8f4e
-timeCreated: 1535160516
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/normalmordel/tower/attack_prefab
   assetBundleVariant: 

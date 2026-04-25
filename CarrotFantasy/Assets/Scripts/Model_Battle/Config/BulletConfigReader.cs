@@ -7,7 +7,7 @@ namespace CarrotFantasy
     {
         public Dictionary<int, Dictionary<String, Fix64>> bulletBirthParam = new Dictionary<int, Dictionary<string, Fix64>>();
 
-        public void init()
+        public void Init()
         {
             this.bulletBirthParam.Add(101, new Dictionary<String, Fix64>() {
                 { "faceDirection", Fix64.Zero},

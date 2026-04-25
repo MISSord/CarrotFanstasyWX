@@ -35,11 +35,11 @@ namespace CarrotFantasy
 
         protected virtual void RemoveListener() { }
 
-        public abstract void init();
+        public abstract void Init();
 
         public abstract void initComponent(); //子类实现
 
-        public BaseBattleComponent getComponent(String type)
+        public BaseBattleComponent GetComponent(String type)
         {
             if (type != null)
             {
@@ -48,7 +48,7 @@ namespace CarrotFantasy
             return null;
         }
 
-        public void addComponent(BaseBattleComponent component)
+        public void AddComponent(BaseBattleComponent component)
         {
             if (component != null)
             {
@@ -64,7 +64,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void removeComponent(BaseBattleComponent component)
+        public void RemoveComponent(BaseBattleComponent component)
         {
             if (component != null)
             {
@@ -75,10 +75,10 @@ namespace CarrotFantasy
 
         public virtual void tick(Fix64 deltaTime)
         {
-            this.onTick(deltaTime);
+            this.OnTick(deltaTime);
         }
 
-        protected virtual void onTick(Fix64 time) //未来优化
+        protected virtual void OnTick(Fix64 time) //未来优化
         {
             if (this.isPause == true) return;
             curClock += time;
@@ -90,9 +90,9 @@ namespace CarrotFantasy
             curFrameId += 1;
             for (int i = 0; i < componentList.Count; i++)
             {
-                componentList[i].onTick(this.lastFrameTime);
+                componentList[i].OnTick(this.lastFrameTime);
             }
-            stateMachine.onTick(time);
+            stateMachine.OnTick(time);
             for (int i = 0; i < componentList.Count; i++)
             {
                 componentList[i].lateTick(this.lastFrameTime);
@@ -102,21 +102,21 @@ namespace CarrotFantasy
             //Debug.Log(String.Format("当前帧数为{0},游戏时间为{1}", this.curFrameId, this.curClock));
         }
 
-        public virtual void startGame()
+        public virtual void StartGame()
         {
             if (isStart == true) return;
             isStart = true;
             for (int i = 0; i < componentList.Count; i++)
             {
-                componentList[i].start();
+                componentList[i].Start();
             }
 
             this.stateMachine.setCurrentState(BattleStateType.START_GAME);
         }
 
-        public virtual void clearGameInfo()
+        public virtual void ClearGameInfo()
         {
-            this.stateMachine.clearGameInfo();
+            this.stateMachine.ClearGameInfo();
             for (int i = componentList.Count - 1; i >= 0; i--)
             {
                 this.componentList[i].clearInfo();

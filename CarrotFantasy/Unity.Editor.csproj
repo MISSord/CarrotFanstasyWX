@@ -75,6 +75,7 @@
     <Compile Include="Assets\Editor\Proto2CsEditor\Proto2CSEditor.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
+    <Compile Include="Assets\Editor\PrefabReferenceFinderWindow.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />

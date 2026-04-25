@@ -9,11 +9,11 @@ namespace CarrotFantasy
 
         public HitTestShape_Rect(HitShapeType hitType, Fix64 x, Fix64 y, Fix64 sizeX, Fix64 sizeY) : base(hitType)
         {
-            this.reset(x, y, sizeX, sizeY);
+            this.Reset(x, y, sizeX, sizeY);
             this.resetStrDesc();
         }
 
-        private void reset(Fix64 x, Fix64 y, Fix64 sizeX, Fix64 sizeY)
+        private void Reset(Fix64 x, Fix64 y, Fix64 sizeX, Fix64 sizeY)
         {
             this.x = x;
             this.y = y;

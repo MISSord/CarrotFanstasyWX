@@ -1,9 +1,7 @@
 fileFormatVersion: 2
 guid: 43b941d310639c949a461f13c1df08df
-timeCreated: 1530583577
-licenseType: Pro
 TextScriptImporter:
   externalObjects: {}
   userData: 
-  assetBundleName: 
+  assetBundleName: json/level_prefab
   assetBundleVariant: 

@@ -69,7 +69,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveModelBattleParams.cs" />
     <Compile Include="Assets\Scripts\Util\UI\SlideCanCoverScrollView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BulletConfigReader.cs" />
-    <Compile Include="Assets\Scripts\Helper\ResourcesHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\PositionInfo.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Event\BattleEventDispatcher.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\XUI.cs" />
@@ -280,6 +279,8 @@
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\UIViewService.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\UiViewAbPaths.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

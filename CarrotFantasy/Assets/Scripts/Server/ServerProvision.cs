@@ -22,8 +22,11 @@ namespace CarrotFantasy
 
         public void Init()
         {
+            new ViewManager();
+            ViewManager.Instance.Init();
+
             connectionServer = new ConnectionServer();
-            connectionServer.init();
+            connectionServer.Init();
             sceneServer = new SceneServer();
             sceneServer.Init();
             panelServer = new PanelServer();

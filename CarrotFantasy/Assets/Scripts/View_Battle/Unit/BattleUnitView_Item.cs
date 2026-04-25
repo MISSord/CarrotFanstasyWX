@@ -9,9 +9,9 @@ namespace CarrotFantasy
         private SpriteRenderer spriteRender;
         private Item item;
 
-        public override void initTransform(Transform node)
+        public override void InitTransform(Transform node)
         {
-            base.initTransform(node);
+            base.InitTransform(node);
             this.slider = this.transform.Find("ItemCanvas/HpSlider").GetComponent<Slider>();
             this.spriteRender = this.transform.GetComponent<SpriteRenderer>();
             this.slider.value = 1;
@@ -22,9 +22,9 @@ namespace CarrotFantasy
             this.item.itemView = this;
         }
 
-        public override void initListener()
+        public override void InitListener()
         {
-            base.initListener();
+            base.InitListener();
             this.unitEventDispatcher.AddListener(BattleEvent.ITEM_LIVE_REDUCE, this.updateLiveNumber);
         }
 
@@ -43,14 +43,14 @@ namespace CarrotFantasy
             this.slider.value = ((float)((BattleUnit_Item)this.unit).curLive / (float)((BattleUnit_Item)this.unit).totalLive);
         }
 
-        public void refreshTarget()
+        public void RefreshTarget()
         {
             this.battleView.battle.eventDispatcher.DispatchEvent<BattleUnit>(BattleEvent.TARGET_CHANGE, this.unit);
         }
 
-        public override void clearUnitInfo()
+        public override void ClearUnitInfo()
         {
-            base.clearUnitInfo();
+            base.ClearUnitInfo();
             this.slider = null;
             this.spriteRender = null;
         }

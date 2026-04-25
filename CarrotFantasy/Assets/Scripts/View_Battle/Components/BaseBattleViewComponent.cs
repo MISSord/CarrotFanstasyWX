@@ -16,10 +16,10 @@ namespace CarrotFantasy
             this.eventDispatcher = this.battle.eventDispatcher;
         }
 
-        public abstract void init();
-        public virtual void start() { } //开始游戏调用
-        public virtual void onTick(float time) { }
-        public virtual void clearGameInfo() { } //重新开始游戏前调用
+        public abstract void Init();
+        public virtual void Start() { } //开始游戏调用
+        public virtual void OnTick(float time) { }
+        public virtual void ClearGameInfo() { } //重新开始游戏前调用
         public virtual void Dispose() { }
     }
 }

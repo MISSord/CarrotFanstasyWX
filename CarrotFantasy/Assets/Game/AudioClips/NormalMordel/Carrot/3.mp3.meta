@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: f72b49319e0d18446bf8f6d22167791e
-timeCreated: 1531471485
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/normalmordel/carrot_prefab
   assetBundleVariant: 

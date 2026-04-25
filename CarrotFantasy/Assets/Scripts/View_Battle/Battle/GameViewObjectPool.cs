@@ -19,21 +19,21 @@ namespace CarrotFantasy
                 if (gamePool == null)
                 {
                     gamePool = new GameViewObjectPool();
-                    gamePool.init();
+                    gamePool.Init();
                 }
                 return gamePool;
             }
         }
 
-        public void init()
+        public void Init()
         {
-            this.registerBattleUnitView(BattleUnitViewType.Monster);
-            this.registerBattleUnitView(BattleUnitViewType.Bullet);
-            this.registerBattleUnitView(BattleUnitViewType.Tower);
-            this.registerBattleUnitView(BattleUnitViewType.Item);
+            this.RegisterBattleUnitView(BattleUnitViewType.Monster);
+            this.RegisterBattleUnitView(BattleUnitViewType.Bullet);
+            this.RegisterBattleUnitView(BattleUnitViewType.Tower);
+            this.RegisterBattleUnitView(BattleUnitViewType.Item);
         }
 
-        public void registerBattleUnitView(String name)
+        public void RegisterBattleUnitView(String name)
         {
             if (!curObjectDic.ContainsKey(name))
             {
@@ -42,7 +42,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void registerGameObject(String name)
+        public void RegisterGameObject(String name)
         {
             if (!curGameObjectDic.ContainsKey(name))
             {
@@ -51,7 +51,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void registerUnitViewComponent(String name)
+        public void RegisterUnitViewComponent(String name)
         {
             if (!curUnitObjectDic.ContainsKey(name))
             {
@@ -60,7 +60,7 @@ namespace CarrotFantasy
             }
         }
 
-        public GameObject getNewGameObject(String name)
+        public GameObject GetNewGameObject(String name)
         {
             List<GameObject> curList;
             if (!curGameObjectDic.TryGetValue(name, out curList))
@@ -121,21 +121,21 @@ namespace CarrotFantasy
         }
 
 
-        public void pushViewObjectToPool(String name, BattleUnitView unit)
+        public void PushViewObjectToPool(String name, BattleUnitView unit)
         {
             List<BattleUnitView> curList = this.curObjectDic[name];
             curList.Add(unit);
             //Debug.Log(String.Format("{0}放回到视图对象池，目前长度{1}", name, curList.Count));
         }
 
-        public void pushViewObjectToPool(String name, BaseUnitViewComponent unit)
+        public void PushViewObjectToPool(String name, BaseUnitViewComponent unit)
         {
             List<BaseUnitViewComponent> curList = this.curUnitObjectDic[name];
             curList.Add(unit);
             //Debug.Log(String.Format("{0}放回到视图组件对象池，目前长度{1}", name, curList.Count));
         }
 
-        public void pushGameObjectToPool(String name, GameObject node)
+        public void PushGameObjectToPool(String name, GameObject node)
         {
             List<GameObject> curList = this.curGameObjectDic[name];
             node.transform.position = GameManager.Instance.baseBattleView.initTran;
@@ -144,7 +144,7 @@ namespace CarrotFantasy
 
         }
 
-        public void clearGameInfo()
+        public void ClearGameInfo()
         {
             this.curGameObjectDic.Clear();
             GC.Collect();

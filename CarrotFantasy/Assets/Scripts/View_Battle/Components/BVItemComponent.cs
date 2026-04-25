@@ -13,18 +13,18 @@ namespace CarrotFantasy
 
         public BVItemComponent(BattleView_base battleView) : base(battleView)
         {
-            this.itemComponent = (BattleItemComponent)this.battleView.battle.getComponent(BattleComponentType.ItemComponent);
-            BattleDataComponent dataComponent = (BattleDataComponent)this.battleView.battle.getComponent(BattleComponentType.DataComponent);
+            this.itemComponent = (BattleItemComponent)this.battleView.battle.GetComponent(BattleComponentType.ItemComponent);
+            BattleDataComponent dataComponent = (BattleDataComponent)this.battleView.battle.GetComponent(BattleComponentType.DataComponent);
             this.itemPrefabUrl = "Prefabs/Game/Item/" + dataComponent.bigLevel + "/";
             this.componentType = BattleViewComponentType.Item;
         }
 
-        public override void init()
+        public override void Init()
         {
-            GameViewObjectPool.Instance.registerGameObject(BattleUnitViewType.DestroyEffect);
+            GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.DestroyEffect);
 
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.getComponent(BattleViewComponentType.SCENE);
-            this.rootGameObject = scene.registerGameContainer("ItemContainer");
+            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
+            this.rootGameObject = scene.RegisterGameContainer("ItemContainer");
             List<BattleUnit_Item> itemList = this.itemComponent.battleItemList;
             for (int i = 0; i <= itemList.Count - 1; i++)
             {
@@ -48,9 +48,9 @@ namespace CarrotFantasy
             BattleUnitView_Item itemView = new BattleUnitView_Item();
             GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(this.itemPrefabUrl + item.itemId));
             itemGo.transform.SetParent(this.rootGameObject.transform);
-            itemView.initTransform(itemGo.transform);
-            itemView.loadInfo(this.battleView, item);
-            itemView.init();
+            itemView.InitTransform(itemGo.transform);
+            itemView.LoadInfo(this.battleView, item);
+            itemView.Init();
             this.itemDic.Add(item, itemView);
         }
 
@@ -61,34 +61,34 @@ namespace CarrotFantasy
                 BattleUnit_Item item = (BattleUnit_Item)obj;
                 BattleUnitView_Item itemView = this.itemDic[item];
                 GameObject.Destroy(itemView.transform.gameObject);
-                itemView.clearUnitInfo();
+                itemView.ClearUnitInfo();
                 this.itemDic.Remove(item);
-                GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Item, itemView);
+                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, itemView);
 
                 //特效
-                GameObject sell = GameViewObjectPool.Instance.getNewGameObject(BattleUnitViewType.DestroyEffect);
+                GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
                 if (sell == null)
                 {
                     sell = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/DestoryEffect"));
                 }
                 sell.transform.GetComponent<Animator>().enabled = true;
-                UnitTransformComponent tran = (UnitTransformComponent)obj.getComponent(UnitComponentType.TRANSFORM);
+                UnitTransformComponent tran = (UnitTransformComponent)obj.GetComponent(UnitComponentType.TRANSFORM);
                 sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
                 Sche.delayExeOnceTimes(() =>
                 {
                     sell.transform.GetComponent<Animator>().enabled = false;
-                    GameViewObjectPool.Instance.pushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
+                    GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
                 }, 0.5f);
             }
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
             foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
             {
                 GameObject.Destroy(info.Value.transform.gameObject);
-                info.Value.clearUnitInfo();
-                GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Item, info.Value);
+                info.Value.ClearUnitInfo();
+                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, info.Value);
             }
             this.itemDic.Clear();
             this.RemoveListener();
@@ -96,7 +96,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearGameInfo();
+            this.ClearGameInfo();
             base.Dispose();
         }
 

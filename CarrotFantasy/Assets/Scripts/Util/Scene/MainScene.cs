@@ -9,10 +9,10 @@ namespace CarrotFantasy
             this.prefabUrl = null;
         }
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
-            StartLoadPanel panel = new StartLoadPanel(null);
+            base.Init();
+            // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
             //ServerProvision.panelServer.ShowPanel(panel);
             //Sche.delayExeOnceTimes(() => {
             //    panel.autoClose();

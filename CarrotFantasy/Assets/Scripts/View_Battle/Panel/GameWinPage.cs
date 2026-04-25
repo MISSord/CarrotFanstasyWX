@@ -23,10 +23,10 @@ namespace CarrotFantasy
         public GameWinPage(Transform node)
         {
             this.transform = node;
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.DataComponent);
+            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
-        public void init()
+        public void Init()
         {
             this.txtResultShow = this.transform.Find("txt_result_show").GetComponent<Text>();
             this.txtLevelShow = this.transform.Find("txt_level_show").GetComponent<Text>();
@@ -45,19 +45,19 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnReplay.onClick.AddListener(this.btnEvenReplay);
-            this.btnChooseLevel.onClick.AddListener(this.btnEvenChooseOtherLevel);
-            this.dataComponent.eventDispatcher.AddListener(BattleEvent.SHOW_GAME_FINISH_PAGE, this.showGameWinPage);
+            this.btnReplay.onClick.AddListener(this.BtnEvenReplay);
+            this.btnChooseLevel.onClick.AddListener(this.BtnEvenChooseOtherLevel);
+            this.dataComponent.eventDispatcher.AddListener(BattleEvent.SHOW_GAME_FINISH_PAGE, this.ShowGameWinPage);
         }
 
         private void RemoveListener()
         {
             this.btnReplay.onClick.RemoveAllListeners();
             this.btnChooseLevel.onClick.RemoveAllListeners();
-            this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.SHOW_GAME_FINISH_PAGE, this.showGameWinPage);
+            this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.SHOW_GAME_FINISH_PAGE, this.ShowGameWinPage);
         }
 
-        public void showGameWinPage()
+        public void ShowGameWinPage()
         {
             this.transform.gameObject.SetActive(true);
             UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Perfect");
@@ -67,12 +67,12 @@ namespace CarrotFantasy
             this.img_Carrot.sprite = this.carrotSprites[dataComponent.carrotTropyLevel() - 1];
         }
 
-        public void btnEvenReplay()
+        public void BtnEvenReplay()
         {
             GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
         }
 
-        public void btnEvenChooseOtherLevel()
+        public void BtnEvenChooseOtherLevel()
         {
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.RETURN_TO_MAIN_SCENE);
         }

@@ -14,7 +14,7 @@ namespace CarrotFantasy
             this.componentType = BattleViewComponentType.SCENE;
         }
 
-        public override void init()
+        public override void Init()
         {
             this.rootGameContainer = new GameObject("SceneContainer");
             this.rootGameContainer.transform.SetParent(this.battleView.rootGameObject.transform);
@@ -23,7 +23,7 @@ namespace CarrotFantasy
             this.rootGameContainer.transform.localScale = Vector3.one;
         }
 
-        public GameObject registerGameContainer(String name)
+        public GameObject RegisterGameContainer(String name)
         {
             if (this.containerDic.ContainsKey(name)) return this.containerDic[name];
             GameObject container = new GameObject(name);
@@ -35,9 +35,9 @@ namespace CarrotFantasy
             return container;
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
-            base.clearGameInfo();
+            base.ClearGameInfo();
             foreach (KeyValuePair<String, GameObject> info in containerDic)
             {
                 GameObject.Destroy(info.Value);

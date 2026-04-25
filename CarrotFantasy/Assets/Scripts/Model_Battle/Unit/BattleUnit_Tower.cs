@@ -35,9 +35,9 @@ namespace CarrotFantasy
             this.monsterList = new List<BattleUnit_Monster>();
         }
 
-        public override void loadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
+        public override void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
         {
-            base.loadInfo(uid, param, birthPosition);
+            base.LoadInfo(uid, param, birthPosition);
             this.towerID = (int)param["towerID"];
             this.price = new int[3];
             this.price[0] = (int)param["price0"];
@@ -57,9 +57,9 @@ namespace CarrotFantasy
             this.y = y;
         }
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
+            base.Init();
             this.unitBeHit = GameObjectPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
             if (this.unitBeHit == null)
             {
@@ -70,15 +70,15 @@ namespace CarrotFantasy
             {
                 this.unitTrans = new UnitTransformComponent();
             }
-            this.addComponent(this.unitBeHit);
-            this.addComponent(this.unitTrans);
+            this.AddComponent(this.unitBeHit);
+            this.AddComponent(this.unitTrans);
 
             this.unitBeHit.registerBeHitCallBack(this.beHitCallBack);
         }
 
-        public override void initComponents()
+        public override void InitComponents()
         {
-            base.initComponents();
+            base.InitComponents();
             this.unitTrans.setBodyRadius(this.towerAttackRadius);
         }
 
@@ -104,7 +104,7 @@ namespace CarrotFantasy
             this.eventDipatcher.DispatchEvent<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this);
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
             this.timeVal += deltaTime;
             if (this.timeVal >= this.attackCD)

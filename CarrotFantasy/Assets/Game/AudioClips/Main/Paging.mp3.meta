@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: 99c254cf5ce613f49a1dc0dc555fd71e
-timeCreated: 1531467406
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/main_prefab
   assetBundleVariant: 

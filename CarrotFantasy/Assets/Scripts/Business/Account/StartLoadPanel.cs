@@ -1,23 +1,17 @@
-using System.Collections.Generic;
-
 namespace CarrotFantasy
 {
-    public class StartLoadPanel : BasePanel
+    public class StartLoadPanel : BaseView
     {
-        public StartLoadPanel(Dictionary<string, dynamic> param) : base(param)
-        {
-            this.isClickGrayEnable = false;
-            this.prefabUrl = "Prefabs/Business/Login/StartLoadPanel";
-        }
+        private static StartLoadPanel _instance;
+        public static StartLoadPanel Instance => _instance ?? (_instance = new StartLoadPanel());
 
-        public override void Init()
-        {
-            base.Init();
-        }
+        private StartLoadPanel() { }
 
-        public void autoClose()
+        public override void InitData()
         {
-            this.Finish();
+            viewName = "StartLoadPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.LoginPrefab, "StartLoadPanel");
         }
     }
 }

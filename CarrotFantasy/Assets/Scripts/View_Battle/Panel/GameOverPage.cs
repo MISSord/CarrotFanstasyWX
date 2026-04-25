@@ -21,10 +21,10 @@ namespace CarrotFantasy
         public GameOverPage(Transform node)
         {
             this.transform = node;
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.DataComponent);
+            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
-        public void init()
+        public void Init()
         {
             this.txtResultShow = this.transform.Find("txt_result_show").GetComponent<Text>();
             this.txtLevelShow = this.transform.Find("txt_level_show").GetComponent<Text>();
@@ -37,20 +37,20 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnReplay.onClick.AddListener(this.btnEvenReplay);
-            this.btnChooseLevel.onClick.AddListener(this.btnEvenChooseOtherLevel);
+            this.btnReplay.onClick.AddListener(this.BtnEvenReplay);
+            this.btnChooseLevel.onClick.AddListener(this.BtnEvenChooseOtherLevel);
 
-            this.dataComponent.eventDispatcher.AddListener(BattleEvent.SHOW_GAME_OVER_PAGE, this.showGameOverPage);
+            this.dataComponent.eventDispatcher.AddListener(BattleEvent.SHOW_GAME_OVER_PAGE, this.ShowGameOverPage);
         }
 
         private void RemoveListener()
         {
             this.btnReplay.onClick.RemoveAllListeners();
             this.btnChooseLevel.onClick.RemoveAllListeners();
-            this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.SHOW_GAME_OVER_PAGE, this.showGameOverPage);
+            this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.SHOW_GAME_OVER_PAGE, this.ShowGameOverPage);
         }
 
-        public void showGameOverPage()
+        public void ShowGameOverPage()
         {
             this.transform.gameObject.SetActive(true);
             UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Lose");
@@ -59,12 +59,12 @@ namespace CarrotFantasy
             this.txtLevelShow.text = LanguageUtil.Instance.getFormatString(1003, dataComponent.bigLevel.ToString(), dataComponent.level.ToString());
         }
 
-        public void btnEvenReplay()
+        public void BtnEvenReplay()
         {
             GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
         }
 
-        public void btnEvenChooseOtherLevel()
+        public void BtnEvenChooseOtherLevel()
         {
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.RETURN_TO_MAIN_SCENE);
         }

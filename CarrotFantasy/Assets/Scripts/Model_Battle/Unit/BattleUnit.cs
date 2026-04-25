@@ -25,27 +25,27 @@ namespace CarrotFantasy
             this.isPause = false;
         }
 
-        public virtual void loadInfo(int uid, Dictionary<String, Fix64> param, Fix64Vector2 birthPosition)  //先loadInfo 再initComponent
+        public virtual void LoadInfo(int uid, Dictionary<String, Fix64> param, Fix64Vector2 birthPosition)  //先loadInfo 再initComponent
         {
             this.uid = uid;
             this.birthParam = param;
             this.birthPosition = birthPosition;
         }
 
-        public virtual void init()
+        public virtual void Init()
         {
 
         }
 
-        public virtual void initComponents()
+        public virtual void InitComponents()
         {
             for (int i = 0; i <= componentList.Count - 1; i++)
             {
-                this.componentList[i].init();
+                this.componentList[i].Init();
             }
         }
 
-        public void addComponent(BaseUnitComponent unitComponent)
+        public void AddComponent(BaseUnitComponent unitComponent)
         {
             if (this.componentDic.ContainsKey(unitComponent.unitComponentType))
             {
@@ -59,7 +59,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void removeComponent(BaseUnitComponent unitComponent)
+        public void RemoveComponent(BaseUnitComponent unitComponent)
         {
             if (unitComponent == null)
             {
@@ -67,19 +67,19 @@ namespace CarrotFantasy
                 Debug.Log(String.Format("移除单元组件出错{0}{1}", this.unitType, unitComponent.unitComponentType));
                 return;
             }
-            this.removeComponent(unitComponent.unitComponentType);
+            this.RemoveComponent(unitComponent.unitComponentType);
         }
 
-        public void removeComponent(String type)
+        public void RemoveComponent(String type)
         {
             this.componentDic.Remove(type);
         }
 
-        public virtual void start()
+        public virtual void Start()
         {
             for (int i = 0; i <= componentList.Count - 1; i++)
             {
-                componentList[i].start();
+                componentList[i].Start();
             }
             this.isPause = false;
         }
@@ -89,14 +89,14 @@ namespace CarrotFantasy
             return this.unitType;
         }
 
-        public BaseUnitComponent getComponent(String name)
+        public BaseUnitComponent GetComponent(String name)
         {
             BaseUnitComponent compon;
             this.componentDic.TryGetValue(name, out compon);
             return compon;
         }
 
-        public abstract void onTick(Fix64 deltaTime);
+        public abstract void OnTick(Fix64 deltaTime);
 
         public virtual void lateTick(Fix64 deltaTime) { }
 

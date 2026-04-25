@@ -27,7 +27,7 @@ namespace CarrotFantasy
             else
             {
                 bBattle = this.createStateInstance(type);
-                bBattle.init();
+                bBattle.Init();
                 stateDic.Add(type, bBattle);
             }
             return bBattle;
@@ -62,17 +62,17 @@ namespace CarrotFantasy
             return currentState;
         }
 
-        public void onTick(Fix64 time)
+        public void OnTick(Fix64 time)
         {
             if (currentState == null) return;
-            String nextType = currentState.onTick(time);
+            String nextType = currentState.OnTick(time);
             if (!String.Equals(nextType, currentState.getStateType()))
             {
                 this.setCurrentState(nextType);
             }
         }
 
-        public void clearGameInfo()
+        public void ClearGameInfo()
         {
             if (this.currentState != null)
             {
@@ -87,7 +87,7 @@ namespace CarrotFantasy
 
         public void Dispose()
         {
-            this.clearGameInfo();
+            this.ClearGameInfo();
             this.eventDispatcher = null;
         }
     }

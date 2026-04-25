@@ -1,48 +1,37 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class NormalModelPanel : BasePanel
+    public class NormalModelPanel : BaseView
     {
+        private static NormalModelPanel _instance;
+        public static NormalModelPanel Instance => _instance ?? (_instance = new NormalModelPanel());
+
+        private NormalModelPanel() { }
+
         private GameObject nodeTopPage;
         private GameObject nodeMenuPage;
         private GameObject nodeGameOverPage;
         private GameObject nodeGameWinPage;
         private GameObject nodeStartUI;
-        private GameObject nodeFinalWave;
-
         private TopPage topPage;
         private GameWinPage gameWinPage;
         private MenuPage menuPage;
         private GameOverPage gameOverPage;
-
         private Button btnMenuPage;
-
         private int schId;
-
         private int schId_startGame;
 
-        private bool isInit;
-
-        public NormalModelPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.prefabUrl = "Prefabs/Game/Panel/NormalModelPanel";
-            this.isShowGray = false;
+            viewName = "NormalModelPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.ViewRootPrefab, "NormalModelPanel");
         }
 
-        public override void Init()
+        protected override void LoadCallBack()
         {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-        }
-
-        protected override void OnAssetReady()
-        {
-            base.OnAssetReady();
-
             this.nodeTopPage = transform.Find("node_TopPage").gameObject;
             this.topPage = new TopPage(this.nodeTopPage.transform);
 
@@ -56,18 +45,16 @@ namespace CarrotFantasy
             this.gameWinPage = new GameWinPage(this.nodeGameWinPage.transform);
 
             this.nodeStartUI = transform.Find("StartUI").gameObject;
-
             this.btnMenuPage = this.transform.Find("node_TopPage/node_btn_container/Btn_Menu").GetComponent<Button>();
-
             this.AddListener();
         }
 
         private void initPages()
         {
-            this.topPage.init();
-            this.menuPage.init();
-            this.gameOverPage.init();
-            this.gameWinPage.init();
+            this.topPage.Init();
+            this.menuPage.Init();
+            this.gameOverPage.Init();
+            this.gameWinPage.Init();
 
             this.nodeTopPage.SetActive(true);
             this.nodeMenuPage.SetActive(false);
@@ -97,9 +84,8 @@ namespace CarrotFantasy
         private void showStartUI()
         {
             this.initPages();
-
             this.nodeStartUI.SetActive(true);
-            BattleSchedulerComponent sche = (BattleSchedulerComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
+            BattleSchedulerComponent sche = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
             this.schId = sche.delayExeOnceTimes(() =>
             {
                 this.nodeStartUI.SetActive(false);
@@ -115,13 +101,12 @@ namespace CarrotFantasy
             }, 3.5f);
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
             this.gameWinPage.Dispose();
             this.gameOverPage.Dispose();
             this.topPage.Dispose();
             this.RemoveListener();
-            base.OnDestroy();
         }
     }
 }

@@ -17,13 +17,13 @@ namespace CarrotFantasy
                 if (gamePool == null)
                 {
                     gamePool = new GameObjectPool();
-                    gamePool.init();
+                    gamePool.Init();
                 }
                 return gamePool;
             }
         }
 
-        public void init()
+        public void Init()
         {
             this.registerBattleUnit(BattleUnitType.MONSTER);
             this.registerBattleUnit(BattleUnitType.TOWER);

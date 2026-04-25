@@ -14,7 +14,7 @@ namespace CarrotFantasy
             this.beHitCallBack = beHitCallBack;
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
 
         }

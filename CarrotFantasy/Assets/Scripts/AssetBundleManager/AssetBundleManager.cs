@@ -10,11 +10,26 @@ using UnityEngine;
 #if UNITY_EDITOR
 public enum LoadMode
 {
-    Development = 0,    // 开发模式
-    Production = 1,     // 生产模式
-    Testing = 2,        // 测试模式
-    Demo = 3,           // 演示模式
-    DebugMode = 4       // 调试模式
+    /// <summary>
+    /// 开发模式
+    /// </summary>
+    Development = 0,
+    /// <summary>
+    /// 生产模式
+    /// </summary>
+    Production = 1,
+    /// <summary>
+    /// 测试模式
+    /// </summary>
+    Testing = 2,
+    /// <summary>
+    /// 演示模式
+    /// </summary>
+    Demo = 3,
+    /// <summary>
+    /// 调试模式
+    /// </summary>
+    DebugMode = 4
 }
 #endif
 

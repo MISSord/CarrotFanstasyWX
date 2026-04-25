@@ -18,7 +18,7 @@ namespace CarrotFantasy
             this.componentType = BattleComponentType.HitTestComponent;
         }
 
-        public override void init()
+        public override void Init()
         {
             this.registerList(BattleUnitType.BULLET);
             this.registerList(BattleUnitType.MONSTER);
@@ -53,14 +53,14 @@ namespace CarrotFantasy
 
         private void registerNewBattleUnit(String type, BattleUnit battle)
         {
-            UnitBeHitComponent beHit = (UnitBeHitComponent)battle.getComponent(UnitComponentType.BEHIT);
+            UnitBeHitComponent beHit = (UnitBeHitComponent)battle.GetComponent(UnitComponentType.BEHIT);
             if (beHit == null) return;
             if (!this.registerUnitDic.ContainsKey(type))
             {
                 Debug.Log(String.Format("没有注册{0}的碰撞链表", type));
                 return;
             }
-            this.registerHitTestShapeDic[type].Add((UnitTransformComponent)battle.getComponent(UnitComponentType.TRANSFORM));
+            this.registerHitTestShapeDic[type].Add((UnitTransformComponent)battle.GetComponent(UnitComponentType.TRANSFORM));
             this.registerUnitDic[type].Add(battle);
             if (type.Equals(BattleUnitType.MONSTER) || type.Equals(BattleUnitType.ITEM))
             {
@@ -70,14 +70,14 @@ namespace CarrotFantasy
 
         private void removeBattleUnit(String type, BattleUnit battle)
         {
-            UnitBeHitComponent beHit = (UnitBeHitComponent)battle.getComponent(UnitComponentType.BEHIT);
+            UnitBeHitComponent beHit = (UnitBeHitComponent)battle.GetComponent(UnitComponentType.BEHIT);
             if (beHit == null) return;
             if (!this.registerUnitDic.ContainsKey(type))
             {
                 Debug.Log(String.Format("移除{0}的碰撞信息失败", type));
                 return;
             }
-            this.registerHitTestShapeDic[type].Remove((UnitTransformComponent)battle.getComponent(UnitComponentType.TRANSFORM));
+            this.registerHitTestShapeDic[type].Remove((UnitTransformComponent)battle.GetComponent(UnitComponentType.TRANSFORM));
             this.registerUnitDic[type].Remove(battle);
             if (this.curShouldCallBackDic.ContainsKey(battle))
             {
@@ -89,7 +89,7 @@ namespace CarrotFantasy
             }
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
             this.chooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.BULLET);
             this.chooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.TOWER);
@@ -125,7 +125,7 @@ namespace CarrotFantasy
         private void chooseSingleBeHit()
         {
             UnitTransformComponent unit1;
-            UnitTransformComponent unit2 = (UnitTransformComponent)this.targetUnit.getComponent(UnitComponentType.TRANSFORM);
+            UnitTransformComponent unit2 = (UnitTransformComponent)this.targetUnit.GetComponent(UnitComponentType.TRANSFORM);
             for (int i = 0; i <= this.registerHitTestShapeDic[BattleUnitType.TOWER].Count - 1; i++)
             {
                 unit1 = this.registerHitTestShapeDic[BattleUnitType.TOWER][i];
@@ -142,10 +142,10 @@ namespace CarrotFantasy
             if (this.curShouldCallBackDic.Count == 0) return;
             foreach (KeyValuePair<BattleUnit, List<BattleUnit>> info in this.curShouldCallBackDic)
             {
-                UnitBeHitComponent tranBeHit = (UnitBeHitComponent)info.Key.getComponent(UnitComponentType.BEHIT);
+                UnitBeHitComponent tranBeHit = (UnitBeHitComponent)info.Key.GetComponent(UnitComponentType.BEHIT);
                 for (int i = 0; i <= info.Value.Count - 1; i++)
                 {
-                    UnitBeHitComponent beHit = (UnitBeHitComponent)info.Value[i].getComponent(UnitComponentType.BEHIT);
+                    UnitBeHitComponent beHit = (UnitBeHitComponent)info.Value[i].GetComponent(UnitComponentType.BEHIT);
                     beHit.beHitCallBack(info.Key);
                     tranBeHit.beHitCallBack(info.Value[i]);
                 }

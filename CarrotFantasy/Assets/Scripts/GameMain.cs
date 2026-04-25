@@ -38,6 +38,7 @@ namespace CarrotFantasy
             //OneThreadSynchronizationContext.Instance.Update();
             //Game.EventSystem.Update();
 
+            ViewManager.Instance?.Update();
             Sche.tick(new Fix64(Time.deltaTime));
             if (BusinessProvision.Instance.IsGameQuit == true)
             {

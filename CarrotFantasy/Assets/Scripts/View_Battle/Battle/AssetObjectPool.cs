@@ -22,7 +22,7 @@ namespace CarrotFantasy
             }
         }
 
-        public GameObject getAsset(String path)
+        public GameObject GetAsset(String path)
         {
             if (this.path2Asset[path] == null)
             {

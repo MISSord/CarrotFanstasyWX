@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: ed8bc180a3087454190988206464f0c1
-timeCreated: 1532055454
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/normalmordel_prefab
   assetBundleVariant: 

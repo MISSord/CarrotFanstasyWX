@@ -16,7 +16,7 @@ namespace CarrotFantasy
         private BVUIComponent uiComponent;
         private int curPrice;
 
-        public void initInfo(Transform transform, int towerId)
+        public void InitInfo(Transform transform, int towerId)
         {
             this.transform = transform;
             this.towerID = towerId;
@@ -27,18 +27,17 @@ namespace CarrotFantasy
             this.button = this.transform.GetComponent<Button>();
 
             this.image.sprite = this.canClickSprite;
-            this.button.onClick.AddListener(this.buildTower);
+            this.button.onClick.AddListener(this.BuildTower);
 
-            this.curPrice = (int)(((BattleTowerComponent)this.uiComponent.battle.getComponent(BattleComponentType.TowerComponent)).
-                configReader.getSingleTowerConfig(this.towerID)["price0"]);
+            this.curPrice = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(this.towerID)["price0"]);
         }
 
-        public void loadInfo(BVUIComponent baseView)
+        public void LoadInfo(BVUIComponent baseView)
         {
             this.uiComponent = baseView;
         }
 
-        public void updateButtonSprite(int coin)
+        public void UpdateButtonSprite(int coin)
         {
             if (coin >= this.curPrice)
             {
@@ -50,8 +49,7 @@ namespace CarrotFantasy
             }
         }
 
-
-        public void buildTower()
+        public void BuildTower()
         {
             if (this.uiComponent.selectGrid != null)
             {
@@ -60,7 +58,7 @@ namespace CarrotFantasy
                     this.uiComponent.selectGrid.mapGrid.x, this.uiComponent.selectGrid.mapGrid.y, InputOrderType.ADD_ORDER);
                 curOrder.setTowerId(this.towerID);
 
-                ((BattleInputComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.InputComponent)).addOrder(curOrder);
+                ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).addOrder(curOrder);
             }
             this.uiComponent.HandleGrid(this.uiComponent.selectGrid);
         }

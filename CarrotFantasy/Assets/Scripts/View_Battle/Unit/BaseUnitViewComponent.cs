@@ -14,10 +14,10 @@ namespace CarrotFantasy
 
         public BaseUnitViewComponent(BattleUnitView unitView)
         {
-            this.rector(unitView);
+            this.Rector(unitView);
         }
 
-        public void rector(BattleUnitView unitView)
+        public void Rector(BattleUnitView unitView)
         {
             this.unitView = unitView;
             this.unit = unitView.unit;
@@ -28,30 +28,30 @@ namespace CarrotFantasy
             this.z = 0;
         }
 
-        public void reset() { }
+        public void Reset() { }
 
-        public void init() { }
+        public void Init() { }
 
-        public void start() { }
+        public void Start() { }
 
-        public virtual void setUnitPosition(float x, float y, float z)
+        public virtual void SetUnitPosition(float x, float y, float z)
         {
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
-        public virtual void setUnitScale(float scale) { }
+        public virtual void SetUnitScale(float scale) { }
 
-        public virtual void setUnitFaceDirection(float faceDirection) { }
+        public virtual void SetUnitFaceDirection(float faceDirection) { }
 
-        public virtual void setUnitRotation(float rotation) { }
+        public virtual void SetUnitRotation(float rotation) { }
 
-        public virtual void setUnitBodyRect(float bodyRect) { }
+        public virtual void SetUnitBodyRect(float bodyRect) { }
 
-        public virtual void pause() { }
+        public virtual void Pause() { }
 
-        public virtual void resume() { }
+        public virtual void Resume() { }
 
         public virtual void Dispose() { }
     }

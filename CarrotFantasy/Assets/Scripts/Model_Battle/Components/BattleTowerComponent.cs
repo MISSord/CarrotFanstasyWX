@@ -11,8 +11,6 @@ namespace CarrotFantasy
 
         private BattleDataComponent dataComponent;
         private BattleMapComponent mapComponent;
-
-        public TowerConfigReader configReader { get; private set; }
         public int[] canBuildTowerList { get; private set; } //可以建造塔的id
         public int canBuildTowerListLength { get; private set; }
 
@@ -21,14 +19,12 @@ namespace CarrotFantasy
             this.componentType = BattleComponentType.TowerComponent;
             this.canBuildTowerList = BattleParamServer.Instance.curStage.mTowerIDList;
             this.canBuildTowerListLength = BattleParamServer.Instance.curStage.mTowerIDListLength;
-            this.configReader = new TowerConfigReader();
-            this.configReader.init();
         }
 
-        public override void init()
+        public override void Init()
         {
-            this.dataComponent = (BattleDataComponent)this.baseBattle.getComponent(BattleComponentType.DataComponent);
-            this.mapComponent = (BattleMapComponent)this.baseBattle.getComponent(BattleComponentType.MapComponent);
+            this.dataComponent = (BattleDataComponent)this.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            this.mapComponent = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
         }
 
         private int getExChangeInt(int x, int y)
@@ -45,7 +41,7 @@ namespace CarrotFantasy
         {
             if (order.order == InputOrderType.ADD_ORDER)
             {
-                int price = (int)this.configReader.getSingleTowerConfig(order.towerId)["price0"];
+                int price = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId)["price0"]);
                 if (price > dataComponent.CoinCount)
                 {
                     UIServer.Instance.showTip(LanguageUtil.Instance.getString(1004));
@@ -57,10 +53,10 @@ namespace CarrotFantasy
                     tower = new BattleUnit_Tower(this.baseBattle);
                 }
                 Fix64Vector2 birthPoint = mapComponent.getMapGridPosition(order.x, order.y);
-                tower.loadInfo(this.baseBattle.getUid(), this.configReader.getSingleTowerConfig(order.towerId), birthPoint);
+                tower.LoadInfo(this.baseBattle.getUid(), TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId), birthPoint);
                 tower.loadInfo1(order.x, order.y);
-                tower.init();
-                tower.initComponents();
+                tower.Init();
+                tower.InitComponents();
                 this.curTowerDic.Add(this.getExChangeInt(order.x, order.y), tower);
                 this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.TOWER, tower);
                 this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, -tower.price[tower.curLevel]);
@@ -102,11 +98,11 @@ namespace CarrotFantasy
             }
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
             foreach (KeyValuePair<int, BattleUnit_Tower> info in this.curTowerDic)
             {
-                info.Value.onTick(time);
+                info.Value.OnTick(time);
             }
 
         }

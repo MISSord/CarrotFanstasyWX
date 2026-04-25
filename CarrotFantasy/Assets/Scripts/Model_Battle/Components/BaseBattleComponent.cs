@@ -15,11 +15,11 @@ namespace CarrotFantasy
             this.eventDispatcher = bBattle.eventDispatcher;
         }
 
-        public abstract void init();
+        public abstract void Init();
 
-        public virtual void start() { } //用于开始游戏(即使是重新开始)
+        public virtual void Start() { } //用于开始游戏(即使是重新开始)
 
-        public virtual void onTick(Fix64 time) { }
+        public virtual void OnTick(Fix64 time) { }
 
         public virtual void lateTick(Fix64 time) { }
 

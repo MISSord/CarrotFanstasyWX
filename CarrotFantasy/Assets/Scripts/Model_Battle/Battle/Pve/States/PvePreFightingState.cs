@@ -15,12 +15,12 @@ namespace CarrotFantasy
 
         }
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
-            this.monsterComponent = (BattleMonsterComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.MonsterComponent);
-            this.scheComponent = (BattleSchedulerComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.DataComponent);
+            base.Init();
+            this.monsterComponent = (BattleMonsterComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.MonsterComponent);
+            this.scheComponent = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
+            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
         public override void stateIn()
@@ -37,7 +37,7 @@ namespace CarrotFantasy
             this.isEnterFighting = true;
         }
 
-        public override string onTick(Fix64 time)
+        public override string OnTick(Fix64 time)
         {
             if (this.isEnterFighting == true)
             {

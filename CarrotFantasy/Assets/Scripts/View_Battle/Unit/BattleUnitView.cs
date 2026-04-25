@@ -26,12 +26,12 @@ namespace CarrotFantasy
 
         public Transform transform { get; set; }
 
-        public virtual void initTransform(Transform node)
+        public virtual void InitTransform(Transform node)
         {
             this.transform = node;
         }
 
-        public void loadInfo(BattleView_base battleView, BattleUnit battleUnit)
+        public void LoadInfo(BattleView_base battleView, BattleUnit battleUnit)
         {
             this.battleView = battleView;
             this.unit = battleUnit;
@@ -39,10 +39,10 @@ namespace CarrotFantasy
             this.unitEventDispatcher = battleUnit.eventDipatcher;
             this.isPaused = false;
             this.isVisible = true;
-            this.transformComponent = (UnitTransformComponent)this.unit.getComponent(UnitComponentType.TRANSFORM);
+            this.transformComponent = (UnitTransformComponent)this.unit.GetComponent(UnitComponentType.TRANSFORM);
         }
 
-        public virtual void reloadInfo()
+        public virtual void ReloadInfo()
         {
             this.initViewPosition();
             this.initViewFaceDirection();
@@ -50,48 +50,48 @@ namespace CarrotFantasy
             this.updateBodyRect();
         }
 
-        public virtual void init()
+        public virtual void Init()
         {
-            this.initListener();
+            this.InitListener();
             this.initViewPosition();
             this.initViewFaceDirection();
             this.updateUnitScale();
             this.updateBodyRect();
         }
 
-        public virtual void onTick(float deltaTime)
+        public virtual void OnTick(float deltaTime)
         {
             this.updatePosition(deltaTime);
         }
 
-        public virtual void initComponents() //子类调用
+        public virtual void InitComponents() //子类调用
         {
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
-                this.componentList[i].init();
+                this.componentList[i].Init();
             }
         }
 
-        public void addComponent(BaseUnitViewComponent component)
+        public void AddComponent(BaseUnitViewComponent component)
         {
             if (component == null) return;
             this.componentDic.Add(component.componetType, component);
             this.componentList.Add(component);
         }
 
-        public void removeComponent(BaseUnitViewComponent component)
+        public void RemoveComponent(BaseUnitViewComponent component)
         {
             if (component == null) return;
             this.componentDic.Remove(component.componetType);
             this.componentList.Remove(component);
         }
 
-        public BaseUnitViewComponent getComponent(String type)
+        public BaseUnitViewComponent GetComponent(String type)
         {
             return this.componentDic[type];
         }
 
-        public virtual void initListener()
+        public virtual void InitListener()
         {
             this.unitEventDispatcher.AddListener(UnitEvent.FACE_DIRECTION_CHANGE, this.updateFaceDirection);
             this.unitEventDispatcher.AddListener(UnitEvent.STATUS_CHANGE, this.updateUnitScale);
@@ -115,7 +115,7 @@ namespace CarrotFantasy
         {
             //for (int i = 0; i <= this.componentList.Count - 1; i++)
             //{
-            //this.componentList[i].setUnitScale(this.transformComponent.scale * this.unit.define.scale);
+            //this.componentList[i].SetUnitScale(this.transformComponent.scale * this.unit.define.scale);
             //}
             //this.updateUnityScale();
         }
@@ -124,7 +124,7 @@ namespace CarrotFantasy
         {
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
-                this.componentList[i].setUnitRotation((float)this.transformComponent.rotation);
+                this.componentList[i].SetUnitRotation((float)this.transformComponent.rotation);
             }
         }
 
@@ -141,7 +141,7 @@ namespace CarrotFantasy
             this.refreshUnityTransform();
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
-                this.componentList[i].setUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
+                this.componentList[i].SetUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
             }
 
         }
@@ -153,7 +153,7 @@ namespace CarrotFantasy
             this.refreshUnityTransform();
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
-                this.componentList[i].setUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
+                this.componentList[i].SetUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
             }
         }
 
@@ -186,7 +186,7 @@ namespace CarrotFantasy
             this.transform.localRotation = Quaternion.Euler(0, this.curViewFaceDirection, 0);
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
-                this.componentList[i].setUnitFaceDirection(this.curViewFaceDirection);
+                this.componentList[i].SetUnitFaceDirection(this.curViewFaceDirection);
             }
         }
 
@@ -197,7 +197,7 @@ namespace CarrotFantasy
             this.curViewFaceDirection = faceDirection;
         }
 
-        public virtual void clearUnitInfo()
+        public virtual void ClearUnitInfo()
         {
             this.RemoveListener();
             this.unitEventDispatcher = null;
@@ -207,7 +207,7 @@ namespace CarrotFantasy
             for (int i = this.componentList.Count - 1; i >= 0; i--)
             {
                 this.componentList[i].Dispose();
-                GameViewObjectPool.Instance.pushViewObjectToPool(this.componentList[i].componetType, this.componentList[i]); ;
+                GameViewObjectPool.Instance.PushViewObjectToPool(this.componentList[i].componetType, this.componentList[i]); ;
             }
             this.componentList.Clear();
             this.componentDic.Clear();
@@ -216,7 +216,7 @@ namespace CarrotFantasy
 
         public virtual void Dispose()
         {
-            this.clearUnitInfo();
+            this.ClearUnitInfo();
             this.battleView = null;
         }
     }

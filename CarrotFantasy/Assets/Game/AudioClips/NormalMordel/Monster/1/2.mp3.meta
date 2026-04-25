@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: 07d18416fcabcdb4abb0548b09560d0b
-timeCreated: 1531472089
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/normalmordel/monster/1_prefab
   assetBundleVariant: 

@@ -5,57 +5,59 @@ using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class MapNormalLevelPanel : BasePanel
+    public class MapNormalLevelPanel : BaseView
     {
-        private SingleMapInfo[] levelInfoList;
+        private static MapNormalLevelPanel _instance;
+        public static MapNormalLevelPanel Instance => _instance ?? (_instance = new MapNormalLevelPanel());
 
-        private string filePath;//图片资源加载的根路径
+        private MapNormalLevelPanel() { }
+
+        private SingleMapInfo[] levelInfoList;
+        private string filePath;
         public int currentBigLevelID;
         public int currentLevelID;
         private string theSpritePath;
-
         private int towerCount = 5;
 
         private Transform levelContentTrans;
-        private GameObject nodeLockBtn;//未解锁关卡遮挡板
-        private Transform nodeTowerTrans;//建塔列表
+        private GameObject nodeLockBtn;
+        private Transform nodeTowerTrans;
         private Image imgBGLeft;
         private Image imgBGRight;
         private Text txtTotalWaves;
         private Transform scroller;
-
         private SlideScrollView slideScrollView;
 
         private Button btnStartGame;
         private Button btnNextLevel;
         private Button btnLastLevel;
-
         private Button btnReturn;
         private Button btnHelp;
 
-        private List<GameObject> levelContentImageGos;//实例化出来的地图卡片UI
-        private List<GameObject> towerContentImageGos;//实例化出来的建塔列表UI
+        private List<GameObject> levelContentImageGos;
+        private List<GameObject> towerContentImageGos;
 
-        public MapNormalLevelPanel(Dictionary<string, dynamic> param) : base(param)
+        public void SetBigLevel(int bigLevelId)
         {
-            this.prefabUrl = "Prefabs/Business/Map/MapLevelPanel";
+            this.currentBigLevelID = bigLevelId;
         }
 
-        public override void Init()
+        public override void InitData()
         {
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-            this.levelInfoList = MapServer.Instance.mapModel.getOnceBigLevelMapInfo(currentBigLevelID);
-            this.filePath = "Pictures/GameOption/Normal/Level/";
+            viewName = "MapNormalLevelPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.MapViewPrefab, "MapLevelPanel");
+        }
 
+        protected override void LoadCallBack()
+        {
+            destroyLevelUI();
+            this.filePath = "Pictures/GameOption/Normal/Level/";
+            this.levelInfoList = MapServer.Instance.mapModel.getOnceBigLevelMapInfo(currentBigLevelID);
             this.levelContentImageGos = new List<GameObject>();
             this.towerContentImageGos = new List<GameObject>();
-
             this.currentLevelID = 1;
-        }
 
-        protected override void OnAssetReady()
-        {
             this.btnReturn = this.transform.Find("node_up/btn_return").GetComponent<Button>();
             this.btnHelp = this.transform.Find("node_up/btn_help").GetComponent<Button>();
 
@@ -85,7 +87,6 @@ namespace CarrotFantasy
             this.AddListener();
         }
 
-        //更新地图UI的方法(动态UI)
         public void loadLevelUI()
         {
             this.imgBGLeft.sprite = ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Left");
@@ -93,13 +94,11 @@ namespace CarrotFantasy
             for (int i = 0; i < levelInfoList.Length; i++)
             {
                 levelContentImageGos.Add(this.CreateUIAndSetUIPosition("Prefabs/UI/node_level", levelContentTrans));
-                //更换关卡图片
                 String path = theSpritePath + "Level_" + (i + 1).ToString();
                 levelContentImageGos[i].transform.GetComponent<Image>().sprite = ResourceLoader.Instance.loadRes<Sprite>(path);
                 levelContentImageGos[i].transform.Find("img_carrot").gameObject.SetActive(false);
                 levelContentImageGos[i].transform.Find("img_all_clear").gameObject.SetActive(false);
             }
-            //设置滚动视图Content的大小
             this.slideScrollView.SetContentLength(levelInfoList.Length);
         }
 
@@ -110,7 +109,6 @@ namespace CarrotFantasy
                 SingleMapInfo info = this.levelInfoList[i];
                 if (info.unLocked == MapInfoType.UNLOCK_LEVEL)
                 {
-                    //已解锁
                     if (info.isAllClear == MapInfoType.ALL_CLEAR)
                     {
                         levelContentImageGos[i].transform.Find("img_all_clear").gameObject.SetActive(true);
@@ -130,7 +128,6 @@ namespace CarrotFantasy
             }
         }
 
-        //更新静态UI
         public void updateTowerUI()
         {
             if (towerContentImageGos.Count == 0)
@@ -164,14 +161,13 @@ namespace CarrotFantasy
                 towerContentImageGos[i].SetActive(false);
             }
         }
-        public void startGame()
+
+        public void StartGame()
         {
             MapServer.Instance.sendGameMapInfo(this.currentBigLevelID, this.currentLevelID);
-            //MapServer.Instance.sendSetSingleMapInfo(this.levelInfoList[this.currentLevelID - 1]);
             UIServer.Instance.playButtonEffect();
         }
 
-        //实例化UI
         public GameObject CreateUIAndSetUIPosition(string uiName, Transform parentTrans)
         {
             GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(uiName));
@@ -207,20 +203,20 @@ namespace CarrotFantasy
 
         public void showHelpPanel()
         {
-            ServerProvision.panelServer.ShowPanel(new HelpPanel(null));
+            UIViewService.OpenHelpPanel();
             UIServer.Instance.playButtonEffect();
         }
 
         private void returnToLastPanel()
         {
             UIServer.Instance.playButtonEffect();
-            this.Finish();
+            this.Close();
         }
 
         private void AddListener()
         {
             MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.updateMapInfo);
-            this.btnStartGame.onClick.AddListener(this.startGame);
+            this.btnStartGame.onClick.AddListener(this.StartGame);
             this.btnLastLevel.onClick.AddListener(this.toLastLevel);
             this.btnNextLevel.onClick.AddListener(this.toNextLevel);
             this.btnReturn.onClick.AddListener(this.returnToLastPanel);
@@ -238,25 +234,26 @@ namespace CarrotFantasy
             this.updateLevelUI();
         }
 
-        //销毁地图卡
         private void destroyLevelUI()
         {
+            if (levelContentImageGos == null) return;
             if (levelContentImageGos.Count > 0)
             {
-                for (int i = 0; i < 5; i++)
+                for (int i = 0; i < levelContentImageGos.Count; i++)
                 {
-                    GameObject.Destroy(levelContentImageGos[i]);
+                    if (levelContentImageGos[i] != null)
+                        GameObject.Destroy(levelContentImageGos[i]);
                 }
-                slideScrollView.InitScrollLength();
+                if (slideScrollView != null)
+                    slideScrollView.InitScrollLength();
                 levelContentImageGos.Clear();
             }
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
             this.destroyLevelUI();
             this.RemoveListener();
-            base.OnDestroy();
         }
     }
 }

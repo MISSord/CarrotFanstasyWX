@@ -10,18 +10,18 @@ namespace CarrotFantasy
 
         }
 
-        public override void init()
+        public override void Init()
         {
             this.stateMachine = new PveStateMachine(this);
-            this.addComponent(new BattleDataComponent(this));
-            this.addComponent(new BattleSimpleHitTestComponent(this));
-            this.addComponent(new BattleMapComponent(this)); //依赖 data
-            this.addComponent(new BattleItemComponent(this)); //依赖map
-            this.addComponent(new BattleTowerComponent(this)); //依赖map data
-            this.addComponent(new BattleMonsterComponent(this)); //依赖map
-            this.addComponent(new BattleBulletComponent(this)); //依赖tower
-            this.addComponent(new BattleInputComponent(this)); //依赖map tower
-            this.addComponent(new BattleSchedulerComponent(this));
+            this.AddComponent(new BattleDataComponent(this));
+            this.AddComponent(new BattleSimpleHitTestComponent(this));
+            this.AddComponent(new BattleMapComponent(this)); //依赖 data
+            this.AddComponent(new BattleItemComponent(this)); //依赖map
+            this.AddComponent(new BattleTowerComponent(this)); //依赖map data
+            this.AddComponent(new BattleMonsterComponent(this)); //依赖map
+            this.AddComponent(new BattleBulletComponent(this)); //依赖tower
+            this.AddComponent(new BattleInputComponent(this)); //依赖map tower
+            this.AddComponent(new BattleSchedulerComponent(this));
 
             this.AddListener();
         }
@@ -38,9 +38,9 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener(BattleEvent.GO_ON_GAME, this.goOnTheGame);
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
-            base.clearGameInfo();
+            base.ClearGameInfo();
             this.RemoveListener();
         }
 
@@ -48,7 +48,7 @@ namespace CarrotFantasy
         {
             foreach (KeyValuePair<String, BaseBattleComponent> info in this.componentDic)
             {
-                info.Value.init();
+                info.Value.Init();
             }
         }
 

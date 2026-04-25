@@ -15,13 +15,13 @@ namespace CarrotFantasy
             this.componentType = BattleComponentType.InputComponent;
         }
 
-        public override void init()
+        public override void Init()
         {
-            this.towerComponent = (BattleTowerComponent)this.baseBattle.getComponent(BattleComponentType.TowerComponent);
-            this.mapComponent = (BattleMapComponent)this.baseBattle.getComponent(BattleComponentType.MapComponent);
+            this.towerComponent = (BattleTowerComponent)this.baseBattle.GetComponent(BattleComponentType.TowerComponent);
+            this.mapComponent = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
             if (this.curNoProcessDic.Count == 0) return;
             //严格来说一帧只可能会有一个操作

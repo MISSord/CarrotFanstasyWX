@@ -21,7 +21,7 @@ namespace CarrotFantasy
             this.unitType = BattleUnitType.ITEM;
         }
 
-        public override void init()
+        public override void Init()
         {
             this.tranComponent = GameObjectPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.tranComponent == null)
@@ -33,15 +33,15 @@ namespace CarrotFantasy
             {
                 this.beHitComponent = new UnitBeHitComponent();
             }
-            this.addComponent(this.tranComponent);
-            this.addComponent(this.beHitComponent);
+            this.AddComponent(this.tranComponent);
+            this.AddComponent(this.beHitComponent);
 
             this.beHitComponent.registerBeHitCallBack(this.beHitCallBack);
         }
 
-        public void loadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition, int id)
+        public void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition, int id)
         {
-            this.loadInfo(uid, param, birthPosition);
+            this.LoadInfo(uid, param, birthPosition);
             this.curLive = (int)this.birthParam["live"];
             this.totalLive = (int)this.birthParam["live"];
             this.itemId = id;
@@ -52,7 +52,7 @@ namespace CarrotFantasy
             this.tranComponent.setBodyRadius(this.birthParam["bodyRadius"]);
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
 
         }

@@ -9,10 +9,10 @@ namespace CarrotFantasy
 
         public zh_language()
         {
-            init();
+            Init();
         }
 
-        public virtual void init()
+        public virtual void Init()
         {
 
         }

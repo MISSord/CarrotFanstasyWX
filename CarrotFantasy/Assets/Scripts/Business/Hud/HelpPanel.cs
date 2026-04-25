@@ -1,13 +1,14 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class HelpPanel : BasePanel
+    public class HelpPanel : BaseView
     {
-        private SlideCanCoverScrollView helpSliderScrollView;
-        private SlideCanCoverScrollView towerSliderScrollView;
+        private static HelpPanel _instance;
+        public static HelpPanel Instance => _instance ?? (_instance = new HelpPanel());
+
+        private HelpPanel() { }
 
         private GameObject nodeHelp;
         private GameObject nodeMonster;
@@ -23,22 +24,15 @@ namespace CarrotFantasy
 
         private int showId = 1;
 
-
-        public HelpPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.prefabUrl = "Prefabs/Business/Help/HelpPanel";
+            viewName = "HelpPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.HelpPrefab, "HelpPanel");
         }
 
-        public override void Init()
+        protected override void LoadCallBack()
         {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-        }
-
-        protected override void OnAssetReady()
-        {
-            base.OnAssetReady();
             this.nodeHelp = this.transform.Find("HelpPage").gameObject;
             this.nodeMonster = this.transform.Find("MonsterPage").gameObject;
             this.nodeTower = this.transform.Find("TowerPage").gameObject;
@@ -48,8 +42,6 @@ namespace CarrotFantasy
             this.btnMonster = this.transform.Find("node_top/Btn_Monster").GetComponent<Button>();
             this.btnTower = this.transform.Find("node_top/Btn_Tower").GetComponent<Button>();
 
-            //this.helpSliderScrollView = this.nodeHelp.
-
             this.showId = 1;
             this.AddListener();
             this.updateNodePosition();
@@ -57,7 +49,7 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnReturn.onClick.AddListener(this.Finish);
+            this.btnReturn.onClick.AddListener(this.Close);
             this.btnHelp.onClick.AddListener(this.showHelpPage);
             this.btnMonster.onClick.AddListener(this.showMonsterPage);
             this.btnTower.onClick.AddListener(this.showTowerPage);
@@ -88,9 +80,8 @@ namespace CarrotFantasy
             this.updateNodePosition();
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
-            base.OnDestroy();
         }
     }
 }

@@ -26,9 +26,9 @@ namespace CarrotFantasy
             this.unitComponentType = UnitComponentType.MOVE_MONSTER;
         }
 
-        public override void init()
+        public override void Init()
         {
-            this.unitTransform = (UnitTransformComponent)this.unit.getComponent(UnitComponentType.TRANSFORM);
+            this.unitTransform = (UnitTransformComponent)this.unit.GetComponent(UnitComponentType.TRANSFORM);
             this.roadPointIndex = 0;
 
             this.isReachCarrot = false;
@@ -37,7 +37,7 @@ namespace CarrotFantasy
             this.setSpeed();
         }
 
-        public void loadInfo(List<Fix64Vector2> monsterPath, Fix64 distance)
+        public void LoadInfo(List<Fix64Vector2> monsterPath, Fix64 distance)
         {
             monsterPointList = monsterPath;
             EndPointDistance = distance;
@@ -74,7 +74,7 @@ namespace CarrotFantasy
             this.moveCurTime = Fix64.Zero;
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
             if (!this.isReachCarrot)
             {

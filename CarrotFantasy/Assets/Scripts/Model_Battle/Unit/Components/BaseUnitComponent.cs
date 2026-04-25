@@ -12,11 +12,11 @@ namespace CarrotFantasy
             this.unit = unit;
         }
 
-        public virtual void init() { }
+        public virtual void Init() { }
 
-        public virtual void start() { }
+        public virtual void Start() { }
 
-        public abstract void onTick(Fix64 deltaTime);
+        public abstract void OnTick(Fix64 deltaTime);
 
         public virtual void lateTick(Fix64 deltaTime) { }
 

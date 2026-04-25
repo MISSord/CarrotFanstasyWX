@@ -1,11 +1,15 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class MapBigLevelPanel : BasePanel
+    public class MapBigLevelPanel : BaseView
     {
+        private static MapBigLevelPanel _instance;
+        public static MapBigLevelPanel Instance => _instance ?? (_instance = new MapBigLevelPanel());
+
+        private MapBigLevelPanel() { }
+
         private Button btnReturn;
         private Button btnHelp;
 
@@ -15,31 +19,26 @@ namespace CarrotFantasy
         private GridLayoutGroup gridLayout;
         private SlideScrollView slideScroll;
 
-        private int bigLevelPageCount;//大关卡总数
-        private Transform[] bigLevelPage;//大关卡按钮数组
-        private Transform bigLevelContentTrans;//滚动视图的content
+        private int bigLevelPageCount;
+        private Transform[] bigLevelPage;
+        private Transform bigLevelContentTrans;
 
         private bool hasRigisterEvent;
-        private int curBigLevel;
+        private int curBigLevel = 1;
 
-        public MapBigLevelPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.prefabUrl = "Prefabs/Business/Map/MapBigLevelPanel";
-            this.curBigLevel = 1;
+            viewName = "MapBigLevelPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.MapViewPrefab, "MapBigLevelPanel");
         }
 
-        public override void Init()
+        protected override void LoadCallBack()
         {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-            this.bigLevelPageCount = MapServer.Instance.mapModel.getBigLevelCount(); //后期读配置
+            this.bigLevelPageCount = MapServer.Instance.mapModel.getBigLevelCount();
             this.bigLevelPage = new Transform[bigLevelPageCount];
             this.hasRigisterEvent = false;
-        }
 
-        protected override void OnAssetReady()
-        {
             this.btnReturn = this.transform.Find("node_up/btn_return").GetComponent<Button>();
             this.btnHelp = this.transform.Find("node_up/btn_help").GetComponent<Button>();
 
@@ -73,13 +72,10 @@ namespace CarrotFantasy
 
         private void initGridLayoutAndSroll()
         {
-            //float curHeight = UIUtil.Instance.curSetScreenSize.y;
-            float sizeChange = 1;//curHeight / GameConfig.DEVELOPMENT_SCREEN_SIZE.y;
-
+            float sizeChange = 1f;
             float newCellX = GameConfig.BIG_LEVEL_UNIT_SIZE_X * sizeChange;
             float newCellY = GameConfig.BIG_LEVEL_UNIT_SIZE_Y * sizeChange;
             this.gridLayout.cellSize = new Vector2(newCellX, newCellY);
-
             float newSpacing = GameConfig.BIG_LEVEL_UNIT_SPACING_X * sizeChange;
             this.gridLayout.spacing = new Vector2(newSpacing, 0);
             this.slideScroll = new SlideScrollView();
@@ -89,7 +85,6 @@ namespace CarrotFantasy
 
         private void loadBigLevelInfo()
         {
-            //显示大关卡信息
             for (int i = 0; i <= bigLevelPageCount - 1; i++)
             {
                 bigLevelPage[i] = bigLevelContentTrans.GetChild(i);
@@ -100,7 +95,7 @@ namespace CarrotFantasy
 
         public void ShowBigLevelState(BigLevelInfo info, Transform theBigLevelButtonTrans, int bigLevelID)
         {
-            if (info.isLock == false)//解锁状态
+            if (info.isLock == false)
             {
                 theBigLevelButtonTrans.Find("img_lock").gameObject.SetActive(false);
                 theBigLevelButtonTrans.Find("img_page").gameObject.SetActive(true);
@@ -108,19 +103,13 @@ namespace CarrotFantasy
                     = info.unlockCount.ToString() + "/" + info.count.ToString();
                 Button theBigLevelButtonCom = theBigLevelButtonTrans.GetComponent<Button>();
                 theBigLevelButtonCom.interactable = true;
+                theBigLevelButtonCom.onClick.RemoveAllListeners();
                 theBigLevelButtonCom.onClick.AddListener(() =>
                 {
-                    //mUIFacade.PlayButtonAudioClip();
-                    //进入小关卡
-                    MapNormalLevelPanel gameNormalLevelPanel = new MapNormalLevelPanel(null);
-                    gameNormalLevelPanel.currentBigLevelID = info.bigLevel;
-                    ServerProvision.panelServer.ShowPanel(gameNormalLevelPanel);
-
-                    //this.Finish();
+                    UIViewService.OpenMapNormalLevelPanel(info.bigLevel);
                 });
-
             }
-            else//未解锁
+            else
             {
                 theBigLevelButtonTrans.Find("img_lock").gameObject.SetActive(true);
                 theBigLevelButtonTrans.Find("img_page").gameObject.SetActive(false);
@@ -140,18 +129,17 @@ namespace CarrotFantasy
         private void returnToMainPanel()
         {
             UIServer.Instance.playButtonEffect();
-            this.Finish();
+            this.Close();
         }
 
         private void showHelpPanel()
         {
-            ServerProvision.panelServer.ShowPanel(new HelpPanel(null));
+            UIViewService.OpenHelpPanel();
             UIServer.Instance.playButtonEffect();
         }
 
         private void toTheNextLevelPage()
         {
-            //mUIFacade.PlayButtonAudioClip();
             if (this.curBigLevel >= this.bigLevelPageCount)
             {
                 return;
@@ -163,7 +151,6 @@ namespace CarrotFantasy
 
         private void toTheLastLevelPage()
         {
-            //mUIFacade.PlayButtonAudioClip();
             if (this.curBigLevel <= 1)
             {
                 return;
@@ -173,10 +160,9 @@ namespace CarrotFantasy
             UIServer.Instance.playPagingEffect();
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
             this.RemoveListener();
-            base.OnDestroy();
         }
     }
 }

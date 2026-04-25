@@ -8,10 +8,10 @@ namespace CarrotFantasy
             this.unitComponentType = UnitComponentType.MOVE_BULLET_ONE;
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
             this.calcuMoveSpeed();
-            base.onTick(deltaTime);
+            base.OnTick(deltaTime);
         }
     }
 }

@@ -21,9 +21,9 @@ namespace CarrotFantasy
             this.unitType = BattleUnitType.BULLET;
         }
 
-        public override void loadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
+        public override void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
         {
-            base.loadInfo(uid, param, birthPosition);
+            base.LoadInfo(uid, param, birthPosition);
             this.damage = (int)this.birthParam["damage"];
             this.moveSpeed = this.birthParam["moveSpeed"];
         }
@@ -35,7 +35,7 @@ namespace CarrotFantasy
             this.target = target;
         }
 
-        public override void init()
+        public override void Init()
         {
             if (this.towerId == 4)
             {
@@ -65,16 +65,16 @@ namespace CarrotFantasy
                 this.beHitComponent = new UnitBeHitComponent();
             }
 
-            this.addComponent(this.moveComponent);
-            this.addComponent(this.tranComponent);
-            this.addComponent(this.beHitComponent);
+            this.AddComponent(this.moveComponent);
+            this.AddComponent(this.tranComponent);
+            this.AddComponent(this.beHitComponent);
 
             this.beHitComponent.registerBeHitCallBack(this.beHitCallBack);
         }
 
-        public override void initComponents()
+        public override void InitComponents()
         {
-            base.initComponents();
+            base.InitComponents();
             this.moveComponent.registerMoveDirect(this.target);
             this.tranComponent.setBodyRadius(new Fix64(0.2f));
         }
@@ -91,9 +91,9 @@ namespace CarrotFantasy
 
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
-            this.moveComponent.onTick(deltaTime);
+            this.moveComponent.OnTick(deltaTime);
         }
 
         public override void lateTick(Fix64 deltaTime)

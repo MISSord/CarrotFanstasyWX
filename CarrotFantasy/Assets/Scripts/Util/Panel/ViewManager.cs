@@ -69,10 +69,16 @@ public class ViewManager
     {
         if (viewDic.ContainsKey(view.ViewName))
         {
-            Debug.LogError($"{view.ViewName}??????????");
+            Debug.LogError("View already registered: " + view.ViewName);
             return;
         }
         viewDic.Add(view.ViewName, view);
+    }
+
+    public void UnregisterView(BaseView view)
+    {
+        if (view == null || viewDic == null) return;
+        viewDic.Remove(view.ViewName);
     }
 
     public GameObject GetBaseViewClone()
@@ -126,6 +132,26 @@ public class ViewManager
         RefreshViewStackPauseState();
     }
 
+    /// <summary> 关闭所有仍处于打开状态（isOpen）的 View，自栈顶向下依次关闭。 </summary>
+    public void CloseAllOpenViews()
+    {
+        if (viewList == null) return;
+        var ordered = new List<BaseView>(32);
+        for (int i = (int)UILayer.Normal; i <= (int)UILayer.Max; ++i)
+        {
+            List<BaseView> list = viewList[(UILayer)i];
+            for (int j = 0; j < list.Count; ++j)
+            {
+                BaseView v = list[j];
+                if (v != null && v.GetIsOpen()) ordered.Add(v);
+            }
+        }
+        for (int k = ordered.Count - 1; k >= 0; k--)
+        {
+            ordered[k].Close();
+        }
+    }
+
     public void Update()
     {
         if (isNeedFlushViewOrder == true)
@@ -142,7 +168,7 @@ public class ViewManager
             sort = i * layerIntervalOrder + 10000;
             List<BaseView> list = viewList[(UILayer)i];
             if (list.Count >= 15)
-                Debug.LogError($"{i}?????????{list.Count}??????????????????????????????????????");
+                Debug.LogError($"[ViewManager] UILayer 枚举值 {i} 上已打开的 View 数量 ({list.Count}) 已达 15，排序或叠层可能异常，请检查是否未 Close 或泄漏");
             for (int j = 0; j < list.Count; ++j)
             {
                 sort = sort + j * viewIntervalOrder;
@@ -152,7 +178,7 @@ public class ViewManager
         }
     }
 
-    /// <summary> 与 FlushViewOrder 相同迭代顺序，仅最末为栈顶；其余走 OnPause，栈顶走 OnResume。 </summary>
+    /// <summary> 与 FlushViewOrder 相同的遍历与叠层顺序，仅最后一项为栈顶；非栈顶调用 OnPause，栈顶调用 OnResume。 </summary>
     private void RefreshViewStackPauseState()
     {
         if (viewList == null) return;

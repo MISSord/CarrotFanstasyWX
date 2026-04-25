@@ -20,11 +20,11 @@ namespace CarrotFantasy
         public Fix64Vector2[] axes = new Fix64Vector2[2];
         public HitTestShape_ObbRect(HitShapeType type, Fix64 centerX, Fix64 centerY, Fix64 sizeX, Fix64 sizeY, Fix64 rotation) : base(type)
         {
-            this.reset(centerX, centerY, sizeX, sizeY, rotation);
+            this.Reset(centerX, centerY, sizeX, sizeY, rotation);
             this.resetStrDesc();
         }
 
-        private void reset(Fix64 centerX, Fix64 centerY, Fix64 sizeX, Fix64 sizeY, Fix64 rotation)
+        private void Reset(Fix64 centerX, Fix64 centerY, Fix64 sizeX, Fix64 sizeY, Fix64 rotation)
         {
             this.centerX = centerX;
             this.centerY = centerY;

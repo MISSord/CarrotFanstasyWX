@@ -37,16 +37,16 @@ namespace CarrotFantasy
             this.scheId = 0;
 
             this.monsterConfigReader = new MonsterConfigReader();
-            this.monsterConfigReader.init();
+            this.monsterConfigReader.Init();
         }
 
-        public override void init()
+        public override void Init()
         {
             this.levelInfo = BattleParamServer.Instance.info;
             this.roundInfo = levelInfo.roundInfo;
 
-            this.battleDataComponent = (BattleDataComponent)this.baseBattle.getComponent(BattleComponentType.DataComponent);
-            BattleMapComponent map = (BattleMapComponent)this.baseBattle.getComponent(BattleComponentType.MapComponent);
+            this.battleDataComponent = (BattleDataComponent)this.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            BattleMapComponent map = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
             this.birthPoint = map.startPoint;
 
             this.calcaTheTotalDistance();
@@ -75,11 +75,11 @@ namespace CarrotFantasy
                     monster = new BattleUnit_Monster(this.baseBattle);
                 }
                 monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.addDeadList);
-                monster.loadInfo(this.baseBattle.getUid(), this.monsterConfigReader.getSingleMonsterConfig(this.getMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
+                monster.LoadInfo(this.baseBattle.getUid(), this.monsterConfigReader.getSingleMonsterConfig(this.getMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
                 monster.loadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
-                monster.init();
+                monster.Init();
                 monster.loadInfo3(this.monsterPointList, this.distance);
-                monster.initComponents();
+                monster.InitComponents();
                 this.curNoRegisterList.Add(monster);
             }
             this.isHaveNoRegisterMonster = true;
@@ -87,7 +87,7 @@ namespace CarrotFantasy
 
         private void calcaTheTotalDistance()
         {
-            BattleMapComponent mapComponent = (BattleMapComponent)this.baseBattle.getComponent(BattleComponentType.MapComponent);
+            BattleMapComponent mapComponent = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
             this.monsterPointList = mapComponent.monsterPathList;
             for (int i = 0; i <= this.monsterPointList.Count - 1; i++)
             {
@@ -155,12 +155,12 @@ namespace CarrotFantasy
             }
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
-            base.onTick(time);
+            base.OnTick(time);
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
-                info.Value.onTick(time);
+                info.Value.OnTick(time);
             }
             this.updateCurMonsterWavesState();
         }
@@ -195,7 +195,7 @@ namespace CarrotFantasy
         {
             if (this.scheId != 0)
             {
-                BattleSchedulerComponent sche = (BattleSchedulerComponent)this.baseBattle.getComponent(BattleComponentType.SchedulerComponent);
+                BattleSchedulerComponent sche = (BattleSchedulerComponent)this.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
                 sche.silenceSingleSche(this.scheId);
                 this.scheId = 0;
             }

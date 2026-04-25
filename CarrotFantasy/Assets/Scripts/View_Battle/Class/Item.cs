@@ -16,7 +16,7 @@ namespace CarrotFantasy
             {
                 return;
             }
-            this.itemView.refreshTarget();
+            this.itemView.RefreshTarget();
         }
 
     }

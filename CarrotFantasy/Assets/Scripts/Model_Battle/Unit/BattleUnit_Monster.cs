@@ -24,9 +24,9 @@ namespace CarrotFantasy
             this.haveBeHit = new List<int>();
         }
 
-        public override void loadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
+        public override void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
         {
-            base.loadInfo(uid, param, birthPosition);
+            base.LoadInfo(uid, param, birthPosition);
             this.curLive = (int)this.birthParam["live"];
             this.totalLive = (int)this.birthParam["live"];
         }
@@ -39,10 +39,10 @@ namespace CarrotFantasy
 
         public void loadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
         {
-            this.moveTrans.loadInfo(monsterPath, distance);
+            this.moveTrans.LoadInfo(monsterPath, distance);
         }
 
-        public override void init()
+        public override void Init()
         {
             this.unitTransform = GameObjectPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.unitTransform == null)
@@ -59,16 +59,16 @@ namespace CarrotFantasy
             {
                 beHit = new UnitBeHitComponent();
             }
-            this.addComponent(this.unitTransform);
-            this.addComponent(this.moveTrans);
-            this.addComponent(beHit);
+            this.AddComponent(this.unitTransform);
+            this.AddComponent(this.moveTrans);
+            this.AddComponent(beHit);
 
             beHit.registerBeHitCallBack(this.beHitCallBack);
         }
 
-        public override void initComponents()
+        public override void InitComponents()
         {
-            base.initComponents();
+            base.InitComponents();
             this.unitTransform.setBodyRadius(this.birthParam["bodyRadius"]);
         }
 
@@ -107,9 +107,9 @@ namespace CarrotFantasy
             return false;
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
-            this.moveTrans.onTick(deltaTime);
+            this.moveTrans.OnTick(deltaTime);
             this.EndPointDistance = this.moveTrans.EndPointDistance;
         }
 

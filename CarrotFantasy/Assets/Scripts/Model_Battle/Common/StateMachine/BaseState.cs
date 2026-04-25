@@ -10,11 +10,11 @@ namespace CarrotFantasy
             statetype = btype;
         }
 
-        public virtual void init() { }
+        public virtual void Init() { }
 
         public virtual void stateIn() { } // 参数由各状态自己去获取
 
-        public abstract String onTick(Fix64 time);
+        public abstract String OnTick(Fix64 time);
 
         public virtual void stateOut() { }
 

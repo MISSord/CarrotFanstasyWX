@@ -93,7 +93,7 @@ namespace CarrotFantasy
             ServerProvision.panelServer.SetShowPanelActive(true); //其实不一定需要这句
             this.eventDispatcher.DispatchEvent(SceneEventType.LOAD_SCENE_FINISH);
 
-            this.currentScene.init();
+            this.currentScene.Init();
             return true;
         }
 

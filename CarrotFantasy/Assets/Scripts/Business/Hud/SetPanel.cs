@@ -1,17 +1,20 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class SetPanel : BasePanel
+    public class SetPanel : BaseView
     {
+        private static SetPanel _instance;
+        public static SetPanel Instance => _instance ?? (_instance = new SetPanel());
+
+        private SetPanel() { }
 
         private GameObject optionPageGo;
         private GameObject producerPageGo;
         private bool playBGMusic = true;
         private bool playEffectMusic = true;
-        public Sprite[] btnSpritesList;//0.音效开 1.音效关 2.背景音乐开 3.背景音乐关
+        public Sprite[] btnSpritesList;
         private Image Img_Btn_EffectAudio;
         private Image Img_Btn_BGAudio;
 
@@ -23,27 +26,19 @@ namespace CarrotFantasy
         private Button btnReturn;
 
         private int stateId;
-
         private Vector3 fadePosition = new Vector3(0, 3000, 0);
         private Vector3 showPosition = Vector3.zero;
 
-        public SetPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.prefabUrl = "Prefabs/Business/Hud/SetPanel";
+            viewName = "SetPanel";
+            layer = UILayer.Normal;
             this.btnSpritesList = new Sprite[4];
+            SetUILoadInfo(0, UiViewAbPaths.SettingViewPrefab, "SetPanel");
         }
 
-        public override void Init()
+        protected override void LoadCallBack()
         {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-        }
-
-        protected override void OnAssetReady()
-        {
-            base.OnAssetReady();
-
             this.stateId = 1;
 
             this.optionPageGo = transform.Find("OptionPage").gameObject;
@@ -101,7 +96,7 @@ namespace CarrotFantasy
         private void returnToLastPanel()
         {
             UIServer.Instance.playButtonEffect();
-            this.Finish();
+            this.Close();
         }
 
         private void updateMusicState()
@@ -140,9 +135,8 @@ namespace CarrotFantasy
             this.btnSpritesList[3] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_11");
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
-            base.OnDestroy();
         }
     }
 }

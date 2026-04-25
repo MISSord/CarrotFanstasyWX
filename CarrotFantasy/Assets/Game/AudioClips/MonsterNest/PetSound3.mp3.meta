@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: 811694f9b571ebc41ade559afca37044
-timeCreated: 1532055304
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/monsternest_prefab
   assetBundleVariant: 

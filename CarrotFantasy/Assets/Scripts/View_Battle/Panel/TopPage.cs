@@ -70,13 +70,13 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.nodeBtnPause.transform.GetComponent<Button>().onClick.AddListener(this.btnPauseGame);
+            this.nodeBtnPause.transform.GetComponent<Button>().onClick.AddListener(this.BtnPauseGame);
             //this.nodeBtnGameSpeed.transform.GetComponent<Button>().onClick.AddListener(this.changeGameSpeed);
 
             this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.updateCoinText);
             this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.updateRoundText);
 
-            this.battle.eventDispatcher.AddListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.pauseGame);
+            this.battle.eventDispatcher.AddListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
         }
 
         private void RemoveListener()
@@ -84,12 +84,12 @@ namespace CarrotFantasy
             this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.updateCoinText);
             this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.updateRoundText);
 
-            this.battle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.pauseGame);
+            this.battle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
         }
 
-        public void init()
+        public void Init()
         {
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.DataComponent);
+            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
             this.battle = GameManager.Instance.baseBattle;
             this.loadResource();
             this.loadTransform();
@@ -131,14 +131,14 @@ namespace CarrotFantasy
         }
 
         //改变游戏速度
-        public void changeGameSpeed()
+        public void ChangeGameSpeed()
         {
             UIServer.Instance.playButtonEffect();
             isNormalSpeed = !isNormalSpeed;
             this.updateBtnSpeed();
         }
 
-        public void btnPauseGame()
+        public void BtnPauseGame()
         {
             UIServer.Instance.playButtonEffect();
             if (this.isPause == true)
@@ -152,15 +152,13 @@ namespace CarrotFantasy
         }
 
         //游戏暂停
-        public void pauseGame(bool isPause)
+        public void PauseGame(bool isPause)
         {
             this.isPause = isPause;
             this.updateBtnPause();
             this.node_pause.SetActive(isPause);
             this.node_playingText.SetActive(!isPause);
         }
-
-
 
         public void Dispose()
         {

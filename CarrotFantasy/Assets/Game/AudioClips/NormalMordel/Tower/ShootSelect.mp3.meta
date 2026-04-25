@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: f2a7eefce85a4a6468a039cdc7e7e97b
-timeCreated: 1531470249
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/normalmordel/tower_prefab
   assetBundleVariant: 

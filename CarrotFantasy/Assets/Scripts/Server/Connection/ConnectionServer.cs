@@ -15,14 +15,14 @@ namespace CarrotFantasy
         private string connectAddress = string.Empty;
         private bool isInited = false;
 
-        public void init(string address = "")
+        public void Init(string address = "")
         {
             this.connectAddress = address ?? string.Empty;
             this.rebuildTransport();
             this.isInited = true;
         }
 
-        public void start()
+        public void Start()
         {
             this.ensureInit();
             this.transport.Start();
@@ -141,7 +141,7 @@ namespace CarrotFantasy
         {
             if (this.isInited == false || this.transport == null)
             {
-                this.init(this.connectAddress);
+                this.Init(this.connectAddress);
             }
         }
 

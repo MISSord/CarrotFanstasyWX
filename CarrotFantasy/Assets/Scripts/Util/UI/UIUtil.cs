@@ -29,14 +29,14 @@ namespace CarrotFantasy
             currentScreenSize = new Vector2(UnityEngine.Screen.width, UnityEngine.Screen.height);
         }
 
-        public void initCanvasScale(CanvasScaler canvasScale) //初始化屏幕
+        public void InitCanvasScale(CanvasScaler canvasScale) //初始化屏幕
         {
             canvasScale.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            canvasScale.matchWidthOrHeight = getMatchWidthOrHeighRatio();
+            canvasScale.matchWidthOrHeight = GetMatchWidthOrHeighRatio();
             canvasScale.referenceResolution = GameConfig.DEVELOPMENT_SCREEN_SIZE;
         }
 
-        public int getMatchWidthOrHeighRatio()
+        public int GetMatchWidthOrHeighRatio()
         {
             if (SCREEN_RADIO > 1.75)
             {
@@ -52,7 +52,7 @@ namespace CarrotFantasy
         {
             if (REAL_REFERENCE_RESOLUTION == Vector2.zero)
             {
-                int radio = this.getMatchWidthOrHeighRatio();
+                int radio = this.GetMatchWidthOrHeighRatio();
                 if (radio == 0)
                 {
                     REAL_REFERENCE_RESOLUTION = new Vector2(GameConfig.DEVELOPMENT_SCREEN_SIZE.x, GameConfig.DEVELOPMENT_SCREEN_SIZE.x * SCREEN_RADIO);

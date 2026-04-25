@@ -98,7 +98,7 @@ namespace CarrotFantasy
             canvas.sortingOrder = 1000;
 
             CanvasScaler canvasScaler = nodeObject.AddComponent<CanvasScaler>();
-            UIUtil.Instance.initCanvasScale(canvasScaler);
+            UIUtil.Instance.InitCanvasScale(canvasScaler);
 
             GraphicRaycaster graphic = nodeObject.AddComponent<GraphicRaycaster>();
         }
@@ -111,7 +111,7 @@ namespace CarrotFantasy
         private void initAudioManager()
         {
             audioManager = new AudioManager();
-            audioManager.init();
+            audioManager.Init();
             this.addToGlobalUI(audioManager.nodeObject);
         }
 

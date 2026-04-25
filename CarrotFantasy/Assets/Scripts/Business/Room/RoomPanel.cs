@@ -1,39 +1,34 @@
-using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class RoomPanel : BasePanel
+    public class RoomPanel : BaseView
     {
+        private static RoomPanel _instance;
+        public static RoomPanel Instance => _instance ?? (_instance = new RoomPanel());
+
+        private RoomPanel() { }
 
         private Button btn_fight;
         private Button btn_canel;
-
         private Text txt_tips;
         private Text txt_userName;
         private Text txt_userState;
         private Text txt_myState;
-
-        private int matchTime = 0;
+        private int matchTime;
         private int scheId;
 
-
-        public RoomPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.isClickGrayEnable = false;
-            this.prefabUrl = "Prefabs/Business/Room/RoomPanel";
+            viewName = "RoomPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.RoomPrefab, "RoomPanel");
         }
 
-        public override void Init()
+        protected override void LoadCallBack()
         {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-        }
-
-        protected override void OnAssetReady()
-        {
-            base.OnAssetReady();
+            this.matchTime = 0;
             this.btn_fight = this.transform.Find("node_bottom/btn_ready").GetComponent<Button>();
             this.btn_canel = this.transform.Find("node_bottom/btn_back").GetComponent<Button>();
 
@@ -60,7 +55,6 @@ namespace CarrotFantasy
         {
             this.btn_canel.onClick.AddListener(this.canelFight);
             this.btn_fight.onClick.AddListener(this.stateToFight);
-
             RoomServer.Instance.eventDispatcher.AddListener(RoomEventType.USER_INFO_CHANGE, this.changeUserInfo);
         }
 
@@ -103,25 +97,21 @@ namespace CarrotFantasy
 
         private void stateToFight()
         {
-            //发送准备消息
             UIServer.Instance.playButtonEffect();
             RoomServer.Instance.sendReadyFight();
-            //
         }
 
         private void canelFight()
         {
-            //发送取消消息
             UIServer.Instance.playButtonEffect();
             RoomServer.Instance.canelMatch();
-            this.Finish();
+            this.Close();
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
             this.RemoveListener();
             Sche.silenceSingleSche(this.scheId);
-            base.OnDestroy();
         }
     }
 }

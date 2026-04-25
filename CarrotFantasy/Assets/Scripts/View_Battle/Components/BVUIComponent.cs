@@ -48,15 +48,15 @@ namespace CarrotFantasy
 
         public BVUIComponent(BattleView_base battleView) : base(battleView)
         {
-            this.towerComponent = (BattleTowerComponent)this.battle.getComponent(BattleComponentType.TowerComponent);
-            this.dataComponent = (BattleDataComponent)this.battle.getComponent(BattleComponentType.DataComponent);
-            this.mapComponent = (BattleMapComponent)this.battle.getComponent(BattleComponentType.MapComponent);
+            this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
+            this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            this.mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
             this.buttonTowerList = new ButtonTower[this.towerComponent.canBuildTowerListLength];
             this.spriteButtonUpList = new Sprite[3];
             this.componentType = BattleViewComponentType.UI;
 
             this.reader = new MapUIConfigReader();
-            this.reader.init();
+            this.reader.Init();
         }
 
         private void AddListener()
@@ -99,10 +99,10 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.setTargetSignal);
         }
 
-        public override void init()
+        public override void Init()
         {
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.getComponent(BattleViewComponentType.SCENE);
-            this.rootGameObject = scene.registerGameContainer("UIContainer");
+            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
+            this.rootGameObject = scene.RegisterGameContainer("UIContainer");
 
             this.nodeTowerList = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/UI/tower_list"));
             this.nodeTowerList.transform.SetParent(this.rootGameObject.transform);
@@ -113,8 +113,8 @@ namespace CarrotFantasy
             {
                 GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/UI/btn_tower_build"));
                 this.buttonTowerList[i] = new ButtonTower();
-                this.buttonTowerList[i].loadInfo(this);
-                this.buttonTowerList[i].initInfo(itemGo.transform, this.towerComponent.canBuildTowerList[i]);
+                this.buttonTowerList[i].LoadInfo(this);
+                this.buttonTowerList[i].InitInfo(itemGo.transform, this.towerComponent.canBuildTowerList[i]);
 
                 itemGo.transform.SetParent(this.nodeTowerList.transform);
                 itemGo.transform.localPosition = Vector3.zero;
@@ -145,7 +145,7 @@ namespace CarrotFantasy
             this.nodeTargetSignal.transform.SetParent(this.rootGameObject.transform);
             this.nodeTargetSignal.transform.position = this.battleView.initTran;
 
-            this.loadInfo();
+            this.LoadInfo();
             this.setStartPoint();
             this.setCarrot();
 
@@ -190,12 +190,12 @@ namespace CarrotFantasy
             this.nodeCarrot = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/Carrot"));
             this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
             this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
-            this.carrot.init();
+            this.carrot.Init();
             Fix64Vector2 endPosition = this.mapComponent.monsterPathList[this.mapComponent.monsterPathList.Count - 1];
             this.carrot.transform.position = new Vector3((float)endPosition.X + 0.1f, (float)endPosition.Y + 0.5f, 0);
         }
 
-        private void loadInfo()
+        private void LoadInfo()
         {
             tranButtonUp = this.nodeHandleTowerCanvas.transform.Find("btn_up_level");
             tranButtonSell = this.nodeHandleTowerCanvas.transform.Find("btn_sell");
@@ -222,7 +222,7 @@ namespace CarrotFantasy
         {
             for (int i = 0; i < this.buttonTowerList.Length; i++)
             {
-                this.buttonTowerList[i].updateButtonSprite(dataComponent.CoinCount);
+                this.buttonTowerList[i].UpdateButtonSprite(dataComponent.CoinCount);
             }
             if (this.selectGrid == null) return;
             BattleUnit_Tower tower = towerComponent.getTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
@@ -371,7 +371,7 @@ namespace CarrotFantasy
             if (tower.isMaxLevel == true) return;
             InputOrder order = new InputOrder();
             order.setOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.UPDATE_ORDER);
-            ((BattleInputComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.InputComponent)).addOrder(order);
+            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).addOrder(order);
             this.selectGrid.HideGrid();
         }
 
@@ -384,7 +384,7 @@ namespace CarrotFantasy
             }
             InputOrder order = new InputOrder();
             order.setOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.REMOVE_ORDER);
-            ((BattleInputComponent)GameManager.Instance.baseBattle.getComponent(BattleComponentType.InputComponent)).addOrder(order);
+            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).addOrder(order);
             this.selectGrid.HideGrid();
         }
 
@@ -434,7 +434,7 @@ namespace CarrotFantasy
             }
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
             this.carrot.Dispose();
             for (int i = 0; i < this.buttonTowerList.Length - 1; i++)
@@ -452,7 +452,7 @@ namespace CarrotFantasy
         private void showTargetSignal()
         {
             UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Tower/ShootSelect");
-            UnitTransformComponent tranComponent = (UnitTransformComponent)this.tranTarget.getComponent(UnitComponentType.TRANSFORM);
+            UnitTransformComponent tranComponent = (UnitTransformComponent)this.tranTarget.GetComponent(UnitComponentType.TRANSFORM);
             Fix64Vector2 pos = tranComponent.getLastPosition();
             Vector3 position = new Vector3((float)pos.X, (float)pos.Y, 0);
             this.nodeTargetSignal.transform.position = position + new Vector3(0, BattleConfig.MAP_RATIO / 2, 0);
@@ -466,7 +466,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearGameInfo();
+            this.ClearGameInfo();
             base.Dispose();
         }
 

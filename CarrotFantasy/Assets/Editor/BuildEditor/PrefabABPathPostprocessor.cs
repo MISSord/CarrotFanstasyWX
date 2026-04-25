@@ -59,12 +59,13 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         if (string.IsNullOrEmpty(path))
             return false;
 
-        bool isPrefab = (path.Contains("UI/View") || path.Contains("Models")) && path.EndsWith(".prefab");
+        bool isPrefab = IsViewLikePrefab(path);
         bool isRawImage = path.Contains("UI/RawImage");
         bool isSpriteAtlas = path.EndsWith(".spriteatlas");
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder;
+        bool useGameFolderRule = UseGameFolderRule(path);
+        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder || useGameFolderRule;
     }
 
     private static string BuildAssetBundleName(string path)
@@ -78,7 +79,7 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
 
         string normalizedBundleName = bundleName.ToLower().Replace('\\', '/');
 
-        if ((path.Contains("UI/View") || path.Contains("Models")) && path.EndsWith(".prefab"))
+        if (IsViewLikePrefab(path))
             return normalizedBundleName + "_prefab";
 
         if (path.EndsWith(".spriteatlas"))
@@ -107,6 +108,9 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return "ui/rawimages/" + imageName;
         }
 
+        if (UseGameFolderRule(path))
+            return normalizedBundleName + "_prefab";
+
         string name = normalizedBundleName + "/" + Path.GetFileNameWithoutExtension(path);
         return name + "_prefab";
     }
@@ -123,5 +127,38 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         string normalizedPath = path.ToLower().Replace('\\', '/');
         bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
         return isImage && normalizedPath.Contains("/rawimages/");
+    }
+
+    private static bool IsViewLikePrefab(string path)
+    {
+        if (!path.EndsWith(".prefab"))
+            return false;
+
+        return path.Contains("UI/View") || path.Contains("UI/FightPart") || path.Contains("Models");
+    }
+
+    private static bool UseGameFolderRule(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        string normalizedPath = path.ToLower().Replace('\\', '/');
+        if (!normalizedPath.StartsWith("assets/game/"))
+            return false;
+
+        string extension = Path.GetExtension(normalizedPath);
+        if (string.IsNullOrEmpty(extension))
+            return false;
+
+        // Skip source/metadata files that should not participate in AB naming.
+        return extension != ".meta" &&
+               extension != ".cs" &&
+               extension != ".anim" &&
+               extension != ".controller" &&
+               extension != ".asmdef" &&
+               extension != ".asmref" &&
+               extension != ".dll" &&
+               extension != ".pdb" &&
+               extension != ".mdb";
     }
 }

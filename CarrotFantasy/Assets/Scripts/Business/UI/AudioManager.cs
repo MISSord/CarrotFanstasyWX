@@ -44,7 +44,7 @@ namespace CarrotFantasy
 
         int currentUid = 0;
 
-        public void init()
+        public void Init()
         {
             this.nodeObject = new GameObject("node_object");
 

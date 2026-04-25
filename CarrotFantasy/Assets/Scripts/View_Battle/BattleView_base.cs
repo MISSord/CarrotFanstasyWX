@@ -35,27 +35,27 @@ namespace CarrotFantasy
 
         public virtual void RemoveListener() { }
 
-        public virtual void init()
+        public virtual void Init()
         {
             this.AddListener();
         }
 
-        public virtual void initComponents() //最后调用
+        public virtual void InitComponents() //最后调用
         {
             for (int i = 0; i < this.componentList.Count; i++)
             {
-                this.componentList[i].init();
+                this.componentList[i].Init();
             }
         }
 
-        public void addComponent(BaseBattleViewComponent component)
+        public void AddComponent(BaseBattleViewComponent component)
         {
             if (component == null) return;
             this.componentDic.Add(component.componentType, component);
             this.componentList.Add(component);
         }
 
-        public void removeComponent(BaseBattleViewComponent component)
+        public void RemoveComponent(BaseBattleViewComponent component)
         {
             if (component == null) return;
             component.Dispose();
@@ -68,35 +68,35 @@ namespace CarrotFantasy
             }
         }
 
-        public BaseBattleViewComponent getComponent(String type)
+        public BaseBattleViewComponent GetComponent(String type)
         {
             return this.componentDic[type];
         }
 
-        public void onTick(float time)
+        public void OnTick(float time)
         {
             if (this.battle.isPause == true) return;
             for (int i = 0; i <= componentList.Count - 1; i++)
             {
-                this.componentList[i].onTick(time);
+                this.componentList[i].OnTick(time);
             }
         }
 
-        public virtual void startGame()
+        public virtual void StartGame()
         {
             if (this.isStart == true) return;
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
-                this.componentList[i].start();
+                this.componentList[i].Start();
             }
             this.isStart = true;
         }
 
-        public virtual void clearGameInfo()
+        public virtual void ClearGameInfo()
         {
             for (int i = this.componentList.Count - 1; i >= 0; i--)
             {
-                this.componentList[i].clearGameInfo();
+                this.componentList[i].ClearGameInfo();
             }
             this.componentDic.Clear();
             this.componentList.Clear();

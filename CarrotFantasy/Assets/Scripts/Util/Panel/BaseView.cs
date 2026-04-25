@@ -41,34 +41,36 @@ public abstract class BaseView
     protected bool isOpen = false;
     protected UINameTableDic nameTableDic;
 
-    // 下面部分子类一般不需要直接访问
-    private GameObject rootObject; // 根节点
-    private Transform rootView; // 界面挂点
-    private Canvas rootCanvas; // 根上的 Canvas
+    // 根对象：Instantiate 出来的整棵 UI 根
+    private GameObject rootObject; // 根 GameObject
+    private Transform rootView; // 子页面挂点（如 Root）
+    private Canvas rootCanvas; // 根节点上的 Canvas
     private int layerOrder = 0;
     private bool isInitData = false;
     private bool isLoadRoot = false;
     private string delayReleaseId;
 
+    /// <summary>index=0 的 UI 加载完成后，首个子物体的 transform，供与 BasePanel 等对接使用</summary>
+    protected Transform transform;
+
     private Dictionary<int, List<UIDownInfo>> uiLoadInfoDic = new Dictionary<int, List<UIDownInfo>>();
-    private Dictionary<int, LoadState> isLoadedDic = new Dictionary<int, LoadState>(); // 该 index 下资源是否已加载完
-    private Dictionary<int, bool> isFirstOpenDic = new Dictionary<int, bool>(); // 是否第一次真正打开该 index
+    private Dictionary<int, LoadState> isLoadedDic = new Dictionary<int, LoadState>(); // 各 index 下子界面的整体加载状态
+    private Dictionary<int, bool> isFirstOpenDic = new Dictionary<int, bool>(); // 各 index 是否已首次打开
     private Queue<int> needToLoadIndexQueue = new Queue<int>();
     private Dictionary<int, Dictionary<string, string>> flushInfo = new Dictionary<int, Dictionary<string, string>>();
 
     private bool isPausedByViewStack;
 
-    // 初始信息设置，子类必须实现
+    // 子类实现：如 SetUILoadInfo、数据初始化等
     public abstract void InitData();
 
     public void RegisterData()
     {
-        if (isInitData == false)
-        {
-            nameTableDic = new UINameTableDic();
-            this.InitData();
-            ViewManager.Instance.RegisterView(this);
-        }
+        if (isInitData) return;
+        nameTableDic = new UINameTableDic();
+        this.InitData();
+        ViewManager.Instance.RegisterView(this);
+        isInitData = true;
     }
 
     public void DeleteMe()
@@ -80,8 +82,9 @@ public abstract class BaseView
     public void Release()
     {
         ReleaseCallBack();
+        transform = null;
 
-        // 先清空实例上的引用
+        // 先断开对实例的引用，再 Destroy
         foreach (var list in uiLoadInfoDic)
         {
             for (int i = 0; i < list.Value.Count; ++i)
@@ -96,7 +99,7 @@ public abstract class BaseView
         rootCanvas = null;
         rootView = null;
 
-        // 卸载 AB 或取消尚未完成的加载
+        // 卸载或取消已加载/加载中的 AB 子资源
         foreach (var info in uiLoadInfoDic)
         {
             List<UIDownInfo> list = info.Value;
@@ -114,7 +117,7 @@ public abstract class BaseView
             }
         }
 
-        // 清空数据
+        // 清延迟释放标记
         delayReleaseId = null;
         CurShowIndex = -1;
         isLoadedDic.Clear();
@@ -144,14 +147,14 @@ public abstract class BaseView
 
     protected void ChangeIndex(int targetIndex)
     {
-        // 已加载完成则只刷新
+        // 已处于目标且已加载完成，则只 Flush
         if (CurShowIndex == targetIndex && isLoadedDic[CurShowIndex] == LoadState.Loaded)
         {
             Flush();
             return;
         }
 
-        // 切走前：隐藏旧页
+        // 从当前子页切走时，先处理当前页显示/刷新
         if (CurShowIndex != 0 && CurShowIndex != -1 && isLoadedDic[CurShowIndex] == LoadState.Loaded)
         {
             TryFlushViewShow(CurShowIndex, false);
@@ -159,7 +162,7 @@ public abstract class BaseView
 
         CurShowIndex = targetIndex;
 
-        // 新 index 已就绪则直接显示
+        // 目标 index 的加载情况
         LoadState state = isLoadedDic.GetValueOrDefault(CurShowIndex, LoadState.None);
         if (state == LoadState.Loaded)
         {
@@ -169,7 +172,7 @@ public abstract class BaseView
         else
         {
             state = isLoadedDic.GetValueOrDefault(0, LoadState.None);
-            // 避免重复入队
+            // 根（index 0）未排过队则先入队拉取
             if (state == LoadState.None)
             {
                 needToLoadIndexQueue.Enqueue(0);
@@ -194,7 +197,7 @@ public abstract class BaseView
         CheckIsNeedLoad();
     }
 
-    #region 回调与可重写
+    #region 可重写回调
     protected virtual void LoadCallBack() { }
 
     protected virtual void LoadIndexCallBack(int viewIndex) { }
@@ -209,13 +212,13 @@ public abstract class BaseView
 
     protected virtual void OpenCallBack(int index) { }
 
-    /// <summary> 同栈中更靠上的 View 遮挡时由 ViewManager 通知（全序仅栈顶不暂停） </summary>
+    /// <summary> 本 View 在打开栈中不再处于最上层时，由 ViewManager 调用 </summary>
     protected virtual void OnPause() { }
 
-    /// <summary> 再次成为栈顶，或关闭本界面且曾经栈暂停时调用 </summary>
+    /// <summary> 再次成为最上层时恢复 </summary>
     protected virtual void OnResume() { }
 
-    /// <summary> 与 FlushViewOrder 同序，仅最末项（sort 最高）为 true </summary>
+    /// <summary> 与 FlushViewOrder 配合：在打开栈中排序后，最上层为 true </summary>
     public void ApplyViewStackPauseState(bool isTopmostInOpenStack)
     {
         if (isTopmostInOpenStack)
@@ -238,7 +241,7 @@ public abstract class BaseView
 
     #endregion
 
-    #region 对外方法
+    #region 公开接口
 
     public void TryFlushTargetIndex(int index, string key = null, string content = null)
     {
@@ -285,7 +288,7 @@ public abstract class BaseView
 
     public virtual void Open(int index = 0)
     {
-        // 第一次打开，使用子类 defaultIndex
+        // 尚未建根且传入 0 时，用子类 defaultIndex
         if (index == 0 && isLoadRoot == false)
         {
             index = GetDefaultIndex();
@@ -301,7 +304,7 @@ public abstract class BaseView
 
         if (isOpen == true)
         {
-            // 再次打开：移到同层打开列表尾部，重算叠放顺序
+            // 已打开则先移出再插回，保证在打开列表尾部（最前显示）
             ViewManager.Instance.RemoveViewFromOpenList(this);
             ViewManager.Instance.AddOpenViewToOpenList(this);
             return;
@@ -336,10 +339,10 @@ public abstract class BaseView
         ViewManager.Instance.RemoveViewFromOpenList(this);
         rootView.transform.localPosition = new Vector2(99999, 99999);
 
-        // 延迟释放实例
+        // 若已有未执行的延迟释放，避免重复排程
         if (delayReleaseId != null)
         {
-            Debug.LogError($"严重：关闭时延迟释放的计时未清空，需排查: {delayReleaseId}");
+            Debug.LogError($"[BaseView] 关闭时仍有一次延迟释放在排队，已忽略本次 Close: {delayReleaseId}");
             return;
         }
 
@@ -350,9 +353,9 @@ public abstract class BaseView
 
     #endregion
 
-    #region 内部实现
+    #region 私有方法
 
-    // 从 BaseView 预制体建根节点与挂点
+    // 从 BaseView 预制体克隆出根节点
     private void CreateViewRoot()
     {
         GameObject baseView = ViewManager.Instance.GetBaseViewClone();
@@ -369,7 +372,7 @@ public abstract class BaseView
         canvas.worldCamera = ViewManager.Instance.GetUICamera();
         rootCanvas = canvas;
 
-        // 子界面预制体挂到名为 Root 的节点下
+        // 子页面实例会挂到名为 Root 的节点下
         rootView = rootObject.transform.Find("Root");
         isLoadRoot = true;
     }
@@ -418,7 +421,7 @@ public abstract class BaseView
 
     private void AssetBundleLoadCallBack(GameObject obj, UIDownInfo info, int targetIndex)
     {
-        // 已关闭则丢弃（界面已关或正销毁）
+        // 已关闭则忽略异步回调
         if (this.isOpen == false)
         {
             return;
@@ -430,18 +433,18 @@ public abstract class BaseView
         info.isLoaded = LoadState.Loaded;
         info.loadIndex = -1;
 
-        // 若需手调父节点、兄弟序、Rect，可取消注释
+        // 若需可在此显式设 RectTransform、兄弟顺序等
         //instanceObj.transform.SetParent(rootView.transform);
         //instanceObj.transform.SetSiblingIndex(info.order);
         //RectTransform trans = instanceObj.gameObject.GetComponent<RectTransform>();
         //trans.localPosition = Vector3.zero;
         //trans.localScale = Vector3.one;
 
-        // 通过 UINameTable 注册控件
+        // 收集 UINameTable
         UINameTable nameTable = instanceObj.transform.GetComponent<UINameTable>();
         if (nameTable == null)
         {
-            Debug.LogError($"该预制体未挂 UINameTable，请检查: {instanceObj.name}");
+            Debug.LogWarning("[BaseView] 未挂 UINameTable（可忽略）: " + instanceObj.name);
         }
         else
         {
@@ -465,16 +468,20 @@ public abstract class BaseView
             }
         }
 
-        // 该 index 下各资源都已加载完
+        // 该 index 下所有子资源已加载完
         if (isAllLoaded == true)
         {
-            // 默认 index 0：全部激活并走 LoadCallBack
+            // index 0 时设置 transform 并调 LoadCallBack
             if (targetIndex == 0)
             {
                 for (int i = 0; i < infos.Count; ++i)
                 {
                     UIDownInfo info = infos[i];
                     info.gameObject.SetActive(true);
+                }
+                if (infos.Count > 0)
+                {
+                    transform = infos[0].gameObject.transform;
                 }
                 this.LoadCallBack();
             }

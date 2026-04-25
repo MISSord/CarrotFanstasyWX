@@ -20,16 +20,16 @@ namespace CarrotFantasy
             this.pathUrl = "Prefabs/Game/MonsterPrefab";
         }
 
-        public override void init()
+        public override void Init()
         {
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.getComponent(BattleViewComponentType.SCENE);
-            this.rootGameObject = scene.registerGameContainer("MonsterContainer");
+            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
+            this.rootGameObject = scene.RegisterGameContainer("MonsterContainer");
             this.noInstanGameObject = ResourceLoader.Instance.getGameObject(this.pathUrl);
 
-            this.scheComponent = (BattleSchedulerComponent)this.battle.getComponent(BattleComponentType.SchedulerComponent);
+            this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
 
-            GameViewObjectPool.Instance.registerGameObject(BattleUnitViewType.Monster);
-            GameViewObjectPool.Instance.registerGameObject(BattleUnitViewType.DestroyEffect);
+            GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.Monster);
+            GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.DestroyEffect);
             this.AddListener();
         }
 
@@ -51,7 +51,7 @@ namespace CarrotFantasy
             {
                 BattleUnit_Monster monster = (BattleUnit_Monster)unit;
                 BattleUnitView_Monster monsterView = GameViewObjectPool.Instance.getNewBattleUnitView<BattleUnitView_Monster>(BattleUnitViewType.Monster);
-                GameObject node = GameViewObjectPool.Instance.getNewGameObject(BattleUnitViewType.Monster);
+                GameObject node = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.Monster);
                 if (monsterView == null)
                 {
                     monsterView = new BattleUnitView_Monster();
@@ -61,20 +61,20 @@ namespace CarrotFantasy
                     node = GameObject.Instantiate(this.noInstanGameObject);
                     node.transform.SetParent(this.rootGameObject.transform);
                 }
-                monsterView.initTransform(node.transform);
-                monsterView.loadInfo(this.battleView, monster);
-                monsterView.init();
+                monsterView.InitTransform(node.transform);
+                monsterView.LoadInfo(this.battleView, monster);
+                monsterView.Init();
 
                 this.monsterDic.Add(monster, monsterView);
                 UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Monster/Create");
             }
         }
 
-        public override void onTick(float time)
+        public override void OnTick(float time)
         {
             foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
-                info.Value.onTick(time);
+                info.Value.OnTick(time);
             }
         }
 
@@ -88,35 +88,35 @@ namespace CarrotFantasy
                 Debug.Log("移除怪兽视图出错");
                 return;
             }
-            GameViewObjectPool.Instance.pushGameObjectToPool(BattleUnitViewType.Monster, monsterView.transform.gameObject);
-            monsterView.clearUnitInfo();
+            GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, monsterView.transform.gameObject);
+            monsterView.ClearUnitInfo();
             this.monsterDic.Remove(monster);
-            GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
+            GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
             UIServer.Instance.audioManager.playEffect(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
 
             //特效
-            GameObject sell = GameViewObjectPool.Instance.getNewGameObject(BattleUnitViewType.DestroyEffect);
+            GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
             if (sell == null)
             {
                 sell = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/DestoryEffect"));
             }
             sell.transform.GetComponent<Animator>().enabled = true;
-            UnitTransformComponent tran = (UnitTransformComponent)unit.getComponent(UnitComponentType.TRANSFORM);
+            UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
             sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
             Sche.delayExeOnceTimes(() =>
             {
                 sell.transform.GetComponent<Animator>().enabled = false;
-                GameViewObjectPool.Instance.pushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
+                GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
             }, 0.5f);
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
             foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
-                GameViewObjectPool.Instance.pushGameObjectToPool(BattleUnitViewType.Monster, info.Value.transform.gameObject);
-                info.Value.clearUnitInfo();
-                GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Monster, info.Value);
+                GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, info.Value.transform.gameObject);
+                info.Value.ClearUnitInfo();
+                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, info.Value);
             }
             this.monsterDic.Clear();
             this.RemoveListener();
@@ -124,7 +124,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearGameInfo();
+            this.ClearGameInfo();
             base.Dispose();
         }
     }

@@ -9,10 +9,10 @@ namespace CarrotFantasy
 
         public ConnectEventDispatcher()
         {
-            init();
+            Init();
         }
 
-        public void init()
+        public void Init()
         {
             eventDispatcher = new EventDispatcher();
         }

@@ -7,7 +7,7 @@ namespace CarrotFantasy
     {
         public Dictionary<int, Dictionary<String, int>> mapUIParam = new Dictionary<int, Dictionary<string, int>>();
 
-        public void init()
+        public void Init()
         {
             this.mapUIParam.Add(101, new Dictionary<String, int>() {
                 { "mapBg", 0},

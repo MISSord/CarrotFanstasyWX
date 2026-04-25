@@ -32,9 +32,9 @@ namespace CarrotFantasy
             this.componentType = BattleComponentType.MapComponent;
         }
 
-        public override void init()
+        public override void Init()
         {
-            BattleDataComponent dataOne = (BattleDataComponent)this.baseBattle.getComponent(BattleComponentType.DataComponent);
+            BattleDataComponent dataOne = (BattleDataComponent)this.baseBattle.GetComponent(BattleComponentType.DataComponent);
             this.xColumn = dataOne.xColumn;
             this.yRow = dataOne.yRow;
             this.gridsList = new BattleMapGrid[this.xColumn, this.yRow];
@@ -98,7 +98,7 @@ namespace CarrotFantasy
 
         public void exePlayerOrder(InputOrder order)
         {
-            BattleTowerComponent towerComponet = (BattleTowerComponent)this.baseBattle.getComponent(BattleComponentType.TowerComponent);
+            BattleTowerComponent towerComponet = (BattleTowerComponent)this.baseBattle.GetComponent(BattleComponentType.TowerComponent);
             BattleUnit_Tower tower = towerComponet.getTowerInfo(order.x, order.y);
             if (tower != null)
             {

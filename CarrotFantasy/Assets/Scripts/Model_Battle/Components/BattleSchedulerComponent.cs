@@ -17,10 +17,10 @@ namespace CarrotFantasy
             this.componentType = BattleComponentType.SchedulerComponent;
         }
 
-        public override void init()
+        public override void Init()
         {
             lastResetTime = onClock();
-            //logComponent = baseBattle.getComponent(BattleComponentType.LogComponent);
+            //logComponent = baseBattle.GetComponent(BattleComponentType.LogComponent);
         }
 
         public Fix64 onClock() //战斗模块开始的时间
@@ -28,7 +28,7 @@ namespace CarrotFantasy
             return baseBattle.curClock;
         }
 
-        public override void onTick(Fix64 time)
+        public override void OnTick(Fix64 time)
         {
             Fix64 curTime = this.onClock();
             int curUnscheCount = 0; //当前不参与延时调用方法的数量

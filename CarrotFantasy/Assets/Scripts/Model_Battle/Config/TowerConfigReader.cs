@@ -7,7 +7,21 @@ namespace CarrotFantasy
     {
         public Dictionary<int, Dictionary<String, Fix64>> towerBirthParam = new Dictionary<int, Dictionary<string, Fix64>>();
 
-        public void init()
+        private static TowerConfigReader reader;
+
+        public static TowerConfigReader Instance { 
+            get 
+            {
+                if(reader == null)
+                {
+                    reader = new TowerConfigReader();
+                    reader.Init();
+                }
+                return reader;
+            }
+        }
+
+        public void Init()
         {
             this.towerBirthParam.Add(1, new Dictionary<String, Fix64>() {
                 { "towerID", Fix64.One},
@@ -77,7 +91,7 @@ namespace CarrotFantasy
 
         }
 
-        public Dictionary<String, Fix64> getSingleTowerConfig(int id)
+        public Dictionary<String, Fix64> GetSingleTowerConfig(int id)
         {
             return this.towerBirthParam[id];
         }

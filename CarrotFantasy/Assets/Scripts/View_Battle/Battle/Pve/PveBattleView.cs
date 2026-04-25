@@ -8,21 +8,21 @@ namespace CarrotFantasy
             this.rootGameObject = ServerProvision.sceneServer.currentScene.gameObj;
         }
 
-        public override void init()
+        public override void Init()
         {
-            this.addComponent(new BVSceneComponent(this));
-            this.addComponent(new BVMapComponent(this));
-            this.addComponent(new BVMonsterComponent(this));
-            this.addComponent(new BVTowerComponent(this));
-            this.addComponent(new BVBulletComponent(this));
-            this.addComponent(new BVItemComponent(this));
-            this.addComponent(new BVUIComponent(this));
+            this.AddComponent(new BVSceneComponent(this));
+            this.AddComponent(new BVMapComponent(this));
+            this.AddComponent(new BVMonsterComponent(this));
+            this.AddComponent(new BVTowerComponent(this));
+            this.AddComponent(new BVBulletComponent(this));
+            this.AddComponent(new BVItemComponent(this));
+            this.AddComponent(new BVUIComponent(this));
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
-            base.clearGameInfo();
-            GameViewObjectPool.Instance.clearGameInfo();
+            base.ClearGameInfo();
+            GameViewObjectPool.Instance.ClearGameInfo();
         }
 
     }

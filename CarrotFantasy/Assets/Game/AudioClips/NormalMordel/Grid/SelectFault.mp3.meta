@@ -1,7 +1,5 @@
 fileFormatVersion: 2
 guid: 85d12db730b71cb4a8fccae38c59f8cf
-timeCreated: 1531470259
-licenseType: Pro
 AudioImporter:
   externalObjects: {}
   serializedVersion: 6
@@ -20,5 +18,5 @@ AudioImporter:
   ambisonic: 0
   3D: 1
   userData: 
-  assetBundleName: 
+  assetBundleName: audioclips/normalmordel/grid_prefab
   assetBundleVariant: 

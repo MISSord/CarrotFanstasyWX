@@ -27,7 +27,7 @@ namespace CarrotFantasy
             canvas.worldCamera = ServerProvision.sceneServer.GetUICamera();
 
             CanvasScaler canvasScaler = mainCanvas.AddComponent<CanvasScaler>();
-            UIUtil.Instance.initCanvasScale(canvasScaler);
+            UIUtil.Instance.InitCanvasScale(canvasScaler);
             canvasScaler.enabled = false;
             canvasScaler.enabled = true; //强制刷新一次
 
@@ -43,7 +43,7 @@ namespace CarrotFantasy
                     rect.anchorMin = Vector2.zero;
                     rect.anchorMax = Vector2.one;
 
-                    if (UIUtil.Instance.getMatchWidthOrHeighRatio() == 0)// 未来可能做屏幕适配
+                    if (UIUtil.Instance.GetMatchWidthOrHeighRatio() == 0)// 未来可能做屏幕适配
                     {
                         rect.offsetMin = Vector2.zero;
                         rect.offsetMax = Vector2.zero;
@@ -88,7 +88,7 @@ namespace CarrotFantasy
             sceneObject.transform.SetAsFirstSibling();
         }
 
-        public virtual void init()
+        public virtual void Init()
         {
 
         }

@@ -9,16 +9,16 @@ namespace CarrotFantasy
             this.prefabUrl = null;
         }
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
+            base.Init();
             this.AddListener();
 
             GameManager manager = this.gameObj.AddComponent<GameManager>();
-            manager.init();
+            manager.Init();
             manager.initBattle();
 
-            Sche.delayExeOnceTimes(manager.startGame, 2.0f);
+            Sche.delayExeOnceTimes(manager.StartGame, 2.0f);
         }
 
         private void AddListener()

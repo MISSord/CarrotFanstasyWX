@@ -16,17 +16,17 @@ namespace CarrotFantasy
             this.componentType = BattleViewComponentType.BULLET;
         }
 
-        public override void init()
+        public override void Init()
         {
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.getComponent(BattleViewComponentType.SCENE);
-            this.rootGameObject = scene.registerGameContainer("BulletContainer");
+            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
+            this.rootGameObject = scene.RegisterGameContainer("BulletContainer");
 
-            BattleDataComponent dataComponent = (BattleDataComponent)this.battle.getComponent(BattleComponentType.DataComponent);
+            BattleDataComponent dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
             for (int i = 0; i < dataComponent.towerIDListLength; i++)
             {
-                GameViewObjectPool.Instance.registerGameObject(String.Format("{0}_1", dataComponent.curTowerIDList[i]));
-                GameViewObjectPool.Instance.registerGameObject(String.Format("{0}_2", dataComponent.curTowerIDList[i]));
-                GameViewObjectPool.Instance.registerGameObject(String.Format("{0}_3", dataComponent.curTowerIDList[i]));
+                GameViewObjectPool.Instance.RegisterGameObject(String.Format("{0}_1", dataComponent.curTowerIDList[i]));
+                GameViewObjectPool.Instance.RegisterGameObject(String.Format("{0}_2", dataComponent.curTowerIDList[i]));
+                GameViewObjectPool.Instance.RegisterGameObject(String.Format("{0}_3", dataComponent.curTowerIDList[i]));
             }
             this.AddListener();
         }
@@ -53,25 +53,25 @@ namespace CarrotFantasy
                 {
                     bulletView = new BattleUnitView_Bullet();
                 }
-                GameObject bulletNode = GameViewObjectPool.Instance.getNewGameObject(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1));
+                GameObject bulletNode = GameViewObjectPool.Instance.GetNewGameObject(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1));
                 if (bulletNode == null)
                 {
                     bulletNode = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(String.Format(this.prefabUrl, bullet.towerId, bullet.towerLevel + 1)));
                 }
                 bulletNode.transform.SetParent(this.rootGameObject.transform);
-                bulletView.initTransform(bulletNode.transform);
-                bulletView.loadInfo(this.battleView, bullet);
-                bulletView.init();
+                bulletView.InitTransform(bulletNode.transform);
+                bulletView.LoadInfo(this.battleView, bullet);
+                bulletView.Init();
 
                 this.bulletDic.Add(bullet, bulletView);
             }
         }
 
-        public override void onTick(float time)
+        public override void OnTick(float time)
         {
             foreach (KeyValuePair<BattleUnit_Bullet, BattleUnitView_Bullet> info in this.bulletDic)
             {
-                info.Value.onTick(time);
+                info.Value.OnTick(time);
             }
         }
 
@@ -85,19 +85,19 @@ namespace CarrotFantasy
                 Debug.Log("移除子弹视图出错");
                 return;
             }
-            GameViewObjectPool.Instance.pushGameObjectToPool(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1), bulletView.transform.gameObject);
-            bulletView.clearUnitInfo();
+            GameViewObjectPool.Instance.PushGameObjectToPool(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1), bulletView.transform.gameObject);
+            bulletView.ClearUnitInfo();
             this.bulletDic.Remove(bullet);
-            GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Bullet, bulletView);
+            GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, bulletView);
         }
 
-        public override void clearGameInfo()
+        public override void ClearGameInfo()
         {
             foreach (KeyValuePair<BattleUnit_Bullet, BattleUnitView_Bullet> info in this.bulletDic)
             {
-                GameViewObjectPool.Instance.pushGameObjectToPool(String.Format("{0}_{1}", info.Key.towerId, info.Key.towerLevel + 1), info.Value.transform.gameObject);
-                info.Value.clearUnitInfo();
-                GameViewObjectPool.Instance.pushViewObjectToPool(BattleUnitViewType.Bullet, info.Value);
+                GameViewObjectPool.Instance.PushGameObjectToPool(String.Format("{0}_{1}", info.Key.towerId, info.Key.towerLevel + 1), info.Value.transform.gameObject);
+                info.Value.ClearUnitInfo();
+                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, info.Value);
             }
             this.bulletDic.Clear();
             this.RemoveListener();
@@ -105,7 +105,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearGameInfo();
+            this.ClearGameInfo();
             base.Dispose();
         }
     }

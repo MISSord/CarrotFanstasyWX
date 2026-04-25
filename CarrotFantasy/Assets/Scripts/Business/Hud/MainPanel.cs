@@ -1,17 +1,21 @@
 using DG.Tweening;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class MainPanel : BasePanel
+    public class MainPanel : BaseView
     {
+        private static MainPanel _instance;
+        public static MainPanel Instance => _instance ?? (_instance = new MainPanel());
+
+        private MainPanel() { }
+
         private Animator carrotAnimator;
         private Transform monsterTrans;
         private Transform cloudTrans;
-        private Tween[] mainPanelTween;//0.右，1.左
-        private Tween ExitTween;//离开主页运行的动画
+        private Tween[] mainPanelTween;
+        private Tween ExitTween;
 
         private Button btnNormal;
         private Button btnBoss;
@@ -21,24 +25,16 @@ namespace CarrotFantasy
         private Button btnSet;
         private Button btnHelp;
 
-        public MainPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.isClickGrayEnable = true;
-            this.prefabUrl = "Prefabs/Business/Hud/MainPanel";
+            viewName = "MainPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.SettingViewPrefab, "MainPanel");
         }
 
-        public override void Init()
+        protected override void LoadCallBack()
         {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-        }
-
-        protected override void OnAssetReady()
-        {
-            base.OnAssetReady();
-            //获取成员变量
-            this.transform.SetSiblingIndex(8);
+            transform.SetSiblingIndex(8);
             this.carrotAnimator = transform.Find("node_center/node_carrot").GetComponent<Animator>();
             this.carrotAnimator.Play("CarrotGrow");
             this.monsterTrans = transform.Find("node_top/spr_monster");
@@ -61,7 +57,6 @@ namespace CarrotFantasy
             this.btnSet = this.transform.Find("node_center/btn_set").GetComponent<Button>();
 
             this.AddListener();
-
             this.PlayUITween();
             UIServer.Instance.playMainBg();
         }
@@ -77,12 +72,6 @@ namespace CarrotFantasy
             this.btnSet.onClick.AddListener(this.showSetPanel);
         }
 
-        private void RemoveListener()
-        {
-
-        }
-
-        //UI动画播放
         private void PlayUITween()
         {
             this.monsterTrans.DOLocalMoveY(20, 7f).SetLoops(-1, LoopType.Yoyo);
@@ -93,35 +82,29 @@ namespace CarrotFantasy
         {
             UIServer.Instance.playButtonEffect();
             ExitTween = mainPanelTween[0];
-            ServerProvision.panelServer.ShowPanel(new SetPanel(null));
+            UIViewService.OpenSetPanel();
         }
 
         public void showHelpPanel()
         {
             UIServer.Instance.playButtonEffect();
-            //ExitTween = mainPanelTween[1];
-            ServerProvision.panelServer.ShowPanel(new HelpPanel(null));
+            UIViewService.OpenHelpPanel();
         }
-
-        //场景状态切换的方法
 
         public void toNormalModel()
         {
             UIServer.Instance.playButtonEffect();
-            ServerProvision.panelServer.ShowPanel(new MapBigLevelPanel(null));
-            //this.Finish();
+            UIViewService.OpenMapBigLevelPanel();
         }
 
         public void toBossModel()
         {
             UIServer.Instance.playButtonEffect();
-            //mUIFacade.currentScenePanelDict[StringManager.GameLoadPanel].EnterPanel();
-            //mUIFacade.ChangeSceneState(new BossGameOptionSceneState(mUIFacade));
         }
 
         private void startMatch()
         {
-            ServerProvision.panelServer.ShowPanel(new RoomPanel(null));
+            UIViewService.OpenRoomPanel();
             RoomServer.Instance.sendStartMatch();
             UIServer.Instance.playButtonEffect();
         }
@@ -132,10 +115,8 @@ namespace CarrotFantasy
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.GAME_QUIT);
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
-            this.RemoveListener();
-            base.OnDestroy();
         }
     }
 }

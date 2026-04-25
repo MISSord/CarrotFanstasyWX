@@ -13,9 +13,9 @@ namespace CarrotFantasy
         private String spriteUrl = "Pictures/NormalMordel/Game/{0}/Monster/{1}-1";
         private String animatorUrl = "Animator/AnimatorController/Monster/{0}/{1}";
 
-        public override void initTransform(Transform node)
+        public override void InitTransform(Transform node)
         {
-            base.initTransform(node);
+            base.InitTransform(node);
             this.slider = this.transform.Find("MonsterCanvas/HPSlider").GetComponent<Slider>();
             this.spriteRender = this.transform.GetComponent<SpriteRenderer>();
             this.animator = this.transform.GetComponent<Animator>();
@@ -23,9 +23,9 @@ namespace CarrotFantasy
             this.slider.gameObject.transform.eulerAngles = Vector3.zero;
         }
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
+            base.Init();
             BattleUnit_Monster monster = (BattleUnit_Monster)this.unit;
             this.spriteRender.sprite = ResourceLoader.Instance.loadRes<Sprite>(
                 String.Format(this.spriteUrl, monster.curLevel, monster.monsterId));
@@ -34,9 +34,9 @@ namespace CarrotFantasy
             this.animator.Play(monster.monsterId.ToString());
         }
 
-        public override void initListener()
+        public override void InitListener()
         {
-            base.initListener();
+            base.InitListener();
             this.unitEventDispatcher.AddListener(BattleEvent.MONSTER_LIVE_REDUCE, this.updateLiveNumber);
         }
 
@@ -60,9 +60,9 @@ namespace CarrotFantasy
             this.slider.gameObject.transform.eulerAngles = Vector3.zero;
         }
 
-        public override void clearUnitInfo()
+        public override void ClearUnitInfo()
         {
-            base.clearUnitInfo();
+            base.ClearUnitInfo();
             this.slider = null;
             this.animator = null;
             this.spriteRender = null;

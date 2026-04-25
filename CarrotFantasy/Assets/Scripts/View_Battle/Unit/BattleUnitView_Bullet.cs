@@ -6,23 +6,23 @@ namespace CarrotFantasy
     {
         private UnitMoveComponent_Bullet moveComponent;
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
+            base.Init();
             if (((BattleUnit_Bullet)this.unit).towerId == 4)
             {
-                this.moveComponent = (UnitMoveComponent_Bullet)this.unit.getComponent(UnitComponentType.MOVE_BULLET);
+                this.moveComponent = (UnitMoveComponent_Bullet)this.unit.GetComponent(UnitComponentType.MOVE_BULLET);
             }
             else
             {
-                this.moveComponent = (UnitMoveComponent_Bullet)this.unit.getComponent(UnitComponentType.MOVE_BULLET_ONE);
+                this.moveComponent = (UnitMoveComponent_Bullet)this.unit.GetComponent(UnitComponentType.MOVE_BULLET_ONE);
             }
 
         }
 
-        public override void onTick(float deltaTime)
+        public override void OnTick(float deltaTime)
         {
-            base.onTick(deltaTime);
+            base.OnTick(deltaTime);
             Fix64 arcsinOne = Fix64.Zero;
             if (moveComponent.moveSpeedX == Fix64.Zero)
             {

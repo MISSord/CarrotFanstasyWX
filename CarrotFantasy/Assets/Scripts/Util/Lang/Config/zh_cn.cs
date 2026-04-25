@@ -2,7 +2,7 @@ namespace CarrotFantasy
 {
     public class zh_cn : zh_language
     {
-        public override void init()
+        public override void Init()
         {
             //room 
             this.zhLangage.Add(100, "未准备好");

@@ -23,7 +23,7 @@ namespace CarrotFantasy
 
 
 
-        public void initTrans(BattleView_base battleView)
+        public void InitTrans(BattleView_base battleView)
         {
             this.battleView = battleView;
             this.spriteRenderer = transform.GetComponent<SpriteRenderer>();
@@ -31,19 +31,19 @@ namespace CarrotFantasy
             levelUpSignalGo.SetActive(false);
         }
 
-        public void initInfo(int x, int y)
+        public void InitInfo(int x, int y)
         {
-            BVMapComponent bvMap = (BVMapComponent)battleView.getComponent(BattleViewComponentType.MAP);
+            BVMapComponent bvMap = (BVMapComponent)battleView.GetComponent(BattleViewComponentType.MAP);
             this.startSprite = bvMap.sprGirdStartState;
             this.normalSprite = bvMap.sprGirdNoramlState;
             this.cantBuildSprite = bvMap.sprGirdCantBuildState;
 
-            BattleMapComponent map = (BattleMapComponent)(this.battleView.battle.getComponent(BattleComponentType.MapComponent));
+            BattleMapComponent map = (BattleMapComponent)(this.battleView.battle.GetComponent(BattleComponentType.MapComponent));
             this.mapGrid = map.gridsList[x, y];
-            this.updateGrid();
+            this.UpdateGrid();
         }
 
-        public void startGame()
+        public void StartGame()
         {
             this.spriteRenderer.sprite = this.startSprite;
             Tween t = DOTween.To(() => spriteRenderer.color, toColor => spriteRenderer.color = toColor, new Color(1, 1, 1, 0.2f), 3);
@@ -68,7 +68,7 @@ namespace CarrotFantasy
 
 
         //更新格子状态
-        public void updateGrid()
+        public void UpdateGrid()
         {
             if (this.mapGrid.state.canBuild)
             {

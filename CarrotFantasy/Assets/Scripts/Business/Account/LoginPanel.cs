@@ -1,40 +1,35 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class LoginPanel : BasePanel
+    public class LoginPanel : BaseView
     {
+        private static LoginPanel _instance;
+        public static LoginPanel Instance => _instance ?? (_instance = new LoginPanel());
+
+        private LoginPanel() { }
+
         private Button btnLogin;
         private Button btnResgister;
         private Button btnBack;
-
         private bool isResigterState = false;
-
         private InputField inputAccount;
         private InputField inputPassword;
         private InputField inputSurePassword;
-
         private GameObject nodeInputSurePassword;
         private GameObject nodeBtnBack;
         private GameObject nodeBtnLogin;
 
-        public LoginPanel(Dictionary<string, dynamic> param) : base(param)
+        public override void InitData()
         {
-            this.isClickGrayEnable = false;
-            this.prefabUrl = "Prefabs/Business/Login/LoginPanel";
+            viewName = "LoginPanel";
+            layer = UILayer.Normal;
+            SetUILoadInfo(0, UiViewAbPaths.LoginPrefab, "LoginPanel");
         }
 
-        public override void Init()
-        {
-            base.Init();
-            this.panelManagerUnit.registerOnAssetReady(this.OnAssetReady);
-            this.panelManagerUnit.registerOnDestroy(this.OnDestroy);
-        }
-
-        protected override void OnAssetReady()
+        protected override void LoadCallBack()
         {
             this.inputAccount = this.transform.Find("node_up/input_account").GetComponent<InputField>();
             this.inputPassword = this.transform.Find("node_up/input_password").GetComponent<InputField>();
@@ -42,7 +37,6 @@ namespace CarrotFantasy
             this.inputSurePassword = this.nodeInputSurePassword.transform.GetComponent<InputField>();
             this.nodeBtnBack = this.transform.Find("node_bottom/btn_back").gameObject;
             this.btnBack = this.nodeBtnBack.transform.GetComponent<Button>();
-
             this.nodeBtnLogin = this.transform.Find("node_bottom/btn_login").gameObject;
             this.btnLogin = this.nodeBtnLogin.transform.GetComponent<Button>();
             this.btnResgister = this.transform.Find("node_bottom/btn_register").GetComponent<Button>();
@@ -56,22 +50,25 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            AccountServer.Instance.eventDispatcher.AddListener(AccountServer.LOGIN_SUCCESS, this.Finish);
+            AccountServer.Instance.eventDispatcher.AddListener(AccountServer.LOGIN_SUCCESS, this.onLoginSuccess);
         }
 
         private void RemoveListener()
         {
-            AccountServer.Instance.eventDispatcher.RemoveListener(AccountServer.LOGIN_SUCCESS, this.Finish);
+            AccountServer.Instance.eventDispatcher.RemoveListener(AccountServer.LOGIN_SUCCESS, this.onLoginSuccess);
+        }
+
+        private void onLoginSuccess()
+        {
+            this.Close();
         }
 
         private void loginAccount()
         {
             String accountText = this.inputAccount.text;
             String passwordText = this.inputPassword.text;
-            //或许还能做其他检验
             if (accountText == null || accountText.Equals("") || passwordText == null || passwordText.Equals(""))
             {
-                //不能为空
                 UIServer.Instance.showTip("账号或密码不能为空");
                 return;
             }
@@ -97,13 +94,11 @@ namespace CarrotFantasy
             String suerpasswordText = this.inputSurePassword.text;
             if (accountText == null || accountText.Equals("") || passwordText == null || passwordText.Equals("") || suerpasswordText == null || suerpasswordText.Equals(""))
             {
-                //不能为空
                 UIServer.Instance.showTip("账号或密码不能为空");
                 return;
             }
             if (!passwordText.Equals(suerpasswordText))
             {
-                //不能不一样
                 UIServer.Instance.showTip("两次输入的密码不一样");
                 return;
             }
@@ -135,10 +130,9 @@ namespace CarrotFantasy
             this.inputSurePassword.text = "";
         }
 
-        protected override void OnDestroy()
+        protected override void ReleaseCallBack()
         {
             this.RemoveListener();
-            base.OnDestroy();
         }
     }
 }

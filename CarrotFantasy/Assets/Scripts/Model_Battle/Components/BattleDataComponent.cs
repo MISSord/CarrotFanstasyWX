@@ -24,7 +24,7 @@ namespace CarrotFantasy
             this.componentType = BattleComponentType.DataComponent;
         }
 
-        public override void init()
+        public override void Init()
         {
             if (BattleParamServer.Instance.isPVE == true)
             {
@@ -108,7 +108,7 @@ namespace CarrotFantasy
             unSaveMapInfo.bigLevelId = this.bigLevel;
             unSaveMapInfo.levelId = this.level;
 
-            BattleItemComponent itemComponent = (BattleItemComponent)this.baseBattle.getComponent(BattleComponentType.ItemComponent);
+            BattleItemComponent itemComponent = (BattleItemComponent)this.baseBattle.GetComponent(BattleComponentType.ItemComponent);
             if (itemComponent.battleItemList.Count == 0)
             {
                 unSaveMapInfo.isAllClear = MapInfoType.ALL_CLEAR;

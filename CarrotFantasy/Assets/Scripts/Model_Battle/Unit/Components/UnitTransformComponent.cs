@@ -26,9 +26,9 @@ namespace CarrotFantasy
             this.unitComponentType = UnitComponentType.TRANSFORM;
         }
 
-        public override void init()
+        public override void Init()
         {
-            base.init();
+            base.Init();
             Fix64Vector2 birthPosition = this.unit.birthPosition;
             this.battleEventDispatcher = this.unit.eventDipatcher;
             this.birthParam = this.unit.birthParam;
@@ -65,7 +65,7 @@ namespace CarrotFantasy
 
         private void resetBodyShape()
         {
-            this.bodyHitTestShape.reset(this.x, this.y, this.bodyRadius);
+            this.bodyHitTestShape.Reset(this.x, this.y, this.bodyRadius);
         }
 
         public Fix64 getBodyRadius()
@@ -90,7 +90,7 @@ namespace CarrotFantasy
             this.x = x;
             this.y = y;
             this.z = z;
-            this.bodyHitTestShape.reset(this.x, this.y, this.bodyRadius);
+            this.bodyHitTestShape.Reset(this.x, this.y, this.bodyRadius);
             this.unit.eventDipatcher.DispatchEvent(UnitEvent.POSITION_CHANGE);
             return true;
         }
@@ -120,7 +120,7 @@ namespace CarrotFantasy
             this.unit.eventDipatcher.DispatchEvent(UnitEvent.FACE_DIRECTION_CHANGE);
         }
 
-        public override void onTick(Fix64 deltaTime)
+        public override void OnTick(Fix64 deltaTime)
         {
 
         }
