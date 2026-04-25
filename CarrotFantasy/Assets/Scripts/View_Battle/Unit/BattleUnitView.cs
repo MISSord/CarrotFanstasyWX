@@ -44,19 +44,19 @@ namespace CarrotFantasy
 
         public virtual void ReloadInfo()
         {
-            this.initViewPosition();
-            this.initViewFaceDirection();
-            this.updateUnitScale();
-            this.updateBodyRect();
+            this.InitViewPosition();
+            this.InitViewFaceDirection();
+            this.UpdateUnitScale();
+            this.UpdateBodyRect();
         }
 
         public virtual void Init()
         {
             this.InitListener();
-            this.initViewPosition();
-            this.initViewFaceDirection();
-            this.updateUnitScale();
-            this.updateBodyRect();
+            this.InitViewPosition();
+            this.InitViewFaceDirection();
+            this.UpdateUnitScale();
+            this.UpdateBodyRect();
         }
 
         public virtual void OnTick(float deltaTime)
@@ -93,25 +93,25 @@ namespace CarrotFantasy
 
         public virtual void InitListener()
         {
-            this.unitEventDispatcher.AddListener(UnitEvent.FACE_DIRECTION_CHANGE, this.updateFaceDirection);
-            this.unitEventDispatcher.AddListener(UnitEvent.STATUS_CHANGE, this.updateUnitScale);
-            this.unitEventDispatcher.AddListener(UnitEvent.ROTATION_CHANGE, this.updateRotation);
-            this.unitEventDispatcher.AddListener(UnitEvent.BODY_RECT_CHANE, this.updateBodyRect);
-            this.unitEventDispatcher.AddListener(UnitEvent.POSITION_CHANGE, this.getLastPosition);
+            this.unitEventDispatcher.AddListener(UnitEvent.FACE_DIRECTION_CHANGE, this.UpdateFaceDirection);
+            this.unitEventDispatcher.AddListener(UnitEvent.STATUS_CHANGE, this.UpdateUnitScale);
+            this.unitEventDispatcher.AddListener(UnitEvent.ROTATION_CHANGE, this.UpdateRotation);
+            this.unitEventDispatcher.AddListener(UnitEvent.BODY_RECT_CHANE, this.UpdateBodyRect);
+            this.unitEventDispatcher.AddListener(UnitEvent.POSITION_CHANGE, this.GetLastPosition);
         }
 
         public virtual void RemoveListener()
         {
             if (this.unitEventDispatcher == null) return;
-            this.unitEventDispatcher.RemoveListener(UnitEvent.FACE_DIRECTION_CHANGE, this.updateFaceDirection);
-            this.unitEventDispatcher.RemoveListener(UnitEvent.STATUS_CHANGE, this.updateUnitScale);
-            this.unitEventDispatcher.RemoveListener(UnitEvent.ROTATION_CHANGE, this.updateRotation);
-            this.unitEventDispatcher.RemoveListener(UnitEvent.BODY_RECT_CHANE, this.updateBodyRect);
-            this.unitEventDispatcher.RemoveListener(UnitEvent.POSITION_CHANGE, this.getLastPosition);
+            this.unitEventDispatcher.RemoveListener(UnitEvent.FACE_DIRECTION_CHANGE, this.UpdateFaceDirection);
+            this.unitEventDispatcher.RemoveListener(UnitEvent.STATUS_CHANGE, this.UpdateUnitScale);
+            this.unitEventDispatcher.RemoveListener(UnitEvent.ROTATION_CHANGE, this.UpdateRotation);
+            this.unitEventDispatcher.RemoveListener(UnitEvent.BODY_RECT_CHANE, this.UpdateBodyRect);
+            this.unitEventDispatcher.RemoveListener(UnitEvent.POSITION_CHANGE, this.GetLastPosition);
 
         }
 
-        private void updateUnitScale()
+        private void UpdateUnitScale()
         {
             //for (int i = 0; i <= this.componentList.Count - 1; i++)
             //{
@@ -120,7 +120,7 @@ namespace CarrotFantasy
             //this.updateUnityScale();
         }
 
-        private void updateRotation()
+        private void UpdateRotation()
         {
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
@@ -128,7 +128,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void updateBodyRect()
+        private void UpdateBodyRect()
         {
 
         }
@@ -138,7 +138,7 @@ namespace CarrotFantasy
             //Vector3 newViewPosition = Vector3.Lerp(transform.position, this.lastPosition, 1 / Vector3.Distance(transform.position, this.lastPosition) * time);
             //this.curViewPosition = newViewPosition;
             this.curViewPosition = this.lastPosition;
-            this.refreshUnityTransform();
+            this.RefreshUnityTransform();
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
                 this.componentList[i].SetUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
@@ -146,27 +146,27 @@ namespace CarrotFantasy
 
         }
 
-        private void initViewPosition()
+        private void InitViewPosition()
         {
-            this.getLastPosition();
+            this.GetLastPosition();
             this.curViewPosition = this.lastPosition;
-            this.refreshUnityTransform();
+            this.RefreshUnityTransform();
             for (int i = 0; i <= this.componentList.Count - 1; i++)
             {
                 this.componentList[i].SetUnitPosition(this.curViewPosition.x, this.curViewPosition.y, this.curViewPosition.z);
             }
         }
 
-        private void getLastPosition()
+        private void GetLastPosition()
         {
-            this.transformComponent.getPosition(out this.lastPosition.x, out this.lastPosition.y, out this.lastPosition.z);
+            this.transformComponent.GetPosition(out this.lastPosition.x, out this.lastPosition.y, out this.lastPosition.z);
         }
 
-        private void refreshUnityTransform()
+        private void RefreshUnityTransform()
         {
             if (this.isVisible == true)
             {
-                this.updateUnityPosition();
+                this.UpdateUnityPosition();
             }
             else
             {
@@ -175,12 +175,12 @@ namespace CarrotFantasy
             }
         }
 
-        private void updateUnityPosition()
+        private void UpdateUnityPosition()
         {
             this.transform.localPosition = this.curViewPosition;
         }
 
-        private void initViewFaceDirection()
+        private void InitViewFaceDirection()
         {
             this.curViewFaceDirection = (float)this.transformComponent.faceDirection;
             this.transform.localRotation = Quaternion.Euler(0, this.curViewFaceDirection, 0);
@@ -190,7 +190,7 @@ namespace CarrotFantasy
             }
         }
 
-        protected virtual void updateFaceDirection() //根据移动的方向进行调整
+        protected virtual void UpdateFaceDirection() //根据移动的方向进行调整
         {
             float faceDirection = (float)this.transformComponent.faceDirection;
             this.transform.localRotation = Quaternion.Euler(0, this.curViewFaceDirection, 0);

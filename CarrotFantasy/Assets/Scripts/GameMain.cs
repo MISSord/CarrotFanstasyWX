@@ -39,7 +39,7 @@ namespace CarrotFantasy
             //Game.EventSystem.Update();
 
             ViewManager.Instance?.Update();
-            Sche.tick(new Fix64(Time.deltaTime));
+            Sche.Tick(new Fix64(Time.deltaTime));
             if (BusinessProvision.Instance.IsGameQuit == true)
             {
                 OnApplicationQuit();

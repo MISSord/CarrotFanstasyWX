@@ -53,16 +53,16 @@ namespace CarrotFantasy
             this.btnProducePage = this.transform.Find("node_top/Btn_Producer").GetComponent<Button>();
             this.btnReturn = this.transform.Find("node_top/Btn_Return").GetComponent<Button>();
 
-            this.loadResource();
+            this.LoadResource();
             this.AddListener();
 
             this.Img_Btn_BGAudio.sprite = UIServer.Instance.audioManager.musicEnable == true ? this.btnSpritesList[2] : this.btnSpritesList[3];
             this.Img_Btn_EffectAudio.sprite = UIServer.Instance.audioManager.effectEnable == true ? this.btnSpritesList[0] : this.btnSpritesList[1];
 
-            this.updatePagePosition();
+            this.UpdatePagePosition();
         }
 
-        private void updatePagePosition()
+        private void UpdatePagePosition()
         {
             this.optionPageGo.transform.localPosition = this.stateId == 1 ? this.showPosition : this.fadePosition;
             this.producerPageGo.transform.localPosition = this.stateId == 2 ? this.showPosition : this.fadePosition;
@@ -70,64 +70,64 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnBGAudio.onClick.AddListener(this.updateMusicState);
-            this.btnEffectAudio.onClick.AddListener(this.updateEffectState);
+            this.btnBGAudio.onClick.AddListener(this.UpdateMusicState);
+            this.btnEffectAudio.onClick.AddListener(this.UpdateEffectState);
 
-            this.btnOptionPage.onClick.AddListener(this.showOptionPage);
-            this.btnProducePage.onClick.AddListener(this.showProducePage);
+            this.btnOptionPage.onClick.AddListener(this.ShowOptionPage);
+            this.btnProducePage.onClick.AddListener(this.ShowProducePage);
 
-            this.btnReturn.onClick.AddListener(this.returnToLastPanel);
+            this.btnReturn.onClick.AddListener(this.ReturnToLastPanel);
         }
 
-        private void showOptionPage()
+        private void ShowOptionPage()
         {
             this.stateId = 1;
-            this.updatePagePosition();
+            this.UpdatePagePosition();
             UIServer.Instance.PlayButtonEffect();
         }
 
-        private void showProducePage()
+        private void ShowProducePage()
         {
             this.stateId = 2;
-            this.updatePagePosition();
+            this.UpdatePagePosition();
             UIServer.Instance.PlayButtonEffect();
         }
 
-        private void returnToLastPanel()
+        private void ReturnToLastPanel()
         {
             UIServer.Instance.PlayButtonEffect();
             this.Close();
         }
 
-        private void updateMusicState()
+        private void UpdateMusicState()
         {
             if (UIServer.Instance.audioManager.musicEnable == true)
             {
                 this.Img_Btn_BGAudio.sprite = this.btnSpritesList[3];
-                UIServer.Instance.audioManager.setMusicEnable(false);
+                UIServer.Instance.audioManager.SetMusicEnable(false);
             }
             else
             {
                 this.Img_Btn_BGAudio.sprite = this.btnSpritesList[2];
-                UIServer.Instance.audioManager.setMusicEnable(true);
+                UIServer.Instance.audioManager.SetMusicEnable(true);
             }
         }
 
-        private void updateEffectState()
+        private void UpdateEffectState()
         {
             if (UIServer.Instance.audioManager.effectEnable == true)
             {
                 this.Img_Btn_EffectAudio.sprite = this.btnSpritesList[1];
-                UIServer.Instance.audioManager.setEffectEnable(false);
+                UIServer.Instance.audioManager.SetEffectEnable(false);
             }
             else
             {
                 this.Img_Btn_EffectAudio.sprite = this.btnSpritesList[0];
-                UIServer.Instance.audioManager.setEffectEnable(true);
+                UIServer.Instance.audioManager.SetEffectEnable(true);
             }
         }
 
-        private void loadResource()
+        private void LoadResource()
         {
             this.btnSpritesList[0] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_15");
             this.btnSpritesList[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_21");

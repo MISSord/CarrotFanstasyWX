@@ -11,7 +11,7 @@ namespace CarrotFantasy
         public static List<Stage> stageList;
         public static String filePath;
 
-        public static void initConfig()
+        public static void InitConfig()
         {
             filePath = Application.streamingAssetsPath + "/Json" + "/MapConfig.json";
             //正常解析
@@ -29,7 +29,7 @@ namespace CarrotFantasy
             }
         }
 
-        public static Stage getSingleStage(int bigLevel, int level)
+        public static Stage GetSingleStage(int bigLevel, int level)
         {
             if (((bigLevel - 1) * 5 + level - 1) <= (stageList.Count - 1))
             {

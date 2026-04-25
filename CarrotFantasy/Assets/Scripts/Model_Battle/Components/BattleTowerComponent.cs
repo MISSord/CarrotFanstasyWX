@@ -27,24 +27,24 @@ namespace CarrotFantasy
             this.mapComponent = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
         }
 
-        private int getExChangeInt(int x, int y)
+        private int GetExChangeInt(int x, int y)
         {
             return x * 100 + y;
         }
 
         public bool isHaveTower(int x, int y) //地图模块用
         {
-            return this.curTowerDic.ContainsKey(this.getExChangeInt(x, y));
+            return this.curTowerDic.ContainsKey(this.GetExChangeInt(x, y));
         }
 
-        public void exePlayerOrder(InputOrder order)
+        public void ExePlayerOrder(InputOrder order)
         {
             if (order.order == InputOrderType.ADD_ORDER)
             {
                 int price = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId)["price0"]);
                 if (price > dataComponent.CoinCount)
                 {
-                    UIServer.Instance.ShowTip(LanguageUtil.Instance.getString(1004));
+                    UIServer.Instance.ShowTip(LanguageUtil.Instance.GetString(1004));
                     return;
                 }
                 BattleUnit_Tower tower = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Tower>(BattleUnitType.TOWER);
@@ -52,26 +52,26 @@ namespace CarrotFantasy
                 {
                     tower = new BattleUnit_Tower(this.baseBattle);
                 }
-                Fix64Vector2 birthPoint = mapComponent.getMapGridPosition(order.x, order.y);
-                tower.LoadInfo(this.baseBattle.getUid(), TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId), birthPoint);
-                tower.loadInfo1(order.x, order.y);
+                Fix64Vector2 birthPoint = mapComponent.GetMapGridPosition(order.x, order.y);
+                tower.LoadInfo(this.baseBattle.GetUid(), TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId), birthPoint);
+                tower.LoadInfo1(order.x, order.y);
                 tower.Init();
                 tower.InitComponents();
-                this.curTowerDic.Add(this.getExChangeInt(order.x, order.y), tower);
+                this.curTowerDic.Add(this.GetExChangeInt(order.x, order.y), tower);
                 this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.TOWER, tower);
                 this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, -tower.price[tower.curLevel]);
             }
             else if (order.order == InputOrderType.UPDATE_ORDER)
             {
                 BattleUnit_Tower tower;
-                int id = this.getExChangeInt(order.x, order.y);
+                int id = this.GetExChangeInt(order.x, order.y);
                 if (this.curTowerDic.TryGetValue(id, out tower))
                 {
                     if (tower.isMaxLevel == true) return;
                     if (dataComponent.CoinCount >= tower.price[tower.curLevel + 1])
                     {
                         this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, -tower.price[tower.curLevel]);
-                        tower.updateLevel();
+                        tower.UpdateLevel();
                     }
                 }
                 else
@@ -82,14 +82,14 @@ namespace CarrotFantasy
             else if (order.order == InputOrderType.REMOVE_ORDER)
             {
                 BattleUnit_Tower tower;
-                int id = this.getExChangeInt(order.x, order.y);
+                int id = this.GetExChangeInt(order.x, order.y);
                 if (this.curTowerDic.TryGetValue(id, out tower))
                 {
                     this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, BattleUnitType.TOWER, tower);
                     tower.ClearInfo();
-                    GameObjectPool.Instance.pushObjectToPool(BattleUnitType.TOWER, tower);
+                    GameObjectPool.Instance.PushObjectToPool(BattleUnitType.TOWER, tower);
                     this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, tower.price[tower.curLevel] - 20);
-                    this.curTowerDic.Remove(this.getExChangeInt(order.x, order.y));
+                    this.curTowerDic.Remove(this.GetExChangeInt(order.x, order.y));
                 }
                 else
                 {
@@ -107,9 +107,9 @@ namespace CarrotFantasy
 
         }
 
-        public BattleUnit_Tower getTowerInfo(int x, int y)
+        public BattleUnit_Tower GetTowerInfo(int x, int y)
         {
-            int id = this.getExChangeInt(x, y);
+            int id = this.GetExChangeInt(x, y);
             if (this.curTowerDic.ContainsKey(id))
             {
                 return this.curTowerDic[id];
@@ -121,9 +121,9 @@ namespace CarrotFantasy
             return null;
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
-            base.clearInfo();
+            base.ClearInfo();
             foreach (KeyValuePair<int, BattleUnit_Tower> info in this.curTowerDic)
             {
                 info.Value.ClearInfo();
@@ -133,7 +133,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
         }
 
     }

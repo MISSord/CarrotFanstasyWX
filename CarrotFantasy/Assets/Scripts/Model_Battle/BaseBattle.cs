@@ -37,7 +37,7 @@ namespace CarrotFantasy
 
         public abstract void Init();
 
-        public abstract void initComponent(); //子类实现
+        public abstract void InitComponent(); //子类实现
 
         public BaseBattleComponent GetComponent(String type)
         {
@@ -73,7 +73,7 @@ namespace CarrotFantasy
             }
         }
 
-        public virtual void tick(Fix64 deltaTime)
+        public virtual void Tick(Fix64 deltaTime)
         {
             this.OnTick(deltaTime);
         }
@@ -95,7 +95,7 @@ namespace CarrotFantasy
             stateMachine.OnTick(time);
             for (int i = 0; i < componentList.Count; i++)
             {
-                componentList[i].lateTick(this.lastFrameTime);
+                componentList[i].LateTick(this.lastFrameTime);
             }
             eventDispatcher.DispatchEvent(BattleEvent.AFTER_TICK);
             this.lastFrameTime = Fix64.Zero;
@@ -111,7 +111,7 @@ namespace CarrotFantasy
                 componentList[i].Start();
             }
 
-            this.stateMachine.setCurrentState(BattleStateType.START_GAME);
+            this.stateMachine.SetCurrentState(BattleStateType.START_GAME);
         }
 
         public virtual void ClearGameInfo()
@@ -119,7 +119,7 @@ namespace CarrotFantasy
             this.stateMachine.ClearGameInfo();
             for (int i = componentList.Count - 1; i >= 0; i--)
             {
-                this.componentList[i].clearInfo();
+                this.componentList[i].ClearInfo();
             }
             this.componentDic.Clear();
             this.componentList.Clear();
@@ -132,19 +132,19 @@ namespace CarrotFantasy
             this.uid = 0;
         }
 
-        protected virtual void pauseTheGame()
+        protected virtual void PauseTheGame()
         {
             this.isPause = true;
             this.eventDispatcher.DispatchEvent<bool>(BattleEvent.GAME_STATE_CHANGE, this.isPause);
         }
 
-        protected virtual void goOnTheGame()
+        protected virtual void GoOnTheGame()
         {
             this.isPause = false;
             this.eventDispatcher.DispatchEvent<bool>(BattleEvent.GAME_STATE_CHANGE, this.isPause);
         }
 
-        public int getUid()
+        public int GetUid()
         {
             this.uid += 1;
             return this.uid;

@@ -44,7 +44,7 @@ namespace CarrotFantasy
             this.btn_pauseSprites = new Sprite[2];
         }
 
-        private void loadResource()
+        private void LoadResource()
         {
             this.btn_gameSpeedSprites[0] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/speed_1");
             this.btn_gameSpeedSprites[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/speed_2");
@@ -53,7 +53,7 @@ namespace CarrotFantasy
             this.btn_pauseSprites[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/pause_3");
         }
 
-        private void loadTransform()
+        private void LoadTransform()
         {
             this.txtCoin = this.transform.Find("txt_coin").GetComponent<Text>();
             this.txtWaveInfo = this.transform.Find("node_playing_text/txt_waves_info").GetComponent<Text>();
@@ -73,16 +73,16 @@ namespace CarrotFantasy
             this.nodeBtnPause.transform.GetComponent<Button>().onClick.AddListener(this.BtnPauseGame);
             //this.nodeBtnGameSpeed.transform.GetComponent<Button>().onClick.AddListener(this.changeGameSpeed);
 
-            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.updateCoinText);
-            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.updateRoundText);
+            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
+            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
 
             this.battle.eventDispatcher.AddListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
         }
 
         private void RemoveListener()
         {
-            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.updateCoinText);
-            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.updateRoundText);
+            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
+            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
 
             this.battle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
         }
@@ -91,41 +91,41 @@ namespace CarrotFantasy
         {
             this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
             this.battle = GameManager.Instance.baseBattle;
-            this.loadResource();
-            this.loadTransform();
+            this.LoadResource();
+            this.LoadTransform();
 
             this.AddListener();
 
-            this.updateCoinText(0);
-            this.updateRoundText(0);
+            this.UpdateCoinText(0);
+            this.UpdateRoundText(0);
 
             this.isPause = this.battle.isPause;
             isNormalSpeed = true;
-            this.updateBtnPause();
-            this.updateBtnSpeed();
+            this.UpdateBtnPause();
+            this.UpdateBtnSpeed();
 
             this.node_pause.SetActive(this.isPause);
             this.node_playingText.SetActive(!this.isPause);
         }
 
         //更新UI文本
-        private void updateCoinText(int coin)
+        private void UpdateCoinText(int coin)
         {
             this.txtCoin.text = dataComponent.CoinCount.ToString();
         }
 
-        private void updateRoundText(int i)
+        private void UpdateRoundText(int i)
         {
             int waves = dataComponent.curWaves;
-            this.txtWaveInfo.text = LanguageUtil.Instance.getFormatString(1001, (waves / 10).ToString(), (waves % 10).ToString(), dataComponent.totalWaves.ToString());
+            this.txtWaveInfo.text = LanguageUtil.Instance.GetFormatString(1001, (waves / 10).ToString(), (waves % 10).ToString(), dataComponent.totalWaves.ToString());
         }
 
-        private void updateBtnPause()
+        private void UpdateBtnPause()
         {
             img_Btn_Pause.sprite = btn_pauseSprites[isPause ? 1 : 0];
         }
 
-        private void updateBtnSpeed()
+        private void UpdateBtnSpeed()
         {
             //img_Btn_GameSpeed.sprite = btn_gameSpeedSprites[isNormalSpeed ? 0 : 1];
         }
@@ -135,7 +135,7 @@ namespace CarrotFantasy
         {
             UIServer.Instance.PlayButtonEffect();
             isNormalSpeed = !isNormalSpeed;
-            this.updateBtnSpeed();
+            this.UpdateBtnSpeed();
         }
 
         public void BtnPauseGame()
@@ -155,7 +155,7 @@ namespace CarrotFantasy
         public void PauseGame(bool isPause)
         {
             this.isPause = isPause;
-            this.updateBtnPause();
+            this.UpdateBtnPause();
             this.node_pause.SetActive(isPause);
             this.node_playingText.SetActive(!isPause);
         }

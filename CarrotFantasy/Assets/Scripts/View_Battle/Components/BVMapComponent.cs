@@ -32,12 +32,12 @@ namespace CarrotFantasy
             this.sprGirdNoramlState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Grid");
             this.sprGirdStartState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/StartSprite");
             this.sprGirdCantBuildState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/cantBuild");
-            this.loadMapGrid();
+            this.LoadMapGrid();
         }
 
-        private void loadMapGrid()
+        private void LoadMapGrid()
         {
-            GameObject item = ResourceLoader.Instance.getGameObject("Prefabs/Game/Grid");
+            GameObject item = ResourceLoader.Instance.GetGameObject("Prefabs/Game/Grid");
 
             BattleMapComponent mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
             BattleMapGrid[,] mapGridInfo = mapComponent.gridsList;

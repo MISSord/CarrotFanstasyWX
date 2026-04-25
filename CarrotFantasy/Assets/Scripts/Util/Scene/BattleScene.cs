@@ -16,22 +16,22 @@ namespace CarrotFantasy
 
             GameManager manager = this.gameObj.AddComponent<GameManager>();
             manager.Init();
-            manager.initBattle();
+            manager.InitBattle();
 
-            Sche.delayExeOnceTimes(manager.StartGame, 2.0f);
+            Sche.DelayExeOnceTimes(manager.StartGame, 2.0f);
         }
 
         private void AddListener()
         {
-            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.RETURN_TO_MAIN_SCENE, this.returnToMainScene);
+            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.RETURN_TO_MAIN_SCENE, this.ReturnToMainScene);
         }
 
         private void RemoveListener()
         {
-            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.RETURN_TO_MAIN_SCENE, this.returnToMainScene);
+            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.RETURN_TO_MAIN_SCENE, this.ReturnToMainScene);
         }
 
-        private void returnToMainScene()
+        private void ReturnToMainScene()
         {
             ServerProvision.sceneServer.LoadScene(BaseSceneType.MainScene, null);
         }

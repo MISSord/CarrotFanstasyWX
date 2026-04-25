@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace CarrotFantasy
 {
-    public class zh_language
+    public class Zh_language
     {
         protected Dictionary<int, String> zhLangage = new Dictionary<int, string>();
 
-        public zh_language()
+        public Zh_language()
         {
             Init();
         }
@@ -17,7 +17,7 @@ namespace CarrotFantasy
 
         }
 
-        public string getString(int id)
+        public string GetString(int id)
         {
             if (zhLangage[id] != null)
             {

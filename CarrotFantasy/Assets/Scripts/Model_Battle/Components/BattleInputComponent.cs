@@ -29,8 +29,8 @@ namespace CarrotFantasy
             {
                 if (this.curNoProcessDic[i].frameId == this.baseBattle.curFrameId)
                 {
-                    this.towerComponent.exePlayerOrder(this.curNoProcessDic[i]);
-                    this.mapComponent.exePlayerOrder(this.curNoProcessDic[i]);
+                    this.towerComponent.ExePlayerOrder(this.curNoProcessDic[i]);
+                    this.mapComponent.ExePlayerOrder(this.curNoProcessDic[i]);
                     this.shouldRemoveList.Add(i);
                 }
                 else if (this.curNoProcessDic[i].frameId < this.baseBattle.curFrameId)
@@ -48,12 +48,12 @@ namespace CarrotFantasy
             }
         }
 
-        public void addOrder(InputOrder order)
+        public void AddOrder(InputOrder order)
         {
             this.curNoProcessDic.Add(order);
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
             this.curNoProcessDic.Clear();
             this.shouldRemoveList.Clear();
@@ -61,7 +61,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
             base.Dispose();
         }
     }

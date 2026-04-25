@@ -33,17 +33,17 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerNewBulletView);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeBulletView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewBulletView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBulletView);
         }
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerNewBulletView);
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeBulletView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewBulletView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBulletView);
         }
 
-        private void registerNewBulletView(String type, BattleUnit unit)
+        private void RegisterNewBulletView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.BULLET))
             {
@@ -56,7 +56,7 @@ namespace CarrotFantasy
                 GameObject bulletNode = GameViewObjectPool.Instance.GetNewGameObject(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1));
                 if (bulletNode == null)
                 {
-                    bulletNode = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(String.Format(this.prefabUrl, bullet.towerId, bullet.towerLevel + 1)));
+                    bulletNode = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject(String.Format(this.prefabUrl, bullet.towerId, bullet.towerLevel + 1)));
                 }
                 bulletNode.transform.SetParent(this.rootGameObject.transform);
                 bulletView.InitTransform(bulletNode.transform);
@@ -75,7 +75,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void removeBulletView(String type, BattleUnit unit)
+        private void RemoveBulletView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.BULLET) == false) return;
             BattleUnit_Bullet bullet = (BattleUnit_Bullet)unit;

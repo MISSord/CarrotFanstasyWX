@@ -35,7 +35,7 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.bigLevelPageCount = MapServer.Instance.mapModel.getBigLevelCount();
+            this.bigLevelPageCount = MapServer.Instance.mapModel.GetBigLevelCount();
             this.bigLevelPage = new Transform[bigLevelPageCount];
             this.hasRigisterEvent = false;
 
@@ -49,28 +49,28 @@ namespace CarrotFantasy
 
             this.bigLevelContentTrans = this.transform.Find("node_center/scroller/viewport/content");
 
-            this.initGridLayoutAndSroll();
-            this.loadBigLevelInfo();
+            this.InitGridLayoutAndSroll();
+            this.LoadBigLevelInfo();
 
             this.AddListener();
         }
 
         private void AddListener()
         {
-            this.btnLast.onClick.AddListener(this.toTheLastLevelPage);
-            this.btnNext.onClick.AddListener(this.toTheNextLevelPage);
+            this.btnLast.onClick.AddListener(this.ToTheLastLevelPage);
+            this.btnNext.onClick.AddListener(this.ToTheNextLevelPage);
 
-            this.btnReturn.onClick.AddListener(this.returnToMainPanel);
-            this.btnHelp.onClick.AddListener(this.showHelpPanel);
-            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.updateBigLevelInfo);
+            this.btnReturn.onClick.AddListener(this.ReturnToMainPanel);
+            this.btnHelp.onClick.AddListener(this.ShowHelpPanel);
+            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.UpdateBigLevelInfo);
         }
 
         private void RemoveListener()
         {
-            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, this.updateBigLevelInfo);
+            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, this.UpdateBigLevelInfo);
         }
 
-        private void initGridLayoutAndSroll()
+        private void InitGridLayoutAndSroll()
         {
             float sizeChange = 1f;
             float newCellX = GameConfig.BIG_LEVEL_UNIT_SIZE_X * sizeChange;
@@ -79,16 +79,16 @@ namespace CarrotFantasy
             float newSpacing = GameConfig.BIG_LEVEL_UNIT_SPACING_X * sizeChange;
             this.gridLayout.spacing = new Vector2(newSpacing, 0);
             this.slideScroll = new SlideScrollView();
-            this.slideScroll.loadSrollView(this.transform.Find("node_center/scroller"), (int)newCellX, (int)newSpacing);
+            this.slideScroll.LoadSrollView(this.transform.Find("node_center/scroller"), (int)newCellX, (int)newSpacing);
             this.slideScroll.SetContentLength(this.bigLevelPageCount);
         }
 
-        private void loadBigLevelInfo()
+        private void LoadBigLevelInfo()
         {
             for (int i = 0; i <= bigLevelPageCount - 1; i++)
             {
                 bigLevelPage[i] = bigLevelContentTrans.GetChild(i);
-                this.ShowBigLevelState(MapServer.Instance.mapModel.getBigLevelInfo(i + 1), bigLevelPage[i], i + 1);
+                this.ShowBigLevelState(MapServer.Instance.mapModel.GetBigLevelInfo(i + 1), bigLevelPage[i], i + 1);
             }
             hasRigisterEvent = true;
         }
@@ -117,28 +117,28 @@ namespace CarrotFantasy
             }
         }
 
-        public void updateBigLevelInfo()
+        public void UpdateBigLevelInfo()
         {
             for (int i = 0; i <= bigLevelPageCount - 1; i++)
             {
-                BigLevelInfo info = MapServer.Instance.mapModel.getBigLevelInfo(i + 1);
+                BigLevelInfo info = MapServer.Instance.mapModel.GetBigLevelInfo(i + 1);
                 this.ShowBigLevelState(info, bigLevelPage[i], i + 1);
             }
         }
 
-        private void returnToMainPanel()
+        private void ReturnToMainPanel()
         {
             UIServer.Instance.PlayButtonEffect();
             this.Close();
         }
 
-        private void showHelpPanel()
+        private void ShowHelpPanel()
         {
             UIViewService.OpenHelpPanel();
             UIServer.Instance.PlayButtonEffect();
         }
 
-        private void toTheNextLevelPage()
+        private void ToTheNextLevelPage()
         {
             if (this.curBigLevel >= this.bigLevelPageCount)
             {
@@ -149,7 +149,7 @@ namespace CarrotFantasy
             UIServer.Instance.PlayPagingEffect();
         }
 
-        private void toTheLastLevelPage()
+        private void ToTheLastLevelPage()
         {
             if (this.curBigLevel <= 1)
             {

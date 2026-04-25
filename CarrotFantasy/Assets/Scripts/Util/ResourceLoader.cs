@@ -20,7 +20,7 @@ namespace CarrotFantasy
             }
         }
 
-        public GameObject getGameObject(String path)
+        public GameObject GetGameObject(String path)
         {
             if (string.IsNullOrEmpty(path))
             {

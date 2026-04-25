@@ -47,7 +47,7 @@ namespace CarrotFantasy
                     scheList[i].lastStartTime = curTime;
                     if (scheList[i].isOnce == true)
                     {
-                        silenceSingleSche(scheList[i].uid);
+                        SilenceSingleSche(scheList[i].uid);
                         curUnscheCount += 1;
                     }
                 }
@@ -72,30 +72,30 @@ namespace CarrotFantasy
             }
         }
 
-        public int delayExeOnceTimes(callBack call, float interval)
+        public int DelayExeOnceTimes(callBack call, float interval)
         {
-            ScheObject sche = this.addSingleSche(call, interval);
+            ScheObject sche = this.AddSingleSche(call, interval);
             sche.isOnce = true;
             return sche.uid;
         }
 
-        public int delayExeMultipleTimes(callBack call, float interval)
+        public int DelayExeMultipleTimes(callBack call, float interval)
         {
-            ScheObject sche = this.addSingleSche(call, interval);
+            ScheObject sche = this.AddSingleSche(call, interval);
             sche.isOnce = false;
             return sche.uid;
         }
 
-        private ScheObject addSingleSche(callBack call, float interval)
+        private ScheObject AddSingleSche(callBack call, float interval)
         {
-            int id = getUniqueId();
+            int id = GetUniqueId();
             ScheObject sche = new ScheObject(id, call, interval, this.onClock());
             this.scheList.Add(sche);
             this.scheDic.Add(id, sche);
             return sche;
         }
 
-        public void silenceSingleSche(int id)
+        public void SilenceSingleSche(int id)
         {
             ScheObject sche;
             if (scheDic.TryGetValue(id, out sche))
@@ -105,7 +105,7 @@ namespace CarrotFantasy
             }
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
             this.scheList.Clear();
             this.scheDic.Clear();
@@ -114,11 +114,11 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
             base.Dispose();
         }
 
-        private int getUniqueId()
+        private int GetUniqueId()
         {
             curIndex += 1;
             return curIndex;

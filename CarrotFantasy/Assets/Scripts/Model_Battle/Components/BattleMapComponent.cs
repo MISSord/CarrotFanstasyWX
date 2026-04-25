@@ -44,22 +44,22 @@ namespace CarrotFantasy
 
             this.levelInfo = BattleParamServer.Instance.info;
 
-            this.loadMapGrid();
-            this.loadMapInfo();
+            this.LoadMapGrid();
+            this.LoadMapInfo();
         }
 
-        private void loadMapGrid()
+        private void LoadMapGrid()
         {
             for (int x = 0; x < this.xColumn; x++)
             {
                 for (int y = 0; y < this.yRow; y++)
                 {
-                    this.gridsList[x, y] = new BattleMapGrid(this.baseBattle.getUid(), x, y);
+                    this.gridsList[x, y] = new BattleMapGrid(this.baseBattle.GetUid(), x, y);
                 }
             }
         }
 
-        private void loadMapInfo()
+        private void LoadMapInfo()
         {
             this.monsterPathList = new List<Fix64Vector2>();
             for (int i = 0; i < this.levelInfo.monsterPath.Count; i++)
@@ -71,7 +71,7 @@ namespace CarrotFantasy
             {
                 for (int y = 0; y < this.yRow; y++)
                 {
-                    this.gridsList[x, y].loadGridInfo(this.levelInfo.gridPoints[y + x * yRow]);
+                    this.gridsList[x, y].LoadGridInfo(this.levelInfo.gridPoints[y + x * yRow]);
                 }
             }
             this.startPoint = monsterPathList[0];
@@ -83,34 +83,34 @@ namespace CarrotFantasy
 
         public bool isCanBuildTower(int x, int y) //视图层调用
         {
-            return this.levelInfo.gridPoints[this.getListNumber(x, y)].canBuild;
+            return this.levelInfo.gridPoints[this.GetListNumber(x, y)].canBuild;
         }
 
-        private int getListNumber(int x, int y)
+        private int GetListNumber(int x, int y)
         {
             return (x - 1) * this.xColumn + (y - 1) * this.yRow;
         }
 
-        public Fix64Vector2 getMapGridPosition(int x, int y)
+        public Fix64Vector2 GetMapGridPosition(int x, int y)
         {
             return new Fix64Vector2(this.gridsList[x, y].realX, this.gridsList[x, y].realY);
         }
 
-        public void exePlayerOrder(InputOrder order)
+        public void ExePlayerOrder(InputOrder order)
         {
             BattleTowerComponent towerComponet = (BattleTowerComponent)this.baseBattle.GetComponent(BattleComponentType.TowerComponent);
-            BattleUnit_Tower tower = towerComponet.getTowerInfo(order.x, order.y);
+            BattleUnit_Tower tower = towerComponet.GetTowerInfo(order.x, order.y);
             if (tower != null)
             {
-                this.gridsList[order.x, order.y].changeTowerState(true);
+                this.gridsList[order.x, order.y].ChangeTowerState(true);
             }
             else
             {
-                this.gridsList[order.x, order.y].changeTowerState(false);
+                this.gridsList[order.x, order.y].ChangeTowerState(false);
             }
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
             this.monsterPathList.Clear();
             this.gridsList = null;

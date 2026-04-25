@@ -2,16 +2,16 @@ namespace CarrotFantasy
 {
     public class UnitBeHitComponent : BaseUnitComponent
     {
-        public CallBack<BattleUnit> beHitCallBack { get; private set; }
+        public CallBack<BattleUnit> BeHitCallBack { get; private set; }
 
         public UnitBeHitComponent()
         {
             this.unitComponentType = UnitComponentType.BEHIT;
         }
 
-        public void registerBeHitCallBack(CallBack<BattleUnit> beHitCallBack)
+        public void RegisterBeHitCallBack(CallBack<BattleUnit> BeHitCallBack)
         {
-            this.beHitCallBack = beHitCallBack;
+            this.BeHitCallBack = BeHitCallBack;
         }
 
         public override void OnTick(Fix64 deltaTime)

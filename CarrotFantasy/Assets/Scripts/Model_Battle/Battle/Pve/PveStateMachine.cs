@@ -8,7 +8,7 @@ namespace CarrotFantasy
 
         }
 
-        protected override BaseBattleState createStateInstance(string type)
+        protected override BaseBattleState CreateStateInstance(string type)
         {
             if (type.Equals(BattleStateType.START_GAME))
             {

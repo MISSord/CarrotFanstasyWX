@@ -24,26 +24,26 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this.buildNewBullet);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.updateBullInfo);
+            this.eventDispatcher.AddListener<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this.BuildNewBullet);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.UpdateBullInfo);
         }
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this.buildNewBullet);
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.updateBullInfo);
+            this.eventDispatcher.RemoveListener<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this.BuildNewBullet);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.UpdateBullInfo);
         }
 
-        public void buildNewBullet(BattleUnit_Tower tower, BattleUnit target)
+        public void BuildNewBullet(BattleUnit_Tower tower, BattleUnit target)
         {
             BattleUnit_Bullet bullet = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Bullet>(BattleUnitType.BULLET);
             if (bullet == null)
             {
                 bullet = new BattleUnit_Bullet(this.baseBattle);
             }
-            bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.addDeadList);
-            bullet.LoadInfo(this.baseBattle.getUid(), this.configReader.getSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
-            bullet.loadInfo2(tower, target);
+            bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.AddDeadList);
+            bullet.LoadInfo(this.baseBattle.GetUid(), this.configReader.getSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
+            bullet.LoadInfo2(tower, target);
             bullet.Init();
             bullet.InitComponents();
             this.curBulletList.Add(bullet);
@@ -51,7 +51,7 @@ namespace CarrotFantasy
             //Debug.Log("注册新的子弹");
         }
 
-        private void addDeadList(BattleUnit_Bullet monster)
+        private void AddDeadList(BattleUnit_Bullet monster)
         {
             this.bulletDeadList.Add(monster);
         }
@@ -59,25 +59,25 @@ namespace CarrotFantasy
         public override void OnTick(Fix64 time)
         {
             base.OnTick(time);
-            this.updateCurBulletState(time);
+            this.UpdateCurBulletState(time);
         }
 
-        public override void lateTick(Fix64 time)
+        public override void LateTick(Fix64 time)
         {
-            base.lateTick(time);
-            this.updateCurMonsterWaveStateLateTick(time);
+            base.LateTick(time);
+            this.UpdateCurMonsterWaveStateLateTick(time);
         }
 
-        private void updateBullInfo(String type, BattleUnit unit)
+        private void UpdateBullInfo(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER)) return;
             for (int i = 0; i <= this.curBulletList.Count - 1; i++)
             {
-                this.curBulletList[i].moveComponent.removeMoveDirect(unit);
+                this.curBulletList[i].moveComponent.RemoveMoveDirect(unit);
             }
         }
 
-        public void updateCurBulletState(Fix64 time)
+        public void UpdateCurBulletState(Fix64 time)
         {
             if (this.curBulletList.Count != 0)
             {
@@ -92,32 +92,32 @@ namespace CarrotFantasy
                 {
                     this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, BattleUnitType.BULLET, this.bulletDeadList[i]);
                     this.bulletDeadList[i].ClearInfo();
-                    GameObjectPool.Instance.pushObjectToPool(BattleUnitType.BULLET, this.bulletDeadList[i]);
+                    GameObjectPool.Instance.PushObjectToPool(BattleUnitType.BULLET, this.bulletDeadList[i]);
                     this.curBulletList.Remove(this.bulletDeadList[i]);
                 }
                 this.bulletDeadList.Clear();
             }
         }
 
-        public void updateCurMonsterWaveStateLateTick(Fix64 time)
+        public void UpdateCurMonsterWaveStateLateTick(Fix64 time)
         {
             if (this.curBulletList.Count != 0)
             {
                 for (int i = 0; i < this.curBulletList.Count; i++)
                 {
-                    this.curBulletList[i].lateTick(time);
+                    this.curBulletList[i].LateTick(time);
                 }
             }
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
             if (this.curBulletList.Count != 0)
             {
                 for (int i = 0; i < this.curBulletList.Count; i++)
                 {
                     this.curBulletList[i].ClearInfo();
-                    GameObjectPool.Instance.pushObjectToPool(BattleUnitType.BULLET, this.curBulletList[i]);
+                    GameObjectPool.Instance.PushObjectToPool(BattleUnitType.BULLET, this.curBulletList[i]);
                 }
             }
             this.curBulletList.Clear();
@@ -127,7 +127,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
             base.Dispose();
         }
     }

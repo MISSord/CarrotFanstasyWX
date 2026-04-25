@@ -18,7 +18,7 @@ namespace CarrotFantasy
             type = hitType;
         }
 
-        public virtual void resetStrDesc()
+        public virtual void ResetStrDesc()
         {
             this.strDesc = String.Format("boundsX:%s boundsZ:%s boundsSizeX:%s boundsSizeZ:%s", this.boundsX, this.boundsY,
                 this.boundsSizeX, this.boundsSizeY);

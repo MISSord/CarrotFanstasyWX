@@ -31,13 +31,13 @@ namespace CarrotFantasy
             this.totalLive = (int)this.birthParam["live"];
         }
 
-        public void loadInfo2(int curLevel, int monsterId)
+        public void LoadInfo2(int curLevel, int monsterId)
         {
             this.curLevel = curLevel;
             this.monsterId = monsterId;
         }
 
-        public void loadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
+        public void LoadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
         {
             this.moveTrans.LoadInfo(monsterPath, distance);
         }
@@ -63,16 +63,16 @@ namespace CarrotFantasy
             this.AddComponent(this.moveTrans);
             this.AddComponent(beHit);
 
-            beHit.registerBeHitCallBack(this.beHitCallBack);
+            beHit.RegisterBeHitCallBack(this.BeHitCallBack);
         }
 
         public override void InitComponents()
         {
             base.InitComponents();
-            this.unitTransform.setBodyRadius(this.birthParam["bodyRadius"]);
+            this.unitTransform.SetBodyRadius(this.birthParam["bodyRadius"]);
         }
 
-        public void beHitCallBack(BattleUnit battleUnit)
+        public void BeHitCallBack(BattleUnit battleUnit)
         {
             if (this.isHaveDead == true) return;
             if (battleUnit.unitType.Equals(BattleUnitType.BULLET))
@@ -94,7 +94,7 @@ namespace CarrotFantasy
             }
         }
 
-        public bool isDead()
+        public bool IsDead()
         {
             if (this.moveTrans.isReachCarrot == true)
             {
@@ -113,9 +113,9 @@ namespace CarrotFantasy
             this.EndPointDistance = this.moveTrans.EndPointDistance;
         }
 
-        public override void lateTick(Fix64 deltaTime)
+        public override void LateTick(Fix64 deltaTime)
         {
-            this.unitTransform.lateTick(deltaTime);
+            this.unitTransform.LateTick(deltaTime);
         }
 
         public override void ClearInfo()

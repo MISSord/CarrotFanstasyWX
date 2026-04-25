@@ -36,7 +36,7 @@ namespace CarrotFantasy
             this.AddComponent(this.tranComponent);
             this.AddComponent(this.beHitComponent);
 
-            this.beHitComponent.registerBeHitCallBack(this.beHitCallBack);
+            this.beHitComponent.RegisterBeHitCallBack(this.BeHitCallBack);
         }
 
         public void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition, int id)
@@ -47,9 +47,9 @@ namespace CarrotFantasy
             this.itemId = id;
         }
 
-        public void loadInfo1()
+        public void LoadInfo1()
         {
-            this.tranComponent.setBodyRadius(this.birthParam["bodyRadius"]);
+            this.tranComponent.SetBodyRadius(this.birthParam["bodyRadius"]);
         }
 
         public override void OnTick(Fix64 deltaTime)
@@ -57,7 +57,7 @@ namespace CarrotFantasy
 
         }
 
-        public void beHitCallBack(BattleUnit battleUnit)
+        public void BeHitCallBack(BattleUnit battleUnit)
         {
             if (this.isHaveDead == true) return;
             if (battleUnit.unitType.Equals(BattleUnitType.BULLET))
@@ -79,7 +79,7 @@ namespace CarrotFantasy
             }
         }
 
-        public bool isDead()
+        public bool IsDead()
         {
             if (this.curLive <= 0) return true;
             return false;

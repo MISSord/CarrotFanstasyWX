@@ -26,7 +26,7 @@ namespace CarrotFantasy
 
         public void Init()
         {
-            UIServer.Instance.audioManager.playMusic("AudioClips/NormalMordel/BGMusic");
+            UIServer.Instance.audioManager.PlayMusic("AudioClips/NormalMordel/BGMusic");
             if (BattleParamServer.Instance.isPVE == true)
             {
                 this.baseBattle = new PveBattle();
@@ -38,20 +38,20 @@ namespace CarrotFantasy
                 //this.baseBattleView = new PveBattleView(this.baseBattle);
             }
             this.baseBattleView.rootGameObject = this.transform.gameObject;
-            this.addLitener();
+            this.AddLitener();
         }
 
-        private void addLitener()
+        private void AddLitener()
         {
-            this.baseBattle.eventDispatcher.AddListener(BattleEvent.REPLAY_THE_GAME, this.restartGame);
+            this.baseBattle.eventDispatcher.AddListener(BattleEvent.REPLAY_THE_GAME, this.RestartGame);
         }
 
         private void RemoveListener()
         {
-            this.baseBattle.eventDispatcher.RemoveListener(BattleEvent.REPLAY_THE_GAME, this.restartGame);
+            this.baseBattle.eventDispatcher.RemoveListener(BattleEvent.REPLAY_THE_GAME, this.RestartGame);
         }
 
-        private void restartGame()
+        private void RestartGame()
         {
             UIServer.Instance.ShowLoadingPanel();
             this.baseBattleView.ClearGameInfo();
@@ -64,14 +64,14 @@ namespace CarrotFantasy
                 this.panel = null;
             }
 
-            this.initBattle();
-            Sche.delayExeOnceTimes(this.StartGame, 2.0f);
+            this.InitBattle();
+            Sche.DelayExeOnceTimes(this.StartGame, 2.0f);
         }
 
-        public void initBattle()
+        public void InitBattle()
         {
             this.baseBattle.Init();
-            this.baseBattle.initComponent();
+            this.baseBattle.InitComponent();
             this.baseBattleView.Init();
             this.baseBattleView.InitComponents();
 
@@ -88,7 +88,7 @@ namespace CarrotFantasy
 
         public void Update()
         {
-            this.baseBattle.tick(new Fix64(Time.deltaTime));
+            this.baseBattle.Tick(new Fix64(Time.deltaTime));
             this.baseBattleView.OnTick(Time.deltaTime);
         }
 

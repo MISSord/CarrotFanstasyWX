@@ -9,7 +9,7 @@ namespace CarrotFantasy
 
         public int towerId { get; private set; }
 
-        public void setOrder(int frame, int x, int y, int order)
+        public void SetOrder(int frame, int x, int y, int order)
         {
             this.frameId = frame;
             this.x = x;
@@ -17,7 +17,7 @@ namespace CarrotFantasy
             this.order = order;
         }
 
-        public void setTowerId(int towerId)
+        public void SetTowerId(int towerId)
         {
             this.towerId = towerId;
         }

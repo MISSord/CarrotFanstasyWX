@@ -28,7 +28,7 @@ namespace CarrotFantasy
             this.moveSpeed = this.birthParam["moveSpeed"];
         }
 
-        public void loadInfo2(BattleUnit_Tower tower, BattleUnit target)
+        public void LoadInfo2(BattleUnit_Tower tower, BattleUnit target)
         {
             this.towerId = tower.towerID;
             this.towerLevel = tower.curLevel;
@@ -69,17 +69,17 @@ namespace CarrotFantasy
             this.AddComponent(this.tranComponent);
             this.AddComponent(this.beHitComponent);
 
-            this.beHitComponent.registerBeHitCallBack(this.beHitCallBack);
+            this.beHitComponent.RegisterBeHitCallBack(this.BeHitCallBack);
         }
 
         public override void InitComponents()
         {
             base.InitComponents();
-            this.moveComponent.registerMoveDirect(this.target);
-            this.tranComponent.setBodyRadius(new Fix64(0.2f));
+            this.moveComponent.RegisterMoveDirect(this.target);
+            this.tranComponent.SetBodyRadius(new Fix64(0.2f));
         }
 
-        private void beHitCallBack(BattleUnit unit)
+        private void BeHitCallBack(BattleUnit unit)
         {
             if (unit.unitType.Equals(BattleUnitType.MONSTER) == true || unit.unitType.Equals(BattleUnitType.ITEM) == true)
             {
@@ -96,9 +96,9 @@ namespace CarrotFantasy
             this.moveComponent.OnTick(deltaTime);
         }
 
-        public override void lateTick(Fix64 deltaTime)
+        public override void LateTick(Fix64 deltaTime)
         {
-            this.tranComponent.lateTick(deltaTime);
+            this.tranComponent.LateTick(deltaTime);
         }
 
         public override void Dispose()

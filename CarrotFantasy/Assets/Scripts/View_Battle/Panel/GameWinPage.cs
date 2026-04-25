@@ -60,11 +60,11 @@ namespace CarrotFantasy
         public void ShowGameWinPage()
         {
             this.transform.gameObject.SetActive(true);
-            UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Perfect");
+            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Perfect");
             int waves = dataComponent.curWaves;
-            this.txtResultShow.text = LanguageUtil.Instance.getFormatString(1002, (waves / 10).ToString(), (waves % 10).ToString(), dataComponent.totalWaves.ToString());
-            this.txtLevelShow.text = LanguageUtil.Instance.getFormatString(1003, dataComponent.bigLevel.ToString(), dataComponent.level.ToString());
-            this.img_Carrot.sprite = this.carrotSprites[dataComponent.carrotTropyLevel() - 1];
+            this.txtResultShow.text = LanguageUtil.Instance.GetFormatString(1002, (waves / 10).ToString(), (waves % 10).ToString(), dataComponent.totalWaves.ToString());
+            this.txtLevelShow.text = LanguageUtil.Instance.GetFormatString(1003, dataComponent.bigLevel.ToString(), dataComponent.level.ToString());
+            this.img_Carrot.sprite = this.carrotSprites[dataComponent.CarrotTropyLevel() - 1];
         }
 
         public void BtnEvenReplay()

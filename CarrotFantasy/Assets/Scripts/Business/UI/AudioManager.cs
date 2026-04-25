@@ -70,34 +70,34 @@ namespace CarrotFantasy
             this.effectVolume = LocalStorageManager.Instance.getDataFromLocal<float>
                 (LocalStorageType.CUR_USER_MUSIC_EFFECT_VOLUME, (System.Object)1f, LocalStorageSaveType.FloatType);
 
-            this.refreshMusicActiveState();
-            this.refreshMusicVolume();
-            this.refreshEffectActiveState();
-            this.refreshEffectVolume();
+            this.RefreshMusicActiveState();
+            this.RefreshMusicVolume();
+            this.RefreshEffectActiveState();
+            this.RefreshEffectVolume();
 
         }
 
-        public void refreshMusicActiveState()
+        public void RefreshMusicActiveState()
         {
             this.audioSourceMusic.enabled = this.musicEnable;
         }
 
-        public void refreshMusicVolume()
+        public void RefreshMusicVolume()
         {
             this.audioSourceMusic.volume = this.musicVolume;
         }
 
-        public void refreshEffectActiveState()
+        public void RefreshEffectActiveState()
         {
             this.audioSourceEffect.enabled = this.effectEnable;
         }
 
-        public void refreshEffectVolume()
+        public void RefreshEffectVolume()
         {
             this.audioSourceEffect.volume = this.effectVolume;
         }
 
-        public int playMusic(String path, int priority = 1)
+        public int PlayMusic(String path, int priority = 1)
         {
             uid = uid + 1;
             MusicInfo musicInfo = new MusicInfo(path, priority, uid);
@@ -119,11 +119,11 @@ namespace CarrotFantasy
                 this.musicProrityGroupMap[priority] = new List<MusicInfo>();
             }
             this.musicProrityGroupMap[priority].Add(musicInfo);
-            this.checkMusic();
+            this.CheckMusic();
             return uid;
         }
 
-        private void checkMusic()
+        private void CheckMusic()
         {
             for (int i = 0; i <= this.orderOfPriority.Count - 1; i++)
             {
@@ -141,23 +141,23 @@ namespace CarrotFantasy
             }
         }
 
-        public void stopMusic()
+        public void StopMusic()
         {
             this.audioSourceMusic.Stop();
         }
 
-        public void stopMusic(int uuid)
+        public void StopMusic(int uuid)
         {
             MusicInfo musicInfo;
             if (this.uid2MusicInfo.TryGetValue(uuid, out musicInfo))
             {
                 this.uid2MusicInfo.Remove(uuid);
                 this.musicProrityGroupMap[musicInfo.prority].Remove(musicInfo);
-                this.checkMusic();
+                this.CheckMusic();
             }
         }
 
-        public void playEffect(String path, int volumeScale = 1)
+        public void PlayEffect(String path, int volumeScale = 1)
         {
             if (this.effectEnable == false) { return; }
             float curTime = Time.realtimeSinceStartup;
@@ -169,80 +169,80 @@ namespace CarrotFantasy
             }
         }
 
-        public void stopEffectClip()
+        public void StopEffectClip()
         {
             this.audioSourceEffect.Stop();
         }
 
-        public bool getMusicEnable()
+        public bool GetMusicEnable()
         {
             return this.musicEnable;
         }
 
-        public bool getEffectEnable()
+        public bool GetEffectEnable()
         {
             return this.effectEnable;
         }
 
-        public float getMusicVolume()
+        public float GetMusicVolume()
         {
             return this.musicVolume;
         }
 
-        public float getEffectVolue()
+        public float GetEffectVolue()
         {
             return this.effectVolume;
         }
 
-        public void setMusicVolume(int volume)
+        public void SetMusicVolume(int volume)
         {
             this.musicVolume = (float)Math.Max(0.001, Math.Min(volume, 1));
-            this.refreshMusicVolume();
+            this.RefreshMusicVolume();
             LocalStorageManager.Instance.setPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_VOLUME, this.musicVolume, LocalStorageSaveType.FloatType);
         }
-        public void setEffectVolume(int volume)
+        public void SetEffectVolume(int volume)
         {
             this.musicVolume = (float)Math.Max(0.001, Math.Min(volume, 1));
-            this.refreshEffectVolume();
+            this.RefreshEffectVolume();
             LocalStorageManager.Instance.setPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_EFFECT_VOLUME, this.effectVolume, LocalStorageSaveType.FloatType);
         }
 
-        public void setMusicEnable(bool isActive)
+        public void SetMusicEnable(bool isActive)
         {
             if (this.musicEnable != isActive)
             {
                 this.musicEnable = isActive;
                 if (isActive == true)
                 {
-                    LocalStorageManager.Instance.setDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
+                    LocalStorageManager.Instance.SetDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
                 }
                 else
                 {
-                    LocalStorageManager.Instance.setDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
+                    LocalStorageManager.Instance.SetDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
                 }
 
             }
-            this.refreshMusicActiveState();
+            this.RefreshMusicActiveState();
         }
 
-        public void setEffectEnable(bool isActive)
+        public void SetEffectEnable(bool isActive)
         {
             if (this.effectEnable != isActive)
             {
                 this.effectEnable = isActive;
                 if (isActive == true)
                 {
-                    LocalStorageManager.Instance.setDataToLocal(LocalStorageType.CUR_USER_MUSIC_EFFECT_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
+                    LocalStorageManager.Instance.SetDataToLocal(LocalStorageType.CUR_USER_MUSIC_EFFECT_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
                 }
                 else
                 {
-                    LocalStorageManager.Instance.setDataToLocal(LocalStorageType.CUR_USER_MUSIC_EFFECT_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
+                    LocalStorageManager.Instance.SetDataToLocal(LocalStorageType.CUR_USER_MUSIC_EFFECT_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
                 }
             }
-            this.refreshEffectActiveState();
+            this.RefreshEffectActiveState();
         }
 
-        public void dipose()
+        public void Dipose()
         {
             GameObject.Destroy(this.nodeObject);
         }

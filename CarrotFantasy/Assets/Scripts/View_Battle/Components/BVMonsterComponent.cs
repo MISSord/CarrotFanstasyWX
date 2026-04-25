@@ -24,7 +24,7 @@ namespace CarrotFantasy
         {
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("MonsterContainer");
-            this.noInstanGameObject = ResourceLoader.Instance.getGameObject(this.pathUrl);
+            this.noInstanGameObject = ResourceLoader.Instance.GetGameObject(this.pathUrl);
 
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
 
@@ -35,17 +35,17 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerNewMonsterView);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeMonsterView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewMonsterView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveMonsterView);
         }
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerNewMonsterView);
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeMonsterView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewMonsterView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveMonsterView);
         }
 
-        private void registerNewMonsterView(String type, BattleUnit unit)
+        private void RegisterNewMonsterView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.MONSTER))
             {
@@ -66,7 +66,7 @@ namespace CarrotFantasy
                 monsterView.Init();
 
                 this.monsterDic.Add(monster, monsterView);
-                UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Monster/Create");
+                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Monster/Create");
             }
         }
 
@@ -78,7 +78,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void removeMonsterView(String type, BattleUnit unit)
+        private void RemoveMonsterView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.MONSTER) == false) return;
             BattleUnit_Monster monster = (BattleUnit_Monster)unit;
@@ -92,18 +92,18 @@ namespace CarrotFantasy
             monsterView.ClearUnitInfo();
             this.monsterDic.Remove(monster);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
-            UIServer.Instance.audioManager.playEffect(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
+            UIServer.Instance.audioManager.PlayEffect(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
 
             //特效
             GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
             if (sell == null)
             {
-                sell = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/DestoryEffect"));
+                sell = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/DestoryEffect"));
             }
             sell.transform.GetComponent<Animator>().enabled = true;
             UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
             sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-            Sche.delayExeOnceTimes(() =>
+            Sche.DelayExeOnceTimes(() =>
             {
                 sell.transform.GetComponent<Animator>().enabled = false;
                 GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);

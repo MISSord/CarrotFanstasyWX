@@ -7,7 +7,7 @@ namespace CarrotFantasy
         public BattleUnit unit { get; private set; }
         public String unitComponentType { get; protected set; } //在子类里赋值
 
-        public void loadUnit(BattleUnit unit)
+        public void LoadUnit(BattleUnit unit)
         {
             this.unit = unit;
         }
@@ -18,7 +18,7 @@ namespace CarrotFantasy
 
         public abstract void OnTick(Fix64 deltaTime);
 
-        public virtual void lateTick(Fix64 deltaTime) { }
+        public virtual void LateTick(Fix64 deltaTime) { }
 
         public virtual void Dispose()
         {

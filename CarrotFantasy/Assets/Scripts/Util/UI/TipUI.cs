@@ -49,22 +49,22 @@ namespace CarrotFantasy
             });
         }
 
-        public void refreshTip(String tip)
+        public void RefreshTip(String tip)
         {
             if (this.scheId != -1) return;
             this.txtShowTip.text = tip;
             mainPanelTween[0].Play();
-            this.scheId = Sche.delayExeOnceTimes(() => { this.mainPanelTween[1].Play(); }, 2f);
+            this.scheId = Sche.DelayExeOnceTimes(() => { this.mainPanelTween[1].Play(); }, 2f);
         }
 
-        public void showTip(String tip)
+        public void ShowTip(String tip)
         {
             if (this.scheId != -1) return;
             this.txtShowTip.text = tip;
             mainPanelTween[0].Play();
         }
 
-        public void fadeTip()
+        public void FadeTip()
         {
             this.mainPanelTween[1].Play();
         }

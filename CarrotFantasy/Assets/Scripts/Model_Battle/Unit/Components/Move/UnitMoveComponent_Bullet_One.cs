@@ -10,7 +10,7 @@ namespace CarrotFantasy
 
         public override void OnTick(Fix64 deltaTime)
         {
-            this.calcuMoveSpeed();
+            this.CalcuMoveSpeed();
             base.OnTick(deltaTime);
         }
     }

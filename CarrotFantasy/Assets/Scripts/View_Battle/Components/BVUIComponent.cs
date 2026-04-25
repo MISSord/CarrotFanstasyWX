@@ -63,40 +63,40 @@ namespace CarrotFantasy
         {
             this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Select_Grid, this.HandleGrid);
 
-            this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Show_Handle_Tower, this.showHandleTowerCanvas);
-            this.battleView.bvEventDispatcher.AddListener(BattleViewEventType.Fade_Handle_Tower, this.fadeHandleTowerCanvas);
-            this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Show_Tower_List, this.showTowerList);
-            this.battleView.bvEventDispatcher.AddListener(BattleViewEventType.Fade_Tower_List, this.fadeTowerList);
+            this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Show_Handle_Tower, this.ShowHandleTowerCanvas);
+            this.battleView.bvEventDispatcher.AddListener(BattleViewEventType.Fade_Handle_Tower, this.FadeHandleTowerCanvas);
+            this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Show_Tower_List, this.ShowTowerList);
+            this.battleView.bvEventDispatcher.AddListener(BattleViewEventType.Fade_Tower_List, this.FadeTowerList);
 
-            this.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.refreshButtonInfo);
+            this.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.RefreshButtonInfo);
 
-            this.tranButtonSell.GetComponent<Button>().onClick.AddListener(this.sellTower);
-            this.tranButtonUp.GetComponent<Button>().onClick.AddListener(this.updateTower);
+            this.tranButtonSell.GetComponent<Button>().onClick.AddListener(this.SellTower);
+            this.tranButtonUp.GetComponent<Button>().onClick.AddListener(this.UpdateTower);
 
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.updateNodeState);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.updateTargetSignal);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.UpdateNodeState);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.UpdateTargetSignal);
 
-            this.eventDispatcher.AddListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.setTargetSignal);
+            this.eventDispatcher.AddListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.SetTargetSignal);
         }
 
         private void RemoveListener()
         {
             this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleViewEventType.Select_Grid, this.HandleGrid);
 
-            this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleViewEventType.Show_Handle_Tower, this.showHandleTowerCanvas);
-            this.battleView.bvEventDispatcher.RemoveListener(BattleViewEventType.Fade_Handle_Tower, this.fadeHandleTowerCanvas);
-            this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleViewEventType.Show_Tower_List, this.showTowerList);
-            this.battleView.bvEventDispatcher.RemoveListener(BattleViewEventType.Fade_Tower_List, this.fadeTowerList);
+            this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleViewEventType.Show_Handle_Tower, this.ShowHandleTowerCanvas);
+            this.battleView.bvEventDispatcher.RemoveListener(BattleViewEventType.Fade_Handle_Tower, this.FadeHandleTowerCanvas);
+            this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleViewEventType.Show_Tower_List, this.ShowTowerList);
+            this.battleView.bvEventDispatcher.RemoveListener(BattleViewEventType.Fade_Tower_List, this.FadeTowerList);
 
-            this.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.refreshButtonInfo);
+            this.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.RefreshButtonInfo);
 
             this.tranButtonSell.GetComponent<Button>().onClick.RemoveAllListeners();
             this.tranButtonUp.GetComponent<Button>().onClick.RemoveAllListeners();
 
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.updateNodeState);
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.updateTargetSignal);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.UpdateNodeState);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.UpdateTargetSignal);
 
-            this.eventDispatcher.RemoveListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.setTargetSignal);
+            this.eventDispatcher.RemoveListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.SetTargetSignal);
         }
 
         public override void Init()
@@ -104,14 +104,14 @@ namespace CarrotFantasy
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("UIContainer");
 
-            this.nodeTowerList = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/UI/tower_list"));
+            this.nodeTowerList = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/UI/tower_list"));
             this.nodeTowerList.transform.SetParent(this.rootGameObject.transform);
             this.nodeTowerList.transform.position = this.battleView.initTran;
             this.nodeTowerList.transform.GetComponent<Canvas>().sortingOrder = 20;
 
             for (int i = 0; i <= this.towerComponent.canBuildTowerListLength - 1; i++)
             {
-                GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/UI/btn_tower_build"));
+                GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/UI/btn_tower_build"));
                 this.buttonTowerList[i] = new ButtonTower();
                 this.buttonTowerList[i].LoadInfo(this);
                 this.buttonTowerList[i].InitInfo(itemGo.transform, this.towerComponent.canBuildTowerList[i]);
@@ -121,7 +121,7 @@ namespace CarrotFantasy
                 itemGo.transform.localScale = Vector3.one;
             }
 
-            this.nodeHandleTowerCanvas = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/UI/handle_tower_canvas"));
+            this.nodeHandleTowerCanvas = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/UI/handle_tower_canvas"));
             this.nodeHandleTowerCanvas.transform.SetParent(this.rootGameObject.transform);
             this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
             this.nodeHandleTowerCanvas.transform.GetComponent<Canvas>().sortingOrder = 20;
@@ -130,7 +130,7 @@ namespace CarrotFantasy
             this.spriteButtonUpList[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_CanUpLevel"); //能升级
             this.spriteButtonUpList[2] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_ReachHighestLevel"); //满级
 
-            this.nodeMap = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/nodeMap"));
+            this.nodeMap = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/nodeMap"));
             this.nodeMap.transform.SetParent(this.rootGameObject.transform);
             this.nodeMap.transform.position = new Vector3(6, 4.35f, 0);
             Dictionary<String, int> map = this.reader.getMapUIConfig(dataComponent.bigLevel, dataComponent.level);
@@ -141,20 +141,20 @@ namespace CarrotFantasy
             this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sortingOrder = 0;
             this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 4;
 
-            this.nodeTargetSignal = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/node_target_signal"));
+            this.nodeTargetSignal = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/node_target_signal"));
             this.nodeTargetSignal.transform.SetParent(this.rootGameObject.transform);
             this.nodeTargetSignal.transform.position = this.battleView.initTran;
 
             this.LoadInfo();
-            this.setStartPoint();
-            this.setCarrot();
+            this.SetStartPoint();
+            this.SetCarrot();
 
             this.AddListener();
         }
 
-        private void setStartPoint()
+        private void SetStartPoint()
         {
-            this.nodeMonsterPoint = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/startPoint"));
+            this.nodeMonsterPoint = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/startPoint"));
             this.nodeMonsterPoint.transform.SetParent(this.rootGameObject.transform);
             Fix64Vector2 startPosition = this.mapComponent.monsterPathList[0];
 
@@ -185,9 +185,9 @@ namespace CarrotFantasy
             }
         }
 
-        private void setCarrot()
+        private void SetCarrot()
         {
-            this.nodeCarrot = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/Carrot"));
+            this.nodeCarrot = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/Carrot"));
             this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
             this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
             this.carrot.Init();
@@ -209,23 +209,23 @@ namespace CarrotFantasy
             this.sellTowerButtonInitPos = tranButtonSell.localPosition;
         }
 
-        private void showHandleTowerCanvas(GridPoint grid)
+        private void ShowHandleTowerCanvas(GridPoint grid)
         {
             this.selectGrid = grid;
             this.nodeHandleTowerCanvas.transform.position = new Vector3((float)grid.mapGrid.realX, (float)grid.mapGrid.realY, 0);
             this.battleView.bvEventDispatcher.DispatchEvent<GridPoint>(BattleEvent.TOWER_RANGE_SHOW, grid);
             this.CorrectHandleTowerCanvasGoPosition(grid);
-            this.refreshButtonInfo(0);
+            this.RefreshButtonInfo(0);
         }
 
-        private void refreshButtonInfo(int coin)
+        private void RefreshButtonInfo(int coin)
         {
             for (int i = 0; i < this.buttonTowerList.Length; i++)
             {
                 this.buttonTowerList[i].UpdateButtonSprite(dataComponent.CoinCount);
             }
             if (this.selectGrid == null) return;
-            BattleUnit_Tower tower = towerComponent.getTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
+            BattleUnit_Tower tower = towerComponent.GetTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
             if (tower == null) return;
             if (tower.isMaxLevel == true)
             {
@@ -283,13 +283,13 @@ namespace CarrotFantasy
             }
         }
 
-        private void fadeHandleTowerCanvas()
+        private void FadeHandleTowerCanvas()
         {
             this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
             this.battleView.bvEventDispatcher.DispatchEvent(BattleEvent.TOWER_RANGE_FADE);
         }
 
-        private void showTowerList(GridPoint grid)
+        private void ShowTowerList(GridPoint grid)
         {
             this.nodeTowerList.transform.position = new Vector3((float)grid.mapGrid.realX, (float)grid.mapGrid.realY, 0);
             this.nodeTowerList.transform.position += this.CorrectTowerListGoPosition(grid);
@@ -317,7 +317,7 @@ namespace CarrotFantasy
             return correctPosition;
         }
 
-        private void fadeTowerList()
+        private void FadeTowerList()
         {
             this.nodeTowerList.transform.position = this.battleView.initTran;
         }
@@ -330,21 +330,21 @@ namespace CarrotFantasy
                 {
                     selectGrid = grid;
                     selectGrid.ShowGrid();
-                    UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Grid/GridSelect");
+                    UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/GridSelect");
                 }
                 else if (grid == selectGrid)//选中同一个格子
                 {
                     grid.HideGrid();
                     selectGrid = null;
                     this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
-                    UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Grid/GridDeselect");
+                    UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/GridDeselect");
                 }
                 else if (grid != selectGrid)//选中不同格子
                 {
                     selectGrid.HideGrid();
                     selectGrid = grid;
                     selectGrid.ShowGrid();
-                    UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Grid/GridSelect");
+                    UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/GridSelect");
                 }
             }
             else
@@ -352,7 +352,7 @@ namespace CarrotFantasy
                 grid.HideGrid();
                 grid.ShowCantBuild();
                 this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
-                UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Grid/SelectFault");
+                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/SelectFault");
                 if (selectGrid != null)
                 {
                     selectGrid.HideGrid();
@@ -360,22 +360,22 @@ namespace CarrotFantasy
             }
         }
 
-        private void updateTower()
+        private void UpdateTower()
         {
             if (this.selectGrid == null)
             {
                 Debug.Log("没有当前格子，无法升级");
                 return;
             }
-            BattleUnit_Tower tower = towerComponent.getTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
+            BattleUnit_Tower tower = towerComponent.GetTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
             if (tower.isMaxLevel == true) return;
             InputOrder order = new InputOrder();
-            order.setOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.UPDATE_ORDER);
-            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).addOrder(order);
+            order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.UPDATE_ORDER);
+            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
             this.selectGrid.HideGrid();
         }
 
-        private void sellTower()
+        private void SellTower()
         {
             if (this.selectGrid == null)
             {
@@ -383,17 +383,17 @@ namespace CarrotFantasy
                 return;
             }
             InputOrder order = new InputOrder();
-            order.setOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.REMOVE_ORDER);
-            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).addOrder(order);
+            order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.REMOVE_ORDER);
+            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
             this.selectGrid.HideGrid();
         }
 
-        private void updateNodeState(String type, BattleUnit unit)
+        private void UpdateNodeState(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER))
             {
-                this.fadeHandleTowerCanvas();
-                this.fadeTowerList();
+                this.FadeHandleTowerCanvas();
+                this.FadeTowerList();
                 if (this.selectGrid != null)
                 {
                     this.selectGrid.HideGrid();
@@ -402,35 +402,35 @@ namespace CarrotFantasy
             }
         }
 
-        private void updateTargetSignal(String type, BattleUnit unit)
+        private void UpdateTargetSignal(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.ITEM))
             {
                 if (unit == this.tranTarget)
                 {
-                    this.fadeTargetSignal();
+                    this.FadeTargetSignal();
                 }
             }
         }
 
-        private void setTargetSignal(BattleUnit unit)
+        private void SetTargetSignal(BattleUnit unit)
         {
             if (this.tranTarget == null)
             {
                 this.tranTarget = unit;
-                this.showTargetSignal();
+                this.ShowTargetSignal();
             }
             //转换新目标
             else if (this.tranTarget != unit)
             {
                 this.tranTarget = unit;
-                this.showTargetSignal();
+                this.ShowTargetSignal();
             }
             //两次点击的是同一个目标
             else if (this.tranTarget == unit)
             {
                 this.tranTarget = null;
-                this.fadeTargetSignal();
+                this.FadeTargetSignal();
             }
         }
 
@@ -449,17 +449,17 @@ namespace CarrotFantasy
             GameObject.Destroy(this.nodeMap);
         }
 
-        private void showTargetSignal()
+        private void ShowTargetSignal()
         {
-            UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Tower/ShootSelect");
+            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/ShootSelect");
             UnitTransformComponent tranComponent = (UnitTransformComponent)this.tranTarget.GetComponent(UnitComponentType.TRANSFORM);
-            Fix64Vector2 pos = tranComponent.getLastPosition();
+            Fix64Vector2 pos = tranComponent.GetLastPosition();
             Vector3 position = new Vector3((float)pos.X, (float)pos.Y, 0);
             this.nodeTargetSignal.transform.position = position + new Vector3(0, BattleConfig.MAP_RATIO / 2, 0);
             //nodeTargetSignal.transform.SetParent(targetTrans);
         }
 
-        private void fadeTargetSignal()
+        private void FadeTargetSignal()
         {
             this.nodeTargetSignal.transform.position = this.battleView.initTran;
         }

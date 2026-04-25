@@ -17,12 +17,12 @@ namespace CarrotFantasy
             eventDispatcher = new EventDispatcher();
         }
 
-        public EventDispatcher getEventDispatcher()
+        public EventDispatcher GetEventDispatcher()
         {
             return eventDispatcher;
         }
 
-        public void dispatcherConnectEvent(int eventType, Dictionary<String, dynamic> mrg)
+        public void DispatcherConnectEvent(int eventType, Dictionary<String, dynamic> mrg)
         {
             eventDispatcher.DispatchEvent(eventType.ToString(), mrg);
         }
@@ -32,12 +32,12 @@ namespace CarrotFantasy
             eventDispatcher.Dispose();
         }
 
-        public void addConnectListener(int eventType, CallBack callBack)
+        public void AddConnectListener(int eventType, CallBack callBack)
         {
             eventDispatcher.AddListener(eventType.ToString(), callBack);
         }
 
-        public void removeConnectListener(int eventType, CallBack callBack)
+        public void RemoveConnectListener(int eventType, CallBack callBack)
         {
             eventDispatcher.RemoveListener(eventType.ToString(), callBack);
         }

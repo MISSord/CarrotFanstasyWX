@@ -30,19 +30,19 @@ namespace CarrotFantasy
             this.unitTran = (UnitTransformComponent)this.unit.GetComponent(UnitComponentType.TRANSFORM);
         }
 
-        public virtual void registerMoveDirect(BattleUnit unit)
+        public virtual void RegisterMoveDirect(BattleUnit unit)
         {
             this.unitTarget = unit;
             this.unitTranTarget = (UnitTransformComponent)this.unitTarget.GetComponent(UnitComponentType.TRANSFORM);
-            this.calcuMoveSpeed();
+            this.CalcuMoveSpeed();
         }
 
-        public virtual void removeMoveDirect(BattleUnit unit)
+        public virtual void RemoveMoveDirect(BattleUnit unit)
         {
             if (unit == unitTarget) this.unitTarget = null;
         }
 
-        public virtual void calcuMoveSpeed()
+        public virtual void CalcuMoveSpeed()
         {
             if (this.unitTarget == null) return;
             if (this.unitTran == null) return;
@@ -64,7 +64,7 @@ namespace CarrotFantasy
             this.unitTran.getLastFramePosition(out x, out y, out z);
             x += deltaTime * this.moveSpeedX;
             y += deltaTime * this.moveSpeedY;
-            this.unitTran.setPosition(x, y, z);
+            this.unitTran.SetPosition(x, y, z);
 
             if (x <= (this.mapLeftBottomPosition.X) || x >= (this.mapRightTopPosition.X)
                 || y <= (this.mapLeftBottomPosition.Y) || y >= (this.mapRightTopPosition.Y))

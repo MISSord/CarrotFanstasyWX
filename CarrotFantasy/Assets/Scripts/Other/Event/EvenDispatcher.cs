@@ -15,7 +15,7 @@ namespace CarrotFantasy
     {
         private Dictionary<String, Delegate> eventTable = new Dictionary<String, Delegate>();
 
-        private void onListenerAdding(String eventType, Delegate callBack)
+        private void OnListenerAdding(String eventType, Delegate callBack)
         {
             if (!eventTable.ContainsKey(eventType))
             {
@@ -27,7 +27,7 @@ namespace CarrotFantasy
                 throw new Exception(string.Format("尝试为事件{0}添加不同类型的委托，当前事件所对应的委托是{1}，要添加的委托类型为{2}", eventType, d.GetType(), callBack.GetType()));
             }
         }
-        private bool onListenerRemoving(String eventType, Delegate callBack)
+        private bool OnListenerRemoving(String eventType, Delegate callBack)
         {
             if (eventTable.ContainsKey(eventType))
             {
@@ -48,7 +48,7 @@ namespace CarrotFantasy
                 //throw new Exception(string.Format("移除监听错误：没有事件码{0}", eventType));
             }
         }
-        private void onListenerRemoved(String eventType)
+        private void OnListenerRemoved(String eventType)
         {
             if (eventTable[eventType] == null)
             {
@@ -58,92 +58,92 @@ namespace CarrotFantasy
         //no parameters
         public void AddListener(String eventType, CallBack callBack)
         {
-            this.onListenerAdding(eventType, callBack);
+            this.OnListenerAdding(eventType, callBack);
             eventTable[eventType] = (CallBack)eventTable[eventType] + callBack;
         }
         //Single parameters
         public void AddListener<T>(String eventType, CallBack<T> callBack)
         {
-            this.onListenerAdding(eventType, callBack);
+            this.OnListenerAdding(eventType, callBack);
             eventTable[eventType] = (CallBack<T>)eventTable[eventType] + callBack;
         }
         //two parameters
         public void AddListener<T, X>(String eventType, CallBack<T, X> callBack)
         {
-            onListenerAdding(eventType, callBack);
+            OnListenerAdding(eventType, callBack);
             eventTable[eventType] = (CallBack<T, X>)eventTable[eventType] + callBack;
         }
         //three parameters
         public void AddListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
         {
-            onListenerAdding(eventType, callBack);
+            OnListenerAdding(eventType, callBack);
             eventTable[eventType] = (CallBack<T, X, Y>)eventTable[eventType] + callBack;
         }
         //four parameters
         public void AddListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
         {
-            onListenerAdding(eventType, callBack);
+            OnListenerAdding(eventType, callBack);
             eventTable[eventType] = (CallBack<T, X, Y, Z>)eventTable[eventType] + callBack;
         }
         //five parameters
         public void AddListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
         {
-            onListenerAdding(eventType, callBack);
+            OnListenerAdding(eventType, callBack);
             eventTable[eventType] = (CallBack<T, X, Y, Z, W>)eventTable[eventType] + callBack;
         }
 
         //no parameters
         public void RemoveListener(String eventType, CallBack callBack)
         {
-            if (onListenerRemoving(eventType, callBack))
+            if (OnListenerRemoving(eventType, callBack))
             {
                 eventTable[eventType] = (CallBack)eventTable[eventType] - callBack;
-                onListenerRemoved(eventType);
+                OnListenerRemoved(eventType);
             }
         }
         //single parameters
         public void RemoveListener<T>(String eventType, CallBack<T> callBack)
         {
-            if (onListenerRemoving(eventType, callBack))
+            if (OnListenerRemoving(eventType, callBack))
             {
                 eventTable[eventType] = (CallBack<T>)eventTable[eventType] - callBack;
-                onListenerRemoved(eventType);
+                OnListenerRemoved(eventType);
             }
         }
         //two parameters
         public void RemoveListener<T, X>(String eventType, CallBack<T, X> callBack)
         {
-            if (onListenerRemoving(eventType, callBack))
+            if (OnListenerRemoving(eventType, callBack))
             {
                 eventTable[eventType] = (CallBack<T, X>)eventTable[eventType] - callBack;
-                onListenerRemoved(eventType);
+                OnListenerRemoved(eventType);
             }
         }
         //three parameters
         public void RemoveListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
         {
-            if (onListenerRemoving(eventType, callBack))
+            if (OnListenerRemoving(eventType, callBack))
             {
                 eventTable[eventType] = (CallBack<T, X, Y>)eventTable[eventType] - callBack;
-                onListenerRemoved(eventType);
+                OnListenerRemoved(eventType);
             }
         }
         //four parameters
         public void RemoveListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
         {
-            if (onListenerRemoving(eventType, callBack))
+            if (OnListenerRemoving(eventType, callBack))
             {
                 eventTable[eventType] = (CallBack<T, X, Y, Z>)eventTable[eventType] - callBack;
-                onListenerRemoved(eventType);
+                OnListenerRemoved(eventType);
             }
         }
         //five parameters
         public void RemoveListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
         {
-            if (onListenerRemoving(eventType, callBack))
+            if (OnListenerRemoving(eventType, callBack))
             {
                 eventTable[eventType] = (CallBack<T, X, Y, Z, W>)eventTable[eventType] - callBack;
-                onListenerRemoved(eventType);
+                OnListenerRemoved(eventType);
             }
         }
 

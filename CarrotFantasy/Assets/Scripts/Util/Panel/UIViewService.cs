@@ -18,12 +18,12 @@ namespace CarrotFantasy
             ServerProvision.panelServer.eventDispatcher.DispatchEvent(PanelEventType.OPEN_PANEL_PREPARE, msg);
         }
 
-        public static void OpenMainPanel()
-        {
-            OpenPrepare("MainPanel");
-            MainPanel.Instance.RegisterData();
-            MainPanel.Instance.Open(0);
-        }
+        //public static void OpenMainPanel()
+        //{
+        //    OpenPrepare("MainPanel");
+        //    MainPanel.Instance.RegisterData();
+        //    MainPanel.Instance.Open(0);
+        //}
 
         public static void OpenSetPanel()
         {

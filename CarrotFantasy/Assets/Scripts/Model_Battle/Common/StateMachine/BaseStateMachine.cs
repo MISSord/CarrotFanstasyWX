@@ -15,9 +15,9 @@ namespace CarrotFantasy
             this.eventDispatcher = battle.eventDispatcher;
         }
 
-        protected abstract BaseBattleState createStateInstance(String type);//子类实现
+        protected abstract BaseBattleState CreateStateInstance(String type);//子类实现
 
-        public BaseBattleState getState(String type)
+        public BaseBattleState GetState(String type)
         {
             BaseBattleState bBattle;
             if (stateDic.ContainsKey(type))
@@ -26,38 +26,38 @@ namespace CarrotFantasy
             }
             else
             {
-                bBattle = this.createStateInstance(type);
+                bBattle = this.CreateStateInstance(type);
                 bBattle.Init();
                 stateDic.Add(type, bBattle);
             }
             return bBattle;
         }
 
-        protected virtual void leaveState()
+        protected virtual void LeaveState()
         {
             if (currentState != null)
             {
-                currentState.stateOut();
+                currentState.StateOut();
                 Debug.Log(String.Format("退出旧的状态{0}", currentState.statetype));
                 currentState = null;
             }
         }
 
-        protected virtual void enterState(BaseBattleState lastState)
+        protected virtual void EnterState(BaseBattleState lastState)
         {
             currentState = lastState;
-            currentState.stateIn();
+            currentState.StateIn();
         }
 
-        public virtual void setCurrentState(String stateType)
+        public virtual void SetCurrentState(String stateType)
         {
-            BaseBattleState lastState = this.getState(stateType);
-            this.leaveState();
-            this.enterState(lastState);
+            BaseBattleState lastState = this.GetState(stateType);
+            this.LeaveState();
+            this.EnterState(lastState);
             Debug.Log(String.Format("进入新的状态{0}", lastState.statetype));
         }
 
-        public BaseBattleState getCurrentState()
+        public BaseBattleState GetCurrentState()
         {
             return currentState;
         }
@@ -66,9 +66,9 @@ namespace CarrotFantasy
         {
             if (currentState == null) return;
             String nextType = currentState.OnTick(time);
-            if (!String.Equals(nextType, currentState.getStateType()))
+            if (!String.Equals(nextType, currentState.GetStateType()))
             {
-                this.setCurrentState(nextType);
+                this.SetCurrentState(nextType);
             }
         }
 
@@ -76,7 +76,7 @@ namespace CarrotFantasy
         {
             if (this.currentState != null)
             {
-                this.currentState.stateOut();
+                this.currentState.StateOut();
             }
             foreach (KeyValuePair<String, BaseBattleState> stateInfo in stateDic)
             {

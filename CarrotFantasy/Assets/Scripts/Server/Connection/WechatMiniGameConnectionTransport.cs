@@ -19,7 +19,7 @@ namespace CarrotFantasy
         public void Init(string address)
         {
             this.address = address ?? string.Empty;
-            this.bindBridge();
+            this.BindBridge();
         }
 
         public void Start()
@@ -31,7 +31,7 @@ namespace CarrotFantasy
 
             if (this.bridge == null)
             {
-                this.bindBridge();
+                this.BindBridge();
             }
 
             this.bridge.Connect(this.address);
@@ -91,16 +91,16 @@ namespace CarrotFantasy
         public void Dispose()
         {
             this.Stop();
-            this.unbindBridge();
+            this.UnbindBridge();
             this.OnMessage = null;
             this.OnError = null;
         }
 
-        private void bindBridge()
+        private void BindBridge()
         {
             if (this.bridge != null)
             {
-                this.unbindBridge();
+                this.UnbindBridge();
             }
 
             this.bridge = WechatSocketBridgeProvider.Bridge;
@@ -109,27 +109,27 @@ namespace CarrotFantasy
                 return;
             }
 
-            this.bridge.OnOpen += this.handleBridgeOpen;
-            this.bridge.OnClose += this.handleBridgeClose;
-            this.bridge.OnError += this.handleBridgeError;
-            this.bridge.OnMessage += this.handleBridgeMessage;
+            this.bridge.OnOpen += this.HandleBridgeOpen;
+            this.bridge.OnClose += this.HandleBridgeClose;
+            this.bridge.OnError += this.HandleBridgeError;
+            this.bridge.OnMessage += this.HandleBridgeMessage;
         }
 
-        private void unbindBridge()
+        private void UnbindBridge()
         {
             if (this.bridge == null)
             {
                 return;
             }
 
-            this.bridge.OnOpen -= this.handleBridgeOpen;
-            this.bridge.OnClose -= this.handleBridgeClose;
-            this.bridge.OnError -= this.handleBridgeError;
-            this.bridge.OnMessage -= this.handleBridgeMessage;
+            this.bridge.OnOpen -= this.HandleBridgeOpen;
+            this.bridge.OnClose -= this.HandleBridgeClose;
+            this.bridge.OnError -= this.HandleBridgeError;
+            this.bridge.OnMessage -= this.HandleBridgeMessage;
             this.bridge = null;
         }
 
-        private void handleBridgeOpen()
+        private void HandleBridgeOpen()
         {
             this.isConnecting = false;
             this.IsConnected = true;
@@ -142,21 +142,21 @@ namespace CarrotFantasy
             }
         }
 
-        private void handleBridgeClose(int code, string reason)
+        private void HandleBridgeClose(int code, string reason)
         {
             this.isConnecting = false;
             this.IsConnected = false;
             Debug.LogWarning(string.Format("WechatMiniGameConnectionTransport closed. code: {0}, reason: {1}", code, reason));
         }
 
-        private void handleBridgeError(string error)
+        private void HandleBridgeError(string error)
         {
             this.isConnecting = false;
             this.IsConnected = false;
             this.OnError?.Invoke(error);
         }
 
-        private void handleBridgeMessage(byte[] packet)
+        private void HandleBridgeMessage(byte[] packet)
         {
             if (!ConnectionMessageCodec.TryDecodePacket(packet, out ushort opcode, out IMessage message))
             {

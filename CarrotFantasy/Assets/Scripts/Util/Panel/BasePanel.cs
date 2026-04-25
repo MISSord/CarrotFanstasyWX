@@ -49,7 +49,7 @@ namespace CarrotFantasy
             if (this.isShowGray)
             {
                 //背景按钮初始化
-                GameObject obj = ResourceLoader.Instance.getGameObject(grayBgPrefabPath);
+                GameObject obj = ResourceLoader.Instance.GetGameObject(grayBgPrefabPath);
                 GameObject grayGameObj = GameObject.Instantiate(obj);
                 grayGameObj.transform.SetParent(container.transform, false);
                 grayGameObj.layer = SceneLayerData.layerType[1];

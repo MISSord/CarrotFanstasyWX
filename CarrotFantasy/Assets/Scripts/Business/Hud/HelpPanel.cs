@@ -44,40 +44,40 @@ namespace CarrotFantasy
 
             this.showId = 1;
             this.AddListener();
-            this.updateNodePosition();
+            this.UpdateNodePosition();
         }
 
         private void AddListener()
         {
             this.btnReturn.onClick.AddListener(this.Close);
-            this.btnHelp.onClick.AddListener(this.showHelpPage);
-            this.btnMonster.onClick.AddListener(this.showMonsterPage);
-            this.btnTower.onClick.AddListener(this.showTowerPage);
+            this.btnHelp.onClick.AddListener(this.ShowHelpPage);
+            this.btnMonster.onClick.AddListener(this.ShowMonsterPage);
+            this.btnTower.onClick.AddListener(this.ShowTowerPage);
         }
 
-        private void updateNodePosition()
+        private void UpdateNodePosition()
         {
             this.nodeHelp.transform.localPosition = this.showId == 1 ? this.showPosition : this.fadePosition;
             this.nodeMonster.transform.localPosition = this.showId == 2 ? this.showPosition : this.fadePosition;
             this.nodeTower.transform.localPosition = this.showId == 3 ? this.showPosition : this.fadePosition;
         }
 
-        private void showHelpPage()
+        private void ShowHelpPage()
         {
             this.showId = 1;
-            this.updateNodePosition();
+            this.UpdateNodePosition();
         }
 
-        private void showMonsterPage()
+        private void ShowMonsterPage()
         {
             this.showId = 2;
-            this.updateNodePosition();
+            this.UpdateNodePosition();
         }
 
-        private void showTowerPage()
+        private void ShowTowerPage()
         {
             this.showId = 3;
-            this.updateNodePosition();
+            this.UpdateNodePosition();
         }
 
         protected override void ReleaseCallBack()

@@ -36,12 +36,12 @@ namespace CarrotFantasy
             this.realY = new Fix64(this.y * BattleConfig.MAP_RATIO);
         }
 
-        public void loadGridInfo(GridState state)
+        public void LoadGridInfo(GridState state)
         {
             this.state = state;
         }
 
-        public void changeTowerState(bool isHave)
+        public void ChangeTowerState(bool isHave)
         {
             this.hasTower = isHave;
         }

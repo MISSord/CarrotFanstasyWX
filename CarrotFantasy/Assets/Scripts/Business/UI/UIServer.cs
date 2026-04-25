@@ -58,17 +58,17 @@ namespace CarrotFantasy
 
         public void ShowTip(String tip)
         {
-            this.tipPanel.refreshTip(tip);
+            this.tipPanel.RefreshTip(tip);
         }
 
         public void ShowTipLong(String tip)
         {
-            this.tipPanel.showTip(tip);
+            this.tipPanel.ShowTip(tip);
         }
 
         public void FadeTipLong()
         {
-            this.tipPanel.fadeTip();
+            this.tipPanel.FadeTip();
         }
 
         public void ShowLoadingPanel()
@@ -158,24 +158,24 @@ namespace CarrotFantasy
             base.Dispose();
             if (this.audioManager != null)
             {
-                this.audioManager.dipose();
+                this.audioManager.Dipose();
             }
             GameObject.Destroy(this.nodeObject);
         }
 
         public void PlayMainBg()
         {
-            this.audioManager.playMusic("AudioClips/Main/BGMusic");
+            this.audioManager.PlayMusic("AudioClips/Main/BGMusic");
         }
 
         public void PlayButtonEffect()
         {
-            this.audioManager.playEffect("AudioClips/Main/Button");
+            this.audioManager.PlayEffect("AudioClips/Main/Button");
         }
 
         public void PlayPagingEffect()
         {
-            this.audioManager.playEffect("AudioClips/Main/Paging");
+            this.audioManager.PlayEffect("AudioClips/Main/Paging");
         }
     }
 }

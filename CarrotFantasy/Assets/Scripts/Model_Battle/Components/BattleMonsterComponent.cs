@@ -49,10 +49,10 @@ namespace CarrotFantasy
             BattleMapComponent map = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
             this.birthPoint = map.startPoint;
 
-            this.calcaTheTotalDistance();
+            this.CalcaTheTotalDistance();
         }
 
-        public void buildNewWavesMonster()
+        public void BuildNewWavesMonster()
         {
             if (this.curNoRegisterList.Count != 0)
             {
@@ -74,18 +74,18 @@ namespace CarrotFantasy
                 {
                     monster = new BattleUnit_Monster(this.baseBattle);
                 }
-                monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.addDeadList);
-                monster.LoadInfo(this.baseBattle.getUid(), this.monsterConfigReader.getSingleMonsterConfig(this.getMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
-                monster.loadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
+                monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
+                monster.LoadInfo(this.baseBattle.GetUid(), this.monsterConfigReader.getSingleMonsterConfig(this.GetMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
+                monster.LoadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
                 monster.Init();
-                monster.loadInfo3(this.monsterPointList, this.distance);
+                monster.LoadInfo3(this.monsterPointList, this.distance);
                 monster.InitComponents();
                 this.curNoRegisterList.Add(monster);
             }
             this.isHaveNoRegisterMonster = true;
         }
 
-        private void calcaTheTotalDistance()
+        private void CalcaTheTotalDistance()
         {
             BattleMapComponent mapComponent = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
             this.monsterPointList = mapComponent.monsterPathList;
@@ -117,12 +117,12 @@ namespace CarrotFantasy
             }
         }
 
-        public int getMonsterId(int monsterId)
+        public int GetMonsterId(int monsterId)
         {
             return this.battleDataComponent.bigLevel * 100 + monsterId;
         }
 
-        public void registerNewMonster()
+        public void RegisterNewMonster()
         {
             BattleUnit_Monster monster = this.curNoRegisterList[0];
             this.curNoRegisterList.RemoveAt(0);
@@ -132,26 +132,26 @@ namespace CarrotFantasy
             if (this.curNoRegisterList.Count == 0)
             {
                 this.isHaveNoRegisterMonster = false;
-                this.removeSchId();
+                this.RemoveSchId();
                 Debug.Log("注册新的怪兽工作完成");
             }
         }
 
-        private void addDeadList(BattleUnit_Monster monster)
+        private void AddDeadList(BattleUnit_Monster monster)
         {
             this.curDeadMonsterList.Add(monster);
         }
 
-        public void checkSingleMonsterState(BattleUnit_Monster monster)
+        public void CheckSingleMonsterState(BattleUnit_Monster monster)
         {
-            if (monster.isDead() == true)
+            if (monster.IsDead() == true)
             {
                 this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, BattleUnitType.MONSTER, monster);
                 this.baseBattle.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, 50);
                 //先从其他组件上除去，再从视图移除，最后再自己移除，确保顺序
                 monster.ClearInfo();
                 this.curMonsterDic.Remove(monster.uid);
-                GameObjectPool.Instance.pushObjectToPool(BattleUnitType.MONSTER, monster);
+                GameObjectPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, monster);
             }
         }
 
@@ -162,41 +162,41 @@ namespace CarrotFantasy
             {
                 info.Value.OnTick(time);
             }
-            this.updateCurMonsterWavesState();
+            this.UpdateCurMonsterWavesState();
         }
 
-        public override void lateTick(Fix64 time)
+        public override void LateTick(Fix64 time)
         {
-            base.lateTick(time);
-            this.updateCurMonsterWaveStateLateTick(time);
+            base.LateTick(time);
+            this.UpdateCurMonsterWaveStateLateTick(time);
         }
 
-        public void updateCurMonsterWavesState()
+        public void UpdateCurMonsterWavesState()
         {
             if (this.curDeadMonsterList.Count != 0)
             {
                 for (int i = 0; i < this.curDeadMonsterList.Count; i++)
                 {
-                    this.checkSingleMonsterState(this.curDeadMonsterList[i]);
+                    this.CheckSingleMonsterState(this.curDeadMonsterList[i]);
                 }
                 this.curDeadMonsterList.Clear();
             }
         }
 
-        public void updateCurMonsterWaveStateLateTick(Fix64 time)
+        public void UpdateCurMonsterWaveStateLateTick(Fix64 time)
         {
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
-                info.Value.lateTick(time);
+                info.Value.LateTick(time);
             }
         }
 
-        public void removeSchId()
+        public void RemoveSchId()
         {
             if (this.scheId != 0)
             {
                 BattleSchedulerComponent sche = (BattleSchedulerComponent)this.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
-                sche.silenceSingleSche(this.scheId);
+                sche.SilenceSingleSche(this.scheId);
                 this.scheId = 0;
             }
         }
@@ -214,7 +214,7 @@ namespace CarrotFantasy
             return false;
         }
 
-        public bool isCanNewMonsterWaves()
+        public bool IsCanNewMonsterWaves()
         {
             if (this.battleDataComponent.curWaves >= this.roundInfo.Count)
             {
@@ -223,18 +223,18 @@ namespace CarrotFantasy
             return true;
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
-            base.clearInfo();
+            base.ClearInfo();
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
                 info.Value.ClearInfo();
-                GameObjectPool.Instance.pushObjectToPool(BattleUnitType.MONSTER, info.Value);
+                GameObjectPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, info.Value);
             }
             for (int i = 0; i <= this.curNoRegisterList.Count - 1; i++)
             {
                 this.curNoRegisterList[i].ClearInfo();
-                GameObjectPool.Instance.pushObjectToPool(BattleUnitType.MONSTER, this.curNoRegisterList[i]);
+                GameObjectPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, this.curNoRegisterList[i]);
             }
             this.curNoRegisterList.Clear();
             this.curMonsterDic.Clear();

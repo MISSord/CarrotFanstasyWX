@@ -28,14 +28,14 @@ namespace CarrotFantasy
 
         protected override void AddListener()
         {
-            this.eventDispatcher.AddListener(BattleEvent.PAUSE_THE_GAME, this.pauseTheGame);
-            this.eventDispatcher.AddListener(BattleEvent.GO_ON_GAME, this.goOnTheGame);
+            this.eventDispatcher.AddListener(BattleEvent.PAUSE_THE_GAME, this.PauseTheGame);
+            this.eventDispatcher.AddListener(BattleEvent.GO_ON_GAME, this.GoOnTheGame);
         }
 
         protected override void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener(BattleEvent.PAUSE_THE_GAME, this.pauseTheGame);
-            this.eventDispatcher.RemoveListener(BattleEvent.GO_ON_GAME, this.goOnTheGame);
+            this.eventDispatcher.RemoveListener(BattleEvent.PAUSE_THE_GAME, this.PauseTheGame);
+            this.eventDispatcher.RemoveListener(BattleEvent.GO_ON_GAME, this.GoOnTheGame);
         }
 
         public override void ClearGameInfo()
@@ -44,7 +44,7 @@ namespace CarrotFantasy
             this.RemoveListener();
         }
 
-        public override void initComponent()
+        public override void InitComponent()
         {
             foreach (KeyValuePair<String, BaseBattleComponent> info in this.componentDic)
             {

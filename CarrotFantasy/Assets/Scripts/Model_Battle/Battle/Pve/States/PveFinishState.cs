@@ -18,17 +18,17 @@ namespace CarrotFantasy
             this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
-        public override void stateIn()
+        public override void StateIn()
         {
             if (this.dataComponent.CarrotIsDead())
             {
-                this.dataComponent.gameOverByCarrotDead();
+                this.dataComponent.GameOverByCarrotDead();
             }
             else
             {
-                if (!this.monsterComponent.isCanNewMonsterWaves()) //击杀全部怪物了
+                if (!this.monsterComponent.IsCanNewMonsterWaves()) //击杀全部怪物了
                 {
-                    this.dataComponent.gameOverByMonsterDead();
+                    this.dataComponent.GameOverByMonsterDead();
                 }
                 else
                 {

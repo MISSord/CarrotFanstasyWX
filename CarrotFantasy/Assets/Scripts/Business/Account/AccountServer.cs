@@ -52,7 +52,7 @@ namespace CarrotFantasy
             //ServerProvision.connectionServer.RemoveListener(HotfixOpcode.A0001_Register_R2C, this.notifyRegister);
         }
 
-        public void setAccountId(String id)
+        public void SetAccountId(String id)
         {
             if (isInit == false)
             {
@@ -61,7 +61,7 @@ namespace CarrotFantasy
             isInit = true;
         }
 
-        public string getAccountId()
+        public string GetAccountId()
         {
             return this.account;
         }
@@ -71,18 +71,18 @@ namespace CarrotFantasy
 
         }
 
-        public void loginAccount(String accout, String password)
+        public void LoginAccount(String accout, String password)
         {
             //ServerProvision.connectionServer.Send(new A0002_Login_C2R() { Account = accout, Password = password });
             this.account = accout;
         }
 
-        public void loginGateAccount()
+        public void LoginGateAccount()
         {
             //ServerProvision.connectionServer.Send(new A0003_LoginGate_C2G() { GateLoginKey = this.gateLoginKey });
         }
 
-        public void registerAccount(String accout, String password)
+        public void RegisterAccount(String accout, String password)
         {
             //ServerProvision.connectionServer.Send(new A0001_Register_C2R { Account = accout, Password = password });
         }

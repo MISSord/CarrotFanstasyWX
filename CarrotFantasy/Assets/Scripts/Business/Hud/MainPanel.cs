@@ -63,13 +63,13 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnBoss.onClick.AddListener(this.toBossModel);
-            this.btnNormal.onClick.AddListener(this.toNormalModel);
-            this.btnNetwork.onClick.AddListener(this.startMatch);
+            this.btnBoss.onClick.AddListener(this.ToBossModel);
+            this.btnNormal.onClick.AddListener(this.ToNormalModel);
+            this.btnNetwork.onClick.AddListener(this.StartMatch);
 
-            this.btnExitGame.onClick.AddListener(this.exitGame);
-            this.btnHelp.onClick.AddListener(this.showHelpPanel);
-            this.btnSet.onClick.AddListener(this.showSetPanel);
+            this.btnExitGame.onClick.AddListener(this.ExitGame);
+            this.btnHelp.onClick.AddListener(this.ShowHelpPanel);
+            this.btnSet.onClick.AddListener(this.ShowSetPanel);
         }
 
         private void PlayUITween()
@@ -78,38 +78,38 @@ namespace CarrotFantasy
             this.cloudTrans.DOLocalMoveX(1300, 30f).SetLoops(-1, LoopType.Restart);
         }
 
-        public void showSetPanel()
+        public void ShowSetPanel()
         {
             UIServer.Instance.PlayButtonEffect();
             ExitTween = mainPanelTween[0];
             UIViewService.OpenSetPanel();
         }
 
-        public void showHelpPanel()
+        public void ShowHelpPanel()
         {
             UIServer.Instance.PlayButtonEffect();
             UIViewService.OpenHelpPanel();
         }
 
-        public void toNormalModel()
+        public void ToNormalModel()
         {
             UIServer.Instance.PlayButtonEffect();
             UIViewService.OpenMapBigLevelPanel();
         }
 
-        public void toBossModel()
+        public void ToBossModel()
         {
             UIServer.Instance.PlayButtonEffect();
         }
 
-        private void startMatch()
+        private void StartMatch()
         {
             UIViewService.OpenRoomPanel();
-            RoomServer.Instance.sendStartMatch();
+            RoomServer.Instance.SendStartMatch();
             UIServer.Instance.PlayButtonEffect();
         }
 
-        public void exitGame()
+        public void ExitGame()
         {
             UIServer.Instance.PlayButtonEffect();
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.GAME_QUIT);

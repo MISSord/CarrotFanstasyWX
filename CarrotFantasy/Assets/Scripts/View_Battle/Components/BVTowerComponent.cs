@@ -28,8 +28,8 @@ namespace CarrotFantasy
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("TowerContainer");
 
-            this.buildGameObject = ResourceLoader.Instance.getGameObject("Prefabs/Game/BuildEffect");
-            this.sellGameObject = ResourceLoader.Instance.getGameObject("Prefabs/Game/DestoryEffect");
+            this.buildGameObject = ResourceLoader.Instance.GetGameObject("Prefabs/Game/BuildEffect");
+            this.sellGameObject = ResourceLoader.Instance.GetGameObject("Prefabs/Game/DestoryEffect");
 
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
 
@@ -38,17 +38,17 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerTowerView);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeTowerView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterTowerView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveTowerView);
         }
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerTowerView);
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeTowerView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterTowerView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveTowerView);
         }
 
-        private void registerTowerView(String type, BattleUnit unit)
+        private void RegisterTowerView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER) == false) return;
             BattleUnit_Tower tower = (BattleUnit_Tower)unit;
@@ -58,22 +58,22 @@ namespace CarrotFantasy
                 towerView = new BattleUnitView_Tower();
             }
             GameObject towerObj = GameObject.Instantiate(
-                ResourceLoader.Instance.getGameObject(String.Format(this.prefabUrl, tower.towerID, tower.curLevel + 1)));
+                ResourceLoader.Instance.GetGameObject(String.Format(this.prefabUrl, tower.towerID, tower.curLevel + 1)));
             towerObj.transform.SetParent(this.rootGameObject.transform);
             towerView.LoadInfo(this.battleView, tower);
             towerView.InitTransform(towerObj.transform);
-            tower.eventDipatcher.AddListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.reloadTran);
+            tower.eventDipatcher.AddListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
             towerView.Init();
             this.towerViewDic.Add(tower, towerView);
-            UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Tower/TowerBulid");
+            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/TowerBulid");
             GameObject build = GameObject.Instantiate(this.buildGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
             build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
 
-            scheComponent.delayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
+            scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
         }
 
-        private void removeTowerView(String type, BattleUnit unit)
+        private void RemoveTowerView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER) == false) return;
             BattleUnit_Tower tower = (BattleUnit_Tower)unit;
@@ -86,34 +86,34 @@ namespace CarrotFantasy
 
             GameObject.Destroy(towerView.transform.gameObject);
             towerView.ClearUnitInfo();
-            tower.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.reloadTran);
+            tower.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
 
             this.towerViewDic.Remove(tower);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Tower, towerView);
-            UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Tower/TowerSell");
+            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/TowerSell");
 
             GameObject sell = GameObject.Instantiate(this.sellGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);
             sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
 
-            scheComponent.delayExeOnceTimes(() => { GameObject.Destroy(sell); }, 0.5f);
+            scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(sell); }, 0.5f);
         }
 
-        private void reloadTran(BattleUnit_Tower tower)
+        private void ReloadTran(BattleUnit_Tower tower)
         {
             BattleUnitView_Tower towerView = this.towerViewDic[tower];
             GameObject.Destroy(towerView.transform.gameObject);
             GameObject towerObj = GameObject.Instantiate(
-                ResourceLoader.Instance.getGameObject(String.Format(this.prefabUrl, tower.towerID, tower.curLevel + 1)));
+                ResourceLoader.Instance.GetGameObject(String.Format(this.prefabUrl, tower.towerID, tower.curLevel + 1)));
             towerView.InitTransform(towerObj.transform);
             towerView.ReloadInfo();
-            UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Tower/TowerUpdata");
+            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/TowerUpdata");
 
             GameObject build = GameObject.Instantiate(this.buildGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);
             build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
 
-            scheComponent.delayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
+            scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
         }
 
         public override void ClearGameInfo()
@@ -122,7 +122,7 @@ namespace CarrotFantasy
             {
                 GameObject.Destroy(info.Value.transform.gameObject);
                 info.Value.ClearUnitInfo();
-                info.Key.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.reloadTran);
+                info.Key.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Tower, info.Value);
             }
             this.towerViewDic.Clear();

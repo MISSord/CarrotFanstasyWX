@@ -41,29 +41,29 @@ namespace CarrotFantasy
             this.btnLogin = this.nodeBtnLogin.transform.GetComponent<Button>();
             this.btnResgister = this.transform.Find("node_bottom/btn_register").GetComponent<Button>();
 
-            this.btnLogin.onClick.AddListener(this.loginAccount);
-            this.btnBack.onClick.AddListener(this.backLoginState);
-            this.btnResgister.onClick.AddListener(this.registerEvent);
-            this.backLoginState();
+            this.btnLogin.onClick.AddListener(this.LoginAccount);
+            this.btnBack.onClick.AddListener(this.BackLoginState);
+            this.btnResgister.onClick.AddListener(this.RegisterEvent);
+            this.BackLoginState();
             this.AddListener();
         }
 
         private void AddListener()
         {
-            AccountServer.Instance.eventDispatcher.AddListener(AccountServer.LOGIN_SUCCESS, this.onLoginSuccess);
+            AccountServer.Instance.eventDispatcher.AddListener(AccountServer.LOGIN_SUCCESS, this.OnLoginSuccess);
         }
 
         private void RemoveListener()
         {
-            AccountServer.Instance.eventDispatcher.RemoveListener(AccountServer.LOGIN_SUCCESS, this.onLoginSuccess);
+            AccountServer.Instance.eventDispatcher.RemoveListener(AccountServer.LOGIN_SUCCESS, this.OnLoginSuccess);
         }
 
-        private void onLoginSuccess()
+        private void OnLoginSuccess()
         {
             this.Close();
         }
 
-        private void loginAccount()
+        private void LoginAccount()
         {
             String accountText = this.inputAccount.text;
             String passwordText = this.inputPassword.text;
@@ -72,22 +72,22 @@ namespace CarrotFantasy
                 UIServer.Instance.ShowTip("账号或密码不能为空");
                 return;
             }
-            AccountServer.Instance.loginAccount(accountText, passwordText);
+            AccountServer.Instance.LoginAccount(accountText, passwordText);
         }
 
-        private void registerEvent()
+        private void RegisterEvent()
         {
             if (this.isResigterState == true)
             {
-                this.registerAccount();
+                this.RegisterAccount();
             }
             else if (this.isResigterState == false)
             {
-                this.enterRegisterAccountState();
+                this.EnterRegisterAccountState();
             }
         }
 
-        private void registerAccount()
+        private void RegisterAccount()
         {
             String accountText = this.inputAccount.text;
             String passwordText = this.inputPassword.text;
@@ -102,10 +102,10 @@ namespace CarrotFantasy
                 UIServer.Instance.ShowTip("两次输入的密码不一样");
                 return;
             }
-            AccountServer.Instance.registerAccount(accountText, passwordText);
+            AccountServer.Instance.RegisterAccount(accountText, passwordText);
         }
 
-        private void enterRegisterAccountState()
+        private void EnterRegisterAccountState()
         {
             this.nodeBtnBack.SetActive(true);
             this.nodeBtnLogin.SetActive(false);
@@ -114,7 +114,7 @@ namespace CarrotFantasy
             this.isResigterState = true;
         }
 
-        private void backLoginState()
+        private void BackLoginState()
         {
             this.nodeBtnBack.SetActive(false);
             this.nodeBtnLogin.SetActive(true);

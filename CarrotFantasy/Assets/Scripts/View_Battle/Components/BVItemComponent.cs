@@ -28,25 +28,25 @@ namespace CarrotFantasy
             List<BattleUnit_Item> itemList = this.itemComponent.battleItemList;
             for (int i = 0; i <= itemList.Count - 1; i++)
             {
-                this.createItemView(itemList[i]);
+                this.CreateItemView(itemList[i]);
             }
             this.AddListener();
         }
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeItemView);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveItemView);
         }
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeItemView);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveItemView);
         }
 
-        private void createItemView(BattleUnit_Item item)
+        private void CreateItemView(BattleUnit_Item item)
         {
             BattleUnitView_Item itemView = new BattleUnitView_Item();
-            GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(this.itemPrefabUrl + item.itemId));
+            GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject(this.itemPrefabUrl + item.itemId));
             itemGo.transform.SetParent(this.rootGameObject.transform);
             itemView.InitTransform(itemGo.transform);
             itemView.LoadInfo(this.battleView, item);
@@ -54,7 +54,7 @@ namespace CarrotFantasy
             this.itemDic.Add(item, itemView);
         }
 
-        private void removeItemView(String type, BattleUnit obj)
+        private void RemoveItemView(String type, BattleUnit obj)
         {
             if (type.Equals(BattleUnitType.ITEM))
             {
@@ -69,12 +69,12 @@ namespace CarrotFantasy
                 GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
                 if (sell == null)
                 {
-                    sell = GameObject.Instantiate(ResourceLoader.Instance.getGameObject("Prefabs/Game/DestoryEffect"));
+                    sell = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/DestoryEffect"));
                 }
                 sell.transform.GetComponent<Animator>().enabled = true;
                 UnitTransformComponent tran = (UnitTransformComponent)obj.GetComponent(UnitComponentType.TRANSFORM);
                 sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-                Sche.delayExeOnceTimes(() =>
+                Sche.DelayExeOnceTimes(() =>
                 {
                     sell.transform.GetComponent<Animator>().enabled = false;
                     GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);

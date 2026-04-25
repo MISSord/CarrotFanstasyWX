@@ -38,32 +38,32 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVE_GAME, this.getPVEBattleParams);
-            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVP_GAME, this.getPVPBattleParams);
+            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVE_GAME, this.GetPVEBattleParams);
+            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVP_GAME, this.GetPVPBattleParams);
         }
 
-        private void getPVEBattleParams()
+        private void GetPVEBattleParams()
         {
             this.isPVE = true;
             this.curBigLevel = MapServer.Instance.curBigLevel;
             this.curLevel = MapServer.Instance.curLevel;
 
-            this.curStage = MapServer.Instance.mapModel.getStage(this.curBigLevel, curLevel);
-            this.curSingleMapInfo = MapServer.Instance.mapModel.getSingleMapInfo(this.curBigLevel, curLevel);
+            this.curStage = MapServer.Instance.mapModel.GetStage(this.curBigLevel, curLevel);
+            this.curSingleMapInfo = MapServer.Instance.mapModel.GetSingleMapInfo(this.curBigLevel, curLevel);
 
             String path = "Level" + this.curBigLevel.ToString() + "_" + this.curLevel.ToString() + ".json";
             this.info = LoadLevelInfoFile(path);
         }
 
-        private void getPVPBattleParams()
+        private void GetPVPBattleParams()
         {
 
         }
 
         private void RemoveListener()
         {
-            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVE_GAME, this.getPVEBattleParams);
-            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVP_GAME, this.getPVPBattleParams);
+            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVE_GAME, this.GetPVEBattleParams);
+            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVP_GAME, this.GetPVPBattleParams);
         }
 
         public override void Dispose()

@@ -20,15 +20,15 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            this.registerList(BattleUnitType.BULLET);
-            this.registerList(BattleUnitType.MONSTER);
-            this.registerList(BattleUnitType.TOWER);
-            this.registerList(BattleUnitType.ITEM);
+            this.RegisterList(BattleUnitType.BULLET);
+            this.RegisterList(BattleUnitType.MONSTER);
+            this.RegisterList(BattleUnitType.TOWER);
+            this.RegisterList(BattleUnitType.ITEM);
 
             this.AddListener();
         }
 
-        private void registerList(String type)
+        private void RegisterList(String type)
         {
             if (!this.registerUnitDic.ContainsKey(type))
             {
@@ -39,19 +39,19 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerNewBattleUnit);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeBattleUnit);
-            this.eventDispatcher.AddListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.setTarget);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewBattleUnit);
+            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBattleUnit);
+            this.eventDispatcher.AddListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.SetTarget);
         }
 
         private void RemoveListener()
         {
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.registerNewBattleUnit);
-            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.removeBattleUnit);
-            this.eventDispatcher.RemoveListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.setTarget);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewBattleUnit);
+            this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBattleUnit);
+            this.eventDispatcher.RemoveListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.SetTarget);
         }
 
-        private void registerNewBattleUnit(String type, BattleUnit battle)
+        private void RegisterNewBattleUnit(String type, BattleUnit battle)
         {
             UnitBeHitComponent beHit = (UnitBeHitComponent)battle.GetComponent(UnitComponentType.BEHIT);
             if (beHit == null) return;
@@ -68,7 +68,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void removeBattleUnit(String type, BattleUnit battle)
+        private void RemoveBattleUnit(String type, BattleUnit battle)
         {
             UnitBeHitComponent beHit = (UnitBeHitComponent)battle.GetComponent(UnitComponentType.BEHIT);
             if (beHit == null) return;
@@ -85,25 +85,25 @@ namespace CarrotFantasy
             }
             if (this.targetUnit == battle)
             {
-                this.setTarget(null);
+                this.SetTarget(null);
             }
         }
 
         public override void OnTick(Fix64 time)
         {
-            this.chooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.BULLET);
-            this.chooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.TOWER);
-            this.chooseSingleBeHit(BattleUnitType.ITEM, BattleUnitType.BULLET);
+            this.ChooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.BULLET);
+            this.ChooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.TOWER);
+            this.ChooseSingleBeHit(BattleUnitType.ITEM, BattleUnitType.BULLET);
 
             if (this.targetUnit != null)
             {
-                this.chooseSingleBeHit();
+                this.ChooseSingleBeHit();
             }
 
-            this.exeTheCallBack();
+            this.ExeTheCallBack();
         }
 
-        private void chooseSingleBeHit(String type1, String type2)
+        private void ChooseSingleBeHit(String type1, String type2)
         {
             UnitTransformComponent unit1;
             UnitTransformComponent unit2;
@@ -113,7 +113,7 @@ namespace CarrotFantasy
                 for (int j = 0; j <= this.registerHitTestShapeDic[type2].Count - 1; j++)
                 {
                     unit2 = this.registerHitTestShapeDic[type2][j];
-                    bool isHit = HitTestHandler.hitTest(unit1.bodyHitTestShape, unit2.bodyHitTestShape);
+                    bool isHit = HitTestHandler.HitTest(unit1.bodyHitTestShape, unit2.bodyHitTestShape);
                     if (isHit == true)
                     {
                         this.curShouldCallBackDic[unit1.unit].Add(unit2.unit);
@@ -122,14 +122,14 @@ namespace CarrotFantasy
             }
         }
 
-        private void chooseSingleBeHit()
+        private void ChooseSingleBeHit()
         {
             UnitTransformComponent unit1;
             UnitTransformComponent unit2 = (UnitTransformComponent)this.targetUnit.GetComponent(UnitComponentType.TRANSFORM);
             for (int i = 0; i <= this.registerHitTestShapeDic[BattleUnitType.TOWER].Count - 1; i++)
             {
                 unit1 = this.registerHitTestShapeDic[BattleUnitType.TOWER][i];
-                bool isHit = HitTestHandler.hitTest(unit1.bodyHitTestShape, unit2.bodyHitTestShape);
+                bool isHit = HitTestHandler.HitTest(unit1.bodyHitTestShape, unit2.bodyHitTestShape);
                 if (isHit == true)
                 {
                     ((BattleUnit_Tower)this.registerUnitDic[BattleUnitType.TOWER][i]).targetUnit = this.targetUnit;
@@ -137,7 +137,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void exeTheCallBack()
+        private void ExeTheCallBack()
         {
             if (this.curShouldCallBackDic.Count == 0) return;
             foreach (KeyValuePair<BattleUnit, List<BattleUnit>> info in this.curShouldCallBackDic)
@@ -146,14 +146,14 @@ namespace CarrotFantasy
                 for (int i = 0; i <= info.Value.Count - 1; i++)
                 {
                     UnitBeHitComponent beHit = (UnitBeHitComponent)info.Value[i].GetComponent(UnitComponentType.BEHIT);
-                    beHit.beHitCallBack(info.Key);
-                    tranBeHit.beHitCallBack(info.Value[i]);
+                    beHit.BeHitCallBack(info.Key);
+                    tranBeHit.BeHitCallBack(info.Value[i]);
                 }
                 info.Value.Clear();
             }
         }
 
-        private void setTarget(BattleUnit unit)
+        private void SetTarget(BattleUnit unit)
         {
             if (this.targetUnit == null)
             {
@@ -169,10 +169,10 @@ namespace CarrotFantasy
             {
                 this.targetUnit = null;
             }
-            this.setCallBackList(unit);
+            this.SetCallBackList(unit);
         }
 
-        private void setCallBackList(BattleUnit unit)
+        private void SetCallBackList(BattleUnit unit)
         {
             if (unit == null) return;
             if (!this.curShouldCallBackDic.ContainsKey(unit))
@@ -182,7 +182,7 @@ namespace CarrotFantasy
             this.curShouldCallBackDic[unit].Clear();
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
             this.curShouldCallBackDic.Clear();
             this.registerHitTestShapeDic.Clear();
@@ -193,7 +193,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
             base.Dispose();
         }
     }

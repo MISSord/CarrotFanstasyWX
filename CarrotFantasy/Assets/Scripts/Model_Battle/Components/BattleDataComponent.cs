@@ -94,14 +94,14 @@ namespace CarrotFantasy
             return false;
         }
 
-        public void gameOverByCarrotDead()
+        public void GameOverByCarrotDead()
         {
             this.isFinishGame = false;
             this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
             this.eventDispatcher.DispatchEvent(BattleEvent.SHOW_GAME_OVER_PAGE);
         }
 
-        public void gameOverByMonsterDead()
+        public void GameOverByMonsterDead()
         {
             this.isFinishGame = true;
             SingleMapInfo unSaveMapInfo = new SingleMapInfo();
@@ -117,16 +117,16 @@ namespace CarrotFantasy
             {
                 unSaveMapInfo.isAllClear = MapInfoType.NOT_ALL_CLEAR;
             }
-            unSaveMapInfo.carrotState = this.carrotTropyLevel();
+            unSaveMapInfo.carrotState = this.CarrotTropyLevel();
             unSaveMapInfo.unLocked = MapInfoType.UNLOCK_LEVEL;
 
-            MapServer.Instance.sendSetSingleMapInfo(unSaveMapInfo);
+            MapServer.Instance.SendSetSingleMapInfo(unSaveMapInfo);
 
             this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
             this.eventDispatcher.DispatchEvent(BattleEvent.SHOW_GAME_FINISH_PAGE);
         }
 
-        public int carrotTropyLevel()
+        public int CarrotTropyLevel()
         {
             if (this.carrotLive >= 7)
             {
@@ -142,14 +142,14 @@ namespace CarrotFantasy
             }
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
             this.RemoveListener();
         }
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
             base.Dispose();
         }
     }

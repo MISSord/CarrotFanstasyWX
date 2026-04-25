@@ -18,13 +18,13 @@ namespace CarrotFantasy
         public void Init(string address = "")
         {
             this.connectAddress = address ?? string.Empty;
-            this.rebuildTransport();
+            this.RebuildTransport();
             this.isInited = true;
         }
 
         public void Start()
         {
-            this.ensureInit();
+            this.EnsureInit();
             this.transport.Start();
         }
 
@@ -67,7 +67,7 @@ namespace CarrotFantasy
             this.listenerMap[opcode] = existed;
         }
 
-        public int getMessageNumber(IMessage message)
+        public int GetMessageNumber(IMessage message)
         {
             if (message == null)
             {
@@ -98,18 +98,18 @@ namespace CarrotFantasy
                 return;
             }
 
-            this.ensureInit();
+            this.EnsureInit();
 
             if (!this.transport.IsConnected)
             {
                 this.transport.Start();
             }
 
-            int messageNumber = this.getMessageNumber(message);
+            int messageNumber = this.GetMessageNumber(message);
             this.transport.Send(message, messageNumber);
         }
 
-        public void dispatchMessage(ushort opcode, IMessage message)
+        public void DispatchMessage(ushort opcode, IMessage message)
         {
             if (this.listenerMap.TryGetValue(opcode, out CallBack<IMessage> callBack))
             {
@@ -128,8 +128,8 @@ namespace CarrotFantasy
 
             if (this.transport != null)
             {
-                this.transport.OnMessage -= this.dispatchMessage;
-                this.transport.OnError -= this.onTransportError;
+                this.transport.OnMessage -= this.DispatchMessage;
+                this.transport.OnError -= this.OnTransportError;
                 this.transport.Dispose();
                 this.transport = null;
             }
@@ -137,7 +137,7 @@ namespace CarrotFantasy
             this.isInited = false;
         }
 
-        private void ensureInit()
+        private void EnsureInit()
         {
             if (this.isInited == false || this.transport == null)
             {
@@ -145,23 +145,23 @@ namespace CarrotFantasy
             }
         }
 
-        private void rebuildTransport()
+        private void RebuildTransport()
         {
             if (this.transport != null)
             {
-                this.transport.OnMessage -= this.dispatchMessage;
-                this.transport.OnError -= this.onTransportError;
+                this.transport.OnMessage -= this.DispatchMessage;
+                this.transport.OnError -= this.OnTransportError;
                 this.transport.Dispose();
                 this.transport = null;
             }
 
             this.transport = ConnectionTransportFactory.Create();
             this.transport.Init(this.connectAddress);
-            this.transport.OnMessage += this.dispatchMessage;
-            this.transport.OnError += this.onTransportError;
+            this.transport.OnMessage += this.DispatchMessage;
+            this.transport.OnError += this.OnTransportError;
         }
 
-        private void onTransportError(string error)
+        private void OnTransportError(string error)
         {
             Debug.LogError(string.Format("Connection transport error: {0}", error));
         }

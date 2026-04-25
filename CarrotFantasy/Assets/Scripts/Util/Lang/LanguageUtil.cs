@@ -12,10 +12,10 @@ namespace CarrotFantasy
     public class LanguageUtil
     {
         private static LanguageUtil languageUtil;
-        private zh_language curLanguageBag;
+        private Zh_language curLanguageBag;
         private LanguageType curType;
 
-        private Dictionary<UnityEngine.SystemLanguage, zh_language> systemLanguageList = new Dictionary<UnityEngine.SystemLanguage, zh_language>();
+        private Dictionary<UnityEngine.SystemLanguage, Zh_language> systemLanguageList = new Dictionary<UnityEngine.SystemLanguage, Zh_language>();
 
         public static LanguageUtil Instance
         {
@@ -24,13 +24,13 @@ namespace CarrotFantasy
                 if (languageUtil == null)
                 {
                     languageUtil = new LanguageUtil();
-                    languageUtil.loadLanguageBag();
+                    languageUtil.LoadLanguageBag();
                 }
                 return languageUtil;
             }
         }
 
-        private void loadLanguageBag()
+        private void LoadLanguageBag()
         {
             systemLanguageList.Add(UnityEngine.SystemLanguage.Chinese, new zh_cn());
             systemLanguageList.Add(UnityEngine.SystemLanguage.English, new zh_cn());
@@ -50,32 +50,32 @@ namespace CarrotFantasy
             }
         }
 
-        public LanguageType getCurLanguageType()
+        public LanguageType GetCurLanguageType()
         {
             return curType;
         }
 
-        public String getString(int id)
+        public String GetString(int id)
         {
-            return curLanguageBag.getString(id);
+            return curLanguageBag.GetString(id);
         }
 
-        public String getFormatString(int id, string one)
+        public String GetFormatString(int id, string one)
         {
-            return String.Format(curLanguageBag.getString(id), one);
+            return String.Format(curLanguageBag.GetString(id), one);
         }
 
-        public String getFormatString(int id, string one, string two)
+        public String GetFormatString(int id, string one, string two)
         {
-            return String.Format(curLanguageBag.getString(id), one, two);
+            return String.Format(curLanguageBag.GetString(id), one, two);
         }
-        public String getFormatString(int id, string one, string two, string three)
+        public String GetFormatString(int id, string one, string two, string three)
         {
-            return String.Format(curLanguageBag.getString(id), one, two, three);
+            return String.Format(curLanguageBag.GetString(id), one, two, three);
         }
-        public String getFormatString(int id, string[] list)
+        public String GetFormatString(int id, string[] list)
         {
-            return String.Format(curLanguageBag.getString(id), list);
+            return String.Format(curLanguageBag.GetString(id), list);
         }
     }
 }

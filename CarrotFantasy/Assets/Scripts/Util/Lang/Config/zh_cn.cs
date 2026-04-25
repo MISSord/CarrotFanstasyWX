@@ -1,6 +1,6 @@
 namespace CarrotFantasy
 {
-    public class zh_cn : zh_language
+    public class zh_cn : Zh_language
     {
         public override void Init()
         {

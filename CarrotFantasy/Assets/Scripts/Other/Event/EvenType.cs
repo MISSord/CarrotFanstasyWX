@@ -46,7 +46,7 @@ namespace CarrotFantasy
     public enum ReturnEventType
     {
         //对象池
-        getGameObject,
+        GetGameObject,
         GetOneControllerCore,
     }
 

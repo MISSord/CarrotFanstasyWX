@@ -51,9 +51,9 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            destroyLevelUI();
+            DestroyLevelUI();
             this.filePath = "Pictures/GameOption/Normal/Level/";
-            this.levelInfoList = MapServer.Instance.mapModel.getOnceBigLevelMapInfo(currentBigLevelID);
+            this.levelInfoList = MapServer.Instance.mapModel.GetOnceBigLevelMapInfo(currentBigLevelID);
             this.levelContentImageGos = new List<GameObject>();
             this.towerContentImageGos = new List<GameObject>();
             this.currentLevelID = 1;
@@ -76,18 +76,18 @@ namespace CarrotFantasy
             this.theSpritePath = filePath + currentBigLevelID.ToString() + "/";
 
             this.slideScrollView = new SlideScrollView();
-            this.slideScrollView.loadSrollView(this.scroller, 1100, 300);
+            this.slideScrollView.LoadSrollView(this.scroller, 1100, 300);
 
-            this.loadLevelUI();
-            this.updateLevelUI();
-            this.updateTowerUI();
+            this.LoadLevelUI();
+            this.UpdateLevelUI();
+            this.UpdateTowerUI();
 
             slideScrollView.Init();
 
             this.AddListener();
         }
 
-        public void loadLevelUI()
+        public void LoadLevelUI()
         {
             this.imgBGLeft.sprite = ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Left");
             this.imgBGRight.sprite = ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Right");
@@ -102,7 +102,7 @@ namespace CarrotFantasy
             this.slideScrollView.SetContentLength(levelInfoList.Length);
         }
 
-        private void updateLevelUI()
+        private void UpdateLevelUI()
         {
             for (int i = 0; i < levelInfoList.Length; i++)
             {
@@ -128,7 +128,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void updateTowerUI()
+        public void UpdateTowerUI()
         {
             if (towerContentImageGos.Count == 0)
             {
@@ -138,7 +138,7 @@ namespace CarrotFantasy
                 }
             }
 
-            Stage stage = MapServer.Instance.mapModel.getStage(this.currentBigLevelID, this.currentLevelID);
+            Stage stage = MapServer.Instance.mapModel.GetStage(this.currentBigLevelID, this.currentLevelID);
             SingleMapInfo info = this.levelInfoList[this.currentLevelID - 1];
 
             if (info.unLocked == MapInfoType.UNLOCK_LEVEL)
@@ -164,20 +164,20 @@ namespace CarrotFantasy
 
         public void StartGame()
         {
-            MapServer.Instance.sendGameMapInfo(this.currentBigLevelID, this.currentLevelID);
+            MapServer.Instance.SendGameMapInfo(this.currentBigLevelID, this.currentLevelID);
             UIServer.Instance.PlayButtonEffect();
         }
 
         public GameObject CreateUIAndSetUIPosition(string uiName, Transform parentTrans)
         {
-            GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(uiName));
+            GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject(uiName));
             itemGo.transform.SetParent(parentTrans, false);
             itemGo.transform.localPosition = Vector3.zero;
             itemGo.transform.localScale = Vector3.one;
             return itemGo;
         }
 
-        public void toNextLevel()
+        public void ToNextLevel()
         {
             if (this.currentLevelID >= this.levelInfoList.Length)
             {
@@ -185,11 +185,11 @@ namespace CarrotFantasy
             }
             currentLevelID++;
             this.slideScrollView.ToNextPage();
-            this.updateTowerUI();
+            this.UpdateTowerUI();
             UIServer.Instance.PlayPagingEffect();
         }
 
-        public void toLastLevel()
+        public void ToLastLevel()
         {
             if (currentLevelID <= 1)
             {
@@ -197,17 +197,17 @@ namespace CarrotFantasy
             }
             currentLevelID--;
             this.slideScrollView.ToLastPage();
-            this.updateTowerUI();
+            this.UpdateTowerUI();
             UIServer.Instance.PlayPagingEffect();
         }
 
-        public void showHelpPanel()
+        public void ShowHelpPanel()
         {
             UIViewService.OpenHelpPanel();
             UIServer.Instance.PlayButtonEffect();
         }
 
-        private void returnToLastPanel()
+        private void ReturnToLastPanel()
         {
             UIServer.Instance.PlayButtonEffect();
             this.Close();
@@ -215,26 +215,26 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.updateMapInfo);
+            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.UpdateMapInfo);
             this.btnStartGame.onClick.AddListener(this.StartGame);
-            this.btnLastLevel.onClick.AddListener(this.toLastLevel);
-            this.btnNextLevel.onClick.AddListener(this.toNextLevel);
-            this.btnReturn.onClick.AddListener(this.returnToLastPanel);
-            this.btnHelp.onClick.AddListener(this.showHelpPanel);
+            this.btnLastLevel.onClick.AddListener(this.ToLastLevel);
+            this.btnNextLevel.onClick.AddListener(this.ToNextLevel);
+            this.btnReturn.onClick.AddListener(this.ReturnToLastPanel);
+            this.btnHelp.onClick.AddListener(this.ShowHelpPanel);
         }
 
         private void RemoveListener()
         {
-            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, this.updateMapInfo);
+            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, this.UpdateMapInfo);
         }
 
-        private void updateMapInfo()
+        private void UpdateMapInfo()
         {
-            this.levelInfoList = MapServer.Instance.mapModel.getOnceBigLevelMapInfo(this.currentBigLevelID);
-            this.updateLevelUI();
+            this.levelInfoList = MapServer.Instance.mapModel.GetOnceBigLevelMapInfo(this.currentBigLevelID);
+            this.UpdateLevelUI();
         }
 
-        private void destroyLevelUI()
+        private void DestroyLevelUI()
         {
             if (levelContentImageGos == null) return;
             if (levelContentImageGos.Count > 0)
@@ -252,7 +252,7 @@ namespace CarrotFantasy
 
         protected override void ReleaseCallBack()
         {
-            this.destroyLevelUI();
+            this.DestroyLevelUI();
             this.RemoveListener();
         }
     }

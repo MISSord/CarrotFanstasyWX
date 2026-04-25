@@ -10,7 +10,7 @@ namespace CarrotFantasy
         public HitTestShape_Rect(HitShapeType hitType, Fix64 x, Fix64 y, Fix64 sizeX, Fix64 sizeY) : base(hitType)
         {
             this.Reset(x, y, sizeX, sizeY);
-            this.resetStrDesc();
+            this.ResetStrDesc();
         }
 
         private void Reset(Fix64 x, Fix64 y, Fix64 sizeX, Fix64 sizeY)

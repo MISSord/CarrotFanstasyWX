@@ -9,11 +9,11 @@ namespace CarrotFantasy
             this.isTimeToPreFighting = false;
         }
 
-        public override void stateIn()
+        public override void StateIn()
         {
-            base.stateIn();
+            base.StateIn();
             BattleSchedulerComponent sch = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
-            this.scheId = sch.delayExeOnceTimes(() => { this.isTimeToPreFighting = true; }, 4.0f);
+            this.scheId = sch.DelayExeOnceTimes(() => { this.isTimeToPreFighting = true; }, 4.0f);
             GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
         }
 
@@ -26,11 +26,11 @@ namespace CarrotFantasy
             return BattleStateType.START_GAME;
         }
 
-        public override void stateOut()
+        public override void StateOut()
         {
             //双重保险
             BattleSchedulerComponent sch = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
-            sch.silenceSingleSche(this.scheId);
+            sch.SilenceSingleSche(this.scheId);
         }
 
         public override void Dispose()

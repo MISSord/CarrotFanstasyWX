@@ -23,7 +23,7 @@ namespace CarrotFantasy
             this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
-        public override void stateIn()
+        public override void StateIn()
         {
             if (this.monsterComponent.CheckIsHaveAnyMonsterSurvive() == true)
             {
@@ -32,8 +32,8 @@ namespace CarrotFantasy
                 return;
             }
             this.dataComponent.WavesNumberChange();
-            this.monsterComponent.buildNewWavesMonster();
-            this.monsterComponent.scheId = scheComponent.delayExeMultipleTimes(this.monsterComponent.registerNewMonster, 2.0f);
+            this.monsterComponent.BuildNewWavesMonster();
+            this.monsterComponent.scheId = scheComponent.DelayExeMultipleTimes(this.monsterComponent.RegisterNewMonster, 2.0f);
             this.isEnterFighting = true;
         }
 

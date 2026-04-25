@@ -15,22 +15,22 @@ namespace CarrotFantasy
             this.delega = d;
         }
 
-        public int getPriority()
+        public int GetPriority()
         {
             return this.priority;
         }
 
-        public String getEventName()
+        public String GetEventName()
         {
             return this.eventName;
         }
 
-        public CallBackOne getCallBack()
+        public CallBackOne GetCallBack()
         {
             return this.delega;
         }
 
-        public void dispatcher(Dictionary<String, dynamic> param)
+        public void Dispatcher(Dictionary<String, dynamic> param)
         {
             if (this.delega != null)
             {

@@ -51,7 +51,7 @@ namespace CarrotFantasy
             this.timeVal = Fix64.Zero;
         }
 
-        public void loadInfo1(int x, int y)
+        public void LoadInfo1(int x, int y)
         {
             this.x = x;
             this.y = y;
@@ -73,16 +73,16 @@ namespace CarrotFantasy
             this.AddComponent(this.unitBeHit);
             this.AddComponent(this.unitTrans);
 
-            this.unitBeHit.registerBeHitCallBack(this.beHitCallBack);
+            this.unitBeHit.RegisterBeHitCallBack(this.BeHitCallBack);
         }
 
         public override void InitComponents()
         {
             base.InitComponents();
-            this.unitTrans.setBodyRadius(this.towerAttackRadius);
+            this.unitTrans.SetBodyRadius(this.towerAttackRadius);
         }
 
-        private void beHitCallBack(BattleUnit unit)
+        private void BeHitCallBack(BattleUnit unit)
         {
             if (unit.unitType.Equals(BattleUnitType.MONSTER) == false)
             {
@@ -92,14 +92,14 @@ namespace CarrotFantasy
             this.monsterList.Add((BattleUnit_Monster)unit);
         }
 
-        public void updateLevel()
+        public void UpdateLevel()
         {
             this.curLevel = this.curLevel + 1;
             this.curPrice = this.price[this.curLevel];
             this.isMaxLevel = this.curLevel == this.price.Length - 1 ? true : false;
             this.towerAttackRadius = this.birthParam["bodyRadius" + this.curLevel.ToString()];
 
-            this.unitTrans.setBodyRadius(this.towerAttackRadius);
+            this.unitTrans.SetBodyRadius(this.towerAttackRadius);
 
             this.eventDipatcher.DispatchEvent<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this);
         }

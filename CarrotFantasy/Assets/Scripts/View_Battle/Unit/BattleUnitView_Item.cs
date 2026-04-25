@@ -25,7 +25,7 @@ namespace CarrotFantasy
         public override void InitListener()
         {
             base.InitListener();
-            this.unitEventDispatcher.AddListener(BattleEvent.ITEM_LIVE_REDUCE, this.updateLiveNumber);
+            this.unitEventDispatcher.AddListener(BattleEvent.ITEM_LIVE_REDUCE, this.UpdateLiveNumber);
         }
 
         public override void RemoveListener()
@@ -33,11 +33,11 @@ namespace CarrotFantasy
             base.RemoveListener();
             if (this.unitEventDispatcher != null)
             {
-                this.unitEventDispatcher.RemoveListener(BattleEvent.ITEM_LIVE_REDUCE, this.updateLiveNumber);
+                this.unitEventDispatcher.RemoveListener(BattleEvent.ITEM_LIVE_REDUCE, this.UpdateLiveNumber);
             }
         }
 
-        private void updateLiveNumber()
+        private void UpdateLiveNumber()
         {
             if (this.slider.gameObject.activeSelf == false) this.slider.gameObject.SetActive(true);
             this.slider.value = ((float)((BattleUnit_Item)this.unit).curLive / (float)((BattleUnit_Item)this.unit).totalLive);

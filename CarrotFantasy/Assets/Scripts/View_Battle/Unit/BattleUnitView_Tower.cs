@@ -30,21 +30,21 @@ namespace CarrotFantasy
         public override void InitListener()
         {
             base.InitListener();
-            this.unit.eventDipatcher.AddListener<BattleUnit>(BattleEvent.TOWER_ATTACK, this.playAnimation);
-            this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleEvent.TOWER_RANGE_SHOW, this.showRange);
-            this.battleView.bvEventDispatcher.AddListener(BattleEvent.TOWER_RANGE_FADE, this.fadeRange);
+            this.unit.eventDipatcher.AddListener<BattleUnit>(BattleEvent.TOWER_ATTACK, this.PlayAnimation);
+            this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleEvent.TOWER_RANGE_SHOW, this.ShowRange);
+            this.battleView.bvEventDispatcher.AddListener(BattleEvent.TOWER_RANGE_FADE, this.FadeRange);
         }
 
         public override void RemoveListener()
         {
-            this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleEvent.TOWER_RANGE_SHOW, this.showRange);
-            this.battleView.bvEventDispatcher.RemoveListener(BattleEvent.TOWER_RANGE_FADE, this.fadeRange);
+            this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleEvent.TOWER_RANGE_SHOW, this.ShowRange);
+            this.battleView.bvEventDispatcher.RemoveListener(BattleEvent.TOWER_RANGE_FADE, this.FadeRange);
             base.RemoveListener();
             if (this.unit == null) return;
-            this.unit.eventDipatcher.RemoveListener<BattleUnit>(BattleEvent.TOWER_ATTACK, this.playAnimation);
+            this.unit.eventDipatcher.RemoveListener<BattleUnit>(BattleEvent.TOWER_ATTACK, this.PlayAnimation);
         }
 
-        private void showRange(GridPoint grid)
+        private void ShowRange(GridPoint grid)
         {
             if (grid.mapGrid.x == ((BattleUnit_Tower)this.unit).x && grid.mapGrid.y == ((BattleUnit_Tower)this.unit).y)
             {
@@ -52,7 +52,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void fadeRange()
+        private void FadeRange()
         {
             if (this.nodeAttackRange.activeSelf == true)
             {
@@ -60,7 +60,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void playAnimation(BattleUnit unit)
+        private void PlayAnimation(BattleUnit unit)
         {
             if (this.animator == null) return;
             if (this.towerId == 1)

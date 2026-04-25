@@ -21,9 +21,9 @@ namespace CarrotFantasy
 
         public virtual void OnTick(Fix64 time) { }
 
-        public virtual void lateTick(Fix64 time) { }
+        public virtual void LateTick(Fix64 time) { }
 
-        public virtual void clearInfo() { } //用于重新开始游戏
+        public virtual void ClearInfo() { } //用于重新开始游戏
 
         public virtual void Dispose() { }
     }

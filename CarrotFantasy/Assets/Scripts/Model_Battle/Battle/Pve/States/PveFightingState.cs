@@ -17,9 +17,9 @@ namespace CarrotFantasy
             this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
-        public override void stateIn()
+        public override void StateIn()
         {
-            base.stateIn();
+            base.StateIn();
         }
 
         public override string OnTick(Fix64 time)
@@ -34,7 +34,7 @@ namespace CarrotFantasy
             }
             else
             {
-                if (this.monsterComponent.isCanNewMonsterWaves()) //还有怪物需要生产
+                if (this.monsterComponent.IsCanNewMonsterWaves()) //还有怪物需要生产
                 {
                     return BattleStateType.PRE_FIGHTINT;
                 }

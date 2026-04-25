@@ -51,35 +51,35 @@ namespace CarrotFantasy
 
         }
 
-        public Fix64Vector2 getLastPosition() //给防御塔用
+        public Fix64Vector2 GetLastPosition() //给防御塔用
         {
             return new Fix64Vector2(this.x, this.y);
         }
 
-        public override void lateTick(Fix64 time)
+        public override void LateTick(Fix64 time)
         {
             this.lastFrameX = this.x;
             this.lastFrameY = this.y;
             this.lastFrameZ = this.z;
         }
 
-        private void resetBodyShape()
+        private void ResetBodyShape()
         {
             this.bodyHitTestShape.Reset(this.x, this.y, this.bodyRadius);
         }
 
-        public Fix64 getBodyRadius()
+        public Fix64 GetBodyRadius()
         {
             return this.bodyRadius;
         }
 
-        public void setBodyRadius(Fix64 bodyRadius)
+        public void SetBodyRadius(Fix64 bodyRadius)
         {
             this.bodyRadius = bodyRadius;
-            this.resetBodyShape();
+            this.ResetBodyShape();
         }
 
-        public bool setPosition(Fix64 x, Fix64 y, Fix64 z)
+        public bool SetPosition(Fix64 x, Fix64 y, Fix64 z)
         {
             //定点数
             if (this.x == x && this.y == y && this.z == z)
@@ -95,7 +95,7 @@ namespace CarrotFantasy
             return true;
         }
 
-        public void getPosition(out float x, out float y, out float z) //视图用
+        public void GetPosition(out float x, out float y, out float z) //视图用
         {
             x = (float)this.x;
             y = (float)this.y;
@@ -109,7 +109,7 @@ namespace CarrotFantasy
             z = this.lastFrameZ;
         }
 
-        public void setFaceDirection(Fix64 faceDirection)
+        public void SetFaceDirection(Fix64 faceDirection)
         {
             //定点数
             if (this.faceDirection == faceDirection)

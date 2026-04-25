@@ -48,7 +48,7 @@ namespace CarrotFantasy
             }
         }
 
-        public Vector2 getReferenceResolution()
+        public Vector2 GetReferenceResolution()
         {
             if (REAL_REFERENCE_RESOLUTION == Vector2.zero)
             {

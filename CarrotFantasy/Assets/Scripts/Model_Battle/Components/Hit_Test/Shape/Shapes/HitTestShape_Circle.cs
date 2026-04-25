@@ -9,7 +9,7 @@ namespace CarrotFantasy
         public HitTestShape_Circle(HitShapeType hitType, Fix64 x, Fix64 y, Fix64 rad) : base(hitType)
         {
             this.Reset(x, y, rad);
-            this.resetStrDesc();
+            this.ResetStrDesc();
         }
 
         public void Reset(Fix64 x, Fix64 y, Fix64 rad)

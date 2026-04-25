@@ -33,85 +33,85 @@ namespace CarrotFantasy
             this.btn_canel = this.transform.Find("node_bottom/btn_back").GetComponent<Button>();
 
             this.txt_tips = this.transform.Find("node_up/txt_tips").GetComponent<Text>();
-            this.txt_tips.text = LanguageUtil.Instance.getString(103);
+            this.txt_tips.text = LanguageUtil.Instance.GetString(103);
 
-            this.initUserInfoUI();
+            this.InitUserInfoUI();
             this.AddListener();
-            this.scheId = Sche.delayExeMultipleTimes(this.updateTipTxt, 1.0f);
+            this.scheId = Sche.DelayExeMultipleTimes(this.UpdateTipTxt, 1.0f);
         }
 
-        private void initUserInfoUI()
+        private void InitUserInfoUI()
         {
             this.txt_userName = this.transform.Find("node_center/node_info/node_info1/txt_user_name").GetComponent<Text>();
             this.txt_userState = this.transform.Find("node_center/node_info/node_info2/txt_user_name").GetComponent<Text>();
             this.txt_myState = this.transform.Find("node_center/node_info/node_info3/txt_user_name").GetComponent<Text>();
 
-            this.txt_userName.text = LanguageUtil.Instance.getString(102);
-            this.txt_userState.text = LanguageUtil.Instance.getString(100);
-            this.txt_myState.text = LanguageUtil.Instance.getString(100);
+            this.txt_userName.text = LanguageUtil.Instance.GetString(102);
+            this.txt_userState.text = LanguageUtil.Instance.GetString(100);
+            this.txt_myState.text = LanguageUtil.Instance.GetString(100);
         }
 
         private void AddListener()
         {
-            this.btn_canel.onClick.AddListener(this.canelFight);
-            this.btn_fight.onClick.AddListener(this.stateToFight);
-            RoomServer.Instance.eventDispatcher.AddListener(RoomEventType.USER_INFO_CHANGE, this.changeUserInfo);
+            this.btn_canel.onClick.AddListener(this.CanelFight);
+            this.btn_fight.onClick.AddListener(this.StateToFight);
+            RoomServer.Instance.eventDispatcher.AddListener(RoomEventType.USER_INFO_CHANGE, this.ChangeUserInfo);
         }
 
         private void RemoveListener()
         {
-            RoomServer.Instance.eventDispatcher.RemoveListener(RoomEventType.USER_INFO_CHANGE, this.changeUserInfo);
+            RoomServer.Instance.eventDispatcher.RemoveListener(RoomEventType.USER_INFO_CHANGE, this.ChangeUserInfo);
         }
 
-        private void updateTipTxt()
+        private void UpdateTipTxt()
         {
             this.matchTime += 1;
-            this.txt_tips.text = LanguageUtil.Instance.getFormatString(104, this.matchTime.ToString());
+            this.txt_tips.text = LanguageUtil.Instance.GetFormatString(104, this.matchTime.ToString());
             if (this.matchTime >= 31)
             {
-                this.canelFight();
+                this.CanelFight();
             }
         }
 
-        private void changeUserInfo()
+        private void ChangeUserInfo()
         {
             if (RoomServer.Instance.partner != null)
             {
                 this.txt_userName.text = RoomServer.Instance.partner.UserID.ToString();
                 if (RoomServer.Instance.partner.isReady == true)
                 {
-                    this.txt_userState.text = LanguageUtil.Instance.getString(101);
+                    this.txt_userState.text = LanguageUtil.Instance.GetString(101);
                 }
                 else
                 {
-                    this.txt_userState.text = LanguageUtil.Instance.getString(100);
+                    this.txt_userState.text = LanguageUtil.Instance.GetString(100);
                 }
             }
             else
             {
-                this.txt_userName.text = LanguageUtil.Instance.getString(102);
-                this.txt_userState.text = LanguageUtil.Instance.getString(100);
+                this.txt_userName.text = LanguageUtil.Instance.GetString(102);
+                this.txt_userState.text = LanguageUtil.Instance.GetString(100);
             }
-            this.txt_myState.text = LanguageUtil.Instance.getString(RoomServer.Instance.myself.isReady ? 101 : 100);
+            this.txt_myState.text = LanguageUtil.Instance.GetString(RoomServer.Instance.myself.isReady ? 101 : 100);
         }
 
-        private void stateToFight()
+        private void StateToFight()
         {
             UIServer.Instance.PlayButtonEffect();
-            RoomServer.Instance.sendReadyFight();
+            RoomServer.Instance.SendReadyFight();
         }
 
-        private void canelFight()
+        private void CanelFight()
         {
             UIServer.Instance.PlayButtonEffect();
-            RoomServer.Instance.canelMatch();
+            RoomServer.Instance.CanelMatch();
             this.Close();
         }
 
         protected override void ReleaseCallBack()
         {
             this.RemoveListener();
-            Sche.silenceSingleSche(this.scheId);
+            Sche.SilenceSingleSche(this.scheId);
         }
     }
 }

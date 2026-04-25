@@ -17,38 +17,38 @@ namespace CarrotFantasy
             this.panelGameObject = panelObject;
         }
 
-        public void setState(PanelStateType state)
+        public void SetState(PanelStateType state)
         {
             this.panelStateType = state;
         }
 
-        public PanelStateType getState()
+        public PanelStateType GetState()
         {
             return this.panelStateType;
         }
 
-        public void onAssetReady()
+        public void OnAssetReady()
         {
-            this.setState(PanelStateType.init_done);
-            this.callLiftCycleFunc(PanelLifeCycleType.ON_ASSET_READY);
+            this.SetState(PanelStateType.init_done);
+            this.CallLiftCycleFunc(PanelLifeCycleType.ON_ASSET_READY);
         }
-        public void onResume()
+        public void OnResume()
         {
-            this.setState(PanelStateType.active);
-            this.callLiftCycleFunc(PanelLifeCycleType.ON_RESUME);
+            this.SetState(PanelStateType.active);
+            this.CallLiftCycleFunc(PanelLifeCycleType.ON_RESUME);
         }
-        public void onPause()
+        public void OnPause()
         {
-            this.setState(PanelStateType.pending);
-            this.callLiftCycleFunc(PanelLifeCycleType.ON_PAUSE);
+            this.SetState(PanelStateType.pending);
+            this.CallLiftCycleFunc(PanelLifeCycleType.ON_PAUSE);
         }
-        public void onDestroy()
+        public void OnDestroy()
         {
-            this.setState(PanelStateType.disable);
-            this.callLiftCycleFunc(PanelLifeCycleType.ON_DESTROY);
+            this.SetState(PanelStateType.disable);
+            this.CallLiftCycleFunc(PanelLifeCycleType.ON_DESTROY);
         }
 
-        public void callLiftCycleFunc(String funcName)
+        public void CallLiftCycleFunc(String funcName)
         {
             LiftCycleFunc func = null;
             if (liftCycleExeMap.TryGetValue(funcName, out func))
@@ -56,7 +56,7 @@ namespace CarrotFantasy
                 func();
             }
         }
-        private void registerLiftCycleEvent(String key, LiftCycleFunc func)
+        private void RegisterLiftCycleEvent(String key, LiftCycleFunc func)
         {
             LiftCycleFunc fun = null;
             if (liftCycleExeMap.TryGetValue(key, out fun))
@@ -69,21 +69,21 @@ namespace CarrotFantasy
             }
             liftCycleExeMap[key] = fun;
         }
-        public void registerOnAssetReady(LiftCycleFunc func)
+        public void RegisterOnAssetReady(LiftCycleFunc func)
         {
-            this.registerLiftCycleEvent(PanelLifeCycleType.ON_ASSET_READY, func);
+            this.RegisterLiftCycleEvent(PanelLifeCycleType.ON_ASSET_READY, func);
         }
-        public void registerOnResume(LiftCycleFunc func)
+        public void RegisterOnResume(LiftCycleFunc func)
         {
-            this.registerLiftCycleEvent(PanelLifeCycleType.ON_RESUME, func);
+            this.RegisterLiftCycleEvent(PanelLifeCycleType.ON_RESUME, func);
         }
-        public void registerOnPause(LiftCycleFunc func)
+        public void RegisterOnPause(LiftCycleFunc func)
         {
-            this.registerLiftCycleEvent(PanelLifeCycleType.ON_PAUSE, func);
+            this.RegisterLiftCycleEvent(PanelLifeCycleType.ON_PAUSE, func);
         }
-        public void registerOnDestroy(LiftCycleFunc func)
+        public void RegisterOnDestroy(LiftCycleFunc func)
         {
-            this.registerLiftCycleEvent(PanelLifeCycleType.ON_DESTROY, func);
+            this.RegisterLiftCycleEvent(PanelLifeCycleType.ON_DESTROY, func);
         }
 
 

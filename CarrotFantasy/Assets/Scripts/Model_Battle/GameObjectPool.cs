@@ -25,18 +25,18 @@ namespace CarrotFantasy
 
         public void Init()
         {
-            this.registerBattleUnit(BattleUnitType.MONSTER);
-            this.registerBattleUnit(BattleUnitType.TOWER);
-            this.registerBattleUnit(BattleUnitType.BULLET);
+            this.RegisterBattleUnit(BattleUnitType.MONSTER);
+            this.RegisterBattleUnit(BattleUnitType.TOWER);
+            this.RegisterBattleUnit(BattleUnitType.BULLET);
 
-            this.registerUnitComponent(UnitComponentType.TRANSFORM);
-            this.registerUnitComponent(UnitComponentType.MOVE_MONSTER);
-            this.registerUnitComponent(UnitComponentType.MOVE_BULLET);
-            this.registerUnitComponent(UnitComponentType.MOVE_BULLET_ONE);
-            this.registerUnitComponent(UnitComponentType.BEHIT);
+            this.RegisterUnitComponent(UnitComponentType.TRANSFORM);
+            this.RegisterUnitComponent(UnitComponentType.MOVE_MONSTER);
+            this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET);
+            this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET_ONE);
+            this.RegisterUnitComponent(UnitComponentType.BEHIT);
         }
 
-        public void registerBattleUnit(String name)
+        public void RegisterBattleUnit(String name)
         {
             if (!curObjectDic.ContainsKey(name))
             {
@@ -45,7 +45,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void registerUnitComponent(String name)
+        public void RegisterUnitComponent(String name)
         {
             if (!curUnitObjectDic.ContainsKey(name))
             {
@@ -97,14 +97,14 @@ namespace CarrotFantasy
         }
 
 
-        public void pushObjectToPool(String name, BattleUnit unit)
+        public void PushObjectToPool(String name, BattleUnit unit)
         {
             List<BattleUnit> curList = this.curObjectDic[name];
             curList.Add(unit);
             //Debug.Log(String.Format("{0}放回到对象池，目前长度{1}", name, curList.Count));
         }
 
-        public void pushObjectToPool(String name, BaseUnitComponent unit)
+        public void PushObjectToPool(String name, BaseUnitComponent unit)
         {
             List<BaseUnitComponent> curList = this.curUnitObjectDic[name];
             curList.Add(unit);

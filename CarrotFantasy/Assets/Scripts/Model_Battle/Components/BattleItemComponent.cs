@@ -30,27 +30,27 @@ namespace CarrotFantasy
                 {
                     if (gridsList[x, y].state.hasItem)
                     {
-                        this.createItem(gridsList[x, y]);
+                        this.CreateItem(gridsList[x, y]);
                     }
                 }
             }
         }
 
         //创建物品
-        private void createItem(BattleMapGrid mapGrid)
+        private void CreateItem(BattleMapGrid mapGrid)
         {
             BattleUnit_Item item = new BattleUnit_Item(this.baseBattle);
-            item.eventDipatcher.AddListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.addDeadList);
+            item.eventDipatcher.AddListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.AddDeadList);
             int itemId = this.mapComponent.levelInfo.bigLevelID * 100 + mapGrid.state.itemID;
-            item.LoadInfo(this.baseBattle.getUid(), this.itemConfigReader.getSingleItemConfig(itemId), this.getPosition(mapGrid), mapGrid.state.itemID);
+            item.LoadInfo(this.baseBattle.GetUid(), this.itemConfigReader.getSingleItemConfig(itemId), this.GetPosition(mapGrid), mapGrid.state.itemID);
             item.Init();
             item.InitComponents();
-            item.loadInfo1();
+            item.LoadInfo1();
             this.battleItemList.Add(item);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.ITEM, item);
         }
 
-        private Fix64Vector2 getPosition(BattleMapGrid mapGrid)
+        private Fix64Vector2 GetPosition(BattleMapGrid mapGrid)
         {
             Fix64Vector2 tran = new Fix64Vector2(mapGrid.realX, mapGrid.realY);
             if (mapGrid.state.itemID <= 2)
@@ -64,7 +64,7 @@ namespace CarrotFantasy
             return tran;
         }
 
-        private void addDeadList(BattleUnit_Item item)
+        private void AddDeadList(BattleUnit_Item item)
         {
             this.deadItemList.Add(item);
         }
@@ -72,24 +72,24 @@ namespace CarrotFantasy
         public override void OnTick(Fix64 time)
         {
             base.OnTick(time);
-            this.updateItemState();
+            this.UpdateItemState();
         }
 
-        public void updateItemState()
+        public void UpdateItemState()
         {
             if (this.deadItemList.Count != 0)
             {
                 for (int i = 0; i < this.deadItemList.Count; i++)
                 {
-                    this.checkSingleItemState(this.deadItemList[i]);
+                    this.CheckSingleItemState(this.deadItemList[i]);
                 }
                 this.deadItemList.Clear();
             }
         }
 
-        public void checkSingleItemState(BattleUnit_Item item)
+        public void CheckSingleItemState(BattleUnit_Item item)
         {
-            if (item.isDead() == true)
+            if (item.IsDead() == true)
             {
                 this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, BattleUnitType.ITEM, item);
                 this.baseBattle.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, (int)item.birthParam["money"]);
@@ -99,13 +99,13 @@ namespace CarrotFantasy
             }
         }
 
-        public override void clearInfo()
+        public override void ClearInfo()
         {
-            base.clearInfo();
+            base.ClearInfo();
             this.deadItemList.Clear();
             for (int i = 0; i <= this.battleItemList.Count - 1; i++)
             {
-                this.battleItemList[i].eventDipatcher.RemoveListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.addDeadList);
+                this.battleItemList[i].eventDipatcher.RemoveListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.AddDeadList);
                 this.battleItemList[i].Dispose();
             }
             this.battleItemList.Clear();
@@ -113,7 +113,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.clearInfo();
+            this.ClearInfo();
             base.Dispose();
         }
     }

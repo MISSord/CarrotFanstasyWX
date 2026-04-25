@@ -53,10 +53,10 @@ namespace CarrotFantasy
         public void ShowGameOverPage()
         {
             this.transform.gameObject.SetActive(true);
-            UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Lose");
+            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Lose");
             int waves = dataComponent.curWaves;
-            this.txtResultShow.text = LanguageUtil.Instance.getFormatString(1002, (waves / 10).ToString(), (waves % 10).ToString(), dataComponent.totalWaves.ToString());
-            this.txtLevelShow.text = LanguageUtil.Instance.getFormatString(1003, dataComponent.bigLevel.ToString(), dataComponent.level.ToString());
+            this.txtResultShow.text = LanguageUtil.Instance.GetFormatString(1002, (waves / 10).ToString(), (waves % 10).ToString(), dataComponent.totalWaves.ToString());
+            this.txtLevelShow.text = LanguageUtil.Instance.GetFormatString(1003, dataComponent.bigLevel.ToString(), dataComponent.level.ToString());
         }
 
         public void BtnEvenReplay()

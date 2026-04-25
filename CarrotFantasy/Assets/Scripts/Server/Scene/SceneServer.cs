@@ -79,7 +79,7 @@ namespace CarrotFantasy
                 return false;
             }
             this.currentScene = targetScene;
-            this.mainCamera = currentScene.getMainCamera();
+            this.mainCamera = currentScene.GetMainCamera();
             if (this.mainCamera != null)
             {
                 this.uiCamera.clearFlags = CameraClearFlags.Depth;
@@ -88,7 +88,7 @@ namespace CarrotFantasy
             {
                 this.uiCamera.clearFlags = CameraClearFlags.Color;
             }
-            this.currentScene.initSceneObject();
+            this.currentScene.InitSceneObject();
 
             ServerProvision.panelServer.SetShowPanelActive(true); //其实不一定需要这句
             this.eventDispatcher.DispatchEvent(SceneEventType.LOAD_SCENE_FINISH);

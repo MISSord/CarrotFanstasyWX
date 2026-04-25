@@ -22,7 +22,7 @@ namespace CarrotFantasy
             "#3,1,0,2,1","#3,2,0,2,2","#3,3,0,2,2","#3,4,0,2,2","#3,5,0,2,2",
         };
 
-        public static String getInitMapInfo()
+        public static String GetInitMapInfo()
         {
             StringBuilder allInfo = new StringBuilder(newInfo[0]);
             for (int i = 1; i <= newInfo.Length - 1; i++)
@@ -32,17 +32,17 @@ namespace CarrotFantasy
             return allInfo.ToString();
         }
 
-        public static String mapInfoConvertString(SingleMapInfo mapInfo)
+        public static String MapInfoConvertString(SingleMapInfo mapInfo)
         {
             return String.Format(blankMapInfo, mapInfo.bigLevelId, mapInfo.levelId, mapInfo.carrotState, mapInfo.isAllClear, mapInfo.unLocked);
         }
 
-        public static String getNewMapInfo(String oldMapInfo, SingleMapInfo mapInfo)
+        public static String GetNewMapInfo(String oldMapInfo, SingleMapInfo mapInfo)
         {
             StringBuilder newAllInfo = new StringBuilder();
             String[] allInfo = oldMapInfo.Split(bigInfoSplitSign);
             int level = (mapInfo.bigLevelId - 1) * 5 + mapInfo.levelId;
-            String newInfo = mapInfoConvertString(mapInfo);
+            String newInfo = MapInfoConvertString(mapInfo);
             allInfo[level] = newInfo;
             for (int i = 1; i <= allInfo.Length - 1; i++)
             {

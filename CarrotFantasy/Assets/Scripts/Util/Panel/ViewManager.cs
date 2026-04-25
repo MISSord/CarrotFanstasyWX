@@ -29,7 +29,7 @@ public class ViewManager
 
     private List<BaseView> preLoadPanelList = new List<BaseView>();
 
-    private bool isCanShowPanel = true;
+    //private bool isCanShowPanel = true;
     private bool isNeedFlushViewOrder = false;
 
     private Camera uiCamera;
@@ -61,7 +61,6 @@ public class ViewManager
         uiRoot = GameObject.Find("UILayer");
 
         baseView = Resources.Load<GameObject>("BaseView");
-
 
     }
 

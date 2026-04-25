@@ -49,7 +49,7 @@ namespace CarrotFantasy
             this.AddListener();
         }
 
-        private void initPages()
+        private void InitPages()
         {
             this.topPage.Init();
             this.menuPage.Init();
@@ -62,7 +62,7 @@ namespace CarrotFantasy
             this.nodeGameWinPage.SetActive(false);
         }
 
-        private void showMenu()
+        private void ShowMenu()
         {
             UIServer.Instance.PlayButtonEffect();
             this.nodeMenuPage.SetActive(true);
@@ -71,33 +71,33 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            GameManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.showStartUI);
-            this.btnMenuPage.onClick.AddListener(this.showMenu);
+            GameManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.ShowStartUI);
+            this.btnMenuPage.onClick.AddListener(this.ShowMenu);
         }
 
         private void RemoveListener()
         {
-            GameManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.showStartUI);
+            GameManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.ShowStartUI);
             this.btnMenuPage.onClick.RemoveAllListeners();
         }
 
-        private void showStartUI()
+        private void ShowStartUI()
         {
-            this.initPages();
+            this.InitPages();
             this.nodeStartUI.SetActive(true);
             BattleSchedulerComponent sche = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
-            this.schId = sche.delayExeOnceTimes(() =>
+            this.schId = sche.DelayExeOnceTimes(() =>
             {
                 this.nodeStartUI.SetActive(false);
-                UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/Go");
+                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Go");
             }, 3.0f);
-            this.schId_startGame = sche.delayExeMultipleTimes(() =>
+            this.schId_startGame = sche.DelayExeMultipleTimes(() =>
             {
-                UIServer.Instance.audioManager.playEffect("AudioClips/NormalMordel/CountDown");
+                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/CountDown");
             }, 1.0f);
-            sche.delayExeOnceTimes(() =>
+            sche.DelayExeOnceTimes(() =>
             {
-                sche.silenceSingleSche(this.schId_startGame);
+                sche.SilenceSingleSche(this.schId_startGame);
             }, 3.5f);
         }
 

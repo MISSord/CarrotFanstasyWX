@@ -40,12 +40,12 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            AccountServer.Instance.eventDispatcher.AddListener(AccountServer.LOGIN_SUCCESS, this.sendGetUserInfo);
+            AccountServer.Instance.eventDispatcher.AddListener(AccountServer.LOGIN_SUCCESS, this.SendGetUserInfo);
         }
 
         private void RemoveListener()
         {
-            AccountServer.Instance.eventDispatcher.RemoveListener(AccountServer.LOGIN_SUCCESS, this.sendGetUserInfo);
+            AccountServer.Instance.eventDispatcher.RemoveListener(AccountServer.LOGIN_SUCCESS, this.SendGetUserInfo);
         }
 
         public override void AddSocketListener()
@@ -105,12 +105,12 @@ namespace CarrotFantasy
             this.RemoveListener();
         }
 
-        public void sendGetUserInfo()
+        public void SendGetUserInfo()
         {
             //ServerProvision.connectionServer.Send(new A1001_GetUserInfo_C2G());
         }
 
-        public void sendSetSingleMapInfo(SingleMapInfo unSaveMapInfo)
+        public void SendSetSingleMapInfo(SingleMapInfo unSaveMapInfo)
         {
             //A1002_SetSingleMapInfo_C2G msg = new A1002_SetSingleMapInfo_C2G();
             //this.unSaveMapInfo = unSaveMapInfo;
@@ -122,7 +122,7 @@ namespace CarrotFantasy
             //ServerProvision.connectionServer.Send(msg);
         }
 
-        public void sendGameMapInfo(int bigLevel, int level)
+        public void SendGameMapInfo(int bigLevel, int level)
         {
             //A1003_GameMapInfo_C2G msg = new A1003_GameMapInfo_C2G();
             //msg.BigLevelId = bigLevel;

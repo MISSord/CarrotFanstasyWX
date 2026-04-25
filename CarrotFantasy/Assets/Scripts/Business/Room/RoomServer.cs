@@ -53,12 +53,12 @@ namespace CarrotFantasy
             //ServerProvision.connectionServer.RemoveListener(HotfixOpcode.Actor_GamerReady_Landlords, this.notifyGamerReadyFight);
         }
 
-        private void notifyStartMatch(IMessage message)
+        private void NotifyStartMatch(IMessage message)
         {
 
         }
 
-        private void notifyGamerEnterRoom(IMessage message) //就两个位置，
+        private void NotifyGamerEnterRoom(IMessage message) //就两个位置，
         {
             Debug.Log("有人加入房间");
             Actor_GamerEnterRoom_Ntt msg = (Actor_GamerEnterRoom_Ntt)message;
@@ -81,7 +81,7 @@ namespace CarrotFantasy
             this.eventDispatcher.DispatchEvent(RoomEventType.USER_INFO_CHANGE);
         }
 
-        private void notifyGamerExitRoom(IMessage message)
+        private void NotifyGamerExitRoom(IMessage message)
         {
             Debug.Log("有人离开房间");
             Actor_GamerExitRoom_Ntt msg = (Actor_GamerExitRoom_Ntt)message;
@@ -90,7 +90,7 @@ namespace CarrotFantasy
             this.eventDispatcher.DispatchEvent(RoomEventType.USER_INFO_CHANGE);
         }
 
-        private void notifyGamerReadyFight(IMessage message)
+        private void NotifyGamerReadyFight(IMessage message)
         {
             Actor_GamerReady_Landlords msg = (Actor_GamerReady_Landlords)message;
             bool isChange = false;
@@ -119,26 +119,26 @@ namespace CarrotFantasy
 
         }
 
-        public void sendStartMatch()
+        public void SendStartMatch()
         {
             //ServerProvision.connectionServer.Send(new C2G_StartMatch_Req());
             //this.myself = new Gamer(AccountServer.Instance.userId);
             //this.myself.isReady = false;
         }
 
-        public void sendReadyFight()
+        public void SendReadyFight()
         {
             //ServerProvision.connectionServer.Send(new Actor_GamerReady_Landlords());
         }
 
-        public void sendCanelMatch()
+        public void SendCanelMatch()
         {
             //ServerProvision.connectionServer.Send(new C2G_ReturnLobby_Ntt());
         }
 
-        public void canelMatch()
+        public void CanelMatch()
         {
-            this.sendCanelMatch();
+            this.SendCanelMatch();
             this.isMatching = false;
             this.myself = null;
             this.partner = null;

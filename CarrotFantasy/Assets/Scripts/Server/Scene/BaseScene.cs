@@ -72,12 +72,12 @@ namespace CarrotFantasy
 
         }
 
-        public void initSceneObject()
+        public void InitSceneObject()
         {
             GameObject sceneObject;
             if (this.prefabUrl != null)
             {
-                sceneObject = GameObject.Instantiate(ResourceLoader.Instance.getGameObject(prefabUrl), gameObj.transform, false);
+                sceneObject = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject(prefabUrl), gameObj.transform, false);
             }
             else
             {
@@ -93,7 +93,7 @@ namespace CarrotFantasy
 
         }
 
-        public virtual GameObject getLayerGameObj(PanelLayerType type)
+        public virtual GameObject GetLayerGameObj(PanelLayerType type)
         {
             if (layerDic[type] != null)
             {
@@ -107,12 +107,12 @@ namespace CarrotFantasy
             return layerDic;
         }
 
-        public BaseSceneType getSceneType()
+        public BaseSceneType GetSceneType()
         {
             return sceneType;
         }
 
-        public virtual Camera getMainCamera()
+        public virtual Camera GetMainCamera()
         {
             return null;
         }

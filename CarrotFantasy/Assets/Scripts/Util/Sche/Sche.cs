@@ -14,7 +14,7 @@ namespace CarrotFantasy
         private static List<ScheObject> scheList = new List<ScheObject>();
         private static Dictionary<int, ScheObject> scheDic = new Dictionary<int, ScheObject>();
 
-        public static void tick(Fix64 timeDeltaTime)
+        public static void Tick(Fix64 timeDeltaTime)
         {
             curTime += timeDeltaTime;
             int curUnscheCount = 0; //当前不参与延时调用方法的数量
@@ -33,7 +33,7 @@ namespace CarrotFantasy
                     scheList[i].lastStartTime = curTime;
                     if (scheList[i].isOnce == true)
                     {
-                        silenceSingleSche(scheList[i].uid);
+                        SilenceSingleSche(scheList[i].uid);
                         curUnscheCount += 1;
                     }
                 }
@@ -58,30 +58,30 @@ namespace CarrotFantasy
             }
         }
 
-        public static int delayExeOnceTimes(callBack call, float interval)
+        public static int DelayExeOnceTimes(callBack call, float interval)
         {
-            ScheObject sche = addSingleSche(call, interval);
+            ScheObject sche = AddSingleSche(call, interval);
             sche.isOnce = true;
             return sche.uid;
         }
 
-        public static int delayExeMultipleTimes(callBack call, float interval)
+        public static int DelayExeMultipleTimes(callBack call, float interval)
         {
-            ScheObject sche = addSingleSche(call, interval);
+            ScheObject sche = AddSingleSche(call, interval);
             sche.isOnce = false;
             return sche.uid;
         }
 
-        private static ScheObject addSingleSche(callBack call, float interval)
+        private static ScheObject AddSingleSche(callBack call, float interval)
         {
-            int id = getUniqueId();
+            int id = GetUniqueId();
             ScheObject sche = new ScheObject(id, call, interval, curTime);
             scheList.Add(sche);
             scheDic.Add(id, sche);
             return sche;
         }
 
-        public static void silenceSingleSche(int id)
+        public static void SilenceSingleSche(int id)
         {
             ScheObject sche;
             if (scheDic.TryGetValue(id, out sche))
@@ -91,7 +91,7 @@ namespace CarrotFantasy
             }
         }
 
-        private static int getUniqueId()
+        private static int GetUniqueId()
         {
             curIndex += 1;
             return curIndex;

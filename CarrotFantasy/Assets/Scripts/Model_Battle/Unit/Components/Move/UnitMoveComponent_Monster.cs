@@ -34,7 +34,7 @@ namespace CarrotFantasy
             this.isReachCarrot = false;
             this.speed = this.unit.birthParam["speed"] != null ? this.unit.birthParam["speed"] : new Fix64(3);
 
-            this.setSpeed();
+            this.SetSpeed();
         }
 
         public void LoadInfo(List<Fix64Vector2> monsterPath, Fix64 distance)
@@ -43,7 +43,7 @@ namespace CarrotFantasy
             EndPointDistance = distance;
         }
 
-        private void setSpeed()
+        private void SetSpeed()
         {
             Fix64 dicX = monsterPointList[roadPointIndex + 1].X - monsterPointList[roadPointIndex].X;
             Fix64 dicY = monsterPointList[roadPointIndex + 1].Y - monsterPointList[roadPointIndex].Y;
@@ -101,7 +101,7 @@ namespace CarrotFantasy
                     this.EndPointDistance += this.speed;
                 }
 
-                this.unitTransform.setPosition(x, y, z);
+                this.unitTransform.SetPosition(x, y, z);
                 if (this.moveCurTime >= this.moveTotalTime)
                 {
                     //怪物的转向
@@ -110,11 +110,11 @@ namespace CarrotFantasy
                         Fix64 xOffset = monsterPointList[roadPointIndex].X - monsterPointList[roadPointIndex + 1].X;
                         if (xOffset < Fix64.Zero)//右走
                         {
-                            this.unitTransform.setFaceDirection(Fix64.Zero);
+                            this.unitTransform.SetFaceDirection(Fix64.Zero);
                         }
                         else if (xOffset > Fix64.Zero)
                         {
-                            this.unitTransform.setFaceDirection(new Fix64(180));
+                            this.unitTransform.SetFaceDirection(new Fix64(180));
                         }
                     }
                     roadPointIndex++;
@@ -125,7 +125,7 @@ namespace CarrotFantasy
                         this.unit.eventDipatcher.DispatchEvent<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, (BattleUnit_Monster)this.unit);
                         return;
                     }
-                    this.setSpeed();
+                    this.SetSpeed();
                 }
             }
         }

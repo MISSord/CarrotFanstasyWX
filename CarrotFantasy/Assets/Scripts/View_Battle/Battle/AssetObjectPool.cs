@@ -26,7 +26,7 @@ namespace CarrotFantasy
         {
             if (this.path2Asset[path] == null)
             {
-                this.path2Asset[path] = ResourceLoader.Instance.getGameObject(path);
+                this.path2Asset[path] = ResourceLoader.Instance.GetGameObject(path);
             }
             return this.path2Asset[path];
         }

@@ -14,7 +14,7 @@ namespace CarrotFantasy
             base.Init();
             // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
             //ServerProvision.panelServer.ShowPanel(panel);
-            //Sche.delayExeOnceTimes(() => {
+            //Sche.DelayExeOnceTimes(() => {
             //    panel.autoClose();
             //    ServerProvision.panelServer.ShowPanel(new MainPanel(null));
             //    UIServer.Instance.FadeLoadingPanel();

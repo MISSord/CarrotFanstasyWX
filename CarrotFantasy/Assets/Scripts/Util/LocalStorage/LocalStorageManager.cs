@@ -15,18 +15,18 @@ namespace CarrotFantasy
                 if (localStorageManager == null)
                 {
                     localStorageManager = new LocalStorageManager();
-                    localStorageManager.account = AccountServer.Instance.getAccountId();
+                    localStorageManager.account = AccountServer.Instance.GetAccountId();
                 }
                 return localStorageManager;
             }
         }
 
-        private String getPlayerStorageData(String value)
+        private String GetPlayerStorageData(String value)
         {
             return String.Format("{0}_{1}", this.account, value);
         }
 
-        public void setDataToLocal(String key, System.Object value, LocalStorageSaveType valueType)
+        public void SetDataToLocal(String key, System.Object value, LocalStorageSaveType valueType)
         {
             if (valueType == LocalStorageSaveType.IntType)
             {
@@ -106,7 +106,7 @@ namespace CarrotFantasy
                 Debug.Log("本地信息获取失败");
                 return default(T);
             }
-            return getDataFromLocal<T>(getPlayerStorageData(key), defaultValue, valueType);
+            return getDataFromLocal<T>(GetPlayerStorageData(key), defaultValue, valueType);
         }
 
         public void setPlayerInfo<T>(String key, System.Object defaultValue, LocalStorageSaveType valueType)
@@ -115,7 +115,7 @@ namespace CarrotFantasy
             {
                 Debug.Log("本地信息设置失败");
             }
-            this.setDataToLocal(getPlayerStorageData(key), defaultValue, valueType);
+            this.SetDataToLocal(GetPlayerStorageData(key), defaultValue, valueType);
         }
     }
 }

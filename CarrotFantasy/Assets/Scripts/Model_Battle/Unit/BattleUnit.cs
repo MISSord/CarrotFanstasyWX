@@ -55,7 +55,7 @@ namespace CarrotFantasy
             {
                 this.componentDic.Add(unitComponent.unitComponentType, unitComponent);
                 this.componentList.Add(unitComponent);
-                unitComponent.loadUnit(this);
+                unitComponent.LoadUnit(this);
             }
         }
 
@@ -84,7 +84,7 @@ namespace CarrotFantasy
             this.isPause = false;
         }
 
-        public String getUnitType()
+        public String GetUnitType()
         {
             return this.unitType;
         }
@@ -98,7 +98,7 @@ namespace CarrotFantasy
 
         public abstract void OnTick(Fix64 deltaTime);
 
-        public virtual void lateTick(Fix64 deltaTime) { }
+        public virtual void LateTick(Fix64 deltaTime) { }
 
         public virtual void ClearInfo()
         {
@@ -106,7 +106,7 @@ namespace CarrotFantasy
             for (int i = 0; i <= componentList.Count - 1; i++)
             {
                 componentList[i].Dispose();
-                GameObjectPool.Instance.pushObjectToPool(componentList[i].unitComponentType, componentList[i]);
+                GameObjectPool.Instance.PushObjectToPool(componentList[i].unitComponentType, componentList[i]);
             }
             componentList.Clear();
             componentDic.Clear();

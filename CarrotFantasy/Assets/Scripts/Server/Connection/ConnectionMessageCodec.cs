@@ -19,14 +19,14 @@ namespace CarrotFantasy
                 return false;
             }
 
-            ensureLoaded();
+            EnsureLoaded();
             return typeToOpcode.TryGetValue(message.GetType(), out opcode);
         }
 
         public static bool TryDecode(ushort opcode, byte[] payload, out IMessage message)
         {
             message = null;
-            ensureLoaded();
+            EnsureLoaded();
 
             if (!opcodeToType.TryGetValue(opcode, out Type messageType))
             {
@@ -67,7 +67,7 @@ namespace CarrotFantasy
             return TryDecode(opcode, payload, out message);
         }
 
-        private static void ensureLoaded()
+        private static void EnsureLoaded()
         {
             if (isLoaded)
             {

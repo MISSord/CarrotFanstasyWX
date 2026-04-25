@@ -27,7 +27,7 @@ namespace CarrotFantasy
 
         public bool needSendMessage;
 
-        public void loadSrollView(Transform scroller, int cellSize, int spac)
+        public void LoadSrollView(Transform scroller, int cellSize, int spac)
         {
             scrollRect = scroller.GetComponent<ScrollRect>();
             contentTrans = scrollRect.content;

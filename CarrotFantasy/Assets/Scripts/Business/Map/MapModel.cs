@@ -15,10 +15,10 @@ namespace CarrotFantasy
         {
             this.eventDispatcher = eventDis;
             this.bigLevelInfo = new Dictionary<int, BigLevelInfo>();
-            MapConfigReader.initConfig();
+            MapConfigReader.InitConfig();
         }
 
-        public void parseMapInfo(String mapInfo)
+        public void ParseMapInfo(String mapInfo)
         {
             String[] map = mapInfo.Split('#');
             this.levelCount = map.Length;
@@ -26,13 +26,13 @@ namespace CarrotFantasy
             this.bigLevelInfo.Clear();
             for (int i = 1; i < map.Length; i++)
             {
-                this.parseSingleMapInfo(map[i]);
+                this.ParseSingleMapInfo(map[i]);
             }
-            this.initBigLevelMapInfo();
+            this.InitBigLevelMapInfo();
             this.eventDispatcher.DispatchEvent(MapEventType.MAP_INFO_CHANGE);
         }
 
-        private void parseSingleMapInfo(String singleMapInfo)
+        private void ParseSingleMapInfo(String singleMapInfo)
         {
             String[] mapInfo = singleMapInfo.Split(',');
             SingleMapInfo info = new SingleMapInfo();
@@ -42,10 +42,10 @@ namespace CarrotFantasy
             info.isAllClear = int.Parse(mapInfo[3]);
             info.unLocked = int.Parse(mapInfo[4]);
 
-            this.allMapInfo[this.getMapNumber(info)] = info;
+            this.allMapInfo[this.GetMapNumber(info)] = info;
         }
 
-        private void initBigLevelMapInfo()
+        private void InitBigLevelMapInfo()
         {
             BigLevelInfo info;
             for (int i = 0; i < this.allMapInfo.Length; i++)
@@ -66,7 +66,7 @@ namespace CarrotFantasy
             }
         }
 
-        private void refreshBigLevelMapInfo(int bigLevel)
+        private void RefreshBigLevelMapInfo(int bigLevel)
         {
             BigLevelInfo levelInfo = this.bigLevelInfo[bigLevel];
             levelInfo.unlockCount = 0;
@@ -86,25 +86,25 @@ namespace CarrotFantasy
             }
         }
 
-        private int getMapNumber(SingleMapInfo info)
+        private int GetMapNumber(SingleMapInfo info)
         {
-            return this.getMapNumber(info.bigLevelId, info.levelId);
+            return this.GetMapNumber(info.bigLevelId, info.levelId);
         }
 
-        private int getMapNumber(int bigLevel, int level)
+        private int GetMapNumber(int bigLevel, int level)
         {
             return (bigLevel - 1) * 5 + (level - 1);
         }
 
-        public void updateSingleMapInfo(SingleMapInfo unSave)
+        public void UpdateSingleMapInfo(SingleMapInfo unSave)
         {
             if (unSave != null)
             {
-                SingleMapInfo info = this.allMapInfo[this.getMapNumber(unSave)];
+                SingleMapInfo info = this.allMapInfo[this.GetMapNumber(unSave)];
                 info.carrotState = info.carrotState >= unSave.carrotState ? info.carrotState : unSave.carrotState;
                 info.isAllClear = info.isAllClear <= unSave.isAllClear ? info.isAllClear : unSave.isAllClear;
-                this.allMapInfo[this.getMapNumber(unSave)] = info;
-                this.refreshBigLevelMapInfo(unSave.bigLevelId);
+                this.allMapInfo[this.GetMapNumber(unSave)] = info;
+                this.RefreshBigLevelMapInfo(unSave.bigLevelId);
             }
             else
             {
@@ -112,19 +112,19 @@ namespace CarrotFantasy
             }
         }
 
-        public void updateSingleMapInfoUnLockState(int bigLevel, int level, int unLock)
+        public void UpdateSingleMapInfoUnLockState(int bigLevel, int level, int unLock)
         {
             if (bigLevel == 0 || level == 0)
             {
                 Debug.Log("开完全部地图了");
                 return;
             }
-            this.allMapInfo[this.getMapNumber(bigLevel, level)].unLocked = unLock;
-            this.refreshBigLevelMapInfo(bigLevel);
+            this.allMapInfo[this.GetMapNumber(bigLevel, level)].unLocked = unLock;
+            this.RefreshBigLevelMapInfo(bigLevel);
             this.eventDispatcher.DispatchEvent(MapEventType.MAP_INFO_CHANGE);
         }
 
-        public SingleMapInfo[] getOnceBigLevelMapInfo(int level)
+        public SingleMapInfo[] GetOnceBigLevelMapInfo(int level)
         {
             SingleMapInfo[] mapInfoList = new SingleMapInfo[5];
             for (int i = 0; i < allMapInfo.Length; i++)
@@ -137,24 +137,24 @@ namespace CarrotFantasy
             return mapInfoList;
         }
 
-        public BigLevelInfo getBigLevelInfo(int bigLevel)
+        public BigLevelInfo GetBigLevelInfo(int bigLevel)
         {
             return this.bigLevelInfo[bigLevel];
         }
 
-        public int getBigLevelCount()
+        public int GetBigLevelCount()
         {
             return this.bigLevelInfo.Count;
         }
 
-        public Stage getStage(int bigLevel, int level)
+        public Stage GetStage(int bigLevel, int level)
         {
-            return MapConfigReader.getSingleStage(bigLevel, level);
+            return MapConfigReader.GetSingleStage(bigLevel, level);
         }
 
-        public SingleMapInfo getSingleMapInfo(int bigLevel, int level)
+        public SingleMapInfo GetSingleMapInfo(int bigLevel, int level)
         {
-            return this.allMapInfo[this.getMapNumber(bigLevel, level)];
+            return this.allMapInfo[this.GetMapNumber(bigLevel, level)];
         }
 
         public void Dispose()

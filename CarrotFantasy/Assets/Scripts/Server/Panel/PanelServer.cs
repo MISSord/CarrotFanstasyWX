@@ -13,10 +13,10 @@ namespace CarrotFantasy
         public void Init()
         {
             this.eventDispatcher = new EventDispatcher();
-            ServerProvision.sceneServer.GetEventDispatcher().AddListener(SceneEventType.LOAD_SCENE_FINISH, this.sceneLoadFinishCallBack);
+            ServerProvision.sceneServer.GetEventDispatcher().AddListener(SceneEventType.LOAD_SCENE_FINISH, this.SceneLoadFinishCallBack);
         }
 
-        private void sceneLoadFinishCallBack()
+        private void SceneLoadFinishCallBack()
         {
         }
 
