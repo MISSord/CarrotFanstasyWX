@@ -456,7 +456,7 @@ public class AssetBundleManager
     }
 #endif
 
-    public int LoadAsset(string bundleName, string assetName, AssetLoadCallback callback = null, LoadPriority priority = LoadPriority.Medium)
+    private int LoadAsset(string bundleName, string assetName, AssetLoadCallback callback = null, LoadPriority priority = LoadPriority.Medium)
     {
         if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetName))
         {

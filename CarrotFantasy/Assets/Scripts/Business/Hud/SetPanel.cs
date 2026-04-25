@@ -83,19 +83,19 @@ namespace CarrotFantasy
         {
             this.stateId = 1;
             this.updatePagePosition();
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         private void showProducePage()
         {
             this.stateId = 2;
             this.updatePagePosition();
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         private void returnToLastPanel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             this.Close();
         }
 

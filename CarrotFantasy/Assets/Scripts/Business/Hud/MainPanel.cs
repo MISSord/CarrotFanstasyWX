@@ -58,7 +58,7 @@ namespace CarrotFantasy
 
             this.AddListener();
             this.PlayUITween();
-            UIServer.Instance.playMainBg();
+            UIServer.Instance.PlayMainBg();
         }
 
         private void AddListener()
@@ -80,38 +80,38 @@ namespace CarrotFantasy
 
         public void showSetPanel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             ExitTween = mainPanelTween[0];
             UIViewService.OpenSetPanel();
         }
 
         public void showHelpPanel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             UIViewService.OpenHelpPanel();
         }
 
         public void toNormalModel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             UIViewService.OpenMapBigLevelPanel();
         }
 
         public void toBossModel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         private void startMatch()
         {
             UIViewService.OpenRoomPanel();
             RoomServer.Instance.sendStartMatch();
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         public void exitGame()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.GAME_QUIT);
         }
 

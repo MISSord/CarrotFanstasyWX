@@ -18,7 +18,6 @@ enum LoadState
     Loaded
 }
 
-
 public abstract class BaseView
 {
     protected string viewName = "viewName";
@@ -30,10 +29,7 @@ public abstract class BaseView
     protected UILayer layer = UILayer.Normal;
     public UILayer Layer
     {
-        get
-        {
-            return layer;
-        }
+        get { return layer; }
     }
 
     protected int defaultIndex = 0;
@@ -169,22 +165,20 @@ public abstract class BaseView
             FlushShowView(targetIndex);
             return;
         }
-        else
-        {
-            state = isLoadedDic.GetValueOrDefault(0, LoadState.None);
-            // 根（index 0）未排过队则先入队拉取
-            if (state == LoadState.None)
-            {
-                needToLoadIndexQueue.Enqueue(0);
-                isLoadedDic[0] = LoadState.Loading;
-            }
 
-            state = isLoadedDic.GetValueOrDefault(targetIndex, LoadState.None);
-            if (state == LoadState.None)
-            {
-                needToLoadIndexQueue.Enqueue(targetIndex);
-                isLoadedDic[targetIndex] = LoadState.Loading;
-            }
+        state = isLoadedDic.GetValueOrDefault(0, LoadState.None);
+        // 根（index 0）未排过队则先入队拉取
+        if (state == LoadState.None)
+        {
+            needToLoadIndexQueue.Enqueue(0);
+            isLoadedDic[0] = LoadState.Loading;
+        }
+
+        state = isLoadedDic.GetValueOrDefault(targetIndex, LoadState.None);
+        if (state == LoadState.None)
+        {
+            needToLoadIndexQueue.Enqueue(targetIndex);
+            isLoadedDic[targetIndex] = LoadState.Loading;
         }
 
         bool isFirstLoad = isFirstOpenDic.GetValueOrDefault(targetIndex, false);
@@ -199,17 +193,11 @@ public abstract class BaseView
 
     #region 可重写回调
     protected virtual void LoadCallBack() { }
-
     protected virtual void LoadIndexCallBack(int viewIndex) { }
-
     protected virtual void ShowIndexCallBack(int viewIndex) { }
-
     protected virtual void ReleaseCallBack() { }
-
     protected virtual void CloseCallBack() { }
-
     protected virtual void OnFlush(int index, Dictionary<string, string> info = null) { }
-
     protected virtual void OpenCallBack(int index) { }
 
     /// <summary> 本 View 在打开栈中不再处于最上层时，由 ViewManager 调用 </summary>
@@ -238,11 +226,9 @@ public abstract class BaseView
             }
         }
     }
-
     #endregion
 
     #region 公开接口
-
     public void TryFlushTargetIndex(int index, string key = null, string content = null)
     {
         if (key != null && content != null)
@@ -300,20 +286,6 @@ public abstract class BaseView
             delayReleaseId = null;
         }
 
-        ChangeIndex(index);
-
-        if (isOpen == true)
-        {
-            // 已打开则先移出再插回，保证在打开列表尾部（最前显示）
-            ViewManager.Instance.RemoveViewFromOpenList(this);
-            ViewManager.Instance.AddOpenViewToOpenList(this);
-            return;
-        }
-        else
-        {
-            ViewManager.Instance.AddOpenViewToOpenList(this);
-        }
-
         if (isLoadRoot == false)
         {
             CreateViewRoot();
@@ -323,6 +295,17 @@ public abstract class BaseView
             rootView.transform.localPosition = Vector3.zero;
         }
 
+        if (isOpen == true)
+        {
+            ChangeIndex(index);
+            // 已打开则先移出再插回，保证在打开列表尾部（最前显示）
+            ViewManager.Instance.RemoveViewFromOpenList(this);
+            ViewManager.Instance.AddOpenViewToOpenList(this);
+            return;
+        }
+
+        ViewManager.Instance.AddOpenViewToOpenList(this);
+        ChangeIndex(index);
         isOpen = true;
     }
 
@@ -337,7 +320,10 @@ public abstract class BaseView
             OnResume();
         }
         ViewManager.Instance.RemoveViewFromOpenList(this);
-        rootView.transform.localPosition = new Vector2(99999, 99999);
+        if (rootView != null)
+        {
+            rootView.transform.localPosition = new Vector2(99999, 99999);
+        }
 
         // 若已有未执行的延迟释放，避免重复排程
         if (delayReleaseId != null)
@@ -350,11 +336,9 @@ public abstract class BaseView
         delayReleaseId = viewName + time;
         TimeUtility.Instance.SetTimeout(5f, this.Release, false, delayReleaseId);
     }
-
     #endregion
 
     #region 私有方法
-
     // 从 BaseView 预制体克隆出根节点
     private void CreateViewRoot()
     {
@@ -391,7 +375,7 @@ public abstract class BaseView
             {
                 if (infos[i].gameObject != null)
                 {
-                    infos[i].gameObject.SetActive(true);
+                    infos[i].gameObject.SetActive(state);
                 }
             }
         }
@@ -413,7 +397,9 @@ public abstract class BaseView
             {
                 UIDownInfo info = infos[i];
                 info.isLoaded = LoadState.Loading;
-                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(info.bundleName, info.assetName,
+                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(
+                    info.bundleName,
+                    info.assetName,
                     (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });
             }
         }
@@ -434,11 +420,11 @@ public abstract class BaseView
         info.loadIndex = -1;
 
         // 若需可在此显式设 RectTransform、兄弟顺序等
-        //instanceObj.transform.SetParent(rootView.transform);
-        //instanceObj.transform.SetSiblingIndex(info.order);
-        //RectTransform trans = instanceObj.gameObject.GetComponent<RectTransform>();
-        //trans.localPosition = Vector3.zero;
-        //trans.localScale = Vector3.one;
+        // instanceObj.transform.SetParent(rootView.transform);
+        // instanceObj.transform.SetSiblingIndex(info.order);
+        // RectTransform trans = instanceObj.gameObject.GetComponent<RectTransform>();
+        // trans.localPosition = Vector3.zero;
+        // trans.localScale = Vector3.one;
 
         // 收集 UINameTable
         UINameTable nameTable = instanceObj.transform.GetComponent<UINameTable>();
@@ -502,6 +488,5 @@ public abstract class BaseView
         }
         this.Flush();
     }
-
     #endregion
 }

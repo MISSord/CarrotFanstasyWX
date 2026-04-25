@@ -128,14 +128,14 @@ namespace CarrotFantasy
 
         private void returnToMainPanel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             this.Close();
         }
 
         private void showHelpPanel()
         {
             UIViewService.OpenHelpPanel();
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         private void toTheNextLevelPage()
@@ -146,7 +146,7 @@ namespace CarrotFantasy
             }
             this.curBigLevel++;
             this.slideScroll.ToNextPage();
-            UIServer.Instance.playPagingEffect();
+            UIServer.Instance.PlayPagingEffect();
         }
 
         private void toTheLastLevelPage()
@@ -157,7 +157,7 @@ namespace CarrotFantasy
             }
             this.curBigLevel--;
             this.slideScroll.ToLastPage();
-            UIServer.Instance.playPagingEffect();
+            UIServer.Instance.PlayPagingEffect();
         }
 
         protected override void ReleaseCallBack()

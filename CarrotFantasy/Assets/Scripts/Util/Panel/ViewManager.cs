@@ -162,20 +162,23 @@ public class ViewManager
 
     private void FlushViewOrder()
     {
-        int sort = 10000;
         for (int i = (int)UILayer.Normal; i <= (int)UILayer.Max; ++i)
         {
-            sort = i * layerIntervalOrder + 10000;
+            int baseSort = i * layerIntervalOrder + 10000;
             List<BaseView> list = viewList[(UILayer)i];
             if (list.Count >= 15)
                 Debug.LogError($"[ViewManager] UILayer 枚举值 {i} 上已打开的 View 数量 ({list.Count}) 已达 15，排序或叠层可能异常，请检查是否未 Close 或泄漏");
             for (int j = 0; j < list.Count; ++j)
             {
-                sort = sort + j * viewIntervalOrder;
+                int sort = baseSort + j * viewIntervalOrder;
                 BaseView view = list[j];
-                view.ChangeCurCanvaseOrder(sort);
+                if (view != null)
+                {
+                    view.ChangeCurCanvaseOrder(sort);
+                }
             }
         }
+        isNeedFlushViewOrder = false;
     }
 
     /// <summary> 与 FlushViewOrder 相同的遍历与叠层顺序，仅最后一项为栈顶；非栈顶调用 OnPause，栈顶调用 OnResume。 </summary>

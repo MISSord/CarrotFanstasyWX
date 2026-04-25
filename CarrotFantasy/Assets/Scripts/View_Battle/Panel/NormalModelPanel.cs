@@ -64,7 +64,7 @@ namespace CarrotFantasy
 
         private void showMenu()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             this.nodeMenuPage.SetActive(true);
             GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
         }

@@ -93,7 +93,7 @@ namespace CarrotFantasy
         //    //判断Realm服务器返回结果
         //    if (messageRealm.Error == ErrorCode.ERR_AccountOrPasswordError)
         //    {
-        //        UIServer.Instance.showTip("登录失败,账号或密码错误");
+        //        UIServer.Instance.ShowTip("登录失败,账号或密码错误");
         //        return;
         //    }
         //    this.setAccountId(this.account);
@@ -106,18 +106,18 @@ namespace CarrotFantasy
         //    A0001_Register_R2C messageRealm = (A0001_Register_R2C)message;
         //    if (messageRealm.Error == ErrorCode.ERR_AccountAlreadyRegisted)
         //    {
-        //        UIServer.Instance.showTip("注册失败，账号已被注册");
+        //        UIServer.Instance.ShowTip("注册失败，账号已被注册");
         //        return;
         //    }
 
         //    if (messageRealm.Error == ErrorCode.ERR_RepeatedAccountExist)
         //    {
-        //        UIServer.Instance.showTip("注册失败，出现重复账号");
+        //        UIServer.Instance.ShowTip("注册失败，出现重复账号");
         //        return;
         //    }
 
         //    //显示登录成功的提示
-        //    UIServer.Instance.showTip("注册成功");
+        //    UIServer.Instance.ShowTip("注册成功");
         //}
 
         //private void notifyLoginGate(IMessage message)
@@ -125,7 +125,7 @@ namespace CarrotFantasy
         //    A0003_LoginGate_G2C msg = (A0003_LoginGate_G2C)message;
         //    this.userId = msg.UserID;
         //    this.eventDispatcher.DispatchEvent(LOGIN_SUCCESS);
-        //    UIServer.Instance.showTip("登录成功,祝你游玩愉快");
+        //    UIServer.Instance.ShowTip("登录成功,祝你游玩愉快");
         //}
     }
 }

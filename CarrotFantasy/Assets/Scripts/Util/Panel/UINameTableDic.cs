@@ -2,43 +2,45 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class UINameTableDic
 {
-    protected Dictionary<string, GameObject> finUiEntries = new Dictionary<string, GameObject>();
-    protected Dictionary<string, Dictionary<Type, Component>> cacheCompent = new Dictionary<string, Dictionary<Type, Component>>();
+    protected Dictionary<string, GameObject> uiEntries = new Dictionary<string, GameObject>();
+    protected Dictionary<string, Dictionary<Type, Component>> cachedComponents = new Dictionary<string, Dictionary<Type, Component>>();
 
     private Component GetComponentSafely(string name, Type componentType)
     {
-        if (name == null || name.Equals(""))
+        if (string.IsNullOrEmpty(name))
         {
             Debug.LogWarning("物体名字为空");
             return null;
         }
 
         GameObject gameObject;
-        if (finUiEntries.TryGetValue(name, out gameObject) == false)
+        if (uiEntries.TryGetValue(name, out gameObject) == false)
         {
-            Debug.LogWarning("没有该物体");
+            Debug.LogWarning($"没有该物体: {name}");
             return null;
-        }
-
-        Dictionary<Type, Component> compDic;
-        if (cacheCompent.TryGetValue(name, out compDic))
-        {
-            Component component1 = compDic[componentType];
-            if (component1 != null) return component1;
-        }
-        else
-        {
-            compDic = new Dictionary<Type, Component>();
-            cacheCompent.Add(name, compDic);
         }
 
         if (componentType == null)
         {
             Debug.LogError("组件类型不能为空");
             return null;
+        }
+
+        Dictionary<Type, Component> compDic;
+        if (cachedComponents.TryGetValue(name, out compDic))
+        {
+            Component component1;
+            if (compDic.TryGetValue(componentType, out component1) && component1 != null)
+            {
+                return component1;
+            }
+        }
+        else
+        {
+            compDic = new Dictionary<Type, Component>();
+            cachedComponents.Add(name, compDic);
         }
 
         if (!typeof(Component).IsAssignableFrom(componentType))
@@ -55,18 +57,7 @@ public class UINameTableDic
             return null;
         }
 
-        // 特殊处理：RectTransform是Transform的子类，需要特殊处理
-        if (component == null && componentType == typeof(RectTransform))
-        {
-            Transform transform = gameObject.transform;
-            if (transform is RectTransform rectTransform)
-            {
-                compDic.Add(componentType, rectTransform);
-                return rectTransform;
-            }
-        }
-
-        compDic.Add(componentType, component);
+        compDic[componentType] = component;
         return component;
     }
 
@@ -83,16 +74,16 @@ public class UINameTableDic
 
     public GameObject GetGameObjectSafely(string name)
     {
-        if (name == null || name.Equals(""))
+        if (string.IsNullOrEmpty(name))
         {
             Debug.LogWarning("物体名字为空");
             return null;
         }
 
         GameObject gameObject;
-        if (finUiEntries.TryGetValue(name, out gameObject) == false)
+        if (uiEntries.TryGetValue(name, out gameObject) == false)
         {
-            Debug.LogWarning("没有该物体");
+            Debug.LogWarning($"没有该物体: {name}");
             return null;
         }
         return gameObject;
@@ -100,20 +91,38 @@ public class UINameTableDic
 
     public void AddUINameTable(List<UINameEntry> list)
     {
+        if (list == null)
+        {
+            Debug.LogWarning("UINameTable 列表为空，忽略本次添加");
+            return;
+        }
+
         foreach (UINameEntry entry in list)
         {
-            if (finUiEntries.ContainsKey(entry.name))
+            if (string.IsNullOrEmpty(entry.name))
+            {
+                Debug.LogError("UINameEntry.name 为空，已跳过");
+                continue;
+            }
+
+            if (entry.uiReference == null)
+            {
+                Debug.LogError($"UINameEntry.uiReference 为空，已跳过: {entry.name}");
+                continue;
+            }
+
+            if (uiEntries.ContainsKey(entry.name))
             {
                 Debug.LogError($"实体名称重复，立马修改{entry.name}");
                 continue;
             }
-            finUiEntries.Add(entry.name, entry.uiReference);
+            uiEntries.Add(entry.name, entry.uiReference);
         }
     }
 
     public void ClearAllInfo()
     {
-        finUiEntries.Clear();
-        cacheCompent.Clear();
+        uiEntries.Clear();
+        cachedComponents.Clear();
     }
 }

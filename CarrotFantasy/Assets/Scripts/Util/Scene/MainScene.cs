@@ -17,7 +17,7 @@ namespace CarrotFantasy
             //Sche.delayExeOnceTimes(() => {
             //    panel.autoClose();
             //    ServerProvision.panelServer.ShowPanel(new MainPanel(null));
-            //    UIServer.Instance.fadeLoadingPanel();
+            //    UIServer.Instance.FadeLoadingPanel();
             //    if (AccountServer.Instance.userId == 0)
             //    {
             //        ServerProvision.panelServer.ShowPanel(new LoginPanel(null));

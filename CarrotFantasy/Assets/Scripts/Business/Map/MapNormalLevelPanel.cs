@@ -165,7 +165,7 @@ namespace CarrotFantasy
         public void StartGame()
         {
             MapServer.Instance.sendGameMapInfo(this.currentBigLevelID, this.currentLevelID);
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         public GameObject CreateUIAndSetUIPosition(string uiName, Transform parentTrans)
@@ -186,7 +186,7 @@ namespace CarrotFantasy
             currentLevelID++;
             this.slideScrollView.ToNextPage();
             this.updateTowerUI();
-            UIServer.Instance.playPagingEffect();
+            UIServer.Instance.PlayPagingEffect();
         }
 
         public void toLastLevel()
@@ -198,18 +198,18 @@ namespace CarrotFantasy
             currentLevelID--;
             this.slideScrollView.ToLastPage();
             this.updateTowerUI();
-            UIServer.Instance.playPagingEffect();
+            UIServer.Instance.PlayPagingEffect();
         }
 
         public void showHelpPanel()
         {
             UIViewService.OpenHelpPanel();
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         private void returnToLastPanel()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             this.Close();
         }
 

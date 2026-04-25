@@ -69,7 +69,7 @@ namespace CarrotFantasy
             String passwordText = this.inputPassword.text;
             if (accountText == null || accountText.Equals("") || passwordText == null || passwordText.Equals(""))
             {
-                UIServer.Instance.showTip("账号或密码不能为空");
+                UIServer.Instance.ShowTip("账号或密码不能为空");
                 return;
             }
             AccountServer.Instance.loginAccount(accountText, passwordText);
@@ -94,12 +94,12 @@ namespace CarrotFantasy
             String suerpasswordText = this.inputSurePassword.text;
             if (accountText == null || accountText.Equals("") || passwordText == null || passwordText.Equals("") || suerpasswordText == null || suerpasswordText.Equals(""))
             {
-                UIServer.Instance.showTip("账号或密码不能为空");
+                UIServer.Instance.ShowTip("账号或密码不能为空");
                 return;
             }
             if (!passwordText.Equals(suerpasswordText))
             {
-                UIServer.Instance.showTip("两次输入的密码不一样");
+                UIServer.Instance.ShowTip("两次输入的密码不一样");
                 return;
             }
             AccountServer.Instance.registerAccount(accountText, passwordText);

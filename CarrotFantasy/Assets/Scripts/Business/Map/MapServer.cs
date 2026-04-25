@@ -90,7 +90,7 @@ namespace CarrotFantasy
         //        //this.eventDispatcher.DispatchEvent(MapEventType.CAN_START_GAME);
         //        BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.READY_START_PVE_GAME);
         //        ServerProvision.sceneServer.loadScene(BaseSceneType.BattleScene, null);
-        //        UIServer.Instance.showLoadingPanel();
+        //        UIServer.Instance.ShowLoadingPanel();
         //    }
         //    else
         //    {

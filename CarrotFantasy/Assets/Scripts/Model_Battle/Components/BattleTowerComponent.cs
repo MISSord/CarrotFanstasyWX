@@ -44,7 +44,7 @@ namespace CarrotFantasy
                 int price = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId)["price0"]);
                 if (price > dataComponent.CoinCount)
                 {
-                    UIServer.Instance.showTip(LanguageUtil.Instance.getString(1004));
+                    UIServer.Instance.ShowTip(LanguageUtil.Instance.getString(1004));
                     return;
                 }
                 BattleUnit_Tower tower = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Tower>(BattleUnitType.TOWER);

@@ -13,7 +13,7 @@ namespace CarrotFantasy
         private GameObject loadingPanelObject;
 
         private TipUI tipPanel;
-        private String loadingPanelUrl = "Prefabs/Util/LoadingPanel";
+        //private String loadingPanelUrl = "Prefabs/Util/LoadingPanel";
         private String tipPanelUrl = "Prefabs/Util/TipPanel";
 
         private Vector3 fadePosition = new Vector3(2000, 0, 0);
@@ -36,58 +36,62 @@ namespace CarrotFantasy
         public override void LoadModule()
         {
             base.LoadModule();
-            this.initGlobalCanvas();
-            this.initAudioManager();
-            this.showFpsNode();
-            this.initCustomizeShow();
-            this.initResolution();
+            this.InitGlobalCanvas();
+            this.InitAudioManager();
+            this.ShowFpsNode();
+            this.InitCustomizeShow();
+            this.InitResolution();
 
-            this.addTipPanel();
-            this.addLoadingPanel();
+            this.AddTipPanel();
+            this.AddLoadingPanel();
         }
 
-        private void addLoadingPanel()
+        private void AddLoadingPanel()
         {
-            GameObject panel = ResourceLoader.Instance.getGameObject(loadingPanelUrl);
-            this.loadingPanelObject = GameObject.Instantiate(panel);
-            this.loadingPanelObject.transform.SetParent(this.nodeObject.transform, false);
-            this.loadingPanelObject.SetActive(false);
+            AssetBundleManager.Instance.LoadAsset<GameObject>("ui/view/loadingview_prefab", "LoadingPanel", (GameObject obj) =>
+            {
+                this.loadingPanelObject = GameObject.Instantiate(obj);
+                this.loadingPanelObject.transform.SetParent(this.nodeObject.transform, false);
+                this.loadingPanelObject.SetActive(false);
+            } );
         }
 
-        public void showTip(String tip)
+        public void ShowTip(String tip)
         {
             this.tipPanel.refreshTip(tip);
         }
 
-        public void showTipLong(String tip)
+        public void ShowTipLong(String tip)
         {
             this.tipPanel.showTip(tip);
         }
 
-        public void fadeTipLong()
+        public void FadeTipLong()
         {
             this.tipPanel.fadeTip();
         }
 
-        public void showLoadingPanel()
+        public void ShowLoadingPanel()
         {
             this.loadingPanelObject.SetActive(true);
         }
 
-        public void fadeLoadingPanel()
+        public void FadeLoadingPanel()
         {
             this.loadingPanelObject.SetActive(false);
         }
 
-        private void addTipPanel()
+        private void AddTipPanel()
         {
-            GameObject panel = ResourceLoader.Instance.getGameObject(tipPanelUrl);
-            GameObject pan = GameObject.Instantiate(panel);
-            pan.transform.SetParent(this.nodeObject.transform, false);
-            this.tipPanel = new TipUI(pan);
+            AssetBundleManager.Instance.LoadAsset<GameObject>("ui/view/tipview_prefab", "TipPanel", (GameObject obj) =>
+            {
+                GameObject pan = GameObject.Instantiate(obj);
+                pan.transform.SetParent(this.nodeObject.transform, false);
+                this.tipPanel = new TipUI(pan);
+            });
         }
 
-        private void initGlobalCanvas()
+        private void InitGlobalCanvas()
         {
             this.nodeObject = new GameObject("global_canvas");
             this.nodeObject.layer = SceneLayerData.layerType[1];
@@ -103,29 +107,29 @@ namespace CarrotFantasy
             GraphicRaycaster graphic = nodeObject.AddComponent<GraphicRaycaster>();
         }
 
-        private void addToGlobalUI(GameObject res)
+        private void AddToGlobalUI(GameObject res)
         {
             res.transform.SetParent(this.nodeObject.transform, false);
         }
 
-        private void initAudioManager()
+        private void InitAudioManager()
         {
             audioManager = new AudioManager();
             audioManager.Init();
-            this.addToGlobalUI(audioManager.nodeObject);
+            this.AddToGlobalUI(audioManager.nodeObject);
         }
 
-        private void showFpsNode()
+        private void ShowFpsNode()
         {
             fpsNode = new FpsNode();
         }
 
-        private void initCustomizeShow()
+        private void InitCustomizeShow()
         {
 
         }
 
-        private void initResolution()
+        private void InitResolution()
         {
             /*
             int height = UnityEngine.Screen.height;
@@ -159,17 +163,17 @@ namespace CarrotFantasy
             GameObject.Destroy(this.nodeObject);
         }
 
-        public void playMainBg()
+        public void PlayMainBg()
         {
             this.audioManager.playMusic("AudioClips/Main/BGMusic");
         }
 
-        public void playButtonEffect()
+        public void PlayButtonEffect()
         {
             this.audioManager.playEffect("AudioClips/Main/Button");
         }
 
-        public void playPagingEffect()
+        public void PlayPagingEffect()
         {
             this.audioManager.playEffect("AudioClips/Main/Paging");
         }

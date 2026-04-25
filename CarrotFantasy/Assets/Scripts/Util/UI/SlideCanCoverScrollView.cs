@@ -116,7 +116,7 @@ namespace CarrotFantasy
 
             DOTween.To(() => scrollRect.horizontalNormalizedPosition, lerpValue => scrollRect.horizontalNormalizedPosition = lerpValue,
                 lastProportion, 0.5f).SetEase(Ease.OutQuint);
-            UIServer.Instance.playPagingEffect();
+            UIServer.Instance.PlayPagingEffect();
         }
 
         public void OnBeginDrag(PointerEventData eventData)

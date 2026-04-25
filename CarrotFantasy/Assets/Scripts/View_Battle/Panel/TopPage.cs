@@ -133,14 +133,14 @@ namespace CarrotFantasy
         //改变游戏速度
         public void ChangeGameSpeed()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             isNormalSpeed = !isNormalSpeed;
             this.updateBtnSpeed();
         }
 
         public void BtnPauseGame()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             if (this.isPause == true)
             {
                 GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);

@@ -97,13 +97,13 @@ namespace CarrotFantasy
 
         private void stateToFight()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             RoomServer.Instance.sendReadyFight();
         }
 
         private void canelFight()
         {
-            UIServer.Instance.playButtonEffect();
+            UIServer.Instance.PlayButtonEffect();
             RoomServer.Instance.canelMatch();
             this.Close();
         }

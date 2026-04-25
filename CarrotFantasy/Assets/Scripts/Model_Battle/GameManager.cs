@@ -53,7 +53,7 @@ namespace CarrotFantasy
 
         private void restartGame()
         {
-            UIServer.Instance.showLoadingPanel();
+            UIServer.Instance.ShowLoadingPanel();
             this.baseBattleView.ClearGameInfo();
             this.baseBattle.ClearGameInfo();
 
@@ -83,7 +83,7 @@ namespace CarrotFantasy
         {
             this.baseBattle.StartGame();
             this.baseBattleView.StartGame();
-            UIServer.Instance.fadeLoadingPanel();
+            UIServer.Instance.FadeLoadingPanel();
         }
 
         public void Update()
@@ -101,7 +101,7 @@ namespace CarrotFantasy
             this.baseBattleView = null;
             this.baseBattle = null;
 
-            UIServer.Instance.showLoadingPanel();
+            UIServer.Instance.ShowLoadingPanel();
         }
     }
 }
