@@ -371,7 +371,7 @@ namespace CarrotFantasy
             if (tower.isMaxLevel == true) return;
             InputOrder order = new InputOrder();
             order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.UPDATE_ORDER);
-            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
+            ((BattleInputComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
             this.selectGrid.HideGrid();
         }
 
@@ -384,7 +384,7 @@ namespace CarrotFantasy
             }
             InputOrder order = new InputOrder();
             order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.REMOVE_ORDER);
-            ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
+            ((BattleInputComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
             this.selectGrid.HideGrid();
         }
 

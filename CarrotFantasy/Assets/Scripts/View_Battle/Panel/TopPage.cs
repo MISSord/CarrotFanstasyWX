@@ -89,8 +89,8 @@ namespace CarrotFantasy
 
         public void Init()
         {
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
-            this.battle = GameManager.Instance.baseBattle;
+            this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            this.battle = BattleManager.Instance.baseBattle;
             this.LoadResource();
             this.LoadTransform();
 
@@ -143,11 +143,11 @@ namespace CarrotFantasy
             UIServer.Instance.PlayButtonEffect();
             if (this.isPause == true)
             {
-                GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
+                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
             }
             else
             {
-                GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
+                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
             }
         }
 

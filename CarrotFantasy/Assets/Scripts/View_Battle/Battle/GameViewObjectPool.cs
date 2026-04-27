@@ -138,7 +138,7 @@ namespace CarrotFantasy
         public void PushGameObjectToPool(String name, GameObject node)
         {
             List<GameObject> curList = this.curGameObjectDic[name];
-            node.transform.position = GameManager.Instance.baseBattleView.initTran;
+            node.transform.position = BattleManager.Instance.baseBattleView.initTran;
             curList.Add(node);
             //Debug.Log(String.Format("{0}放回到视图游戏对象池，目前长度{1}", name, curList.Count));
 

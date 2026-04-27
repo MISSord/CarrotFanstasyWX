@@ -66,18 +66,18 @@ namespace CarrotFantasy
         {
             UIServer.Instance.PlayButtonEffect();
             this.nodeMenuPage.SetActive(true);
-            GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
+            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
         }
 
         private void AddListener()
         {
-            GameManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.ShowStartUI);
+            BattleManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.ShowStartUI);
             this.btnMenuPage.onClick.AddListener(this.ShowMenu);
         }
 
         private void RemoveListener()
         {
-            GameManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.ShowStartUI);
+            BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.ShowStartUI);
             this.btnMenuPage.onClick.RemoveAllListeners();
         }
 
@@ -85,7 +85,7 @@ namespace CarrotFantasy
         {
             this.InitPages();
             this.nodeStartUI.SetActive(true);
-            BattleSchedulerComponent sche = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
+            BattleSchedulerComponent sche = (BattleSchedulerComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
             this.schId = sche.DelayExeOnceTimes(() =>
             {
                 this.nodeStartUI.SetActive(false);

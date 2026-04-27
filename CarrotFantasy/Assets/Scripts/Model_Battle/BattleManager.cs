@@ -2,13 +2,13 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    public class GameManager : MonoBehaviour //驱动
+    public class BattleManager : MonoBehaviour //驱动
     {
-        private static GameManager instance;
+        private static BattleManager instance;
 
         private NormalModelPanel panel;
 
-        public static GameManager Instance
+        public static BattleManager Instance
         {
             get
             {

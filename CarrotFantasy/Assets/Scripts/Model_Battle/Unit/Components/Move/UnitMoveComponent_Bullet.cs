@@ -19,7 +19,7 @@ namespace CarrotFantasy
         public UnitMoveComponent_Bullet()
         {
             this.unitComponentType = UnitComponentType.MOVE_BULLET;
-            BattleMapComponent map = (BattleMapComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.MapComponent);
+            BattleMapComponent map = (BattleMapComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.MapComponent);
             mapLeftBottomPosition = map.mapLeftBottomPosition;
             mapRightTopPosition = map.mapRightTopPosition;
         }

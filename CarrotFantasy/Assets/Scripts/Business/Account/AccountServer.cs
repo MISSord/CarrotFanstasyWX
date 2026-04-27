@@ -2,9 +2,8 @@ using System;
 
 namespace CarrotFantasy
 {
-    public class AccountServer : BaseServer
+    public class AccountServer : BaseServer<AccountServer>
     {
-        private static AccountServer accountServer;
         private String account;
         private long gateLoginKey;
         public long userId { get; private set; }
@@ -13,17 +12,11 @@ namespace CarrotFantasy
         public static String LOGIN_SUCCESS = "Login_success";
         public EventDispatcher eventDispatcher;
 
-        public static AccountServer Instance
+        private MainPanel mainPanel;
+
+        protected override void OnSingletonInit()
         {
-            get
-            {
-                if (accountServer == null)
-                {
-                    accountServer = new AccountServer();
-                    accountServer.eventDispatcher = new EventDispatcher();
-                }
-                return accountServer;
-            }
+            eventDispatcher = new EventDispatcher();
         }
 
         public override void LoadModule()
@@ -31,6 +24,9 @@ namespace CarrotFantasy
             base.LoadModule();
             this.AddListener();
             this.userId = 0;
+
+            mainPanel = new MainPanel();
+            mainPanel.RegisterData();
         }
 
         private void AddListener()
@@ -68,6 +64,8 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
+            mainPanel.DeleteMe();
+            mainPanel = null;
 
         }
 

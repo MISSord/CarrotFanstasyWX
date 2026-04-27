@@ -12,9 +12,9 @@ namespace CarrotFantasy
         public override void StateIn()
         {
             base.StateIn();
-            BattleSchedulerComponent sch = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
+            BattleSchedulerComponent sch = (BattleSchedulerComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
             this.scheId = sch.DelayExeOnceTimes(() => { this.isTimeToPreFighting = true; }, 4.0f);
-            GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
+            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
         }
 
         public override string OnTick(Fix64 time)
@@ -29,7 +29,7 @@ namespace CarrotFantasy
         public override void StateOut()
         {
             //双重保险
-            BattleSchedulerComponent sch = (BattleSchedulerComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
+            BattleSchedulerComponent sch = (BattleSchedulerComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
             sch.SilenceSingleSche(this.scheId);
         }
 

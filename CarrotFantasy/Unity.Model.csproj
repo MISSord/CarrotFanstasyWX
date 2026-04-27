@@ -86,7 +86,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Handle\Handler\HitTestHandler.cs" />
     <Compile Include="Assets\Scripts\Business\UI\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\BaseUnitComponent.cs" />
-    <Compile Include="Assets\Scripts\Util\UI\TipUI.cs" />
+    <Compile Include="Assets\Scripts\Business\UI\TipView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BaseBattleViewComponent.cs" />
     <Compile Include="Assets\Scripts\Other\Event\EvenDispatcher.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Bullet_One.cs" />
@@ -94,11 +94,9 @@
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageManager.cs" />
     <Compile Include="Assets\Scripts\Other\Event\EventObject.cs" />
     <Compile Include="Assets\Scripts\Business\UI\UIServer.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\GameObjectPool.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\Shapes\HitTestShape_ObbRect.cs" />
     <Compile Include="Assets\Scripts\Component\BaseComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFightingState.cs" />
-    <Compile Include="Assets\Scripts\Server\Panel\PanelCloseReasonType.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Battle\Pve\PveBattleView.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\IConnectionTransport.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\BaseView.cs" />
@@ -117,7 +115,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\ListenerObj.cs" />
     <Compile Include="Assets\Scripts\GameStateMachine.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\UnitComponentType.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\PanelLifeCycleType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattleResult.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatMiniGameConnectionTransport.cs" />
     <Compile Include="Assets\Scripts\Business\BusinessType.cs" />
@@ -153,7 +150,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattle.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Tower.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleBulletComponent.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\GameManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Monster.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BaseBattleComponent.cs" />
     <Compile Include="Assets\Scripts\Util\MD5Checker.cs" />
@@ -163,7 +159,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleDataComponent.cs" />
     <Compile Include="Assets\Scripts\Other\Define.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\Components\BUVTransformComponent.cs" />
-    <Compile Include="Assets\Scripts\Business\UI\FpsNode.cs" />
     <Compile Include="Assets\Scripts\Util\MapInfo\MapInfoHelper.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVBullComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleLogComponent.cs" />
@@ -196,7 +191,6 @@
     <Compile Include="Assets\Scripts\View_Battle\Battle\AssetObjectPool.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\ItemConfigReader.cs" />
     <Compile Include="Assets\Scripts\Business\Account\AccountServer.cs" />
-    <Compile Include="Assets\Scripts\Server\Panel\PanelEventType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\BattlePveDataComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveStateMachine.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTableDic.cs" />
@@ -211,7 +205,6 @@
     <Compile Include="Assets\Scripts\View_Battle\Enum\BattleViewComponentType.cs" />
     <Compile Include="Assets\Scripts\Util\Lang\LanguageUtil.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapInfoType.cs" />
-    <Compile Include="Assets\Scripts\Server\Panel\PanelServer.cs" />
     <Compile Include="Assets\Scripts\Util\ResourceLoader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\StateMachine\BaseStateMachine.cs" />
     <Compile Include="Assets\Scripts\Business\Account\LoginPanel.cs" />
@@ -247,7 +240,6 @@
     <Compile Include="Assets\Scripts\Util\UI\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Stat\BattleStatInfo.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\PanelManagerUnit.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Carrot.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleMapComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\V2.cs" />
@@ -269,13 +261,18 @@
     <Compile Include="Assets\Scripts\View_Battle\Components\BVItemComponent.cs" />
     <Compile Include="Assets\Scripts\Util\UI\UIUtil.cs" />
     <Compile Include="Assets\Scripts\Util\Sche\ScheObject.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\BasePanel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UIViewService.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UiViewAbPaths.cs" />
     <Compile Include="Assets\Scripts\Util\Logging\GameLogController.cs" />
+    <Compile Include="Assets\Scripts\Business\Hud\SettingServer.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\BattleManager.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\BattleUnitPool.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\PanelEventType.cs" />
+    <Compile Include="Assets\Scripts\Util\Scene\GameSceneType.cs" />
+    <Compile Include="Assets\Scripts\Util\Scene\SceneLoader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

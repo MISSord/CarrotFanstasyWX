@@ -3,7 +3,6 @@ namespace CarrotFantasy
     public class ServerProvision
     {
         private static ServerProvision _server;
-        public static PanelServer panelServer;
         public static SceneServer sceneServer;
         public static ConnectionServer connectionServer;
 
@@ -29,8 +28,6 @@ namespace CarrotFantasy
             connectionServer.Init();
             sceneServer = new SceneServer();
             sceneServer.Init();
-            panelServer = new PanelServer();
-            panelServer.Init();
         }
     }
 }

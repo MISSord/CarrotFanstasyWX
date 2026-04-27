@@ -13,7 +13,7 @@ public enum GameState
     InGame,         // 游戏中
     Restart,        // 重启游戏
     Exit,           // 游戏退出
-    Error,          //游戏进程错误状态
+    Error,          // 游戏进程错误状态
 }
 
 // 状态机接口
@@ -63,13 +63,16 @@ public class GameStateMachine
     private Dictionary<GameState, IGameState> states = new Dictionary<GameState, IGameState>();
     private IGameState currentState;
     private GameContext gameContext;
+    private GameMain curMain;
 
 #if UNITY_EDITOR
     private LoadMode loadMode;
 #endif
 
-    public void Init()
+    public void Init(GameMain main)
     {
+        this.curMain = main;
+
         gameContext = new GameContext();
 
         // 初始化所有状态
@@ -140,6 +143,7 @@ public class CheckUpdateState : BaseGameState
         if (finalResutl.totalDownloadSize > 0) //有需要下载的
         {
             Debug.Log(string.Format("校验完成回调，需要下载{0}B的资源", finalResutl.totalDownloadSize));
+            // 打开下载确认界面
             //ViewManager.Instance.OpenView("");
         }
     }
@@ -244,7 +248,7 @@ public class LoginState : BaseGameState
 
     public LoginState(GameContext context) : base(context)
     {
-        // loginManager = GameManager.Instance.LoginManager;
+        // loginManager = BattleManager.Instance.LoginManager;
         //downView = new DownLoadView();
         //downView.RegisterData();
     }
@@ -292,7 +296,7 @@ public class EnterGameState : BaseGameState
     public override void Enter()
     {
         Debug.Log("进入进游戏流程");
-        //testView.Open();
+        ViewManager.Instance.OpenView<MainPanel>();
     }
 
     public override void Update()
@@ -317,7 +321,7 @@ public class InGameState : IGameState
 
     public InGameState()
     {
-        // inGameManager = GameManager.Instance.InGameManager;
+        // inGameManager = BattleManager.Instance.InGameManager;
     }
 
     public void Enter()

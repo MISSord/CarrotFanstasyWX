@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    public class TipUI
+    public class TipView
     {
         private Text txtShowTip;
         private Image imgBg;
@@ -18,7 +18,7 @@ namespace CarrotFantasy
 
         private int PREFAB_HEIGHT = 200;
 
-        public TipUI(GameObject tran)
+        public TipView(GameObject tran)
         {
             this.nodeTran = tran;
             this.transform = tran.transform;

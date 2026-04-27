@@ -58,7 +58,7 @@ namespace CarrotFantasy
                     this.uiComponent.selectGrid.mapGrid.x, this.uiComponent.selectGrid.mapGrid.y, InputOrderType.ADD_ORDER);
                 curOrder.SetTowerId(this.towerID);
 
-                ((BattleInputComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(curOrder);
+                ((BattleInputComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(curOrder);
             }
             this.uiComponent.HandleGrid(this.uiComponent.selectGrid);
         }

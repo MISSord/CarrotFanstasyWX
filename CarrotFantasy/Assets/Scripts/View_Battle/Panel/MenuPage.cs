@@ -35,14 +35,14 @@ namespace CarrotFantasy
         {
             UIServer.Instance.PlayButtonEffect();
             this.transform.gameObject.SetActive(false);
-            GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
+            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
         }
 
         public void BtnEvenReplay()
         {
             UIServer.Instance.PlayButtonEffect();
             this.transform.gameObject.SetActive(false);
-            GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
+            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
         }
 
         public void BtnEvenChooseOtherLevel()

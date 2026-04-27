@@ -5,14 +5,22 @@ namespace CarrotFantasy
     public class GameMain : MonoBehaviour  //游戏开始脚本(作为业务层，游戏层可能有所调整)
     {
         private GameStateMachine gameStateMachine; // 游戏状态机，主要是管理游戏一些主要流程
+        private AssetBundleManager assetBundleManager;
 
         private void Awake()
         {
             //开始游戏前的工作
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
+            gameStateMachine = new GameStateMachine();
+
             // //加载底层模块和逻辑
             // this.StartAsync().Coroutine();
+
+            SRPScheduler.Init();
+
+            assetBundleManager = new AssetBundleManager();
+            assetBundleManager.Init();
 
             UIUtil.Instance.Init();
             ServerProvision.Instance.Init();
@@ -24,13 +32,11 @@ namespace CarrotFantasy
             //加载登录场景
             ServerProvision.sceneServer.LoadScene(BaseSceneType.MainScene, null);
 
-            gameStateMachine = new GameStateMachine();
-
         }
 
         private void Start()
         {
-            gameStateMachine.Init();
+            gameStateMachine.Init(this);
         }
 
         private void Update()
@@ -39,6 +45,7 @@ namespace CarrotFantasy
             //Game.EventSystem.Update();
 
             ViewManager.Instance?.Update();
+            AssetBundleManager.Instance.Update();
             Sche.Tick(new Fix64(Time.deltaTime));
             if (BusinessProvision.Instance.IsGameQuit == true)
             {

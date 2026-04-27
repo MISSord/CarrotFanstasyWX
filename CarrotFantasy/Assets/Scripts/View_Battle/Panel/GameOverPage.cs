@@ -21,7 +21,7 @@ namespace CarrotFantasy
         public GameOverPage(Transform node)
         {
             this.transform = node;
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
         public void Init()
@@ -61,7 +61,7 @@ namespace CarrotFantasy
 
         public void BtnEvenReplay()
         {
-            GameManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
+            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
         }
 
         public void BtnEvenChooseOtherLevel()

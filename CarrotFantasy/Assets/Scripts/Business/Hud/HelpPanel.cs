@@ -5,11 +5,6 @@ namespace CarrotFantasy
 {
     public class HelpPanel : BaseView
     {
-        private static HelpPanel _instance;
-        public static HelpPanel Instance => _instance ?? (_instance = new HelpPanel());
-
-        private HelpPanel() { }
-
         private GameObject nodeHelp;
         private GameObject nodeMonster;
         private GameObject nodeTower;

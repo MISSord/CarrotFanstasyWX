@@ -6,6 +6,7 @@ namespace CarrotFantasy
     public static class UiViewAbPaths
     {
         public const string SettingViewPrefab = "ui/view/settingview_prefab";
+        public const string MainViewViewPrefab = "ui/view/mainview_prefab";
         public const string HelpPrefab = "ui/view/help_prefab";
         public const string MapViewPrefab = "ui/view/mapview_prefab";
         public const string RoomPrefab = "ui/view/room_prefab";

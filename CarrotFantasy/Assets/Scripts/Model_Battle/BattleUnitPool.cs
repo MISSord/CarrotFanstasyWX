@@ -4,22 +4,22 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    public class GameObjectPool
+    public class BattleUnitPool
     {
-        private static GameObjectPool gamePool;
+        private static BattleUnitPool battleUnitPool;
         private Dictionary<String, List<BattleUnit>> curObjectDic = new Dictionary<String, List<BattleUnit>>();
         private Dictionary<String, List<BaseUnitComponent>> curUnitObjectDic = new Dictionary<string, List<BaseUnitComponent>>();
 
-        public static GameObjectPool Instance
+        public static BattleUnitPool Instance
         {
             get
             {
-                if (gamePool == null)
+                if (battleUnitPool == null)
                 {
-                    gamePool = new GameObjectPool();
-                    gamePool.Init();
+                    battleUnitPool = new BattleUnitPool();
+                    battleUnitPool.Init();
                 }
-                return gamePool;
+                return battleUnitPool;
             }
         }
 
@@ -70,7 +70,6 @@ namespace CarrotFantasy
             {
                 BattleUnit cur = curList[0];
                 curList.RemoveAt(0);
-                //Debug.Log(String.Format("{0}取出对象池，目前长度{1}", name, curList.Count));
                 return (T)cur;
             }
         }
@@ -91,7 +90,6 @@ namespace CarrotFantasy
             {
                 BaseUnitComponent cur = curList[0];
                 curList.RemoveAt(0);
-                //Debug.Log(String.Format("{0}取出组件对象池，目前长度{1}", name, curList.Count));
                 return (T)cur;
             }
         }
@@ -101,14 +99,12 @@ namespace CarrotFantasy
         {
             List<BattleUnit> curList = this.curObjectDic[name];
             curList.Add(unit);
-            //Debug.Log(String.Format("{0}放回到对象池，目前长度{1}", name, curList.Count));
         }
 
         public void PushObjectToPool(String name, BaseUnitComponent unit)
         {
             List<BaseUnitComponent> curList = this.curUnitObjectDic[name];
             curList.Add(unit);
-            //Debug.Log(String.Format("{0}放回到组件对象池，目前长度{1}", name, curList.Count));
         }
 
         public void Dispose()

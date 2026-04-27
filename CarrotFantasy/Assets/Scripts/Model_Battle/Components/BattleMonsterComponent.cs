@@ -69,7 +69,7 @@ namespace CarrotFantasy
 
             for (int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
             {
-                BattleUnit_Monster monster = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
+                BattleUnit_Monster monster = BattleUnitPool.Instance.getNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
                 if (monster == null)
                 {
                     monster = new BattleUnit_Monster(this.baseBattle);
@@ -151,7 +151,7 @@ namespace CarrotFantasy
                 //先从其他组件上除去，再从视图移除，最后再自己移除，确保顺序
                 monster.ClearInfo();
                 this.curMonsterDic.Remove(monster.uid);
-                GameObjectPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, monster);
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, monster);
             }
         }
 
@@ -229,12 +229,12 @@ namespace CarrotFantasy
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
                 info.Value.ClearInfo();
-                GameObjectPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, info.Value);
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, info.Value);
             }
             for (int i = 0; i <= this.curNoRegisterList.Count - 1; i++)
             {
                 this.curNoRegisterList[i].ClearInfo();
-                GameObjectPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, this.curNoRegisterList[i]);
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, this.curNoRegisterList[i]);
             }
             this.curNoRegisterList.Clear();
             this.curMonsterDic.Clear();

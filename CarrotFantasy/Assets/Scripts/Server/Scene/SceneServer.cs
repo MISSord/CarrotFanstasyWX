@@ -15,7 +15,7 @@ namespace CarrotFantasy
         {
             this.currentScene = null;
             this.eventDispatcher = new EventDispatcher();
-            GameObject uiCamera = GameObject.Find("uiCamera");
+            GameObject uiCamera = GameObject.Find("UICamera");
             this.uiCamera = uiCamera.GetComponent<Camera>();
         }
 
@@ -34,15 +34,15 @@ namespace CarrotFantasy
             return currentScene;
         }
 
-        public Dictionary<PanelLayerType, GameObject> GetPanelLayerInfo()
-        {
-            return this.currentScene.getLayerDic();
-        }
+        //public Dictionary<PanelLayerType, GameObject> GetPanelLayerInfo()
+        //{
+        //    return this.currentScene.getLayerDic();
+        //}
 
         private void RemoveScene()
         {
-            ServerProvision.panelServer.CloseAllPanel(PanelCloseReasonType.SCENE_CHANGE, this.currentScene.sceneType);
-            ServerProvision.panelServer.SetShowPanelActive(false);
+            ViewManager.Instance.CloseAllPanel(PanelCloseReasonType.SCENE_CHANGE, this.currentScene.sceneType);
+            ViewManager.Instance.SetShowPanelActive(false);
             this.currentScene.Dispose(); //卸载旧场景
         }
 
@@ -79,18 +79,20 @@ namespace CarrotFantasy
                 return false;
             }
             this.currentScene = targetScene;
-            this.mainCamera = currentScene.GetMainCamera();
-            if (this.mainCamera != null)
-            {
-                this.uiCamera.clearFlags = CameraClearFlags.Depth;
-            }
-            else
-            {
-                this.uiCamera.clearFlags = CameraClearFlags.Color;
-            }
+
+            //this.mainCamera = currentScene.GetMainCamera();
+            //if (this.mainCamera != null)
+            //{
+            //    this.uiCamera.clearFlags = CameraClearFlags.Depth;
+            //}
+            //else
+            //{
+            //    this.uiCamera.clearFlags = CameraClearFlags.Color;
+            //}
+
             this.currentScene.InitSceneObject();
 
-            ServerProvision.panelServer.SetShowPanelActive(true); //其实不一定需要这句
+            //ViewManager.Instance.SetShowPanelActive(true); //其实不一定需要这句
             this.eventDispatcher.DispatchEvent(SceneEventType.LOAD_SCENE_FINISH);
 
             this.currentScene.Init();

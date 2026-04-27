@@ -29,8 +29,9 @@ namespace CarrotFantasy
         public void Init()
         {
             this.businessDic.Add(BusinessType.UIServer, UIServer.Instance);
-            //this.businessDic.Add(BusinessType.AccountServer, AccountServer.Instance);
-            //this.businessDic.Add(BusinessType.MapServer, MapServer.Instance);
+            this.businessDic.Add(BusinessType.AccountServer, AccountServer.Instance);
+            this.businessDic.Add(BusinessType.SettingServer, SettingServer.Instance);
+
             //this.businessDic.Add(BusinessType.RoomServer, RoomServer.Instance);
             //this.businessDic.Add(BusinessType.BattleParamServer, BattleParamServer.Instance);
 
@@ -55,8 +56,6 @@ namespace CarrotFantasy
             }
         }
 
-
-
         public void Dispose()
         {
             for (int i = this.businessList.Count - 1; i >= 0; i--)
@@ -68,7 +67,6 @@ namespace CarrotFantasy
             this.businessList.Clear();
 
             ServerProvision.connectionServer.Dispose();
-            ServerProvision.panelServer.Dispose();
             ServerProvision.sceneServer.Dispose();
 
             this.IsGameQuit = true;

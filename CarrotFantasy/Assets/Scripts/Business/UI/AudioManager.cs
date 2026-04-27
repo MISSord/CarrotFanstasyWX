@@ -20,14 +20,10 @@ namespace CarrotFantasy
 
     public class AudioManager
     {
+        private const string LogTag = "AudioManager";
         public GameObject nodeObject;
-        private GameObject audio_music;
-        private GameObject audio_sound_effect;
-
         private AudioSource audioSourceMusic;
         private AudioSource audioSourceEffect;
-
-        private float timeCurrent;
 
         public bool musicEnable { get; private set; }
         public float musicVolume { get; private set; }
@@ -37,12 +33,14 @@ namespace CarrotFantasy
         private int uid = 0;
 
         private const float RESET_PLAYING_EFFECT_INTERVAL = 0.1f;
+        private readonly Dictionary<string, float> effectLastPlayTime = new Dictionary<string, float>();
 
         Dictionary<int, MusicInfo> uid2MusicInfo = new Dictionary<int, MusicInfo>();
         Dictionary<int, List<MusicInfo>> musicProrityGroupMap = new Dictionary<int, List<MusicInfo>>();
         List<int> orderOfPriority = new List<int>();
 
         int currentUid = 0;
+        string currentMusicPath = null;
 
         public void Init()
         {
@@ -55,8 +53,6 @@ namespace CarrotFantasy
             GameObject audio_sound_effect = new GameObject("audio_sound_effect");
             audio_sound_effect.transform.SetParent(nodeObject.transform, false);
             this.audioSourceEffect = audio_sound_effect.AddComponent<AudioSource>();
-
-            this.timeCurrent = Time.realtimeSinceStartup;
 
             this.audioSourceMusic.loop = true;
 
@@ -74,7 +70,6 @@ namespace CarrotFantasy
             this.RefreshMusicVolume();
             this.RefreshEffectActiveState();
             this.RefreshEffectVolume();
-
         }
 
         public void RefreshMusicActiveState()
@@ -99,6 +94,12 @@ namespace CarrotFantasy
 
         public int PlayMusic(String path, int priority = 1)
         {
+            if (string.IsNullOrEmpty(path))
+            {
+                GameLogController.Warning("PlayMusic path 为空，已忽略", LogTag);
+                return -1;
+            }
+
             uid = uid + 1;
             MusicInfo musicInfo = new MusicInfo(path, priority, uid);
             this.uid2MusicInfo.Add(uid, musicInfo);
@@ -109,7 +110,7 @@ namespace CarrotFantasy
                 {
                     if (priority > orderOfPriority[i])
                     {
-                        orderOfPriority.Add(priority);
+                        orderOfPriority.Insert(i, priority);
                         insertSuc = true;
                         break;
                     }
@@ -133,8 +134,20 @@ namespace CarrotFantasy
                     if (musicInfo.uid != this.currentUid)
                     {
                         AudioClip clip = ResourceLoader.Instance.loadRes<AudioClip>(musicInfo.path);
+                        if (clip == null)
+                        {
+                            GameLogController.Warning("音乐资源不存在: " + musicInfo.path, LogTag);
+                            return;
+                        }
+                        if (this.currentMusicPath == musicInfo.path && this.audioSourceMusic.isPlaying)
+                        {
+                            this.currentUid = musicInfo.uid;
+                            return;
+                        }
                         this.audioSourceMusic.clip = clip;
                         this.audioSourceMusic.Play();
+                        this.currentUid = musicInfo.uid;
+                        this.currentMusicPath = musicInfo.path;
                     }
                     break;
                 }
@@ -144,6 +157,8 @@ namespace CarrotFantasy
         public void StopMusic()
         {
             this.audioSourceMusic.Stop();
+            this.currentUid = 0;
+            this.currentMusicPath = null;
         }
 
         public void StopMusic(int uuid)
@@ -153,6 +168,11 @@ namespace CarrotFantasy
             {
                 this.uid2MusicInfo.Remove(uuid);
                 this.musicProrityGroupMap[musicInfo.prority].Remove(musicInfo);
+                if (this.musicProrityGroupMap[musicInfo.prority].Count == 0)
+                {
+                    this.musicProrityGroupMap.Remove(musicInfo.prority);
+                    this.orderOfPriority.Remove(musicInfo.prority);
+                }
                 this.CheckMusic();
             }
         }
@@ -160,13 +180,27 @@ namespace CarrotFantasy
         public void PlayEffect(String path, int volumeScale = 1)
         {
             if (this.effectEnable == false) { return; }
+            if (string.IsNullOrEmpty(path)) { return; }
             float curTime = Time.realtimeSinceStartup;
-            if (this.timeCurrent + RESET_PLAYING_EFFECT_INTERVAL < curTime)
+            float lastPlayTime = -RESET_PLAYING_EFFECT_INTERVAL;
+            if (this.effectLastPlayTime.TryGetValue(path, out float time))
             {
-                this.timeCurrent = curTime;
-                AudioClip clip = ResourceLoader.Instance.loadRes<AudioClip>(path);
-                this.audioSourceEffect.PlayOneShot(clip, volumeScale);
+                lastPlayTime = time;
             }
+
+            if (lastPlayTime + RESET_PLAYING_EFFECT_INTERVAL >= curTime)
+            {
+                return;
+            }
+
+            this.effectLastPlayTime[path] = curTime;
+            AudioClip clip = ResourceLoader.Instance.loadRes<AudioClip>(path);
+            if (clip == null)
+            {
+                GameLogController.Warning("音效资源不存在: " + path, LogTag);
+                return;
+            }
+            this.audioSourceEffect.PlayOneShot(clip, Mathf.Clamp01(volumeScale));
         }
 
         public void StopEffectClip()
@@ -196,15 +230,25 @@ namespace CarrotFantasy
 
         public void SetMusicVolume(int volume)
         {
-            this.musicVolume = (float)Math.Max(0.001, Math.Min(volume, 1));
+            SetMusicVolume((float)volume);
+        }
+        public void SetMusicVolume(float volume)
+        {
+            this.musicVolume = Mathf.Clamp01(volume);
             this.RefreshMusicVolume();
             LocalStorageManager.Instance.SetPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_VOLUME, this.musicVolume, LocalStorageSaveType.FloatType);
+            LocalStorageManager.Instance.Save();
         }
         public void SetEffectVolume(int volume)
         {
-            this.musicVolume = (float)Math.Max(0.001, Math.Min(volume, 1));
+            SetEffectVolume((float)volume);
+        }
+        public void SetEffectVolume(float volume)
+        {
+            this.effectVolume = Mathf.Clamp01(volume);
             this.RefreshEffectVolume();
             LocalStorageManager.Instance.SetPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_EFFECT_VOLUME, this.effectVolume, LocalStorageSaveType.FloatType);
+            LocalStorageManager.Instance.Save();
         }
 
         public void SetMusicEnable(bool isActive)
@@ -220,6 +264,7 @@ namespace CarrotFantasy
                 {
                     LocalStorageManager.Instance.SetDataToLocal(LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
                 }
+                LocalStorageManager.Instance.Save();
 
             }
             this.RefreshMusicActiveState();
@@ -238,13 +283,25 @@ namespace CarrotFantasy
                 {
                     LocalStorageManager.Instance.SetDataToLocal(LocalStorageType.CUR_USER_MUSIC_EFFECT_ENABLE, (System.Object)false, LocalStorageSaveType.BoolType);
                 }
+                LocalStorageManager.Instance.Save();
             }
             this.RefreshEffectActiveState();
         }
 
-        public void Dipose()
+        public void Dispose()
         {
+            this.audioSourceMusic?.Stop();
+            this.audioSourceEffect?.Stop();
+            this.uid2MusicInfo.Clear();
+            this.musicProrityGroupMap.Clear();
+            this.orderOfPriority.Clear();
+            this.effectLastPlayTime.Clear();
+            this.currentUid = 0;
+            this.currentMusicPath = null;
             GameObject.Destroy(this.nodeObject);
+            this.nodeObject = null;
+            this.audioSourceMusic = null;
+            this.audioSourceEffect = null;
         }
     }
 }

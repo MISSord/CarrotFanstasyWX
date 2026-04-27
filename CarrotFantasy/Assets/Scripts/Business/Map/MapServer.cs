@@ -3,9 +3,8 @@ using System;
 
 namespace CarrotFantasy
 {
-    public class MapServer : BaseServer
+    public class MapServer : BaseServer<MapServer>
     {
-        private static MapServer mapServer;
         public String account;
         public MapModel mapModel;
         public EventDispatcher eventDispatcher;
@@ -15,18 +14,10 @@ namespace CarrotFantasy
         public int curBigLevel { get; private set; }
         public int curLevel { get; private set; }
 
-        public static MapServer Instance
+        protected override void OnSingletonInit()
         {
-            get
-            {
-                if (mapServer == null)
-                {
-                    mapServer = new MapServer();
-                    mapServer.eventDispatcher = new EventDispatcher();
-                    mapServer.mapModel = new MapModel(mapServer.eventDispatcher);
-                }
-                return mapServer;
-            }
+            eventDispatcher = new EventDispatcher();
+            mapModel = new MapModel(eventDispatcher);
         }
 
         public override void LoadModule()

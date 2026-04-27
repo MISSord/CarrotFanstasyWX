@@ -47,7 +47,7 @@ namespace CarrotFantasy
                     UIServer.Instance.ShowTip(LanguageUtil.Instance.GetString(1004));
                     return;
                 }
-                BattleUnit_Tower tower = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Tower>(BattleUnitType.TOWER);
+                BattleUnit_Tower tower = BattleUnitPool.Instance.getNewBattleUnit<BattleUnit_Tower>(BattleUnitType.TOWER);
                 if (tower == null)
                 {
                     tower = new BattleUnit_Tower(this.baseBattle);
@@ -87,7 +87,7 @@ namespace CarrotFantasy
                 {
                     this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, BattleUnitType.TOWER, tower);
                     tower.ClearInfo();
-                    GameObjectPool.Instance.PushObjectToPool(BattleUnitType.TOWER, tower);
+                    BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.TOWER, tower);
                     this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, tower.price[tower.curLevel] - 20);
                     this.curTowerDic.Remove(this.GetExChangeInt(order.x, order.y));
                 }

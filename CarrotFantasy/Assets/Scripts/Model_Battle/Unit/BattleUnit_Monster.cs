@@ -44,17 +44,17 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            this.unitTransform = GameObjectPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
+            this.unitTransform = BattleUnitPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.unitTransform == null)
             {
                 this.unitTransform = new UnitTransformComponent();
             }
-            this.moveTrans = GameObjectPool.Instance.getNewUnitComponent<UnitMoveComponent_Monster>(UnitComponentType.MOVE_MONSTER);
+            this.moveTrans = BattleUnitPool.Instance.getNewUnitComponent<UnitMoveComponent_Monster>(UnitComponentType.MOVE_MONSTER);
             if (this.moveTrans == null)
             {
                 this.moveTrans = new UnitMoveComponent_Monster();
             }
-            UnitBeHitComponent beHit = GameObjectPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
+            UnitBeHitComponent beHit = BattleUnitPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
             if (beHit == null)
             {
                 beHit = new UnitBeHitComponent();

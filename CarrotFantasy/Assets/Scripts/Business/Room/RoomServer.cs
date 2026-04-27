@@ -4,9 +4,8 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    public class RoomServer : BaseServer
+    public class RoomServer : BaseServer<RoomServer>
     {
-        private static RoomServer roomServer;
         public EventDispatcher eventDispatcher;
 
         public Gamer partner;
@@ -14,17 +13,9 @@ namespace CarrotFantasy
         public bool isMatching { get; set; }
         private int localIndex = -1;
 
-        public static RoomServer Instance
+        protected override void OnSingletonInit()
         {
-            get
-            {
-                if (roomServer == null)
-                {
-                    roomServer = new RoomServer();
-                    roomServer.eventDispatcher = new EventDispatcher();
-                }
-                return roomServer;
-            }
+            eventDispatcher = new EventDispatcher();
         }
 
         public override void LoadModule()

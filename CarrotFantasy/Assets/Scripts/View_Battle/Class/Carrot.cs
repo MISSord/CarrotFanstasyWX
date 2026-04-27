@@ -33,7 +33,7 @@ namespace CarrotFantasy
             animator = GetComponent<Animator>();
             sr = GetComponent<SpriteRenderer>();
             hpText = transform.Find("HpCanvas/txt_live").GetComponent<Text>();
-            this.dataComponent = (BattleDataComponent)GameManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
 
             this.dataComponent.eventDispatcher.AddListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
             this.UpdateCarrotUI();

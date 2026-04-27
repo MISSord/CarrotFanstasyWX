@@ -36,7 +36,7 @@ namespace CarrotFantasy
 
         public void BuildNewBullet(BattleUnit_Tower tower, BattleUnit target)
         {
-            BattleUnit_Bullet bullet = GameObjectPool.Instance.getNewBattleUnit<BattleUnit_Bullet>(BattleUnitType.BULLET);
+            BattleUnit_Bullet bullet = BattleUnitPool.Instance.getNewBattleUnit<BattleUnit_Bullet>(BattleUnitType.BULLET);
             if (bullet == null)
             {
                 bullet = new BattleUnit_Bullet(this.baseBattle);
@@ -92,7 +92,7 @@ namespace CarrotFantasy
                 {
                     this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, BattleUnitType.BULLET, this.bulletDeadList[i]);
                     this.bulletDeadList[i].ClearInfo();
-                    GameObjectPool.Instance.PushObjectToPool(BattleUnitType.BULLET, this.bulletDeadList[i]);
+                    BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.BULLET, this.bulletDeadList[i]);
                     this.curBulletList.Remove(this.bulletDeadList[i]);
                 }
                 this.bulletDeadList.Clear();
@@ -117,7 +117,7 @@ namespace CarrotFantasy
                 for (int i = 0; i < this.curBulletList.Count; i++)
                 {
                     this.curBulletList[i].ClearInfo();
-                    GameObjectPool.Instance.PushObjectToPool(BattleUnitType.BULLET, this.curBulletList[i]);
+                    BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.BULLET, this.curBulletList[i]);
                 }
             }
             this.curBulletList.Clear();

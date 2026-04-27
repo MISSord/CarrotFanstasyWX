@@ -6,11 +6,6 @@ namespace CarrotFantasy
 {
     public class MainPanel : BaseView
     {
-        private static MainPanel _instance;
-        public static MainPanel Instance => _instance ?? (_instance = new MainPanel());
-
-        private MainPanel() { }
-
         private Animator carrotAnimator;
         private Transform monsterTrans;
         private Transform cloudTrans;
@@ -29,7 +24,7 @@ namespace CarrotFantasy
         {
             viewName = "MainPanel";
             layer = UILayer.Normal;
-            SetUILoadInfo(0, UiViewAbPaths.SettingViewPrefab, "MainPanel");
+            SetUILoadInfo(0, UiViewAbPaths.MainViewViewPrefab, "MainPanel");
         }
 
         protected override void LoadCallBack()
@@ -82,13 +77,13 @@ namespace CarrotFantasy
         {
             UIServer.Instance.PlayButtonEffect();
             ExitTween = mainPanelTween[0];
-            UIViewService.OpenSetPanel();
+            ViewManager.Instance.OpenView<SetPanel>();
         }
 
         public void ShowHelpPanel()
         {
             UIServer.Instance.PlayButtonEffect();
-            UIViewService.OpenHelpPanel();
+            ViewManager.Instance.OpenView<HelpPanel>();
         }
 
         public void ToNormalModel()

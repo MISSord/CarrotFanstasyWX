@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    public class BattleParamServer : BaseServer
+    //战斗参数服务，记录当前游戏进度
+    public class BattleParamServer : BaseServer<BattleParamServer>
     {
-        public static BattleParamServer battleParamServer;
         public SingleMapInfo curSingleMapInfo;
         public Stage curStage;
 
@@ -17,18 +17,6 @@ namespace CarrotFantasy
         public int curLevel;
 
         public bool isPVE = false;
-
-        public static BattleParamServer Instance
-        {
-            get
-            {
-                if (battleParamServer == null)
-                {
-                    battleParamServer = new BattleParamServer();
-                }
-                return battleParamServer;
-            }
-        }
 
         public override void LoadModule()
         {

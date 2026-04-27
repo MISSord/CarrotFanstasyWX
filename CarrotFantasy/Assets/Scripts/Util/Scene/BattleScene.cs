@@ -14,7 +14,7 @@ namespace CarrotFantasy
             base.Init();
             this.AddListener();
 
-            GameManager manager = this.gameObj.AddComponent<GameManager>();
+            BattleManager manager = this.gameObj.AddComponent<BattleManager>();
             manager.Init();
             manager.InitBattle();
 
@@ -38,7 +38,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            GameManager.Instance.Dispose();
+            BattleManager.Instance.Dispose();
             this.RemoveListener();
             base.Dispose();
         }

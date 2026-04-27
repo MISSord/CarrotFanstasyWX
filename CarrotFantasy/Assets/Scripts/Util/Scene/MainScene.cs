@@ -13,21 +13,18 @@ namespace CarrotFantasy
         {
             base.Init();
             // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
-            //ServerProvision.panelServer.ShowPanel(panel);
             //Sche.DelayExeOnceTimes(() => {
             //    panel.autoClose();
-            //    ServerProvision.panelServer.ShowPanel(new MainPanel(null));
+            //    UIViewService.OpenMainPanel();
             //    UIServer.Instance.FadeLoadingPanel();
             //    if (AccountServer.Instance.userId == 0)
             //    {
-            //        ServerProvision.panelServer.ShowPanel(new LoginPanel(null));
+            //        UIViewService.OpenLoginPanel();
             //    }
             //    if(MapServer.Instance.curBigLevel != 0)
             //    {
-            //        ServerProvision.panelServer.ShowPanel(new MapBigLevelPanel(null));
-            //        MapNormalLevelPanel panelOne = new MapNormalLevelPanel(null);
-            //        panelOne.currentBigLevelID = MapServer.Instance.curBigLevel;
-            //        ServerProvision.panelServer.ShowPanel(panelOne);
+            //        UIViewService.OpenMapBigLevelPanel();
+            //        UIViewService.OpenMapNormalLevelPanel(MapServer.Instance.curBigLevel);
             //    }
             //}, 2f);
 

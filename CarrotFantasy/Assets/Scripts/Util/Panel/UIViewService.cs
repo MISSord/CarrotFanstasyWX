@@ -3,19 +3,19 @@ using System.Collections.Generic;
 
 namespace CarrotFantasy
 {
-    /// <summary> 替代 PanelServer.ShowPanel，统一用 BaseView + AssetBundle 打开。 </summary>
+    /// <summary> 统一用 BaseView + AssetBundle 打开。 </summary>
     public static class UIViewService
     {
         private static void OpenPrepare(string logicalPanelName)
         {
-            if (ServerProvision.panelServer == null) return;
+            if (ViewManager.Instance == null || ViewManager.Instance.eventDispatcher == null) return;
             var msg = new Dictionary<String, System.Object>
             {
                 { "panelName", logicalPanelName },
                 { "enableShow", true },
                 { "reason", "" }
             };
-            ServerProvision.panelServer.eventDispatcher.DispatchEvent(PanelEventType.OPEN_PANEL_PREPARE, msg);
+            ViewManager.Instance.eventDispatcher.DispatchEvent(PanelEventType.OPEN_PANEL_PREPARE, msg);
         }
 
         //public static void OpenMainPanel()
@@ -24,20 +24,6 @@ namespace CarrotFantasy
         //    MainPanel.Instance.RegisterData();
         //    MainPanel.Instance.Open(0);
         //}
-
-        public static void OpenSetPanel()
-        {
-            OpenPrepare("SetPanel");
-            SetPanel.Instance.RegisterData();
-            SetPanel.Instance.Open(0);
-        }
-
-        public static void OpenHelpPanel()
-        {
-            OpenPrepare("HelpPanel");
-            HelpPanel.Instance.RegisterData();
-            HelpPanel.Instance.Open(0);
-        }
 
         public static void OpenMapBigLevelPanel()
         {

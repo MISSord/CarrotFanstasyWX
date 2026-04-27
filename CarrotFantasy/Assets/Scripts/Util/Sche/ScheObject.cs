@@ -1,7 +1,5 @@
 namespace CarrotFantasy
 {
-
-
     public class ScheObject
     {
         public int uid;

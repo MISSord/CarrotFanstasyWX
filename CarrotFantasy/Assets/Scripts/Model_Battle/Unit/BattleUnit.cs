@@ -106,7 +106,7 @@ namespace CarrotFantasy
             for (int i = 0; i <= componentList.Count - 1; i++)
             {
                 componentList[i].Dispose();
-                GameObjectPool.Instance.PushObjectToPool(componentList[i].unitComponentType, componentList[i]);
+                BattleUnitPool.Instance.PushObjectToPool(componentList[i].unitComponentType, componentList[i]);
             }
             componentList.Clear();
             componentDic.Clear();

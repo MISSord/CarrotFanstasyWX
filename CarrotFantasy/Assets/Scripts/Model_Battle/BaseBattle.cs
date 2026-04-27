@@ -160,7 +160,7 @@ namespace CarrotFantasy
             this.componentList.Clear();
             this.componentDic.Clear();
             this.RemoveListener();
-            GameObjectPool.Instance.Dispose();
+            BattleUnitPool.Instance.Dispose();
             this.eventDispatcher.Dispose();
         }
     }

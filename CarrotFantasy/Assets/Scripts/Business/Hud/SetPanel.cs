@@ -5,10 +5,6 @@ namespace CarrotFantasy
 {
     public class SetPanel : BaseView
     {
-        private static SetPanel _instance;
-        public static SetPanel Instance => _instance ?? (_instance = new SetPanel());
-
-        private SetPanel() { }
 
         private GameObject optionPageGo;
         private GameObject producerPageGo;

@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CarrotFantasy;
 
 public enum UILayer
 {
@@ -23,13 +25,15 @@ public class ViewManager
     }
 
     public Dictionary<string, BaseView> viewDic;
+    public Dictionary<Type, BaseView> viewTypeDic;
     public Dictionary<UILayer, List<BaseView>> viewList;
     public int layerIntervalOrder = 1500;
     public int viewIntervalOrder = 100;
 
     private List<BaseView> preLoadPanelList = new List<BaseView>();
 
-    //private bool isCanShowPanel = true;
+    public EventDispatcher eventDispatcher { get; private set; }
+    private bool isCanShowPanel = true;
     private bool isNeedFlushViewOrder = false;
 
     private Camera uiCamera;
@@ -41,13 +45,18 @@ public class ViewManager
         viewDic.Clear();
         viewDic = null;
 
+        viewTypeDic.Clear();
+        viewTypeDic = null;
+
         viewList.Clear();
         viewList = null;
     }
 
     public void Init()
     {
+        eventDispatcher = new EventDispatcher();
         viewDic = new Dictionary<string, BaseView>();
+        viewTypeDic = new Dictionary<Type, BaseView>();
 
         viewList = new Dictionary<UILayer, List<BaseView>>();
         viewList.Add(UILayer.Normal, new List<BaseView>(4));
@@ -64,20 +73,46 @@ public class ViewManager
 
     }
 
+    public void SetShowPanelActive(bool isCanShow)
+    {
+        isCanShowPanel = isCanShow;
+    }
+
+    public bool GetShowPanelActive()
+    {
+        return isCanShowPanel;
+    }
+
     public void RegisterView(BaseView view)
     {
+        if (view == null)
+        {
+            Debug.LogError("RegisterView failed: view is null");
+            return;
+        }
+
         if (viewDic.ContainsKey(view.ViewName))
         {
             Debug.LogError("View already registered: " + view.ViewName);
             return;
         }
+
+        Type viewType = view.GetType();
+        if (viewTypeDic.ContainsKey(viewType))
+        {
+            Debug.LogError("View type already registered: " + viewType.Name);
+            return;
+        }
+
         viewDic.Add(view.ViewName, view);
+        viewTypeDic.Add(viewType, view);
     }
 
     public void UnregisterView(BaseView view)
     {
         if (view == null || viewDic == null) return;
         viewDic.Remove(view.ViewName);
+        viewTypeDic?.Remove(view.GetType());
     }
 
     public GameObject GetBaseViewClone()
@@ -102,6 +137,33 @@ public class ViewManager
             return;
         }
         view.Open();
+    }
+
+    public void OpenView(Type viewType)
+    {
+        if (viewType == null)
+        {
+            Debug.LogError("OpenView failed: viewType is null");
+            return;
+        }
+
+        if (!typeof(BaseView).IsAssignableFrom(viewType))
+        {
+            Debug.LogError($"OpenView failed: {viewType.FullName} is not BaseView");
+            return;
+        }
+
+        if (viewTypeDic.TryGetValue(viewType, out BaseView view) == false)
+        {
+            Debug.LogWarning("View not registered by type: " + viewType.FullName);
+            return;
+        }
+        view.Open();
+    }
+
+    public void OpenView<T>() where T : BaseView
+    {
+        OpenView(typeof(T));
     }
 
     public void FlushView(string name, int index, string key, string value)
@@ -149,6 +211,17 @@ public class ViewManager
         {
             ordered[k].Close();
         }
+    }
+
+    // 兼容旧面板接口
+    public void CloseAllPanel(int closeReason, BaseSceneType nextSceneType)
+    {
+        CloseAllOpenViews();
+    }
+
+    // 兼容旧 BasePanel 接口，BaseView 体系下该 uid 关闭逻辑已废弃
+    public void ClosePanel(int uid, int closeReason)
+    {
     }
 
     public void Update()

@@ -60,12 +60,12 @@ namespace CarrotFantasy
         public override void Init()
         {
             base.Init();
-            this.unitBeHit = GameObjectPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
+            this.unitBeHit = BattleUnitPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
             if (this.unitBeHit == null)
             {
                 this.unitBeHit = new UnitBeHitComponent();
             }
-            this.unitTrans = GameObjectPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
+            this.unitTrans = BattleUnitPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.unitTrans == null)
             {
                 this.unitTrans = new UnitTransformComponent();

@@ -134,7 +134,7 @@ namespace CarrotFantasy
 
         private void ShowHelpPanel()
         {
-            UIViewService.OpenHelpPanel();
+            ViewManager.Instance.OpenView<HelpPanel>();
             UIServer.Instance.PlayButtonEffect();
         }
 
