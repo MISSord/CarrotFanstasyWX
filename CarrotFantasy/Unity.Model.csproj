@@ -87,7 +87,6 @@
     <Compile Include="Assets\Scripts\Business\UI\AudioManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\BaseUnitComponent.cs" />
     <Compile Include="Assets\Scripts\Util\UI\TipUI.cs" />
-    <Compile Include="Assets\Scripts\Util\Network\ConnectEventType.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BaseBattleViewComponent.cs" />
     <Compile Include="Assets\Scripts\Other\Event\EvenDispatcher.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Bullet_One.cs" />
@@ -208,9 +207,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64SinLut.cs" />
     <Compile Include="Assets\Scripts\Util\TimeManager\TimeUtility.cs" />
-    <Compile Include="Assets\Scripts\Helper\ActionHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFinishState.cs" />
-    <Compile Include="Assets\Scripts\Component\GlobalProto.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Enum\BattleViewComponentType.cs" />
     <Compile Include="Assets\Scripts\Util\Lang\LanguageUtil.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapInfoType.cs" />
@@ -233,7 +230,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpFinishState.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatSocketCallbackReceiver.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Result_verify\ModelBattleResultVerify.cs" />
-    <Compile Include="Assets\Scripts\Helper\GameObjectHelper.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\IWechatSocketBridge.cs" />
     <Compile Include="Assets\Scripts\Util\Lang\Config\zh_cn.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpBattleResult.cs" />
@@ -249,7 +245,6 @@
     <Compile Include="Assets\Scripts\Business\Room\RoomServer.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomEventType.cs" />
     <Compile Include="Assets\Scripts\Util\UI\SlideScrollView.cs" />
-    <Compile Include="Assets\Scripts\Util\Network\ConnectEventDispatcher.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Stat\BattleStatInfo.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\PanelManagerUnit.cs" />
@@ -265,7 +260,6 @@
     <Compile Include="Assets\Scripts\Server\Scene\SceneEventType.cs" />
     <Compile Include="Assets\Scripts\Other\Event\EvenType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\UnitBeHitComponent.cs" />
-    <Compile Include="Assets\Scripts\Util\Network\ConnectEventCMD.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVSceneComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\HitShapeType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpPreFightingState.cs" />
@@ -281,6 +275,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UIViewService.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UiViewAbPaths.cs" />
+    <Compile Include="Assets\Scripts\Util\Logging\GameLogController.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

@@ -20,7 +20,8 @@ public static class AssetBundlePathHelper
     /// </summary>
     public static string GetLocalLZ4Path(string bundleName)
     {
-        return Application.persistentDataPath + "/" + localSavePath + "/" + bundleName;
+        string normalizedBundleName = GetBundleFileName(bundleName).Replace('\\', '/');
+        return Path.Combine(Application.persistentDataPath, localSavePath, normalizedBundleName);
     }
 
     //    /// <summary>
@@ -45,22 +46,22 @@ public static class AssetBundlePathHelper
     /// </summary>
     public static string GetRuntimeLoadPath(string bundleName)
     {
-        string platformFolder = GetRuntimePlatformFolder();
         string fileName = GetBundleFileName(bundleName);
 
-        // 优先检查热更新路径（持久化数据路径）
-        string persistentPath = Path.Combine(Application.persistentDataPath, localSavePath, platformFolder, fileName);
+        // 统一运行时本地加载路径：与下载、校验、更新流程保持一致。
+        string persistentPath = GetLocalLZ4Path(fileName);
         if (File.Exists(persistentPath))
         {
             return persistentPath;
         }
 
         // 使用内置资源路径
-        string streamingPath = Path.Combine(Application.streamingAssetsPath, localSavePath, platformFolder, fileName);
+        string platformFolder = GetRuntimePlatformFolder();
+        string streamingPath = Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder, fileName);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         // Android平台下，StreamingAssets中的文件不能直接使用File.Exists检查
-        return Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder, fileName);
+        return streamingPath;
 #else
         if (File.Exists(streamingPath))
         {

@@ -61,13 +61,13 @@ namespace CarrotFantasy
             this.audioSourceMusic.loop = true;
 
 
-            this.musicEnable = LocalStorageManager.Instance.getDataFromLocal<bool>
+            this.musicEnable = LocalStorageManager.Instance.GetDataFromLocal<bool>
                 (LocalStorageType.CUR_USER_MUSIC_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
-            this.musicVolume = LocalStorageManager.Instance.getDataFromLocal<float>
+            this.musicVolume = LocalStorageManager.Instance.GetDataFromLocal<float>
                 (LocalStorageType.CUR_USER_MUSIC_VOLUME, (System.Object)1f, LocalStorageSaveType.FloatType);
-            this.effectEnable = LocalStorageManager.Instance.getDataFromLocal<bool>
+            this.effectEnable = LocalStorageManager.Instance.GetDataFromLocal<bool>
                 (LocalStorageType.CUR_USER_MUSIC_EFFECT_ENABLE, (System.Object)true, LocalStorageSaveType.BoolType);
-            this.effectVolume = LocalStorageManager.Instance.getDataFromLocal<float>
+            this.effectVolume = LocalStorageManager.Instance.GetDataFromLocal<float>
                 (LocalStorageType.CUR_USER_MUSIC_EFFECT_VOLUME, (System.Object)1f, LocalStorageSaveType.FloatType);
 
             this.RefreshMusicActiveState();
@@ -198,13 +198,13 @@ namespace CarrotFantasy
         {
             this.musicVolume = (float)Math.Max(0.001, Math.Min(volume, 1));
             this.RefreshMusicVolume();
-            LocalStorageManager.Instance.setPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_VOLUME, this.musicVolume, LocalStorageSaveType.FloatType);
+            LocalStorageManager.Instance.SetPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_VOLUME, this.musicVolume, LocalStorageSaveType.FloatType);
         }
         public void SetEffectVolume(int volume)
         {
             this.musicVolume = (float)Math.Max(0.001, Math.Min(volume, 1));
             this.RefreshEffectVolume();
-            LocalStorageManager.Instance.setPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_EFFECT_VOLUME, this.effectVolume, LocalStorageSaveType.FloatType);
+            LocalStorageManager.Instance.SetPlayerInfo<float>(LocalStorageType.CUR_USER_MUSIC_EFFECT_VOLUME, this.effectVolume, LocalStorageSaveType.FloatType);
         }
 
         public void SetMusicEnable(bool isActive)

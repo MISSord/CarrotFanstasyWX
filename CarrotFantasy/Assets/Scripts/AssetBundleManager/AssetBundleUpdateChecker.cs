@@ -53,20 +53,20 @@ public class UpdateCheckResult
     //public ErrorCode errorCode;
 }
 
+// 状态机枚举
+public enum CheckerState
+{
+    Idle,                   // 空闲状态
+    DownloadingManifest,    // 下载远程清单
+    LoadingLocalManifest,   // 加载本地清单
+    ComparingManifests,     // 对比清单
+    VerifyingFiles,         // 验证文件
+    Complete,               // 完成
+    Error                   // 错误
+}
+
 public class AssetBundleUpdateChecker
 {
-    // 状态机枚举
-    public enum CheckerState
-    {
-        Idle,                   // 空闲状态
-        DownloadingManifest,    // 下载远程清单
-        LoadingLocalManifest,   // 加载本地清单
-        ComparingManifests,     // 对比清单
-        VerifyingFiles,         // 验证文件
-        Complete,               // 完成
-        Error                   // 错误
-    }
-
     [Header("性能配置")]
     public int bundlesPerFrame = 5;           // 每帧处理的AB包数量
     public float timeSlicePerFrame = 0.005f;  // 每帧最大处理时间(秒)
@@ -92,6 +92,8 @@ public class AssetBundleUpdateChecker
 
     // 分帧处理变量
     private List<CustomAssetBundleInfo> m_RemainingBundlesToCheck;
+    private int m_RemainingCursor = 0;
+    private int m_TotalBundlesInStage = 0;
     private int m_CurrentBundleIndex = 0;
     private float m_Progress = 0f;
     private string m_CurrentOperation = "";
@@ -271,6 +273,8 @@ public class AssetBundleUpdateChecker
 
         m_CurrentResult = new UpdateCheckResult();
         m_RemainingBundlesToCheck = new List<CustomAssetBundleInfo>(m_RemoteManifest.AssetBundles);
+        m_RemainingCursor = 0;
+        m_TotalBundlesInStage = m_RemainingBundlesToCheck.Count;
         m_CurrentBundleIndex = 0;
         m_Progress = 0.5f;
 
@@ -287,7 +291,7 @@ public class AssetBundleUpdateChecker
     /// </summary>
     private void ExecuteCompareManifests()
     {
-        if (m_RemainingBundlesToCheck == null || m_RemainingBundlesToCheck.Count == 0)
+        if (m_RemainingBundlesToCheck == null || m_RemainingCursor >= m_RemainingBundlesToCheck.Count)
         {
             ChangeState(CheckerState.VerifyingFiles);
             return;
@@ -297,15 +301,15 @@ public class AssetBundleUpdateChecker
         int processedCount = 0;
 
         // 分帧处理：数量限制 + 时间片限制
-        while (m_RemainingBundlesToCheck.Count > 0 &&
+        while (m_RemainingCursor < m_RemainingBundlesToCheck.Count &&
                processedCount < bundlesPerFrame &&
                (Time.realtimeSinceStartup - startTime) < timeSlicePerFrame)
         {
-            var remoteBundle = m_RemainingBundlesToCheck[0];
-            m_RemainingBundlesToCheck.RemoveAt(0);
+            var remoteBundle = m_RemainingBundlesToCheck[m_RemainingCursor];
+            m_RemainingCursor++;
 
             // 查找本地对应的AB包
-            var localBundle = FindLocalBundle(remoteBundle.AssetName);
+            var localBundle = FindLocalBundle(remoteBundle.BundleName);
 
             if (localBundle == null)
             {
@@ -334,13 +338,16 @@ public class AssetBundleUpdateChecker
         }
 
         // 更新进度
-        int totalBundles = m_RemoteManifest.AssetBundles.Count;
-        m_Progress = 0.5f + 0.2f * (m_CurrentBundleIndex / (float)totalBundles); // 对比占20%进度
+        int totalBundles = m_TotalBundlesInStage;
+        if (totalBundles > 0)
+        {
+            m_Progress = 0.5f + 0.2f * (m_CurrentBundleIndex / (float)totalBundles); // 对比占20%进度
+        }
 
         m_CurrentOperation = $"对比清单文件... ({m_CurrentBundleIndex}/{totalBundles})";
 
         // 如果处理完成，进入下一状态
-        if (m_RemainingBundlesToCheck.Count == 0)
+        if (m_RemainingCursor >= m_RemainingBundlesToCheck.Count)
         {
             Debug.Log($"清单对比完成: 新增{m_CurrentResult.bundlesToDownload.Count}个, 待验证{m_CurrentResult.bundlesToUpdate.Count}个");
             ChangeState(CheckerState.VerifyingFiles);
@@ -354,6 +361,8 @@ public class AssetBundleUpdateChecker
     {
         // 将待验证的包转移到剩余检查列表
         m_RemainingBundlesToCheck = new List<CustomAssetBundleInfo>(m_CurrentResult.bundlesToUpdate);
+        m_RemainingCursor = 0;
+        m_TotalBundlesInStage = m_RemainingBundlesToCheck.Count;
         m_CurrentResult.bundlesToUpdate.Clear(); // 清空，后面重新添加
         m_CurrentBundleIndex = 0;
         m_Progress = 0.7f; // 验证阶段从70%开始
@@ -364,7 +373,7 @@ public class AssetBundleUpdateChecker
     /// </summary>
     private void ExecuteVerifyFiles()
     {
-        if (m_RemainingBundlesToCheck == null || m_RemainingBundlesToCheck.Count == 0)
+        if (m_RemainingBundlesToCheck == null || m_RemainingCursor >= m_RemainingBundlesToCheck.Count)
         {
             FinalizeResult();
             ChangeState(CheckerState.Complete);
@@ -374,12 +383,12 @@ public class AssetBundleUpdateChecker
         float startTime = Time.realtimeSinceStartup;
         int processedCount = 0;
 
-        while (m_RemainingBundlesToCheck.Count > 0 &&
+        while (m_RemainingCursor < m_RemainingBundlesToCheck.Count &&
                processedCount < bundlesPerFrame &&
                (Time.realtimeSinceStartup - startTime) < timeSlicePerFrame)
         {
-            var remoteBundle = m_RemainingBundlesToCheck[0];
-            m_RemainingBundlesToCheck.RemoveAt(0);
+            var remoteBundle = m_RemainingBundlesToCheck[m_RemainingCursor];
+            m_RemainingCursor++;
 
             string localFilePath = AssetBundlePathHelper.GetLocalLZ4Path(remoteBundle.BundleName);
             bool needsUpdate = CheckBundleIntegrity(localFilePath, remoteBundle);
@@ -399,7 +408,7 @@ public class AssetBundleUpdateChecker
         }
 
         // 更新进度
-        int totalBundlesToVerify = m_CurrentResult.bundlesToUpdate.Count + m_CurrentResult.upToDateBundles.Count + m_RemainingBundlesToCheck.Count;
+        int totalBundlesToVerify = m_TotalBundlesInStage;
         if (totalBundlesToVerify > 0)
         {
             m_Progress = 0.7f + 0.3f * (m_CurrentBundleIndex / (float)totalBundlesToVerify); // 验证占30%进度
@@ -534,11 +543,11 @@ public class AssetBundleUpdateChecker
         }
     }
 
-    private CustomAssetBundleInfo FindLocalBundle(string AssetName)
+    private CustomAssetBundleInfo FindLocalBundle(string bundleName)
     {
         if (m_LocalManifest?.AssetBundles == null) return null;
         return m_LocalManifest.AssetBundles.Find(b =>
-            string.Equals(b.AssetName, AssetName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(b.BundleName, bundleName, StringComparison.OrdinalIgnoreCase));
     }
 
     //public List<CustomAssetBundleInfo> GetAllBundlesToDownload()

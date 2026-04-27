@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 // 加载优先级枚举
@@ -138,7 +140,7 @@ public class AssetItem
             }
             catch (Exception e)
             {
-                Debug.LogError($"执行资源回调失败: {assetName}, 错误: {e.Message}");
+                GameLogController.Error($"执行资源回调失败: {assetName}, 错误: {e.Message}", "AssetBundleManager");
             }
         }
 
@@ -175,6 +177,8 @@ public class BundleInfo
     public int loadedDependenciesCount; // 已加载的依赖数量
     public bool areDependenciesLoaded; // 所有依赖是否已加载
     public Action onDependenciesLoaded; // 依赖加载完成的回调
+    private HashSet<string> _referencedDependencies; // 已计入引用计数的依赖集合（按父包去重）
+    private HashSet<string> _loadedDependencySet; // 已完成加载回调的依赖集合（防重复）
 
     public BundleInfo(string name)
     {
@@ -191,6 +195,8 @@ public class BundleInfo
         Dependencies = new List<string>();
         loadedDependenciesCount = 0;
         areDependenciesLoaded = false;
+        _referencedDependencies = new HashSet<string>();
+        _loadedDependencySet = new HashSet<string>();
     }
 
     public void AddReference()
@@ -226,13 +232,13 @@ public class BundleInfo
         if (!pendingAssets.Contains(assetName))
         {
             pendingAssets.Add(assetName);
-            Debug.LogError($"{assetName}加入{bundleName}待加载队列");
+            GameLogController.Log($"{assetName}加入{bundleName}待加载队列", "AssetBundleManager");
         }
     }
 
     public void RemovePendingAsset(string assetName)
     {
-        Debug.LogError($"{assetName}从{bundleName}待加载队列移除");
+        GameLogController.Log($"{assetName}从{bundleName}待加载队列移除", "AssetBundleManager");
         pendingAssets.Remove(assetName);
     }
 
@@ -253,6 +259,8 @@ public class BundleInfo
         pendingAssets.Clear();
         isLoaded = false;
         isLoading = false;
+        _referencedDependencies.Clear();
+        _loadedDependencySet.Clear();
     }
 
     // 新增方法：检查依赖是否全部加载完成
@@ -275,11 +283,28 @@ public class BundleInfo
     // 新增方法：依赖加载完成回调
     public void OnDependencyLoaded(string dependencyName)
     {
-        if (Dependencies.Contains(dependencyName))
+        if (Dependencies.Contains(dependencyName) && _loadedDependencySet.Add(dependencyName))
         {
             loadedDependenciesCount++;
             CheckDependenciesLoaded();
         }
+    }
+
+    public void ResetDependencyLoadState()
+    {
+        loadedDependenciesCount = 0;
+        areDependenciesLoaded = false;
+        _loadedDependencySet.Clear();
+    }
+
+    public bool TryMarkDependencyReferenced(string dependencyName)
+    {
+        return _referencedDependencies.Add(dependencyName);
+    }
+
+    public bool HasReferencedDependency(string dependencyName)
+    {
+        return _referencedDependencies.Contains(dependencyName);
     }
 }
 
@@ -325,12 +350,16 @@ public class AssetBundleManager
 
     // 正在加载的AB包
     private List<BundleInfo> _loadingBundles = new List<BundleInfo>();
+    private HashSet<string> _loadingBundleNames = new HashSet<string>();
 
     // 资源加载等待队列
     private Queue<AssetItem> _assetLoadingQueue = new Queue<AssetItem>();
+    private HashSet<string> _queuedAssetKeys = new HashSet<string>();
 
     //正在加载的资源
     private List<AssetItem> _loadingAssets = new List<AssetItem>();
+    private HashSet<string> _loadingAssetKeys = new HashSet<string>();
+    private HashSet<string> _cancelledAssetKeys = new HashSet<string>();
 
     public int maxConcurrentLoads = 3;
     public int maxConcurrentAssetLoads = 5; // 最大同时加载资源数量
@@ -370,8 +399,12 @@ public class AssetBundleManager
 
         // 清理资源加载相关
         _loadingBundles.Clear();
+        _loadingBundleNames.Clear();
         _assetLoadingQueue.Clear();
+        _queuedAssetKeys.Clear();
         _loadingAssets.Clear();
+        _loadingAssetKeys.Clear();
+        _cancelledAssetKeys.Clear();
         _loadedBundles.Clear();
     }
 
@@ -394,7 +427,7 @@ public class AssetBundleManager
         {
             _bundleManifests[abInfo.BundleName] = abInfo;
         }
-        Debug.Log($"AB包清单设置完成，共 {manifests.AssetBundles.Count} 个AB包信息");
+        GameLogController.Log($"AB包清单设置完成，共 {manifests.AssetBundles.Count} 个AB包信息", "AssetBundleManager");
     }
 
     /// <summary>
@@ -416,7 +449,7 @@ public class AssetBundleManager
                 T typedAsset = asset as T;
                 if (typedAsset == null && asset != null)
                 {
-                    Debug.LogError($"资源类型不匹配: {assetName}, 期望: {typeof(T).Name}, 实际: {asset.GetType().Name}");
+                    GameLogController.Error($"资源类型不匹配: {assetName}, 期望: {typeof(T).Name}, 实际: {asset.GetType().Name}", "AssetBundleManager");
                 }
                 callback?.Invoke(typedAsset);
             };
@@ -460,12 +493,12 @@ public class AssetBundleManager
     {
         if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetName))
         {
-            Debug.LogError("AB包名或资源名为空");
+            GameLogController.Error("AB包名或资源名为空", "AssetBundleManager");
             callback?.Invoke(null);
             return -1;
         }
 
-        Debug.LogError($"开始尝试加载{bundleName}和{assetName}");
+        GameLogController.Log($"开始尝试加载{bundleName}和{assetName}", "AssetBundleManager");
 
         // 查找或创建BundleInfo
         BundleInfo bundleInfo = GetOrCreateBundleInfo(bundleName);
@@ -597,22 +630,10 @@ public class AssetBundleManager
     // 新增：从加载队列中移除资源
     private void RemoveAssetFromLoadingQueue(AssetItem assetItem)
     {
-        // 从资源加载队列中移除
-        var queueList = _assetLoadingQueue.ToList();
-        queueList.RemoveAll(item =>
-            item.bundleName == assetItem.bundleName &&
-            item.assetName == assetItem.assetName);
-
-        _assetLoadingQueue.Clear();
-        foreach (var item in queueList)
-        {
-            _assetLoadingQueue.Enqueue(item);
-        }
-
-        // 从正在加载列表中移除 //这里可能会有隐患
-        _loadingAssets.RemoveAll(item =>
-            item.bundleName == assetItem.bundleName &&
-            item.assetName == assetItem.assetName);
+        string assetKey = GetAssetLoadKey(assetItem.bundleName, assetItem.assetName);
+        // 惰性取消：不重建队列，不强行操作进行中的 request，交给 Update 时跳过/回收。
+        _cancelledAssetKeys.Add(assetKey);
+        _queuedAssetKeys.Remove(assetKey);
 
         // 从AB包的待加载列表中移除
         var bundleInfo = GetBundleInfo(assetItem.bundleName);
@@ -647,7 +668,7 @@ public class AssetBundleManager
     {
         if (!_allBundleDic.TryGetValue(bundleName, out BundleInfo bundleInfo))
         {
-            Debug.LogError($"Bundle依赖没找到，怎么去减少依赖？{bundleName}");
+            GameLogController.Error($"Bundle依赖没找到，怎么去减少依赖？{bundleName}", "AssetBundleManager");
             return;
         }
 
@@ -659,7 +680,8 @@ public class AssetBundleManager
         {
             foreach (string dependency in bundleInfo.Dependencies)
             {
-                if (_allBundleDic.TryGetValue(dependency, out BundleInfo depBundle))
+                if (bundleInfo.HasReferencedDependency(dependency) &&
+                    _allBundleDic.TryGetValue(dependency, out BundleInfo depBundle))
                 {
                     depBundle.RemoveReference(); // 减少依赖包的引用计数
                 }
@@ -679,7 +701,7 @@ public class AssetBundleManager
 
                 bundleInfo.Unload(true);
                 _loadedBundles.Remove(bundleName);
-                Debug.Log($"卸载AB包: {bundleName}");
+                GameLogController.Log($"卸载AB包: {bundleName}", "AssetBundleManager");
             }
         }
     }
@@ -737,7 +759,7 @@ public class AssetBundleManager
     {
         if (!_bundleManifests.TryGetValue(bundleName, out CustomAssetBundleInfo manifest))
         {
-            Debug.LogError($"AB包不在清单中: {bundleName}");
+            GameLogController.Error($"AB包不在清单中: {bundleName}", "AssetBundleManager");
             return;
         }
 
@@ -764,6 +786,7 @@ public class AssetBundleManager
             bundleInfo.Dependencies.Clear();
             bundleInfo.Dependencies.AddRange(manifest.Dependencies);
         }
+        bundleInfo.ResetDependencyLoadState();
 
         // 设置依赖加载完成的回调
         bundleInfo.onDependenciesLoaded = () =>
@@ -793,8 +816,11 @@ public class AssetBundleManager
             // 检查依赖是否已经加载
             if (_loadedBundles.TryGetValue(dependency, out BundleInfo depBundle))
             {
-                // 依赖已加载，增加引用计数（因为这个AB包依赖它）
-                depBundle.AddReference();
+                // 依赖已加载，仅在父包尚未计入时增加引用计数，避免重复累加。
+                if (bundleInfo.TryMarkDependencyReferenced(dependency))
+                {
+                    depBundle.AddReference();
+                }
                 bundleInfo.OnDependencyLoaded(dependency);
             }
             else
@@ -815,9 +841,12 @@ public class AssetBundleManager
 
     private void LoadDependencyBundle(string dependencyName, BundleInfo parentBundle, LoadPriority priority)
     {
-        // 先增加引用计数（在依赖加载过程中也要计数）
+        // 依赖引用按父包去重计入，避免多次请求导致计数膨胀。
         var dependencyBundle = GetOrCreateBundleInfo(dependencyName);
-        dependencyBundle.AddReference(); // 因为被依赖而增加引用计数
+        if (parentBundle.TryMarkDependencyReferenced(dependencyName))
+        {
+            dependencyBundle.AddReference(); // 因为被依赖而增加引用计数
+        }
 
         // 递归加载依赖的依赖
         LoadBundleWithDependencies(dependencyName, priority);
@@ -842,7 +871,7 @@ public class AssetBundleManager
     {
         // 如果已经加载或正在加载，只增加引用计数（已经在LoadAsset中处理）
         if (_loadedBundles.TryGetValue(bundleName, out BundleInfo loadedBundle) ||
-            _loadingBundles.Any(b => b.bundleName == bundleName))
+            _loadingBundleNames.Contains(bundleName))
         {
             return;
         }
@@ -852,7 +881,7 @@ public class AssetBundleManager
         // 检查依赖是否全部加载完成
         if (!bundleInfo.areDependenciesLoaded && bundleInfo.Dependencies.Count > 0)
         {
-            Debug.LogWarning($"尝试加载AB包 {bundleName} 但依赖尚未全部加载完成");
+            GameLogController.Warning($"尝试加载AB包 {bundleName} 但依赖尚未全部加载完成", "AssetBundleManager");
             return;
         }
 
@@ -866,21 +895,24 @@ public class AssetBundleManager
         var bundleInfo = GetBundleInfo(assetItem.bundleName);
         if (bundleInfo == null || !bundleInfo.isLoaded)
         {
-            Debug.LogError($"AB包未加载，无法加载资源: {assetItem.assetName}，立马排除加载问题");
+            GameLogController.Warning($"AB包未加载，无法加载资源: {assetItem.assetName}", "AssetBundleManager");
             return;
         }
 
         // 如果资源已经在加载队列或正在加载，不再重复添加
-        if (IsAssetInLoadingQueue(assetItem) || _loadingAssets.Contains(assetItem))
+        string assetKey = GetAssetLoadKey(assetItem.bundleName, assetItem.assetName);
+        if (_queuedAssetKeys.Contains(assetKey) || _loadingAssetKeys.Contains(assetKey))
         {
             return;
         }
 
         // 将资源加入加载队列
         _assetLoadingQueue.Enqueue(assetItem);
+        _queuedAssetKeys.Add(assetKey);
+        _cancelledAssetKeys.Remove(assetKey);
         bundleInfo.RemovePendingAsset(assetItem.assetName);
 
-        Debug.Log($"资源加入加载队列: {assetItem.assetName}, 队列位置: {_assetLoadingQueue.Count}");
+        GameLogController.Log($"资源加入加载队列: {assetItem.assetName}, 队列位置: {_assetLoadingQueue.Count}", "AssetBundleManager");
     }
 
     // 新增方法：立即开始加载资源（不经过队列）
@@ -889,7 +921,7 @@ public class AssetBundleManager
         var bundleInfo = GetBundleInfo(assetItem.bundleName);
         if (bundleInfo == null || !bundleInfo.isLoaded)
         {
-            Debug.LogError($"AB包未加载，无法加载资源: {assetItem.assetName}");
+            GameLogController.Warning($"AB包未加载，无法加载资源: {assetItem.assetName}", "AssetBundleManager");
             assetItem.ExecuteCallbacks();
             return;
         }
@@ -897,16 +929,15 @@ public class AssetBundleManager
         // 开始异步加载资源
         assetItem.loadRequest = bundleInfo.bundle.LoadAssetAsync(assetItem.assetName);
         _loadingAssets.Add(assetItem);
+        _loadingAssetKeys.Add(GetAssetLoadKey(assetItem.bundleName, assetItem.assetName));
 
-        Debug.Log($"开始加载资源: {assetItem.assetName}, 正在加载的资源数: {_loadingAssets.Count}");
+        GameLogController.Log($"开始加载资源: {assetItem.assetName}, 正在加载的资源数: {_loadingAssets.Count}", "AssetBundleManager");
     }
 
     // 新增方法：检查资源是否在加载队列中
     private bool IsAssetInLoadingQueue(AssetItem assetItem)
     {
-        return _assetLoadingQueue.Any(item =>
-            item.bundleName == assetItem.bundleName &&
-            item.assetName == assetItem.assetName);
+        return _queuedAssetKeys.Contains(GetAssetLoadKey(assetItem.bundleName, assetItem.assetName));
     }
 
     #endregion
@@ -945,6 +976,12 @@ public class AssetBundleManager
         while (_loadingAssets.Count < maxConcurrentAssetLoads && _assetLoadingQueue.Count > 0)
         {
             AssetItem nextAsset = _assetLoadingQueue.Dequeue();
+            string assetKey = GetAssetLoadKey(nextAsset.bundleName, nextAsset.assetName);
+            _queuedAssetKeys.Remove(assetKey);
+            if (_cancelledAssetKeys.Contains(assetKey))
+            {
+                continue;
+            }
             StartAssetLoadingImmediate(nextAsset);
         }
 
@@ -982,12 +1019,13 @@ public class AssetBundleManager
         // 再次确认依赖已全部加载
         if (!bundleInfo.areDependenciesLoaded && bundleInfo.Dependencies.Count > 0)
         {
-            Debug.LogError($"AB包 {bundleInfo.bundleName} 的依赖尚未全部加载完成，无法开始加载");
+            GameLogController.Warning($"AB包 {bundleInfo.bundleName} 的依赖尚未全部加载完成，无法开始加载", "AssetBundleManager");
             return;
         }
 
         bundleInfo.isLoading = true;
         _loadingBundles.Add(bundleInfo);
+        _loadingBundleNames.Add(bundleInfo.bundleName);
 
         string path = AssetBundlePathHelper.GetLocalLZ4Path(bundleInfo.bundleName);
 
@@ -1003,13 +1041,14 @@ public class AssetBundleManager
             bundleInfo.bundleRequest = AssetBundle.LoadFromFileAsync(path);
         }
 
-        Debug.Log($"开始加载AB包: {bundleInfo.bundleName}, 优先级: {bundleInfo.loadPriority}, 依赖数: {bundleInfo.Dependencies.Count}");
+        GameLogController.Log($"开始加载AB包: {bundleInfo.bundleName}, 优先级: {bundleInfo.loadPriority}, 依赖数: {bundleInfo.Dependencies.Count}", "AssetBundleManager");
     }
 
     // 修改OnBundleLoadComplete方法，在AB包加载失败时减少引用计数
     private void OnBundleLoadComplete(BundleInfo bundleInfo)
     {
         bundleInfo.isLoading = false;
+        _loadingBundleNames.Remove(bundleInfo.bundleName);
 
         AssetBundle loadedBundle = bundleInfo.bundleRequest?.assetBundle ?? bundleInfo.bundle;
 
@@ -1020,7 +1059,7 @@ public class AssetBundleManager
             bundleInfo.loadTime = DateTime.Now;
 
             _loadedBundles[bundleInfo.bundleName] = bundleInfo;
-            Debug.Log($"AB包加载完成: {bundleInfo.bundleName}, 等待加载资源数: {bundleInfo.pendingAssets.Count}");
+            GameLogController.Log($"AB包加载完成: {bundleInfo.bundleName}, 等待加载资源数: {bundleInfo.pendingAssets.Count}", "AssetBundleManager");
 
             // 加载所有等待中的资源
             foreach (string assetName in bundleInfo.pendingAssets.ToList())
@@ -1036,25 +1075,24 @@ public class AssetBundleManager
         }
         else
         {
-            Debug.LogError($"AB包加载失败: {bundleInfo.bundleName}");
+            GameLogController.Error($"AB包加载失败: {bundleInfo.bundleName}", "AssetBundleManager");
             OnBundleLoadFailed?.Invoke(bundleInfo.bundleName);
+            // AB包加载失败时，必须通知等待中的资源请求方，避免上层逻辑一直等待。
+            foreach (string assetName in bundleInfo.pendingAssets.ToList())
+            {
+                var assetItem = bundleInfo.GetAssetItem(assetName);
+                if (assetItem != null)
+                {
+                    assetItem.loadRequest = null;
+                    assetItem.assetObject = null;
 
-            //// AB包加载失败，减少所有等待资源的引用计数
-            //foreach (string assetName in bundleInfo.pendingAssets.ToList())
-            //{
-            //    var assetItem = bundleInfo.GetAssetItem(assetName);
-            //    if (assetItem != null)
-            //    {
-            //        // 减少资源引用计数
-            //        assetItem.RemoveReference();
+                    // 收敛一次引用，避免失败路径上长期堆积。
+                    assetItem.RemoveReference();
+                    bundleInfo.RemoveReference();
 
-            //        // 减少AB包引用计数（因为资源加载失败）
-            //        bundleInfo.RemoveReference();
-
-            //        // 执行回调
-            //        assetItem?.ExecuteCallbacks();
-            //    }
-            //}
+                    assetItem.ExecuteCallbacks();
+                }
+            }
         }
 
         bundleInfo.pendingAssets.Clear();
@@ -1062,16 +1100,26 @@ public class AssetBundleManager
 
     private void OnAssetLoadComplete(AssetItem assetItem)
     {
-        bool isSuccess = false;
+        string assetKey = GetAssetLoadKey(assetItem.bundleName, assetItem.assetName);
+        bool isCancelled = _cancelledAssetKeys.Contains(assetKey);
+        _loadingAssetKeys.Remove(assetKey);
+
+        if (isCancelled)
+        {
+            _cancelledAssetKeys.Remove(assetKey);
+            assetItem.loadRequest = null;
+            assetItem.RemoveAllCallbacks();
+            return;
+        }
+
         if (assetItem.loadRequest.asset != null)
         {
             assetItem.assetObject = assetItem.loadRequest.asset;
-            Debug.Log($"资源加载完成: {assetItem.assetName}");
-            isSuccess = true;
+            GameLogController.Log($"资源加载完成: {assetItem.assetName}", "AssetBundleManager");
         }
         else
         {
-            Debug.LogError($"资源加载失败: {assetItem.assetName}");
+            GameLogController.Error($"资源加载失败: {assetItem.assetName}", "AssetBundleManager");
 
             // 资源加载失败，减少引用计数
             assetItem.RemoveReference();
@@ -1082,10 +1130,12 @@ public class AssetBundleManager
 
         assetItem.loadRequest = null;
 
-        if (isSuccess)
-        {
-            assetItem.ExecuteCallbacks();
-        }
+        assetItem.ExecuteCallbacks();
+    }
+
+    private static string GetAssetLoadKey(string bundleName, string assetName)
+    {
+        return (bundleName + "|" + assetName).ToLowerInvariant();
     }
 
     //// 新增方法：批量释放多个资源
@@ -1140,11 +1190,11 @@ public class AssetBundleManager
     {
         if (AssetBundleDownloader.Instance == null)
         {
-            Debug.LogError("AB下载器未设置");
+            GameLogController.Error("AB下载器未设置", "AssetBundleManager");
             return;
         }
 
-        Debug.Log($"开始下载AB包: {bundleName}");
+        GameLogController.Log($"开始下载AB包: {bundleName}", "AssetBundleManager");
         AssetBundleDownloader.Instance.DownloadBundle(bundleName, false, onDownloadComplete);
     }
 
@@ -1185,7 +1235,7 @@ public class AssetBundleManager
 
         if (unloadedCount > 0)
         {
-            Debug.Log($"自动卸载了 {unloadedCount} 个未使用的AB包");
+            GameLogController.Log($"自动卸载了 {unloadedCount} 个未使用的AB包", "AssetBundleManager");
         }
     }
 

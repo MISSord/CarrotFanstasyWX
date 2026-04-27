@@ -2,7 +2,6 @@ using CarrotFantasy;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using static AssetBundleUpdateChecker;
 
 // 游戏状态枚举
 public enum GameState

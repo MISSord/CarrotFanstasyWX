@@ -3,8 +3,10 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
+    //本地数据保存管理器
     public class LocalStorageManager
     {
+        private const string LogTag = "LocalStorageManager";
         private static LocalStorageManager localStorageManager;
         private string account;
 
@@ -23,70 +25,108 @@ namespace CarrotFantasy
 
         private String GetPlayerStorageData(String value)
         {
+            EnsureAccount();
             return String.Format("{0}_{1}", this.account, value);
         }
 
         public void SetDataToLocal(String key, System.Object value, LocalStorageSaveType valueType)
         {
-            if (valueType == LocalStorageSaveType.IntType)
+            if (string.IsNullOrEmpty(key))
             {
-                PlayerPrefs.SetInt(key, (int)value);
+                GameLogController.Error("SetDataToLocal失败: key为空", LogTag);
+                return;
             }
-            else if (valueType == LocalStorageSaveType.StringType)
-            {
-                PlayerPrefs.SetString(key, (String)value);
-            }
-            else if (valueType == LocalStorageSaveType.FloatType)
-            {
-                PlayerPrefs.SetFloat(key, (float)value);
-            }
-            else if (valueType == LocalStorageSaveType.BoolType)
-            {
-                if (value is Boolean) //判断是不是Boolean类型
-                {
-                    if ((Boolean)value == true)
-                    {
-                        PlayerPrefs.SetString(key, "true");
-                    }
-                    else if ((Boolean)value == false)
-                    {
-                        PlayerPrefs.SetString(key, "false");
-                    }
-                }
 
+            if (!TrySetDataToLocalInternal(key, value, valueType))
+            {
+                GameLogController.Error($"SetDataToLocal失败: key={key}, valueType={valueType}, value={value}", LogTag);
             }
         }
 
-        public T getDataFromLocal<T>(String key, System.Object defaultValue, LocalStorageSaveType valueType)
+        private bool TrySetDataToLocalInternal(String key, System.Object value, LocalStorageSaveType valueType)
         {
-            if (valueType == LocalStorageSaveType.StringType)
+            if (valueType == LocalStorageSaveType.IntType)
             {
-                String value = (String)defaultValue;
-                return (T)(System.Object)PlayerPrefs.GetString(key, value);
+                if (value is int intValue)
+                {
+                    PlayerPrefs.SetInt(key, intValue);
+                    return true;
+                }
             }
-            else if (valueType == LocalStorageSaveType.IntType)
+            else if (valueType == LocalStorageSaveType.StringType)
             {
-                int value = (int)defaultValue;
-                return (T)(System.Object)PlayerPrefs.GetInt(key, value);
+                if (value is String stringValue)
+                {
+                    PlayerPrefs.SetString(key, stringValue);
+                    return true;
+                }
             }
             else if (valueType == LocalStorageSaveType.FloatType)
             {
-                float value = (float)defaultValue;
-                return (T)(System.Object)PlayerPrefs.GetFloat(key, value);
+                if (value is float floatValue)
+                {
+                    PlayerPrefs.SetFloat(key, floatValue);
+                    return true;
+                }
             }
             else if (valueType == LocalStorageSaveType.BoolType)
             {
-                String dfValue;
-                if ((bool)defaultValue == true)
+                if (value is Boolean boolValue) //判断是不是Boolean类型
                 {
-                    dfValue = "true";
+                    // 统一使用int存储bool：1=true, 0=false（兼容跨平台与读取性能）
+                    PlayerPrefs.SetInt(key, boolValue ? 1 : 0);
+                    return true;
                 }
-                else
+            }
+            return false;
+        }
+
+        public T GetDataFromLocal<T>(String key, System.Object defaultValue, LocalStorageSaveType valueType)
+        {
+            if (string.IsNullOrEmpty(key))
+            {
+                GameLogController.Warning("GetDataFromLocal: key为空，返回默认值", LogTag);
+                return defaultValue is T castedDefault ? castedDefault : default(T);
+            }
+
+            if (valueType == LocalStorageSaveType.StringType)
+            {
+                if (defaultValue is String value)
                 {
-                    dfValue = "false";
+                    return (T)(System.Object)PlayerPrefs.GetString(key, value);
+                }
+            }
+            else if (valueType == LocalStorageSaveType.IntType)
+            {
+                if (defaultValue is int value)
+                {
+                    return (T)(System.Object)PlayerPrefs.GetInt(key, value);
+                }
+            }
+            else if (valueType == LocalStorageSaveType.FloatType)
+            {
+                if (defaultValue is float value)
+                {
+                    return (T)(System.Object)PlayerPrefs.GetFloat(key, value);
+                }
+            }
+            else if (valueType == LocalStorageSaveType.BoolType)
+            {
+                if (!(defaultValue is bool boolDefaultValue))
+                {
+                    GameLogController.Warning($"GetDataFromLocal bool默认值类型错误: key={key}", LogTag);
+                    return default(T);
                 }
 
-                String value = PlayerPrefs.GetString(key, dfValue);
+                // 新格式：int
+                if (PlayerPrefs.HasKey(key))
+                {
+                    int intBool = PlayerPrefs.GetInt(key, boolDefaultValue ? 1 : 0);
+                    return (T)(System.Object)(intBool != 0);
+                }
+
+                // 兼容旧格式：字符串 "true"/"false"
+                String value = PlayerPrefs.GetString(key, boolDefaultValue ? "true" : "false");
                 if (string.Equals(value, "true"))
                 {
                     return (T)(System.Object)true;
@@ -96,26 +136,61 @@ namespace CarrotFantasy
                     return (T)(System.Object)false;
                 }
             }
+
+            GameLogController.Warning($"GetDataFromLocal类型不匹配: key={key}, valueType={valueType}, defaultValue={defaultValue}", LogTag);
             return default(T);
         }
 
-        public T getPlayerInfo<T>(String key, System.Object defaultValue, LocalStorageSaveType valueType)
+        public T GetPlayerInfo<T>(String key, System.Object defaultValue, LocalStorageSaveType valueType)
         {
             if (key == null || defaultValue == null)
             {
-                Debug.Log("本地信息获取失败");
+                GameLogController.Warning("本地信息获取失败: key或默认值为空", LogTag);
                 return default(T);
             }
-            return getDataFromLocal<T>(GetPlayerStorageData(key), defaultValue, valueType);
+            return GetDataFromLocal<T>(GetPlayerStorageData(key), defaultValue, valueType);
         }
 
-        public void setPlayerInfo<T>(String key, System.Object defaultValue, LocalStorageSaveType valueType)
+        public void SetPlayerInfo<T>(String key, System.Object value, LocalStorageSaveType valueType)
         {
-            if (key == null || defaultValue == null)
+            if (key == null || value == null)
             {
-                Debug.Log("本地信息设置失败");
+                GameLogController.Warning("本地信息设置失败: key或值为空", LogTag);
+                return;
             }
-            this.SetDataToLocal(GetPlayerStorageData(key), defaultValue, valueType);
+            this.SetDataToLocal(GetPlayerStorageData(key), value, valueType);
+        }
+
+        public bool HasPlayerInfo(String key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return false;
+            return PlayerPrefs.HasKey(GetPlayerStorageData(key));
+        }
+
+        public void DeletePlayerInfo(String key)
+        {
+            if (string.IsNullOrEmpty(key))
+                return;
+            PlayerPrefs.DeleteKey(GetPlayerStorageData(key));
+        }
+
+        public void Save()
+        {
+            PlayerPrefs.Save();
+        }
+
+        public void RefreshAccount()
+        {
+            account = AccountServer.Instance.GetAccountId();
+        }
+
+        private void EnsureAccount()
+        {
+            if (string.IsNullOrEmpty(account))
+            {
+                RefreshAccount();
+            }
         }
     }
 }

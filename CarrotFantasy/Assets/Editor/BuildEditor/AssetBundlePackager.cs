@@ -39,6 +39,11 @@ public static class AssetBundlePackager
 
             if (clearFolders && Directory.Exists(outputPath))
             {
+                if (!IsSafeToDeleteDirectory(outputPath))
+                {
+                    Debug.LogError("输出目录过于危险，已拒绝清空: " + outputPath);
+                    return false;
+                }
                 Directory.Delete(outputPath, true);
                 Debug.Log("\u5df2\u6e05\u7a7a\u8f93\u51fa\u6587\u4ef6\u5939: " + outputPath);
             }
@@ -49,7 +54,12 @@ public static class AssetBundlePackager
                 Debug.Log("\u5df2\u521b\u5efa\u8f93\u51fa\u76ee\u5f55: " + outputPath);
             }
 
-            BuildPipeline.BuildAssetBundles(outputPath, compression, buildTarget);
+            AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(outputPath, compression, buildTarget);
+            if (manifest == null)
+            {
+                Debug.LogError("BuildPipeline.BuildAssetBundles 返回空结果。");
+                return false;
+            }
 
             Debug.Log($"AssetBundle \u5df2\u751f\u6210\u3002\u8def\u5f84: {outputPath} \u5e73\u53f0: {buildTarget}");
 
@@ -135,30 +145,36 @@ public static class AssetBundlePackager
         };
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
-
-        foreach (string file in bundleFiles)
+        try
         {
-            if (file.EndsWith(".meta") || file.EndsWith(".manifest") || file.EndsWith(".json") || file.EndsWith(".txt"))
-                continue;
-
-            string BundleName = AssetBundlePackager.GetBundlePath(bundlePath, file);
-            CustomAssetBundleInfo info = new CustomAssetBundleInfo
+            for (int i = 0; i < bundleFiles.Length; i++)
             {
-                AssetName = Path.GetFileName(file),
-                BundleName = BundleName,
-                Size = new FileInfo(file).Length,
-                Hash = MD5Checker.ComputeFileMD5(file),
-            };
+                string file = bundleFiles[i];
+                if (file.EndsWith(".meta") || file.EndsWith(".manifest") || file.EndsWith(".json") || file.EndsWith(".txt"))
+                    continue;
 
-            string manifestFile = file + ".manifest";
-            if (File.Exists(manifestFile))
-            {
+                EditorUtility.DisplayProgressBar("生成AB清单", Path.GetFileName(file), (i + 1f) / bundleFiles.Length);
+
+                string BundleName = AssetBundlePackager.GetBundlePath(bundlePath, file);
+                CustomAssetBundleInfo info = new CustomAssetBundleInfo
+                {
+                    AssetName = Path.GetFileName(file),
+                    BundleName = BundleName,
+                    Size = new FileInfo(file).Length,
+                    Hash = MD5Checker.ComputeFileMD5(file),
+                };
+
+                // 统一通过 AssetDatabase 读取依赖，避免多套来源带来的不一致。
                 HashSet<string> processedBundles = new HashSet<string>();
                 GenerateFlatDependencyList(BundleName, 0, processedBundles);
                 info.Dependencies = processedBundles.ToArray();
-            }
 
-            generatedManifest.AssetBundles.Add(info);
+                generatedManifest.AssetBundles.Add(info);
+            }
+        }
+        finally
+        {
+            EditorUtility.ClearProgressBar();
         }
 
         string manifestJson = JsonUtility.ToJson(generatedManifest, true);
@@ -172,32 +188,6 @@ public static class AssetBundlePackager
         EditorUtility.DisplayDialog("\u6210\u529f", "\u6e05\u5355\u6587\u4ef6\u5df2\u751f\u6210\uff01", "\u786e\u5b9a");
 
         return generatedManifest;
-    }
-
-    private static string[] ExtractDependencies(string manifestPath)
-    {
-        List<string> dependencies = new List<string>();
-        try
-        {
-            string[] lines = File.ReadAllLines(manifestPath);
-            foreach (string line in lines)
-            {
-                if (line.Contains("Dependencies:"))
-                {
-                    int startIndex = line.IndexOf("- ") + 2;
-                    if (startIndex > 1)
-                    {
-                        string dep = line.Substring(startIndex).Trim();
-                        dependencies.Add(dep);
-                    }
-                }
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"\u89e3\u6790\u4f9d\u8d56\u6587\u4ef6\u5931\u8d25: {e.Message}");
-        }
-        return dependencies.ToArray();
     }
 
     private static void GenerateFlatDependencyList(string abName, int depth, HashSet<string> processedBundles)
@@ -215,6 +205,24 @@ public static class AssetBundlePackager
         {
             GenerateFlatDependencyList(dependency, depth + 1, processedBundles);
         }
+    }
+
+    private static bool IsSafeToDeleteDirectory(string outputPath)
+    {
+        string fullPath = Path.GetFullPath(outputPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string rootPath = Path.GetPathRoot(fullPath)?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (string.IsNullOrEmpty(fullPath) || string.IsNullOrEmpty(rootPath))
+            return false;
+
+        if (string.Equals(fullPath, rootPath, System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."))
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (string.Equals(fullPath, projectRoot, System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        return true;
     }
 }
 

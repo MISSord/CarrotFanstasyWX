@@ -16,6 +16,7 @@ public enum LoaderState
 //AssetBundle下载器，负责AB下载与解压转换
 public class AssetBundleDownloader
 {
+    private const string LogTag = "AssetBundleDownloader";
     private static AssetBundleDownloader _instance;
 
     public static AssetBundleDownloader Instance
@@ -301,6 +302,12 @@ public class AssetBundleDownloader
         activeDownloads.Add(task);
 
         Log($"开始下载: {task.bundleName}");
+
+        string targetDir = Path.GetDirectoryName(task.tempPath);
+        if (!string.IsNullOrEmpty(targetDir) && !Directory.Exists(targetDir))
+        {
+            Directory.CreateDirectory(targetDir);
+        }
 
         task.webRequest = UnityWebRequest.Get(task.remoteURL);
         task.webRequest.timeout = (int)timeout;
@@ -640,7 +647,7 @@ public class AssetBundleDownloader
     {
         if (enableLogging)
         {
-            Debug.Log($"[AssetBundleDownloader] {message}");
+            GameLogController.Log(message, LogTag);
         }
     }
 
@@ -648,7 +655,7 @@ public class AssetBundleDownloader
     {
         if (enableLogging)
         {
-            Debug.LogError($"[AssetBundleDownloader] {message}");
+            GameLogController.Error(message, LogTag);
         }
     }
 
