@@ -6,11 +6,9 @@ namespace CarrotFantasy
     /// <summary>
     /// 游戏胜利页面
     /// </summary>
-    public class GameWinPage
+    public class GameWinPage : BaseView
     {
         private BattleDataComponent dataComponent;
-
-        private Transform transform;
 
         private Text txtResultShow;
         private Text txtLevelShow;
@@ -19,6 +17,7 @@ namespace CarrotFantasy
 
         private Button btnReplay;
         private Button btnChooseLevel;
+        private bool isLoaded;
 
         public GameWinPage(Transform node)
         {
@@ -26,8 +25,40 @@ namespace CarrotFantasy
             this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
         }
 
-        public void Init()
+        public override void InitData()
         {
+            viewName = "GameWinPage";
+            layer = UILayer.Normal;
+        }
+
+        public void BindNode(Transform node)
+        {
+            this.transform = node;
+        }
+
+        public void OpenPage()
+        {
+            if (!isLoaded)
+            {
+                LoadCallBack();
+                isLoaded = true;
+            }
+        }
+
+        public void ClosePage()
+        {
+            if (this.transform != null)
+            {
+                this.transform.gameObject.SetActive(false);
+            }
+        }
+
+        protected override void LoadCallBack()
+        {
+            if (dataComponent == null)
+            {
+                dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            }
             this.txtResultShow = this.transform.Find("txt_result_show").GetComponent<Text>();
             this.txtLevelShow = this.transform.Find("txt_level_show").GetComponent<Text>();
             this.img_Carrot = transform.Find("Img_Carrot").GetComponent<Image>();
@@ -77,10 +108,11 @@ namespace CarrotFantasy
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.RETURN_TO_MAIN_SCENE);
         }
 
-        public void Dispose()
+        protected override void ReleaseCallBack()
         {
             this.RemoveListener();
             this.dataComponent = null;
+            isLoaded = false;
         }
     }
 }

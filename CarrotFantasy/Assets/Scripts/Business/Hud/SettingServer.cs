@@ -6,6 +6,7 @@ namespace CarrotFantasy
     {
         private SetPanel settingPanel;
         private HelpPanel helpPanel;
+        private StartLoadPanel startLoadPanel;
 
         public override void LoadModule()
         {
@@ -15,6 +16,9 @@ namespace CarrotFantasy
 
             helpPanel = new HelpPanel();
             helpPanel.RegisterData();
+
+            startLoadPanel = new StartLoadPanel();
+            startLoadPanel.RegisterData();
         }
 
     }

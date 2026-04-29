@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 224358337607923638}
   - component: {fileID: 222808717391738784}
   - component: {fileID: 114933682397933140}
+  - component: {fileID: 2569547681236680516}
   m_Layer: 5
   m_Name: Img_Instruction
   m_TagString: Untagged
@@ -76,6 +77,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2569547681236680516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1026369783754848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/bossmodelview/images_atlas
+  defaultAssetName: gameover1-hd_0
+  _lastRecordedSpriteInstanceId: 27376
 --- !u!1 &1031993161606690
 GameObject:
   m_ObjectHideFlags: 0
@@ -87,6 +103,7 @@ GameObject:
   - component: {fileID: 224051065778688752}
   - component: {fileID: 222144250301656858}
   - component: {fileID: 114227256581552808}
+  - component: {fileID: 1742211056438011118}
   m_Layer: 5
   m_Name: Img_BG
   m_TagString: Untagged
@@ -152,6 +169,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1742211056438011118
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1031993161606690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/gameover1-hd_2
+  defaultAssetName: gameover1-hd_2
+  _lastRecordedSpriteInstanceId: 27384
 --- !u!1 &1040765655439010
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,6 +196,7 @@ GameObject:
   - component: {fileID: 222211033240032228}
   - component: {fileID: 114095344560709046}
   - component: {fileID: 114924556424431672}
+  - component: {fileID: 6954796143931013971}
   m_Layer: 5
   m_Name: But_Menu
   m_TagString: Untagged
@@ -188,8 +221,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 830, y: 1.7501221}
-  m_SizeDelta: {x: 88.5, y: 88.5}
+  m_AnchoredPosition: {x: 716, y: 0}
+  m_SizeDelta: {x: 56, y: 56}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222211033240032228
 CanvasRenderer:
@@ -273,6 +306,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6954796143931013971
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1040765655439010}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: menu_1
+  _lastRecordedSpriteInstanceId: 27216
 --- !u!1 &1046050560540354
 GameObject:
   m_ObjectHideFlags: 0
@@ -285,6 +333,7 @@ GameObject:
   - component: {fileID: 222780590093470878}
   - component: {fileID: 114569675571963286}
   - component: {fileID: 114347212543911572}
+  - component: {fileID: 5024615899846226470}
   m_Layer: 5
   m_Name: Btn_ChooseLevel
   m_TagString: Untagged
@@ -394,6 +443,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5024615899846226470
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046050560540354}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gameover-hd_3
+  _lastRecordedSpriteInstanceId: 27160
 --- !u!1 &1079470190921636
 GameObject:
   m_ObjectHideFlags: 0
@@ -406,6 +470,7 @@ GameObject:
   - component: {fileID: 222231670676735354}
   - component: {fileID: 114658416117954224}
   - component: {fileID: 114466203441188188}
+  - component: {fileID: 3169989366536012043}
   m_Layer: 5
   m_Name: Btn_ChooseLevel
   m_TagString: Untagged
@@ -515,6 +580,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &3169989366536012043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1079470190921636}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/gamemenu-hd
+  defaultAssetName: gamemenu-hd_6
+  _lastRecordedSpriteInstanceId: 27434
 --- !u!1 &1137492805943866
 GameObject:
   m_ObjectHideFlags: 0
@@ -526,6 +606,7 @@ GameObject:
   - component: {fileID: 224766111510942338}
   - component: {fileID: 222324589012541142}
   - component: {fileID: 114058035601157684}
+  - component: {fileID: 4526451085122523212}
   m_Layer: 5
   m_Name: Img_BG
   m_TagString: Untagged
@@ -594,6 +675,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4526451085122523212
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1137492805943866}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/gamemenu-hd
+  defaultAssetName: gamemenu-hd_0
+  _lastRecordedSpriteInstanceId: 27422
 --- !u!1 &1138127645767252
 GameObject:
   m_ObjectHideFlags: 0
@@ -629,7 +725,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 81, y: 9.2501}
+  m_AnchoredPosition: {x: 81, y: 6}
   m_SizeDelta: {x: 244.4, y: 73.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222984690660635642
@@ -708,7 +804,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 41.000153, y: 1.7501221}
+  m_AnchoredPosition: {x: 41.000153, y: 0}
   m_SizeDelta: {x: 454.4, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1198457386606280
@@ -803,6 +899,7 @@ GameObject:
   - component: {fileID: 222309991561985642}
   - component: {fileID: 114950762280767004}
   - component: {fileID: 114306456567463966}
+  - component: {fileID: 8164608411481577284}
   m_Layer: 5
   m_Name: Btn_Replay
   m_TagString: Untagged
@@ -912,6 +1009,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8164608411481577284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1198985830843022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gameover-hd_0
+  _lastRecordedSpriteInstanceId: 27148
 --- !u!1 &1202928974876160
 GameObject:
   m_ObjectHideFlags: 0
@@ -923,6 +1035,7 @@ GameObject:
   - component: {fileID: 224635863847537162}
   - component: {fileID: 222697555985490466}
   - component: {fileID: 114946023215605314}
+  - component: {fileID: 3970399482352768547}
   m_Layer: 5
   m_Name: MenuPanel
   m_TagString: Untagged
@@ -948,7 +1061,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 42, y: 0.0000066757}
+  m_AnchoredPosition: {x: 42, y: 0}
   m_SizeDelta: {x: 479.5, y: 359.7}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222697555985490466
@@ -989,6 +1102,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3970399482352768547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1202928974876160}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1212582350065528
 GameObject:
   m_ObjectHideFlags: 0
@@ -1000,6 +1128,7 @@ GameObject:
   - component: {fileID: 224566774461068396}
   - component: {fileID: 222975836112714090}
   - component: {fileID: 114335968624433202}
+  - component: {fileID: 2433748926574020489}
   m_Layer: 5
   m_Name: Img_BG
   m_TagString: Untagged
@@ -1065,6 +1194,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2433748926574020489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1212582350065528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/gameover1-hd_3
+  defaultAssetName: gameover1-hd_3
+  _lastRecordedSpriteInstanceId: 27388
 --- !u!1 &1235863233766728
 GameObject:
   m_ObjectHideFlags: 0
@@ -1157,6 +1301,7 @@ GameObject:
   - component: {fileID: 222259645429332692}
   - component: {fileID: 114675574706005016}
   - component: {fileID: 114617354390535548}
+  - component: {fileID: 1397729681768309975}
   m_Layer: 5
   m_Name: Btn_Replay
   m_TagString: Untagged
@@ -1266,6 +1411,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1397729681768309975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1241153880978144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gameover-hd_0
+  _lastRecordedSpriteInstanceId: 27148
 --- !u!1 &1261633148347038
 GameObject:
   m_ObjectHideFlags: 0
@@ -1278,6 +1438,7 @@ GameObject:
   - component: {fileID: 222548524257341622}
   - component: {fileID: 114260850384591312}
   - component: {fileID: 114448491043437216}
+  - component: {fileID: 7192545043968998662}
   m_Layer: 5
   m_Name: Btn_ChooseLevel
   m_TagString: Untagged
@@ -1387,6 +1548,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7192545043968998662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1261633148347038}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gameover-hd_3
+  _lastRecordedSpriteInstanceId: 27160
 --- !u!1 &1275060026406820
 GameObject:
   m_ObjectHideFlags: 0
@@ -1422,7 +1598,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -654.6, y: 15}
+  m_AnchoredPosition: {x: -643, y: 6}
   m_SizeDelta: {x: 214.4, y: 73.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222911523568108874
@@ -1479,6 +1655,7 @@ GameObject:
   - component: {fileID: 222239491855118410}
   - component: {fileID: 114178073915534754}
   - component: {fileID: 114917253772145736}
+  - component: {fileID: 7439760192417227431}
   m_Layer: 5
   m_Name: But_GameSpeed
   m_TagString: Untagged
@@ -1503,8 +1680,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 520, y: 2.8601}
-  m_SizeDelta: {x: 179.4, y: 102.22}
+  m_AnchoredPosition: {x: 520, y: 0}
+  m_SizeDelta: {x: 100, y: 57}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222239491855118410
 CanvasRenderer:
@@ -1588,6 +1765,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7439760192417227431
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1290187540191166}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: speed_1
+  _lastRecordedSpriteInstanceId: 27236
 --- !u!1 &1311395733245306
 GameObject:
   m_ObjectHideFlags: 0
@@ -1599,6 +1791,7 @@ GameObject:
   - component: {fileID: 224208064615316682}
   - component: {fileID: 222710506635112496}
   - component: {fileID: 114159674244191174}
+  - component: {fileID: 8754889394173550864}
   m_Layer: 5
   m_Name: GameOverPanel
   m_TagString: Untagged
@@ -1670,6 +1863,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8754889394173550864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1311395733245306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1423534425553036
 GameObject:
   m_ObjectHideFlags: 0
@@ -1679,6 +1887,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224883812918705048}
+  - component: {fileID: 3259779634617456392}
   m_Layer: 5
   m_Name: BossModelPanel
   m_TagString: Untagged
@@ -1705,11 +1914,48 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &3259779634617456392
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1423534425553036}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiEntries:
+  - name: Img_TopPanel
+    uiReference: {fileID: 1831720129471980}
+  - name: Tex_Coin
+    uiReference: {fileID: 1275060026406820}
+  - name: Emp_Pause
+    uiReference: {fileID: 1196517078150222}
+  - name: Tex_Instruction
+    uiReference: {fileID: 1424360396475234}
+  - name: But_GameSpeed
+    uiReference: {fileID: 1290187540191166}
+  - name: But_Pause
+    uiReference: {fileID: 1777245807812928}
+  - name: But_Menu
+    uiReference: {fileID: 1040765655439010}
+  - name: Tex_Time
+    uiReference: {fileID: 1623463498833842}
+  - name: Tex_TImeNum
+    uiReference: {fileID: 1883068765165718}
+  - name: Tex_LifeValue
+    uiReference: {fileID: 1138127645767252}
+  - name: Tex_LifeValueNum
+    uiReference: {fileID: 1914669750115306}
+  - name: GameWinPanel
+    uiReference: {fileID: 1606680154119274}
 --- !u!1 &1424360396475234
 GameObject:
   m_ObjectHideFlags: 0
@@ -1745,7 +1991,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 63.874924, y: 7.500246}
+  m_AnchoredPosition: {x: 64, y: 6}
   m_SizeDelta: {x: 259.7, y: 73.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222004887360638876
@@ -1802,6 +2048,7 @@ GameObject:
   - component: {fileID: 222907251815765410}
   - component: {fileID: 114303125645054850}
   - component: {fileID: 114011176348247338}
+  - component: {fileID: 1904665783240192705}
   m_Layer: 5
   m_Name: Btn_Replay
   m_TagString: Untagged
@@ -1911,6 +2158,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1904665783240192705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1490419597095812}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/gamemenu-hd
+  defaultAssetName: gamemenu-hd_5
+  _lastRecordedSpriteInstanceId: 27432
 --- !u!1 &1556440915227090
 GameObject:
   m_ObjectHideFlags: 0
@@ -1922,6 +2184,7 @@ GameObject:
   - component: {fileID: 224125044192340394}
   - component: {fileID: 222769614743946090}
   - component: {fileID: 114348299532583162}
+  - component: {fileID: 7034324652474188338}
   m_Layer: 5
   m_Name: Img_Instruction
   m_TagString: Untagged
@@ -1987,6 +2250,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7034324652474188338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1556440915227090}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/bossmodelview/images_atlas
+  defaultAssetName: gameover1-hd_1
+  _lastRecordedSpriteInstanceId: 27380
 --- !u!1 &1606680154119274
 GameObject:
   m_ObjectHideFlags: 0
@@ -1998,6 +2276,7 @@ GameObject:
   - component: {fileID: 224212577846143382}
   - component: {fileID: 222832372868583218}
   - component: {fileID: 114139600165639104}
+  - component: {fileID: 3776476240776549935}
   m_Layer: 5
   m_Name: GameWinPanel
   m_TagString: Untagged
@@ -2071,6 +2350,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3776476240776549935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1606680154119274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1614580781745972
 GameObject:
   m_ObjectHideFlags: 0
@@ -2186,7 +2480,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -347, y: 11}
+  m_AnchoredPosition: {x: -347, y: 6}
   m_SizeDelta: {x: 244.4, y: 73.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222296611325181160
@@ -2323,6 +2617,7 @@ GameObject:
   - component: {fileID: 222496679945610310}
   - component: {fileID: 114376314954481882}
   - component: {fileID: 114188920913352180}
+  - component: {fileID: 4014379466218632048}
   m_Layer: 5
   m_Name: But_Pause
   m_TagString: Untagged
@@ -2347,8 +2642,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 701, y: 1.7501}
-  m_SizeDelta: {x: 88.5, y: 88.5}
+  m_AnchoredPosition: {x: 626, y: 0}
+  m_SizeDelta: {x: 56, y: 56}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222496679945610310
 CanvasRenderer:
@@ -2432,6 +2727,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &4014379466218632048
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1777245807812928}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: pause_1
+  _lastRecordedSpriteInstanceId: 27224
 --- !u!1 &1817365129702792
 GameObject:
   m_ObjectHideFlags: 0
@@ -2444,6 +2754,7 @@ GameObject:
   - component: {fileID: 222793630776432352}
   - component: {fileID: 114137549905355462}
   - component: {fileID: 114701486428599188}
+  - component: {fileID: 7458446224798122638}
   m_Layer: 5
   m_Name: Btn_GoOn
   m_TagString: Untagged
@@ -2553,6 +2864,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &7458446224798122638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1817365129702792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/gamemenu-hd
+  defaultAssetName: gamemenu-hd_2
+  _lastRecordedSpriteInstanceId: 27426
 --- !u!1 &1822780658110600
 GameObject:
   m_ObjectHideFlags: 0
@@ -2564,6 +2890,7 @@ GameObject:
   - component: {fileID: 224350054092283182}
   - component: {fileID: 222833994359195630}
   - component: {fileID: 114435166997722902}
+  - component: {fileID: 2756860414880905907}
   m_Layer: 5
   m_Name: Img_Carrot
   m_TagString: Untagged
@@ -2629,6 +2956,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2756860414880905907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1822780658110600}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: Carrot_3
+  _lastRecordedSpriteInstanceId: 27592
 --- !u!1 &1831720129471980
 GameObject:
   m_ObjectHideFlags: 0
@@ -2640,6 +2982,7 @@ GameObject:
   - component: {fileID: 224957024747457826}
   - component: {fileID: 222790062236282462}
   - component: {fileID: 114163619099919276}
+  - component: {fileID: 4518889629161088931}
   m_Layer: 5
   m_Name: Img_TopPanel
   m_TagString: Untagged
@@ -2671,11 +3014,11 @@ RectTransform:
   m_Father: {fileID: 224883812918705048}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 643.2}
-  m_SizeDelta: {x: 1846.2, y: 153.6}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 77}
+  m_Pivot: {x: 0.5, y: 1}
 --- !u!222 &222790062236282462
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2705,7 +3048,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 5c8fc5e1d8a2f0e47ba82852fa6753df, type: 3}
-  m_Type: 0
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -2714,6 +3057,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &4518889629161088931
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831720129471980}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: touming-hd.pvr_13
+  _lastRecordedSpriteInstanceId: 27252
 --- !u!1 &1883068765165718
 GameObject:
   m_ObjectHideFlags: 0
@@ -2749,8 +3107,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -131, y: 11}
-  m_SizeDelta: {x: 214.4, y: 73.5}
+  m_AnchoredPosition: {x: -131, y: 6}
+  m_SizeDelta: {x: 214, y: 73.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222848973921880510
 CanvasRenderer:
@@ -2829,7 +3187,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 314, y: 9.2501}
+  m_AnchoredPosition: {x: 329, y: 6}
   m_SizeDelta: {x: 244.4, y: 73.5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222614292586241182
@@ -2873,7 +3231,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 100000
+  m_Text: 1000
 --- !u!1 &1958014798787506
 GameObject:
   m_ObjectHideFlags: 0

@@ -133,6 +133,7 @@ public class CheckUpdateState : BaseGameState
     public override void Enter()
     {
         Debug.Log("进入检测更新流程");
+        ViewManager.Instance.OpenView<StartLoadPanel>();
         checker?.StartUpdateCheck(AssetBundlePathHelper.GetServerLoadUrl(), CheckResultCallBack);
     }
 
@@ -281,16 +282,9 @@ public class LoginState : BaseGameState
 
 public class EnterGameState : BaseGameState
 {
-    //public TestView testView;
-    //public DownLoadView downloadView;
-
     public EnterGameState(GameContext context) : base(context)
     {
-        //testView = new TestView();
-        //testView.RegisterData();
 
-        //downloadView = new DownLoadView();
-        //downloadView.RegisterData();
     }
 
     public override void Enter()
@@ -302,9 +296,6 @@ public class EnterGameState : BaseGameState
     public override void Update()
     {
 
-        //// 模拟进入游戏完成，开始游戏
-        //GameRoot root = GameObject.FindObjectOfType<GameRoot>();
-        //root?.ChangeMachineState(GameState.InGame);
     }
 
     public override void Exit()

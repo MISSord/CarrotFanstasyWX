@@ -15,16 +15,16 @@ public class UINameTableDic
             return null;
         }
 
+        if (componentType == null)
+        {
+            Debug.LogError("组件类型不能为空");
+            return null;
+        }
+
         GameObject gameObject;
         if (uiEntries.TryGetValue(name, out gameObject) == false)
         {
             Debug.LogWarning($"没有该物体: {name}");
-            return null;
-        }
-
-        if (componentType == null)
-        {
-            Debug.LogError("组件类型不能为空");
             return null;
         }
 
@@ -41,12 +41,6 @@ public class UINameTableDic
         {
             compDic = new Dictionary<Type, Component>();
             cachedComponents.Add(name, compDic);
-        }
-
-        if (!typeof(Component).IsAssignableFrom(componentType))
-        {
-            Debug.LogError($"类型 {componentType.Name} 不是Unity组件");
-            return null;
         }
 
         // 尝试获取组件
@@ -87,6 +81,16 @@ public class UINameTableDic
             return null;
         }
         return gameObject;
+    }
+
+    /// <summary>
+    /// 按名称获取 UI 根节点，等价于 <see cref="GetGameObjectSafely"/>。
+    /// 示例：<c>nameTableDic["btn_ok"].GetComponent&lt;Button&gt;()</c>
+    /// （仅 Unity 自带查找；需要走名称表缓存时请用 <see cref="GetComponentSafely{T}"/>。）
+    /// </summary>
+    public GameObject this[string name]
+    {
+        get => GetGameObjectSafely(name);
     }
 
     public void AddUINameTable(List<UINameEntry> list)

@@ -34,15 +34,19 @@ namespace CarrotFantasy
         {
             this.nodeTopPage = transform.Find("node_TopPage").gameObject;
             this.topPage = new TopPage(this.nodeTopPage.transform);
+            this.topPage.BindNode(this.nodeTopPage.transform);
 
             this.nodeMenuPage = transform.Find("MenuPage").gameObject;
             this.menuPage = new MenuPage(this.nodeMenuPage.transform);
+            this.menuPage.BindNode(this.nodeMenuPage.transform);
 
             this.nodeGameOverPage = transform.Find("GameOverPage").gameObject;
             this.gameOverPage = new GameOverPage(this.nodeGameOverPage.transform);
+            this.gameOverPage.BindNode(this.nodeGameOverPage.transform);
 
             this.nodeGameWinPage = transform.Find("GameWinPage").gameObject;
             this.gameWinPage = new GameWinPage(this.nodeGameWinPage.transform);
+            this.gameWinPage.BindNode(this.nodeGameWinPage.transform);
 
             this.nodeStartUI = transform.Find("StartUI").gameObject;
             this.btnMenuPage = this.transform.Find("node_TopPage/node_btn_container/Btn_Menu").GetComponent<Button>();
@@ -51,15 +55,15 @@ namespace CarrotFantasy
 
         private void InitPages()
         {
-            this.topPage.Init();
-            this.menuPage.Init();
-            this.gameOverPage.Init();
-            this.gameWinPage.Init();
+            this.topPage.OpenPage();
+            this.menuPage.OpenPage();
+            this.gameOverPage.OpenPage();
+            this.gameWinPage.OpenPage();
 
             this.nodeTopPage.SetActive(true);
-            this.nodeMenuPage.SetActive(false);
-            this.nodeGameOverPage.SetActive(false);
-            this.nodeGameWinPage.SetActive(false);
+            this.menuPage.ClosePage();
+            this.gameOverPage.ClosePage();
+            this.gameWinPage.ClosePage();
         }
 
         private void ShowMenu()
@@ -103,9 +107,10 @@ namespace CarrotFantasy
 
         protected override void ReleaseCallBack()
         {
-            this.gameWinPage.Dispose();
-            this.gameOverPage.Dispose();
-            this.topPage.Dispose();
+            this.gameWinPage?.Release();
+            this.gameOverPage?.Release();
+            this.menuPage?.Release();
+            this.topPage?.Release();
             this.RemoveListener();
         }
     }

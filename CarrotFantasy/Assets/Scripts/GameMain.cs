@@ -31,7 +31,6 @@ namespace CarrotFantasy
 
             //加载登录场景
             ServerProvision.sceneServer.LoadScene(BaseSceneType.MainScene, null);
-
         }
 
         private void Start()

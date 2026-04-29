@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 224431004401439226}
   - component: {fileID: 222511134780525160}
   - component: {fileID: 114985198931059366}
+  - component: {fileID: 613474840576599960}
   m_Layer: 5
   m_Name: Img_LifeValue
   m_TagString: Untagged
@@ -76,6 +77,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &613474840576599960
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1015431407499058}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: antiboss1-hd_17
+  _lastRecordedSpriteInstanceId: 24218
 --- !u!1 &1062324103668222
 GameObject:
   m_ObjectHideFlags: 0
@@ -87,6 +103,7 @@ GameObject:
   - component: {fileID: 224157496648187978}
   - component: {fileID: 222589743401167706}
   - component: {fileID: 114293378959290250}
+  - component: {fileID: 7372418877082050930}
   m_Layer: 5
   m_Name: Img_Boss
   m_TagString: Untagged
@@ -152,6 +169,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7372418877082050930
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1062324103668222}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/antiboss1-hd_0
+  defaultAssetName: antiboss1-hd_0
+  _lastRecordedSpriteInstanceId: 24268
 --- !u!1 &1093044292909406
 GameObject:
   m_ObjectHideFlags: 0
@@ -163,6 +195,7 @@ GameObject:
   - component: {fileID: 224134211776509256}
   - component: {fileID: 222075066416686890}
   - component: {fileID: 114970918751216350}
+  - component: {fileID: 9212956376710150002}
   m_Layer: 5
   m_Name: Img_AllClear
   m_TagString: Untagged
@@ -228,6 +261,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &9212956376710150002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1093044292909406}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: AllClear
+  _lastRecordedSpriteInstanceId: 24216
 --- !u!1 &1133735313546436
 GameObject:
   m_ObjectHideFlags: 0
@@ -239,6 +287,7 @@ GameObject:
   - component: {fileID: 224976919291657410}
   - component: {fileID: 222174924957111908}
   - component: {fileID: 114296397095366558}
+  - component: {fileID: 7358358225622092241}
   m_Layer: 5
   m_Name: Handle
   m_TagString: Untagged
@@ -304,6 +353,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7358358225622092241
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1133735313546436}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1229433892321682
 GameObject:
   m_ObjectHideFlags: 0
@@ -316,6 +380,7 @@ GameObject:
   - component: {fileID: 222515784125666098}
   - component: {fileID: 114965464399697322}
   - component: {fileID: 6092159080503974025}
+  - component: {fileID: 6148703175009028079}
   m_Layer: 5
   m_Name: Scroll View
   m_TagString: Untagged
@@ -401,6 +466,21 @@ MonoBehaviour:
   leftOffset: 0
   totalItemNum: 0
   needSendMessage: 0
+--- !u!114 &6148703175009028079
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1229433892321682}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1259517952644564
 GameObject:
   m_ObjectHideFlags: 0
@@ -413,6 +493,7 @@ GameObject:
   - component: {fileID: 222202159876869230}
   - component: {fileID: 114915507695735188}
   - component: {fileID: 114456088951002660}
+  - component: {fileID: 77138538203155308}
   m_Layer: 5
   m_Name: Scrollbar Horizontal
   m_TagString: Untagged
@@ -528,6 +609,21 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &77138538203155308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1259517952644564}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1273839107104144
 GameObject:
   m_ObjectHideFlags: 0
@@ -539,6 +635,7 @@ GameObject:
   - component: {fileID: 224376624097427736}
   - component: {fileID: 222822686273148872}
   - component: {fileID: 114905039468515130}
+  - component: {fileID: 2756191403413738262}
   m_Layer: 5
   m_Name: Btn_Help
   m_TagString: Untagged
@@ -559,7 +656,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 224506147716285734}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -604,6 +701,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2756191403413738262
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273839107104144}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption2/images_atlas
+  defaultAssetName: stages_bg-hd_42
+  _lastRecordedSpriteInstanceId: 23336
 --- !u!1 &1468780664675684
 GameObject:
   m_ObjectHideFlags: 0
@@ -613,8 +725,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224506147716285734}
-  - component: {fileID: 222434318655309008}
-  - component: {fileID: 114697549558273320}
+  - component: {fileID: 2377859693345288561}
   m_Layer: 5
   m_Name: GameBossOptionPanel
   m_TagString: Untagged
@@ -631,9 +742,10 @@ RectTransform:
   m_GameObject: {fileID: 1468780664675684}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.9999936, y: 0.9999936, z: 0.9999936}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1, y: 0.9999936, z: 0.9999936}
+  m_ConstrainProportionsScale: 1
   m_Children:
+  - {fileID: 4623787977741825033}
   - {fileID: 224988154550288256}
   - {fileID: 224499068244573238}
   - {fileID: 224376624097427736}
@@ -643,18 +755,10 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000061035156, y: -0.000061035156}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 1920, y: 1440}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &222434318655309008
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1468780664675684}
-  m_CullTransparentMesh: 1
---- !u!114 &114697549558273320
+--- !u!114 &2377859693345288561
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -663,27 +767,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 1468780664675684}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 18778e82e1ae5cd48ab7a8939f7b9994, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
+  uiEntries:
+  - name: Btn_Return
+    uiReference: {fileID: 1961321617434016}
+  - name: Btn_Help
+    uiReference: {fileID: 1273839107104144}
+  - name: Btn_Start
+    uiReference: {fileID: 1972517742059322}
+  - name: Img_OK
+    uiReference: {fileID: 1724100769568754}
+  - name: Img_AllClear
+    uiReference: {fileID: 1093044292909406}
+  - name: Img_LifeValueBG
+    uiReference: {fileID: 1614116453138074}
+  - name: Img_LifeValue
+    uiReference: {fileID: 1015431407499058}
+  - name: Img_Name
+    uiReference: {fileID: 1591960486224722}
+  - name: Img_Time
+    uiReference: {fileID: 1604990301032656}
+  - name: Img_Boss
+    uiReference: {fileID: 1062324103668222}
 --- !u!1 &1566707306445608
 GameObject:
   m_ObjectHideFlags: 0
@@ -732,6 +839,7 @@ GameObject:
   - component: {fileID: 224674994206742726}
   - component: {fileID: 222382701353496404}
   - component: {fileID: 114003885588736054}
+  - component: {fileID: 8247417360795316163}
   m_Layer: 5
   m_Name: Img_Name
   m_TagString: Untagged
@@ -797,6 +905,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8247417360795316163
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1591960486224722}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: antiboss1-hd_16
+  _lastRecordedSpriteInstanceId: 24206
 --- !u!1 &1604990301032656
 GameObject:
   m_ObjectHideFlags: 0
@@ -808,6 +931,7 @@ GameObject:
   - component: {fileID: 224681806271807866}
   - component: {fileID: 222403129284291098}
   - component: {fileID: 114506229670021326}
+  - component: {fileID: 869150360438057051}
   m_Layer: 5
   m_Name: Img_Time
   m_TagString: Untagged
@@ -873,6 +997,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &869150360438057051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604990301032656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: antiboss_bg-hd_14
+  _lastRecordedSpriteInstanceId: 24214
 --- !u!1 &1614116453138074
 GameObject:
   m_ObjectHideFlags: 0
@@ -884,6 +1023,7 @@ GameObject:
   - component: {fileID: 224427425144484984}
   - component: {fileID: 222979473281783692}
   - component: {fileID: 114268088426896868}
+  - component: {fileID: 6726692120713314792}
   m_Layer: 5
   m_Name: Img_LifeValueBG
   m_TagString: Untagged
@@ -949,6 +1089,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &6726692120713314792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1614116453138074}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: antiboss1-hd_19
+  _lastRecordedSpriteInstanceId: 24212
 --- !u!1 &1614895023562082
 GameObject:
   m_ObjectHideFlags: 0
@@ -1059,6 +1214,7 @@ GameObject:
   - component: {fileID: 224914298268612940}
   - component: {fileID: 222499669140814232}
   - component: {fileID: 114021537663512402}
+  - component: {fileID: 8300047397223669553}
   m_Layer: 5
   m_Name: Img_ChooseLevel
   m_TagString: Untagged
@@ -1079,7 +1235,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 224506147716285734}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1124,6 +1280,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8300047397223669553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706812411981346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: antiboss_bg-hd_23
+  _lastRecordedSpriteInstanceId: 24174
 --- !u!1 &1724100769568754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1135,6 +1306,7 @@ GameObject:
   - component: {fileID: 224771204326888142}
   - component: {fileID: 222954386537850976}
   - component: {fileID: 114117252713857402}
+  - component: {fileID: 3988430176703291117}
   m_Layer: 5
   m_Name: Img_OK
   m_TagString: Untagged
@@ -1200,6 +1372,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3988430176703291117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1724100769568754}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: antiboss_bg-hd_3
+  _lastRecordedSpriteInstanceId: 24210
 --- !u!1 &1768625630286492
 GameObject:
   m_ObjectHideFlags: 0
@@ -1212,6 +1399,7 @@ GameObject:
   - component: {fileID: 222621638953352086}
   - component: {fileID: 114115388381262188}
   - component: {fileID: 114124499939106608}
+  - component: {fileID: 8731524733458981849}
   m_Layer: 5
   m_Name: Scrollbar Vertical
   m_TagString: Untagged
@@ -1327,6 +1515,21 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &8731524733458981849
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1768625630286492}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1769723363971766
 GameObject:
   m_ObjectHideFlags: 0
@@ -1338,6 +1541,7 @@ GameObject:
   - component: {fileID: 224001933464744986}
   - component: {fileID: 222526826189298242}
   - component: {fileID: 114930467977914276}
+  - component: {fileID: 5966020497565045313}
   m_Layer: 5
   m_Name: Handle
   m_TagString: Untagged
@@ -1403,6 +1607,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5966020497565045313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769723363971766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1820350407135508
 GameObject:
   m_ObjectHideFlags: 0
@@ -1415,6 +1634,7 @@ GameObject:
   - component: {fileID: 114626574003404152}
   - component: {fileID: 222549294157414816}
   - component: {fileID: 114288015580949522}
+  - component: {fileID: 715220904678968011}
   m_Layer: 5
   m_Name: Viewport
   m_TagString: Untagged
@@ -1494,6 +1714,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &715220904678968011
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1820350407135508}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1903373168606608
 GameObject:
   m_ObjectHideFlags: 0
@@ -1503,7 +1738,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224988154550288256}
-  - component: {fileID: 222392012349522016}
   m_Layer: 5
   m_Name: LevelPage
   m_TagString: Untagged
@@ -1532,21 +1766,13 @@ RectTransform:
   - {fileID: 224674994206742726}
   - {fileID: 224681806271807866}
   m_Father: {fileID: 224506147716285734}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0.000061035156, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &222392012349522016
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1903373168606608}
-  m_CullTransparentMesh: 1
 --- !u!1 &1961321617434016
 GameObject:
   m_ObjectHideFlags: 0
@@ -1558,6 +1784,7 @@ GameObject:
   - component: {fileID: 224499068244573238}
   - component: {fileID: 222713717170211374}
   - component: {fileID: 114219701633450024}
+  - component: {fileID: 990900648683741871}
   m_Layer: 5
   m_Name: Btn_Return
   m_TagString: Untagged
@@ -1578,7 +1805,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 224506147716285734}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
@@ -1623,6 +1850,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &990900648683741871
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1961321617434016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption2/images_atlas
+  defaultAssetName: stages_bg-hd_41
+  _lastRecordedSpriteInstanceId: 23342
 --- !u!1 &1972517742059322
 GameObject:
   m_ObjectHideFlags: 0
@@ -1634,6 +1876,7 @@ GameObject:
   - component: {fileID: 224948274029317434}
   - component: {fileID: 222220063537185440}
   - component: {fileID: 114084238787033920}
+  - component: {fileID: 2124281183358180582}
   m_Layer: 5
   m_Name: Btn_Start
   m_TagString: Untagged
@@ -1699,3 +1942,107 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2124281183358180582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1972517742059322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/gameoption/images_atlas
+  defaultAssetName: stages_bg-hd_30
+  _lastRecordedSpriteInstanceId: 24208
+--- !u!1 &225660621730019570
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4623787977741825033}
+  - component: {fileID: 8395781485207977421}
+  - component: {fileID: 4203839200776624005}
+  - component: {fileID: 376060811637910831}
+  m_Layer: 5
+  m_Name: RawImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &4623787977741825033
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225660621730019570}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 224506147716285734}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &8395781485207977421
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225660621730019570}
+  m_CullTransparentMesh: 1
+--- !u!114 &4203839200776624005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225660621730019570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: 18778e82e1ae5cd48ab7a8939f7b9994, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!114 &376060811637910831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 225660621730019570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/antiboss_bg-hd_0
+  defaultAssetName: antiboss_bg-hd_0
+  _lastRecordedSpriteInstanceId: 24102

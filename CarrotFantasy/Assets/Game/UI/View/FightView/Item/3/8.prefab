@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 224617920022609498}
   - component: {fileID: 222411502516561908}
   - component: {fileID: 114962365324667170}
+  - component: {fileID: 2566970642510519831}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
@@ -76,6 +77,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &2566970642510519831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004961129852506}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: HpSlider
+  _lastRecordedSpriteInstanceId: 23774
 --- !u!1 &1057207575443286
 GameObject:
   m_ObjectHideFlags: 0
@@ -87,6 +103,7 @@ GameObject:
   - component: {fileID: 224328328892680120}
   - component: {fileID: 222583575220391920}
   - component: {fileID: 114395402853322730}
+  - component: {fileID: 7278866545754125992}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -152,6 +169,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &7278866545754125992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1057207575443286}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: HpHolder
+  _lastRecordedSpriteInstanceId: 23772
 --- !u!1 &1469968771333542
 GameObject:
   m_ObjectHideFlags: 0
@@ -297,7 +329,6 @@ GameObject:
   m_Component:
   - component: {fileID: 224124484744535750}
   - component: {fileID: 114450477491423462}
-  - component: {fileID: 222354769373205398}
   m_Layer: 5
   m_Name: HpSlider
   m_TagString: Untagged
@@ -378,14 +409,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!222 &222354769373205398
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1638217244476782}
-  m_CullTransparentMesh: 1
 --- !u!1 &1835480766252962
 GameObject:
   m_ObjectHideFlags: 0

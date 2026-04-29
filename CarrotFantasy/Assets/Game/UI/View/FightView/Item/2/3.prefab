@@ -157,7 +157,6 @@ GameObject:
   m_Component:
   - component: {fileID: 224991222693148122}
   - component: {fileID: 114483855200789526}
-  - component: {fileID: 222987549696462456}
   m_Layer: 5
   m_Name: HpSlider
   m_TagString: Untagged
@@ -238,14 +237,6 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
---- !u!222 &222987549696462456
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1379063376425676}
-  m_CullTransparentMesh: 1
 --- !u!1 &1634766014694246
 GameObject:
   m_ObjectHideFlags: 0
@@ -294,6 +285,7 @@ GameObject:
   - component: {fileID: 224788097562450930}
   - component: {fileID: 222329184853048634}
   - component: {fileID: 114835996876501428}
+  - component: {fileID: 8046344971743700283}
   m_Layer: 5
   m_Name: Background
   m_TagString: Untagged
@@ -359,6 +351,21 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &8046344971743700283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1722064177306234}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: HpHolder
+  _lastRecordedSpriteInstanceId: 23772
 --- !u!1 &1894681362887242
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,6 +512,7 @@ GameObject:
   - component: {fileID: 224827079747107580}
   - component: {fileID: 222983313860950320}
   - component: {fileID: 114994040934481144}
+  - component: {fileID: 5520767389686090069}
   m_Layer: 5
   m_Name: Fill
   m_TagString: Untagged
@@ -570,3 +578,18 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &5520767389686090069
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1993707369742336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: HpSlider
+  _lastRecordedSpriteInstanceId: 23774

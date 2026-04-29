@@ -67,7 +67,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Bullet.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapServer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveModelBattleParams.cs" />
-    <Compile Include="Assets\Scripts\Util\UI\SlideCanCoverScrollView.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\SlideCanCoverScrollView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BulletConfigReader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\PositionInfo.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Event\BattleEventDispatcher.cs" />
@@ -237,7 +237,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpStartState.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomServer.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomEventType.cs" />
-    <Compile Include="Assets\Scripts\Util\UI\SlideScrollView.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Stat\BattleStatInfo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Carrot.cs" />
@@ -259,7 +259,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\LevelInfo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BaseUnitViewComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVItemComponent.cs" />
-    <Compile Include="Assets\Scripts\Util\UI\UIUtil.cs" />
+    <Compile Include="Assets\Scripts\Util\Panel\UIUtil.cs" />
     <Compile Include="Assets\Scripts\Util\Sche\ScheObject.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
@@ -273,6 +273,12 @@
     <Compile Include="Assets\Scripts\Util\Panel\PanelEventType.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\GameSceneType.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\SceneLoader.cs" />
+    <Compile Include="Assets\Scripts\Util\Loading\LoadingOrchestrator.cs" />
+    <Compile Include="Assets\Scripts\Business\UI\LoadingView.cs" />
+    <Compile Include="Assets\Scripts\Business\Hud\DownLoadFileView.cs" />
+    <Compile Include="Assets\Scripts\Util\Resource\UIImageLoader.cs" />
+    <Compile Include="Assets\Scripts\Util\Resource\ImageResourceManager.cs" />
+    <Compile Include="Assets\Scripts\Util\Resource\UIImageLoaderExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

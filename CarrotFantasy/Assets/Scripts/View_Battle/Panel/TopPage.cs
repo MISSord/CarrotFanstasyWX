@@ -7,10 +7,8 @@ namespace CarrotFantasy
     /// <summary>
     /// 顶部UI显示页面
     /// </summary>
-    public class TopPage
+    public class TopPage : BaseView
     {
-
-        private Transform transform;
         //引用
         private Text txtCoin;
         private Text txtWaveInfo;
@@ -36,12 +34,45 @@ namespace CarrotFantasy
         //开关
         private bool isNormalSpeed;
         private bool isPause;
+        private bool isLoaded;
 
         public TopPage(Transform node)
         {
             this.transform = node;
             this.btn_gameSpeedSprites = new Sprite[2];
             this.btn_pauseSprites = new Sprite[2];
+        }
+
+        public override void InitData()
+        {
+            viewName = "TopPage";
+            layer = UILayer.Normal;
+        }
+
+        public void BindNode(Transform node)
+        {
+            this.transform = node;
+        }
+
+        public void OpenPage()
+        {
+            if (!isLoaded)
+            {
+                LoadCallBack();
+                isLoaded = true;
+            }
+            if (this.transform != null)
+            {
+                this.transform.gameObject.SetActive(true);
+            }
+        }
+
+        public void ClosePage()
+        {
+            if (this.transform != null)
+            {
+                this.transform.gameObject.SetActive(false);
+            }
         }
 
         private void LoadResource()
@@ -87,7 +118,7 @@ namespace CarrotFantasy
             this.battle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
         }
 
-        public void Init()
+        protected override void LoadCallBack()
         {
             this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
             this.battle = BattleManager.Instance.baseBattle;
@@ -160,9 +191,10 @@ namespace CarrotFantasy
             this.node_playingText.SetActive(!isPause);
         }
 
-        public void Dispose()
+        protected override void ReleaseCallBack()
         {
             this.RemoveListener();
+            isLoaded = false;
         }
     }
 }

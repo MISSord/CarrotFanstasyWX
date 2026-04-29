@@ -43,14 +43,6 @@ namespace CarrotFantasy
             mainPanelTween[1].SetAutoKill(false);
             mainPanelTween[1].Pause();
 
-            this.btnNormal = this.transform.Find("node_bottom/btn_normal").GetComponent<Button>();
-            this.btnBoss = this.transform.Find("node_bottom/btn_boss").GetComponent<Button>();
-            this.btnNetwork = this.transform.Find("node_bottom/btn_network").GetComponent<Button>();
-
-            this.btnExitGame = this.transform.Find("node_top/btn_exit_game").GetComponent<Button>();
-            this.btnHelp = this.transform.Find("node_center/btn_help").GetComponent<Button>();
-            this.btnSet = this.transform.Find("node_center/btn_set").GetComponent<Button>();
-
             this.AddListener();
             this.PlayUITween();
             UIServer.Instance.PlayMainBg();
@@ -58,13 +50,20 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnBoss.onClick.AddListener(this.ToBossModel);
-            this.btnNormal.onClick.AddListener(this.ToNormalModel);
-            this.btnNetwork.onClick.AddListener(this.StartMatch);
+            this.btnNormal = this.nameTableDic["btn_normal"].GetComponent<Button>();
+            this.btnBoss = this.nameTableDic["node_bottom/btn_boss"].GetComponent<Button>();
+            this.btnNetwork = this.transform.Find("node_bottom/btn_network").GetComponent<Button>();
 
-            this.btnExitGame.onClick.AddListener(this.ExitGame);
-            this.btnHelp.onClick.AddListener(this.ShowHelpPanel);
-            this.btnSet.onClick.AddListener(this.ShowSetPanel);
+            this.btnExitGame = this.transform.Find("node_top/btn_exit_game").GetComponent<Button>();
+            this.btnHelp = this.transform.Find("node_center/btn_help").GetComponent<Button>();
+            this.btnSet = this.transform.Find("node_center/btn_set").GetComponent<Button>();
+
+            XUI.AddButtonListener(this.btnBoss, this.ToBossModel);
+            XUI.AddButtonListener(this.btnNormal, this.ToNormalModel);
+            XUI.AddButtonListener(this.btnNetwork, this.StartMatch);
+            XUI.AddButtonListener(this.btnExitGame, this.ExitGame);
+            XUI.AddButtonListener(this.btnHelp, this.ShowHelpPanel);
+            XUI.AddButtonListener(this.btnSet, this.ShowSetPanel);
         }
 
         private void PlayUITween()
