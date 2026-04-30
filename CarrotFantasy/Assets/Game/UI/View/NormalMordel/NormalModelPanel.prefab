@@ -980,7 +980,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiEntries: []
+  uiEntries:
+  - name: node_TopPage
+    uiReference: {fileID: 1618489538536258}
+  - name: StartUI
+    uiReference: {fileID: 1641655574077848}
+  - name: Img_Num
+    uiReference: {fileID: 1516941657730048}
+  - name: Btn_Pause
+    uiReference: {fileID: 1095854762844164}
+  - name: Btn_Menu
+    uiReference: {fileID: 1786387714145458}
+  - name: Btn_GameSpeed
+    uiReference: {fileID: 1865766121589408}
+  - name: node_playing_text
+    uiReference: {fileID: 1454035031833190}
+  - name: txt_waves_info
+    uiReference: {fileID: 1291467742513814}
+  - name: img_round_count
+    uiReference: {fileID: 1920444095781944}
+  - name: node_pause
+    uiReference: {fileID: 1066958026861672}
+  - name: txt_coin
+    uiReference: {fileID: 1892918214648344}
 --- !u!1 &1865766121589408
 GameObject:
   m_ObjectHideFlags: 0

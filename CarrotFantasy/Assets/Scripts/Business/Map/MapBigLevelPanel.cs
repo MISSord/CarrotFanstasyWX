@@ -39,15 +39,15 @@ namespace CarrotFantasy
             this.bigLevelPage = new Transform[bigLevelPageCount];
             this.hasRigisterEvent = false;
 
-            this.btnReturn = this.transform.Find("node_up/btn_return").GetComponent<Button>();
-            this.btnHelp = this.transform.Find("node_up/btn_help").GetComponent<Button>();
+            this.btnReturn = this.nameTableDic["btn_return"].GetComponent<Button>();
+            this.btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
 
-            this.btnNext = this.transform.Find("node_center/btn_next_page").GetComponent<Button>();
-            this.btnLast = this.transform.Find("node_center/btn_last_page").GetComponent<Button>();
+            this.btnNext = this.nameTableDic["btn_next_page"].GetComponent<Button>();
+            this.btnLast = this.nameTableDic["btn_last_page"].GetComponent<Button>();
 
-            this.gridLayout = this.transform.Find("node_center/scroller/viewport/content").GetComponent<GridLayoutGroup>();
+            this.gridLayout = this.nameTableDic["content"].GetComponent<GridLayoutGroup>();
 
-            this.bigLevelContentTrans = this.transform.Find("node_center/scroller/viewport/content");
+            this.bigLevelContentTrans = this.nameTableDic["content"].transform;
 
             this.InitGridLayoutAndSroll();
             this.LoadBigLevelInfo();
@@ -79,7 +79,7 @@ namespace CarrotFantasy
             float newSpacing = GameConfig.BIG_LEVEL_UNIT_SPACING_X * sizeChange;
             this.gridLayout.spacing = new Vector2(newSpacing, 0);
             this.slideScroll = new SlideScrollView();
-            this.slideScroll.LoadSrollView(this.transform.Find("node_center/scroller"), (int)newCellX, (int)newSpacing);
+            this.slideScroll.LoadSrollView(this.nameTableDic["scroller"].transform, (int)newCellX, (int)newSpacing);
             this.slideScroll.SetContentLength(this.bigLevelPageCount);
         }
 

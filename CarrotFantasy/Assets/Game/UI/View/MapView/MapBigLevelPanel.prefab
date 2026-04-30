@@ -1299,6 +1299,7 @@ GameObject:
   - component: {fileID: 2754934933567004919}
   - component: {fileID: 6736340619192570059}
   - component: {fileID: 4080699268460504556}
+  - component: {fileID: 887766554433221102}
   m_Layer: 5
   m_Name: MapBigLevelPanel
   m_TagString: Untagged
@@ -1381,6 +1382,31 @@ MonoBehaviour:
   defaultBundleName: ui/rawimages/stages_bg-hd_0
   defaultAssetName: stages_bg-hd_0
   _lastRecordedSpriteInstanceId: 23240
+--- !u!114 &887766554433221102
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1494301574538940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiEntries:
+  - name: btn_return
+    uiReference: {fileID: 7443495680128512157}
+  - name: btn_help
+    uiReference: {fileID: 7443709657981402647}
+  - name: btn_last_page
+    uiReference: {fileID: 1054686842716696}
+  - name: btn_next_page
+    uiReference: {fileID: 1494814632147052}
+  - name: content
+    uiReference: {fileID: 1441544565588126}
+  - name: scroller
+    uiReference: {fileID: 1680603175216414}
 --- !u!1 &1494814632147052
 GameObject:
   m_ObjectHideFlags: 0

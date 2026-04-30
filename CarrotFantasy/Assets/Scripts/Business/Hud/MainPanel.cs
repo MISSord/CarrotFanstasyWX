@@ -10,15 +10,6 @@ namespace CarrotFantasy
         private Transform monsterTrans;
         private Transform cloudTrans;
         private Tween[] mainPanelTween;
-        private Tween ExitTween;
-
-        private Button btnNormal;
-        private Button btnBoss;
-        private Button btnNetwork;
-
-        private Button btnExitGame;
-        private Button btnSet;
-        private Button btnHelp;
 
         public override void InitData()
         {
@@ -30,10 +21,10 @@ namespace CarrotFantasy
         protected override void LoadCallBack()
         {
             transform.SetSiblingIndex(8);
-            this.carrotAnimator = transform.Find("node_center/node_carrot").GetComponent<Animator>();
+            this.carrotAnimator = this.nameTableDic["node_carrot"].GetComponent<Animator>();
             this.carrotAnimator.Play("CarrotGrow");
-            this.monsterTrans = transform.Find("node_top/spr_monster");
-            this.cloudTrans = transform.Find("node_top/spr_cloud");
+            this.monsterTrans = this.nameTableDic["spr_monster"].transform;
+            this.cloudTrans = this.nameTableDic["spr_cloud"].transform;
 
             mainPanelTween = new Tween[2];
             mainPanelTween[0] = transform.DOLocalMoveX(1920, 0.5f);
@@ -50,20 +41,20 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnNormal = this.nameTableDic["btn_normal"].GetComponent<Button>();
-            this.btnBoss = this.nameTableDic["node_bottom/btn_boss"].GetComponent<Button>();
-            this.btnNetwork = this.transform.Find("node_bottom/btn_network").GetComponent<Button>();
+            Button btnNormal = this.nameTableDic["btn_normal"].GetComponent<Button>();
+            Button btnBoss = this.nameTableDic["btn_boss"].GetComponent<Button>();
+            Button btnNetwork = this.nameTableDic["btn_network"].GetComponent<Button>();
 
-            this.btnExitGame = this.transform.Find("node_top/btn_exit_game").GetComponent<Button>();
-            this.btnHelp = this.transform.Find("node_center/btn_help").GetComponent<Button>();
-            this.btnSet = this.transform.Find("node_center/btn_set").GetComponent<Button>();
+            Button btnExitGame = this.nameTableDic["btn_exit_game"].GetComponent<Button>();
+            Button btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
+            Button btnSet = this.nameTableDic["btn_set"].GetComponent<Button>();
 
-            XUI.AddButtonListener(this.btnBoss, this.ToBossModel);
-            XUI.AddButtonListener(this.btnNormal, this.ToNormalModel);
-            XUI.AddButtonListener(this.btnNetwork, this.StartMatch);
-            XUI.AddButtonListener(this.btnExitGame, this.ExitGame);
-            XUI.AddButtonListener(this.btnHelp, this.ShowHelpPanel);
-            XUI.AddButtonListener(this.btnSet, this.ShowSetPanel);
+            XUI.AddButtonListener(btnBoss, this.ToBossModel);
+            XUI.AddButtonListener(btnNormal, this.ToNormalModel);
+            XUI.AddButtonListener(btnNetwork, this.StartMatch);
+            XUI.AddButtonListener(btnExitGame, this.ExitGame);
+            XUI.AddButtonListener(btnHelp, this.ShowHelpPanel);
+            XUI.AddButtonListener(btnSet, this.ShowSetPanel);
         }
 
         private void PlayUITween()
@@ -75,7 +66,6 @@ namespace CarrotFantasy
         public void ShowSetPanel()
         {
             UIServer.Instance.PlayButtonEffect();
-            ExitTween = mainPanelTween[0];
             ViewManager.Instance.OpenView<SetPanel>();
         }
 

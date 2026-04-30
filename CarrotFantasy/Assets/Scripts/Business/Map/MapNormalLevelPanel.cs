@@ -58,20 +58,20 @@ namespace CarrotFantasy
             this.towerContentImageGos = new List<GameObject>();
             this.currentLevelID = 1;
 
-            this.btnReturn = this.transform.Find("node_up/btn_return").GetComponent<Button>();
-            this.btnHelp = this.transform.Find("node_up/btn_help").GetComponent<Button>();
+            this.btnReturn = this.nameTableDic["btn_return"].GetComponent<Button>();
+            this.btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
 
-            this.levelContentTrans = transform.Find("node_center/scroller/viewport/content");
-            this.nodeLockBtn = transform.Find("node_bottom/img_lock_btn").gameObject;
-            this.nodeTowerTrans = transform.Find("node_center/node_tower");
-            this.imgBGLeft = transform.Find("node_bottom/img_bg_left").GetComponent<Image>();
-            this.imgBGRight = transform.Find("node_bottom/img_bg_right").GetComponent<Image>();
-            this.txtTotalWaves = transform.Find("node_center/node_total_waves/txt_waves").GetComponent<Text>();
-            this.scroller = transform.Find("node_center/scroller");
+            this.levelContentTrans = this.nameTableDic["content"].transform;
+            this.nodeLockBtn = this.nameTableDic["img_lock_btn"];
+            this.nodeTowerTrans = this.nameTableDic["node_tower"].transform;
+            this.imgBGLeft = this.nameTableDic["img_bg_left"].GetComponent<Image>();
+            this.imgBGRight = this.nameTableDic["img_bg_right"].GetComponent<Image>();
+            this.txtTotalWaves = this.nameTableDic["txt_waves"].GetComponent<Text>();
+            this.scroller = this.nameTableDic["scroller"].transform;
 
-            this.btnStartGame = this.transform.Find("node_bottom/btn_start").GetComponent<Button>();
-            this.btnLastLevel = this.transform.Find("node_center/btn_last_page").GetComponent<Button>();
-            this.btnNextLevel = this.transform.Find("node_center/btn_next_page").GetComponent<Button>();
+            this.btnStartGame = this.nameTableDic["btn_start"].GetComponent<Button>();
+            this.btnLastLevel = this.nameTableDic["btn_last_page"].GetComponent<Button>();
+            this.btnNextLevel = this.nameTableDic["btn_next_page"].GetComponent<Button>();
 
             this.theSpritePath = filePath + currentBigLevelID.ToString() + "/";
 

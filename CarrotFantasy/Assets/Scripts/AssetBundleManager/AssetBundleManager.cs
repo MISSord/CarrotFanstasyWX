@@ -313,6 +313,7 @@ public struct AssetBaseLoadInfo
 {
     public string bundleName;
     public string assetName;
+    public System.Type expectedType;
     public AssetLoadCallback _callback;
 }
 #endif
@@ -462,6 +463,7 @@ public class AssetBundleManager
             {
                 bundleName = bundleName,
                 assetName = assetName,
+                expectedType = typeof(T),
                 _callback = genericCallback,
             };
             assetBaseLoadInfos.Add(info);
@@ -479,7 +481,7 @@ public class AssetBundleManager
         for (int i = 0; i < assetBaseLoadInfos.Count; ++i)
         {
             AssetBaseLoadInfo info = assetBaseLoadInfos[i];
-            UnityEngine.Object asset = EditorAssetLoader.LoadAssetAtPath(info.bundleName, info.assetName);
+            UnityEngine.Object asset = EditorAssetLoader.LoadAssetAtPath(info.bundleName, info.assetName, info.expectedType);
             if (asset != null && info._callback != null)
             {
                 info._callback(asset);

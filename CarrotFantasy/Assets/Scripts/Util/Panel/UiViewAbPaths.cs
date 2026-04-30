@@ -13,5 +13,6 @@ namespace CarrotFantasy
         public const string LoginPrefab = "ui/view/login_prefab";
         public const string ViewRootPrefab = "ui/view_prefab";
         public const string LoadingViewPrefab = "ui/view/loadingview_prefab";
+        public const string NormalMordelPrefab = "ui/view/normalmordel_prefab";
     }
 }

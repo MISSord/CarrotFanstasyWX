@@ -31,15 +31,15 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.inputAccount = this.transform.Find("node_up/input_account").GetComponent<InputField>();
-            this.inputPassword = this.transform.Find("node_up/input_password").GetComponent<InputField>();
-            this.nodeInputSurePassword = this.transform.Find("node_up/input_sure_password").gameObject;
-            this.inputSurePassword = this.nodeInputSurePassword.transform.GetComponent<InputField>();
-            this.nodeBtnBack = this.transform.Find("node_bottom/btn_back").gameObject;
-            this.btnBack = this.nodeBtnBack.transform.GetComponent<Button>();
-            this.nodeBtnLogin = this.transform.Find("node_bottom/btn_login").gameObject;
-            this.btnLogin = this.nodeBtnLogin.transform.GetComponent<Button>();
-            this.btnResgister = this.transform.Find("node_bottom/btn_register").GetComponent<Button>();
+            this.inputAccount = this.nameTableDic["input_account"].GetComponent<InputField>();
+            this.inputPassword = this.nameTableDic["input_password"].GetComponent<InputField>();
+            this.nodeInputSurePassword = this.nameTableDic["input_sure_password"];
+            this.inputSurePassword = this.nodeInputSurePassword.GetComponent<InputField>();
+            this.nodeBtnBack = this.nameTableDic["btn_back"];
+            this.btnBack = this.nodeBtnBack.GetComponent<Button>();
+            this.nodeBtnLogin = this.nameTableDic["btn_login"];
+            this.btnLogin = this.nodeBtnLogin.GetComponent<Button>();
+            this.btnResgister = this.nameTableDic["btn_register"].GetComponent<Button>();
 
             this.btnLogin.onClick.AddListener(this.LoginAccount);
             this.btnBack.onClick.AddListener(this.BackLoginState);

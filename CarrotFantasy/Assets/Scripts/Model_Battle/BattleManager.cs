@@ -7,6 +7,9 @@ namespace CarrotFantasy
         private static BattleManager instance;
 
         private NormalModelPanel panel;
+        private MenuView menuView;
+        private GameWinView gameWinView;
+        private GameOverView gameOverView;
 
         public static BattleManager Instance
         {
@@ -15,7 +18,6 @@ namespace CarrotFantasy
                 return instance;
             }
         }
-
         public BaseBattle baseBattle { get; private set; }
         public BattleView_base baseBattleView { get; private set; }
 
@@ -39,6 +41,30 @@ namespace CarrotFantasy
             }
             this.baseBattleView.rootGameObject = this.transform.gameObject;
             this.AddLitener();
+            InitBattleViews();
+        }
+
+        private void InitBattleViews()
+        {           
+            // 战斗 UI：集中创建与注册（避免单例）
+            panel = new NormalModelPanel();
+            panel.RegisterData();
+
+            if (menuView == null)
+            {
+                menuView = new MenuView();
+                menuView.RegisterData();
+            }
+            if (gameWinView == null)
+            {
+                gameWinView = new GameWinView();
+                gameWinView.RegisterData();
+            }
+            if (gameOverView == null)
+            {
+                gameOverView = new GameOverView();
+                gameOverView.RegisterData();
+            }
         }
 
         private void AddLitener()
@@ -57,12 +83,11 @@ namespace CarrotFantasy
             this.baseBattleView.ClearGameInfo();
             this.baseBattle.ClearGameInfo();
 
+            // 关闭战斗 UI
+            this.panel?.Close();
+            ViewManager.Instance?.CloseAllOpenViews();
 
-            if (this.panel != null)
-            {
-                this.panel.Close();
-                this.panel = null;
-            }
+            InitBattleViews();
 
             this.InitBattle();
             Sche.DelayExeOnceTimes(this.StartGame, 2.0f);
@@ -75,8 +100,7 @@ namespace CarrotFantasy
             this.baseBattleView.Init();
             this.baseBattleView.InitComponents();
 
-            UIViewService.OpenNormalModelPanel();
-            this.panel = NormalModelPanel.Instance;
+            this.panel.Open();
         }
 
         public void StartGame()
@@ -95,6 +119,7 @@ namespace CarrotFantasy
         public void Dispose()
         {
             this.RemoveListener();
+
             this.baseBattleView.Dispose();
             this.baseBattle.Dispose();
 

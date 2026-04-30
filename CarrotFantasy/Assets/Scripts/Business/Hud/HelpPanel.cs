@@ -28,14 +28,14 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.nodeHelp = this.transform.Find("HelpPage").gameObject;
-            this.nodeMonster = this.transform.Find("MonsterPage").gameObject;
-            this.nodeTower = this.transform.Find("TowerPage").gameObject;
+            this.nodeHelp = this.nameTableDic["HelpPage"];
+            this.nodeMonster = this.nameTableDic["MonsterPage"];
+            this.nodeTower = this.nameTableDic["TowerPage"];
 
-            this.btnReturn = this.transform.Find("node_top/Btn_Return").GetComponent<Button>();
-            this.btnHelp = this.transform.Find("node_top/Btn_Help").GetComponent<Button>();
-            this.btnMonster = this.transform.Find("node_top/Btn_Monster").GetComponent<Button>();
-            this.btnTower = this.transform.Find("node_top/Btn_Tower").GetComponent<Button>();
+            this.btnReturn = this.nameTableDic["Btn_Return"].GetComponent<Button>();
+            this.btnHelp = this.nameTableDic["Btn_Help"].GetComponent<Button>();
+            this.btnMonster = this.nameTableDic["Btn_Monster"].GetComponent<Button>();
+            this.btnTower = this.nameTableDic["Btn_Tower"].GetComponent<Button>();
 
             this.showId = 1;
             this.AddListener();

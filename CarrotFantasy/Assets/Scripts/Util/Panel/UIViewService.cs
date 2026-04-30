@@ -55,13 +55,6 @@ namespace CarrotFantasy
             LoginPanel.Instance.Open(0);
         }
 
-        public static void OpenNormalModelPanel()
-        {
-            OpenPrepare("NormalModelPanel");
-            NormalModelPanel.Instance.RegisterData();
-            NormalModelPanel.Instance.Open(0);
-        }
-
         public static void CloseAllViews()
         {
             if (ViewManager.Instance != null)

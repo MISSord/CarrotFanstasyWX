@@ -37,17 +37,17 @@ namespace CarrotFantasy
         {
             this.stateId = 1;
 
-            this.optionPageGo = transform.Find("OptionPage").gameObject;
-            this.producerPageGo = transform.Find("ProducerPage").gameObject;
-            this.Img_Btn_EffectAudio = optionPageGo.transform.Find("Btn_EffectAudio").GetComponent<Image>();
-            this.Img_Btn_BGAudio = optionPageGo.transform.Find("Btn_BGAudio").GetComponent<Image>();
+            this.optionPageGo = this.nameTableDic["OptionPage"];
+            this.producerPageGo = this.nameTableDic["ProducerPage"];
+            this.Img_Btn_EffectAudio = this.nameTableDic["Btn_EffectAudio"].GetComponent<Image>();
+            this.Img_Btn_BGAudio = this.nameTableDic["Btn_BGAudio"].GetComponent<Image>();
 
-            this.btnBGAudio = this.optionPageGo.transform.Find("Btn_BGAudio").GetComponent<Button>();
-            this.btnEffectAudio = this.optionPageGo.transform.Find("Btn_EffectAudio").GetComponent<Button>();
+            this.btnBGAudio = this.nameTableDic["Btn_BGAudio"].GetComponent<Button>();
+            this.btnEffectAudio = this.nameTableDic["Btn_EffectAudio"].GetComponent<Button>();
 
-            this.btnOptionPage = this.transform.Find("node_top/Btn_Option").GetComponent<Button>();
-            this.btnProducePage = this.transform.Find("node_top/Btn_Producer").GetComponent<Button>();
-            this.btnReturn = this.transform.Find("node_top/Btn_Return").GetComponent<Button>();
+            this.btnOptionPage = this.nameTableDic["Btn_Option"].GetComponent<Button>();
+            this.btnProducePage = this.nameTableDic["Btn_Producer"].GetComponent<Button>();
+            this.btnReturn = this.nameTableDic["Btn_Return"].GetComponent<Button>();
 
             this.LoadResource();
             this.AddListener();

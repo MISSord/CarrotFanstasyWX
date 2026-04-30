@@ -466,6 +466,7 @@ GameObject:
   - component: {fileID: 8752743477425917386}
   - component: {fileID: 8752743477425917387}
   - component: {fileID: 5761603836746186963}
+  - component: {fileID: 887766554433221104}
   m_Layer: 5
   m_Name: RoomPanel
   m_TagString: Untagged
@@ -549,6 +550,31 @@ MonoBehaviour:
   defaultBundleName: ui/rawimages/stages_bg-hd_0
   defaultAssetName: stages_bg-hd_0
   _lastRecordedSpriteInstanceId: 23240
+--- !u!114 &887766554433221104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8752743477425917381}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiEntries:
+  - name: btn_ready
+    uiReference: {fileID: 8752743478014499784}
+  - name: btn_back
+    uiReference: {fileID: 8752743477138000773}
+  - name: txt_tips
+    uiReference: {fileID: 8757200692723348087}
+  - name: txt_user_name_info1
+    uiReference: {fileID: 8757200692549375761}
+  - name: txt_user_name_info2
+    uiReference: {fileID: 8744465108101440042}
+  - name: txt_user_name_info3
+    uiReference: {fileID: 6335775544125286362}
 --- !u!1 &8752743478014499784
 GameObject:
   m_ObjectHideFlags: 0

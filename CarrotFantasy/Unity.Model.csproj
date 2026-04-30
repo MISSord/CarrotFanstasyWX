@@ -129,7 +129,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\Shapes\HitTestShape_Rect.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle_Team\BattleTeam_Base.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Panel\TopPage.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpBattle.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneServer.cs" />
     <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleUpdateChecker.cs" />
@@ -168,7 +167,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Config\MonsterConfigReader.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionMessageCodec.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapNormalLevelPanel.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Panel\GameWinPage.cs" />
     <Compile Include="Assets\Scripts\Business\Map\SingleMapInfo.cs" />
     <Compile Include="Assets\Scripts\Business\Base\BaseServer.cs" />
     <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleManager.cs" />
@@ -177,13 +175,11 @@
     <Compile Include="Assets\Scripts\View_Battle\Enum\BattleUnitViewType.cs" />
     <Compile Include="Assets\Scripts\Business\BusinessProvision.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\StateMachine\BaseState.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Panel\MenuPage.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleUnitType.cs" />
     <Compile Include="Assets\Scripts\Business\Account\StartLoadPanel.cs" />
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageSaveType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\ViewManager.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\MainScene.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Panel\GameOverPage.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\UnitEvent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleStateType.cs" />
     <Compile Include="Assets\Scripts\GameMain.cs" />
@@ -279,6 +275,10 @@
     <Compile Include="Assets\Scripts\Util\Resource\UIImageLoader.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\ImageResourceManager.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\UIImageLoaderExtensions.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Panel\MenuView.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Panel\GameOverView.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Panel\GameWinView.cs" />
+    <Compile Include="Assets\Scripts\Business\UI\ButtonClickPlayAudio.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

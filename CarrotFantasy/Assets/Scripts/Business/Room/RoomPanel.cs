@@ -29,10 +29,10 @@ namespace CarrotFantasy
         protected override void LoadCallBack()
         {
             this.matchTime = 0;
-            this.btn_fight = this.transform.Find("node_bottom/btn_ready").GetComponent<Button>();
-            this.btn_canel = this.transform.Find("node_bottom/btn_back").GetComponent<Button>();
+            this.btn_fight = this.nameTableDic["btn_ready"].GetComponent<Button>();
+            this.btn_canel = this.nameTableDic["btn_back"].GetComponent<Button>();
 
-            this.txt_tips = this.transform.Find("node_up/txt_tips").GetComponent<Text>();
+            this.txt_tips = this.nameTableDic["txt_tips"].GetComponent<Text>();
             this.txt_tips.text = LanguageUtil.Instance.GetString(103);
 
             this.InitUserInfoUI();
@@ -42,9 +42,9 @@ namespace CarrotFantasy
 
         private void InitUserInfoUI()
         {
-            this.txt_userName = this.transform.Find("node_center/node_info/node_info1/txt_user_name").GetComponent<Text>();
-            this.txt_userState = this.transform.Find("node_center/node_info/node_info2/txt_user_name").GetComponent<Text>();
-            this.txt_myState = this.transform.Find("node_center/node_info/node_info3/txt_user_name").GetComponent<Text>();
+            this.txt_userName = this.nameTableDic["txt_user_name_info1"].GetComponent<Text>();
+            this.txt_userState = this.nameTableDic["txt_user_name_info2"].GetComponent<Text>();
+            this.txt_myState = this.nameTableDic["txt_user_name_info3"].GetComponent<Text>();
 
             this.txt_userName.text = LanguageUtil.Instance.GetString(102);
             this.txt_userState.text = LanguageUtil.Instance.GetString(100);

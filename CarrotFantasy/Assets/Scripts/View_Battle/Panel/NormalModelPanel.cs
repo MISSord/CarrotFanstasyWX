@@ -5,21 +5,19 @@ namespace CarrotFantasy
 {
     public class NormalModelPanel : BaseView
     {
-        private static NormalModelPanel _instance;
-        public static NormalModelPanel Instance => _instance ?? (_instance = new NormalModelPanel());
-
-        private NormalModelPanel() { }
-
         private GameObject nodeTopPage;
-        private GameObject nodeMenuPage;
-        private GameObject nodeGameOverPage;
-        private GameObject nodeGameWinPage;
         private GameObject nodeStartUI;
-        private TopPage topPage;
-        private GameWinPage gameWinPage;
-        private MenuPage menuPage;
-        private GameOverPage gameOverPage;
         private Button btnMenuPage;
+        private Button btnPause;
+        private Text txtCoin;
+        private Text txtWaveInfo;
+        private Image imgBtnPause;
+        private GameObject nodePause;
+        private GameObject nodePlayingText;
+        private Sprite[] btnPauseSprites;
+        private BattleDataComponent dataComponent;
+        private BaseBattle battle;
+        private bool isPause;
         private int schId;
         private int schId_startGame;
 
@@ -32,56 +30,66 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.nodeTopPage = transform.Find("node_TopPage").gameObject;
-            this.topPage = new TopPage(this.nodeTopPage.transform);
-            this.topPage.BindNode(this.nodeTopPage.transform);
+            this.nodeTopPage = this.nameTableDic["node_TopPage"];
+            this.nodeStartUI = this.nameTableDic["StartUI"];
+            this.txtCoin = this.nameTableDic["txt_coin"].GetComponent<Text>();
+            this.txtWaveInfo = this.nameTableDic["txt_waves_info"].GetComponent<Text>();
+            this.btnMenuPage = this.nameTableDic["Btn_Menu"].GetComponent<Button>();
+            this.btnPause = this.nameTableDic["Btn_Pause"].GetComponent<Button>();
+            this.imgBtnPause = this.btnPause.GetComponent<Image>();
+            this.nodePause = this.nameTableDic["node_pause"];
+            this.nodePlayingText = this.nameTableDic["node_playing_text"];
+            this.LoadTopResources();
 
-            this.nodeMenuPage = transform.Find("MenuPage").gameObject;
-            this.menuPage = new MenuPage(this.nodeMenuPage.transform);
-            this.menuPage.BindNode(this.nodeMenuPage.transform);
-
-            this.nodeGameOverPage = transform.Find("GameOverPage").gameObject;
-            this.gameOverPage = new GameOverPage(this.nodeGameOverPage.transform);
-            this.gameOverPage.BindNode(this.nodeGameOverPage.transform);
-
-            this.nodeGameWinPage = transform.Find("GameWinPage").gameObject;
-            this.gameWinPage = new GameWinPage(this.nodeGameWinPage.transform);
-            this.gameWinPage.BindNode(this.nodeGameWinPage.transform);
-
-            this.nodeStartUI = transform.Find("StartUI").gameObject;
-            this.btnMenuPage = this.transform.Find("node_TopPage/node_btn_container/Btn_Menu").GetComponent<Button>();
             this.AddListener();
         }
 
         private void InitPages()
         {
-            this.topPage.OpenPage();
-            this.menuPage.OpenPage();
-            this.gameOverPage.OpenPage();
-            this.gameWinPage.OpenPage();
+            this.battle = BattleManager.Instance.baseBattle;
+            this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
+            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
+            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
+            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
+            this.isPause = this.battle.isPause;
+            this.UpdateCoinText(0);
+            this.UpdateRoundText(0);
+            this.UpdateBtnPause();
+            this.nodePause.SetActive(this.isPause);
+            this.nodePlayingText.SetActive(!this.isPause);
 
             this.nodeTopPage.SetActive(true);
-            this.menuPage.ClosePage();
-            this.gameOverPage.ClosePage();
-            this.gameWinPage.ClosePage();
         }
 
         private void ShowMenu()
         {
             UIServer.Instance.PlayButtonEffect();
-            this.nodeMenuPage.SetActive(true);
+            ViewManager.Instance.OpenView<MenuView>();
             BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
         }
 
         private void AddListener()
         {
             BattleManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.ShowStartUI);
+            BattleManager.Instance.baseBattle.eventDispatcher.AddListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
+            this.btnPause.onClick.AddListener(this.BtnPauseGame);
             this.btnMenuPage.onClick.AddListener(this.ShowMenu);
         }
 
         private void RemoveListener()
         {
             BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.ShowStartUI);
+            if (this.dataComponent != null)
+            {
+                this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
+                this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
+            }
+            if (BattleManager.Instance?.baseBattle != null)
+            {
+                BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
+            }
+            this.btnPause.onClick.RemoveAllListeners();
             this.btnMenuPage.onClick.RemoveAllListeners();
         }
 
@@ -107,11 +115,52 @@ namespace CarrotFantasy
 
         protected override void ReleaseCallBack()
         {
-            this.gameWinPage?.Release();
-            this.gameOverPage?.Release();
-            this.menuPage?.Release();
-            this.topPage?.Release();
+            this.btnPauseSprites = null;
             this.RemoveListener();
+        }
+
+        private void LoadTopResources()
+        {
+            this.btnPauseSprites = new Sprite[2];
+            this.btnPauseSprites[0] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/pause_1");
+            this.btnPauseSprites[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/pause_3");
+        }
+
+        private void UpdateCoinText(int coin)
+        {
+            this.txtCoin.text = this.dataComponent.CoinCount.ToString();
+        }
+
+        private void UpdateRoundText(int i)
+        {
+            int waves = this.dataComponent.curWaves;
+            this.txtWaveInfo.text = LanguageUtil.Instance.GetFormatString(1001, (waves / 10).ToString(), (waves % 10).ToString(), this.dataComponent.totalWaves.ToString());
+        }
+
+        private void UpdateBtnPause()
+        {
+            this.imgBtnPause.sprite = this.btnPauseSprites[this.isPause ? 1 : 0];
+        }
+
+        private void BtnPauseGame()
+        {
+            UIServer.Instance.PlayButtonEffect();
+            if (this.isPause)
+            {
+                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
+            }
+            else
+            {
+                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
+            }
+        }
+
+        private void PauseGame(bool pauseState)
+        {
+            this.isPause = pauseState;
+            this.UpdateBtnPause();
+            this.nodePause.SetActive(pauseState);
+            this.nodePlayingText.SetActive(!pauseState);
         }
     }
 }

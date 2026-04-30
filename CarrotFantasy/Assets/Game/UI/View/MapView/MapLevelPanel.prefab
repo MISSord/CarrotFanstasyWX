@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 480326021622498665}
   - component: {fileID: 6821646009369665292}
   - component: {fileID: 7867335014081924652}
+  - component: {fileID: 887766554433221103}
   m_Layer: 5
   m_Name: MapLevelPanel
   m_TagString: Untagged
@@ -95,6 +96,43 @@ MonoBehaviour:
   defaultBundleName: ui/rawimages/stages_bg-hd_0
   defaultAssetName: stages_bg-hd_0
   _lastRecordedSpriteInstanceId: 23240
+--- !u!114 &887766554433221103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1119619717552792}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiEntries:
+  - name: btn_return
+    uiReference: {fileID: 7778169538299223844}
+  - name: btn_help
+    uiReference: {fileID: 7777820326754259374}
+  - name: btn_start
+    uiReference: {fileID: 1858638526573840}
+  - name: btn_last_page
+    uiReference: {fileID: 4130012082926924323}
+  - name: btn_next_page
+    uiReference: {fileID: 3601188692290608079}
+  - name: content
+    uiReference: {fileID: 1481091937553306}
+  - name: scroller
+    uiReference: {fileID: 1331665739482734}
+  - name: img_lock_btn
+    uiReference: {fileID: 1637293756476974}
+  - name: node_tower
+    uiReference: {fileID: 1189603113067174}
+  - name: img_bg_left
+    uiReference: {fileID: 1569359193881780}
+  - name: img_bg_right
+    uiReference: {fileID: 1447804465374560}
+  - name: txt_waves
+    uiReference: {fileID: 1406212610186834}
 --- !u!1 &1189603113067174
 GameObject:
   m_ObjectHideFlags: 0

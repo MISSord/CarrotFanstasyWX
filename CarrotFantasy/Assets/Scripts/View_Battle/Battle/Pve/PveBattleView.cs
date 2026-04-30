@@ -2,7 +2,6 @@ namespace CarrotFantasy
 {
     public class PveBattleView : BattleView_base
     {
-
         public PveBattleView(BaseBattle battle) : base(battle)
         {
             this.rootGameObject = ServerProvision.sceneServer.currentScene.gameObj;

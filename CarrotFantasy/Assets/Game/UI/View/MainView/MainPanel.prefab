@@ -207,6 +207,8 @@ MonoBehaviour:
     uiReference: {fileID: 1627964372533596}
   - name: btn_network
     uiReference: {fileID: 2575983301584838067}
+  - name: node_carrot
+    uiReference: {fileID: 1465428803348860}
 --- !u!1 &1156331854298982
 GameObject:
   m_ObjectHideFlags: 0
@@ -1123,7 +1125,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 35, y: -88}
-  m_SizeDelta: {x: 972, y: 576.8}
+  m_SizeDelta: {x: 460, y: 273}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222671448101219424
 CanvasRenderer:
