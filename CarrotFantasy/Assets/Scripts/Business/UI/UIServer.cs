@@ -9,7 +9,6 @@ namespace CarrotFantasy
         private GameObject nodeObject;
         private GameObject loadingPanelObject;
         private TipView tipPanel;
-        public AudioManager audioManager;
 
         //private String loadingPanelUrl = "Prefabs/Util/LoadingPanel";
         //private String tipPanelUrl = "Prefabs/Util/TipPanel";
@@ -130,26 +129,22 @@ namespace CarrotFantasy
         public override void Dispose()
         {
             base.Dispose();
-            if (this.audioManager != null)
-            {
-                this.audioManager.Dispose();
-            }
             GameObject.Destroy(this.nodeObject);
         }
 
         public void PlayMainBg()
         {
-            //this.audioManager.PlayMusic("AudioClips/Main/BGMusic");
+            //AudioManager.Instance.PlayMusic("AudioClips/Main/BGMusic");
         }
 
         public void PlayButtonEffect()
         {
-            //this.audioManager.PlayEffect("AudioClips/Main/Button");
+            //AudioManager.Instance.PlayEffect("AudioClips/Main/Button");
         }
 
         public void PlayPagingEffect()
         {
-            //this.audioManager.PlayEffect("AudioClips/Main/Paging");
+            //AudioManager.Instance.PlayEffect("AudioClips/Main/Paging");
         }
     }
 }

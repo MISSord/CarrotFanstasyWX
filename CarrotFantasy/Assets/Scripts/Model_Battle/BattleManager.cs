@@ -28,7 +28,8 @@ namespace CarrotFantasy
 
         public void Init()
         {
-            UIServer.Instance.audioManager.PlayMusic("AudioClips/NormalMordel/BGMusic");
+            AudioClipPreloader.RunBattleDefaults(null);
+            AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
             if (BattleParamServer.Instance.isPVE == true)
             {
                 this.baseBattle = new PveBattle();

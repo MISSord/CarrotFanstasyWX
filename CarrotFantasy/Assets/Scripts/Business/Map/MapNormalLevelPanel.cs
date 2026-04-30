@@ -22,17 +22,9 @@ namespace CarrotFantasy
         private Transform levelContentTrans;
         private GameObject nodeLockBtn;
         private Transform nodeTowerTrans;
-        private Image imgBGLeft;
-        private Image imgBGRight;
         private Text txtTotalWaves;
         private Transform scroller;
         private SlideScrollView slideScrollView;
-
-        private Button btnStartGame;
-        private Button btnNextLevel;
-        private Button btnLastLevel;
-        private Button btnReturn;
-        private Button btnHelp;
 
         private List<GameObject> levelContentImageGos;
         private List<GameObject> towerContentImageGos;
@@ -58,20 +50,11 @@ namespace CarrotFantasy
             this.towerContentImageGos = new List<GameObject>();
             this.currentLevelID = 1;
 
-            this.btnReturn = this.nameTableDic["btn_return"].GetComponent<Button>();
-            this.btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
-
             this.levelContentTrans = this.nameTableDic["content"].transform;
             this.nodeLockBtn = this.nameTableDic["img_lock_btn"];
             this.nodeTowerTrans = this.nameTableDic["node_tower"].transform;
-            this.imgBGLeft = this.nameTableDic["img_bg_left"].GetComponent<Image>();
-            this.imgBGRight = this.nameTableDic["img_bg_right"].GetComponent<Image>();
             this.txtTotalWaves = this.nameTableDic["txt_waves"].GetComponent<Text>();
             this.scroller = this.nameTableDic["scroller"].transform;
-
-            this.btnStartGame = this.nameTableDic["btn_start"].GetComponent<Button>();
-            this.btnLastLevel = this.nameTableDic["btn_last_page"].GetComponent<Button>();
-            this.btnNextLevel = this.nameTableDic["btn_next_page"].GetComponent<Button>();
 
             this.theSpritePath = filePath + currentBigLevelID.ToString() + "/";
 
@@ -89,8 +72,10 @@ namespace CarrotFantasy
 
         public void LoadLevelUI()
         {
-            this.imgBGLeft.sprite = ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Left");
-            this.imgBGRight.sprite = ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Right");
+            this.nameTableDic["img_bg_left"].GetComponent<Image>().sprite =
+                ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Left");
+            this.nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
+                ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Right");
             for (int i = 0; i < levelInfoList.Length; i++)
             {
                 levelContentImageGos.Add(this.CreateUIAndSetUIPosition("Prefabs/UI/node_level", levelContentTrans));
@@ -216,11 +201,11 @@ namespace CarrotFantasy
         private void AddListener()
         {
             MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.UpdateMapInfo);
-            this.btnStartGame.onClick.AddListener(this.StartGame);
-            this.btnLastLevel.onClick.AddListener(this.ToLastLevel);
-            this.btnNextLevel.onClick.AddListener(this.ToNextLevel);
-            this.btnReturn.onClick.AddListener(this.ReturnToLastPanel);
-            this.btnHelp.onClick.AddListener(this.ShowHelpPanel);
+            XUI.AddButtonListener(this.nameTableDic["btn_start"].GetComponent<Button>(), this.StartGame);
+            XUI.AddButtonListener(this.nameTableDic["btn_last_page"].GetComponent<Button>(), this.ToLastLevel);
+            XUI.AddButtonListener(this.nameTableDic["btn_next_page"].GetComponent<Button>(), this.ToNextLevel);
+            XUI.AddButtonListener(this.nameTableDic["btn_return"].GetComponent<Button>(), this.ReturnToLastPanel);
+            XUI.AddButtonListener(this.nameTableDic["btn_help"].GetComponent<Button>(), this.ShowHelpPanel);
         }
 
         private void RemoveListener()

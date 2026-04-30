@@ -10,8 +10,6 @@ namespace CarrotFantasy
 
         private RoomPanel() { }
 
-        private Button btn_fight;
-        private Button btn_canel;
         private Text txt_tips;
         private Text txt_userName;
         private Text txt_userState;
@@ -29,8 +27,6 @@ namespace CarrotFantasy
         protected override void LoadCallBack()
         {
             this.matchTime = 0;
-            this.btn_fight = this.nameTableDic["btn_ready"].GetComponent<Button>();
-            this.btn_canel = this.nameTableDic["btn_back"].GetComponent<Button>();
 
             this.txt_tips = this.nameTableDic["txt_tips"].GetComponent<Text>();
             this.txt_tips.text = LanguageUtil.Instance.GetString(103);
@@ -53,8 +49,8 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btn_canel.onClick.AddListener(this.CanelFight);
-            this.btn_fight.onClick.AddListener(this.StateToFight);
+            XUI.AddButtonListener(this.nameTableDic["btn_back"].GetComponent<Button>(), this.CanelFight);
+            XUI.AddButtonListener(this.nameTableDic["btn_ready"].GetComponent<Button>(), this.StateToFight);
             RoomServer.Instance.eventDispatcher.AddListener(RoomEventType.USER_INFO_CHANGE, this.ChangeUserInfo);
         }
 

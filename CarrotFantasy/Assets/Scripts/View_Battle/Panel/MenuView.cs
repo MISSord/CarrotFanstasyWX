@@ -7,10 +7,6 @@ namespace CarrotFantasy
     {
         public MenuView() { }
 
-        private Button btnGoOn;
-        private Button btnReplay;
-        private Button btnChooseLevel;
-
         public override void InitData()
         {
             viewName = "MenuView";
@@ -20,13 +16,9 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            btnGoOn = nameTableDic["btn_go_on"].GetComponent<Button>();
-            btnReplay = nameTableDic["btn_replay"].GetComponent<Button>();
-            btnChooseLevel = nameTableDic["btn_choose_level"].GetComponent<Button>();
-
-            btnGoOn.onClick.AddListener(OnGoOn);
-            btnReplay.onClick.AddListener(OnReplay);
-            btnChooseLevel.onClick.AddListener(OnChooseOtherLevel);
+            XUI.AddButtonListener(nameTableDic["btn_go_on"].GetComponent<Button>(), OnGoOn);
+            XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
+            XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
         }
 
         protected override void CloseCallBack()
@@ -40,9 +32,9 @@ namespace CarrotFantasy
 
         protected override void ReleaseCallBack()
         {
-            btnGoOn?.onClick.RemoveAllListeners();
-            btnReplay?.onClick.RemoveAllListeners();
-            btnChooseLevel?.onClick.RemoveAllListeners();
+            nameTableDic["btn_go_on"].GetComponent<Button>().onClick.RemoveAllListeners();
+            nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
+            nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
         }
 
         private void OnGoOn()

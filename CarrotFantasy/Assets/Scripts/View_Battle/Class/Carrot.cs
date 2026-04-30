@@ -59,7 +59,7 @@ namespace CarrotFantasy
             {
                 animator.Play("Touch");
                 int randomNum = UnityEngine.Random.Range(1, 4);
-                UIServer.Instance.audioManager.PlayEffect(
+                AudioManager.Instance.PlayEffectByResources(
                     String.Format("NormalMordel/Carrot/{0}", randomNum.ToString()));
             }
         }

@@ -9,11 +9,6 @@ namespace CarrotFantasy
         private GameObject nodeMonster;
         private GameObject nodeTower;
 
-        private Button btnReturn;
-        private Button btnHelp;
-        private Button btnMonster;
-        private Button btnTower;
-
         private Vector3 fadePosition = new Vector3(0, 3000, 0);
         private Vector3 showPosition = Vector3.zero;
 
@@ -32,11 +27,6 @@ namespace CarrotFantasy
             this.nodeMonster = this.nameTableDic["MonsterPage"];
             this.nodeTower = this.nameTableDic["TowerPage"];
 
-            this.btnReturn = this.nameTableDic["Btn_Return"].GetComponent<Button>();
-            this.btnHelp = this.nameTableDic["Btn_Help"].GetComponent<Button>();
-            this.btnMonster = this.nameTableDic["Btn_Monster"].GetComponent<Button>();
-            this.btnTower = this.nameTableDic["Btn_Tower"].GetComponent<Button>();
-
             this.showId = 1;
             this.AddListener();
             this.UpdateNodePosition();
@@ -44,10 +34,10 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnReturn.onClick.AddListener(this.Close);
-            this.btnHelp.onClick.AddListener(this.ShowHelpPage);
-            this.btnMonster.onClick.AddListener(this.ShowMonsterPage);
-            this.btnTower.onClick.AddListener(this.ShowTowerPage);
+            XUI.AddButtonListener(this.nameTableDic["Btn_Return"].GetComponent<Button>(), this.Close);
+            XUI.AddButtonListener(this.nameTableDic["Btn_Help"].GetComponent<Button>(), this.ShowHelpPage);
+            XUI.AddButtonListener(this.nameTableDic["Btn_Monster"].GetComponent<Button>(), this.ShowMonsterPage);
+            XUI.AddButtonListener(this.nameTableDic["Btn_Tower"].GetComponent<Button>(), this.ShowTowerPage);
         }
 
         private void UpdateNodePosition()

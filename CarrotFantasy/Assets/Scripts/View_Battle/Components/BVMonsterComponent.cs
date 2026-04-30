@@ -66,7 +66,7 @@ namespace CarrotFantasy
                 monsterView.Init();
 
                 this.monsterDic.Add(monster, monsterView);
-                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Monster/Create");
+                AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Monster/Create");
             }
         }
 
@@ -92,7 +92,7 @@ namespace CarrotFantasy
             monsterView.ClearUnitInfo();
             this.monsterDic.Remove(monster);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
-            UIServer.Instance.audioManager.PlayEffect(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
+            AudioManager.Instance.PlayEffectByResources(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
 
             //特效
             GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);

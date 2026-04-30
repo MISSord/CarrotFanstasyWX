@@ -27,7 +27,7 @@ namespace CarrotFantasy
             this.button = this.transform.GetComponent<Button>();
 
             this.image.sprite = this.canClickSprite;
-            this.button.onClick.AddListener(this.BuildTower);
+            XUI.AddButtonListener(this.button, this.BuildTower);
 
             this.curPrice = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(this.towerID)["price0"]);
         }

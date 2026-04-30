@@ -69,6 +69,8 @@ namespace CarrotFantasy
             ServerProvision.connectionServer.Dispose();
             ServerProvision.sceneServer.Dispose();
 
+            AudioManager.Shutdown();
+
             this.IsGameQuit = true;
         }
     }

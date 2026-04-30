@@ -70,8 +70,8 @@ namespace CarrotFantasy
 
             this.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.RefreshButtonInfo);
 
-            this.tranButtonSell.GetComponent<Button>().onClick.AddListener(this.SellTower);
-            this.tranButtonUp.GetComponent<Button>().onClick.AddListener(this.UpdateTower);
+            XUI.AddButtonListener(this.tranButtonSell.GetComponent<Button>(), this.SellTower);
+            XUI.AddButtonListener(this.tranButtonUp.GetComponent<Button>(), this.UpdateTower);
 
             this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.UpdateNodeState);
             this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.UpdateTargetSignal);
@@ -330,21 +330,21 @@ namespace CarrotFantasy
                 {
                     selectGrid = grid;
                     selectGrid.ShowGrid();
-                    UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/GridSelect");
+                    AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Grid/GridSelect");
                 }
                 else if (grid == selectGrid)//选中同一个格子
                 {
                     grid.HideGrid();
                     selectGrid = null;
                     this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
-                    UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/GridDeselect");
+                    AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Grid/GridDeselect");
                 }
                 else if (grid != selectGrid)//选中不同格子
                 {
                     selectGrid.HideGrid();
                     selectGrid = grid;
                     selectGrid.ShowGrid();
-                    UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/GridSelect");
+                    AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Grid/GridSelect");
                 }
             }
             else
@@ -352,7 +352,7 @@ namespace CarrotFantasy
                 grid.HideGrid();
                 grid.ShowCantBuild();
                 this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
-                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Grid/SelectFault");
+                AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Grid/SelectFault");
                 if (selectGrid != null)
                 {
                     selectGrid.HideGrid();
@@ -451,7 +451,7 @@ namespace CarrotFantasy
 
         private void ShowTargetSignal()
         {
-            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/ShootSelect");
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/ShootSelect");
             UnitTransformComponent tranComponent = (UnitTransformComponent)this.tranTarget.GetComponent(UnitComponentType.TRANSFORM);
             Fix64Vector2 pos = tranComponent.GetLastPosition();
             Vector3 position = new Vector3((float)pos.X, (float)pos.Y, 0);

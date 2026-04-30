@@ -7,11 +7,8 @@ namespace CarrotFantasy
     {
         private GameObject nodeTopPage;
         private GameObject nodeStartUI;
-        private Button btnMenuPage;
-        private Button btnPause;
         private Text txtCoin;
         private Text txtWaveInfo;
-        private Image imgBtnPause;
         private GameObject nodePause;
         private GameObject nodePlayingText;
         private Sprite[] btnPauseSprites;
@@ -34,9 +31,6 @@ namespace CarrotFantasy
             this.nodeStartUI = this.nameTableDic["StartUI"];
             this.txtCoin = this.nameTableDic["txt_coin"].GetComponent<Text>();
             this.txtWaveInfo = this.nameTableDic["txt_waves_info"].GetComponent<Text>();
-            this.btnMenuPage = this.nameTableDic["Btn_Menu"].GetComponent<Button>();
-            this.btnPause = this.nameTableDic["Btn_Pause"].GetComponent<Button>();
-            this.imgBtnPause = this.btnPause.GetComponent<Image>();
             this.nodePause = this.nameTableDic["node_pause"];
             this.nodePlayingText = this.nameTableDic["node_playing_text"];
             this.LoadTopResources();
@@ -73,8 +67,8 @@ namespace CarrotFantasy
         {
             BattleManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.ShowStartUI);
             BattleManager.Instance.baseBattle.eventDispatcher.AddListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
-            this.btnPause.onClick.AddListener(this.BtnPauseGame);
-            this.btnMenuPage.onClick.AddListener(this.ShowMenu);
+            XUI.AddButtonListener(this.nameTableDic["Btn_Pause"].GetComponent<Button>(), this.BtnPauseGame);
+            XUI.AddButtonListener(this.nameTableDic["Btn_Menu"].GetComponent<Button>(), this.ShowMenu);
         }
 
         private void RemoveListener()
@@ -89,8 +83,8 @@ namespace CarrotFantasy
             {
                 BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
             }
-            this.btnPause.onClick.RemoveAllListeners();
-            this.btnMenuPage.onClick.RemoveAllListeners();
+            this.nameTableDic["Btn_Pause"].GetComponent<Button>().onClick.RemoveAllListeners();
+            this.nameTableDic["Btn_Menu"].GetComponent<Button>().onClick.RemoveAllListeners();
         }
 
         private void ShowStartUI()
@@ -101,11 +95,11 @@ namespace CarrotFantasy
             this.schId = sche.DelayExeOnceTimes(() =>
             {
                 this.nodeStartUI.SetActive(false);
-                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Go");
+                AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/GO");
             }, 3.0f);
             this.schId_startGame = sche.DelayExeMultipleTimes(() =>
             {
-                UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/CountDown");
+                AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/CountDown");
             }, 1.0f);
             sche.DelayExeOnceTimes(() =>
             {
@@ -139,7 +133,7 @@ namespace CarrotFantasy
 
         private void UpdateBtnPause()
         {
-            this.imgBtnPause.sprite = this.btnPauseSprites[this.isPause ? 1 : 0];
+            this.nameTableDic["Btn_Pause"].GetComponent<Image>().sprite = this.btnPauseSprites[this.isPause ? 1 : 0];
         }
 
         private void BtnPauseGame()

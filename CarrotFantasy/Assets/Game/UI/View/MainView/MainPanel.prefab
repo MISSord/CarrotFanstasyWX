@@ -590,6 +590,7 @@ GameObject:
   - component: {fileID: 114055087775285154}
   - component: {fileID: 114001073294091300}
   - component: {fileID: 2808561455221744208}
+  - component: {fileID: 2647162226729689984}
   m_Layer: 5
   m_Name: btn_normal
   m_TagString: Untagged
@@ -727,6 +728,27 @@ MonoBehaviour:
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Btn_Normal
   _lastRecordedSpriteInstanceId: 26870
+--- !u!114 &2647162226729689984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359254519708610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b53b6eedae9d6b14ba956841278281b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scaleTarget: {fileID: 0}
+  releasedScale: {x: 1, y: 1, z: 1}
+  pressedScale: {x: 0.92, y: 0.92, z: 1}
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  pressEase: 6
+  releaseEase: 6
+  useUnscaledTime: 0
+  resetToReleasedOnEnable: 1
 --- !u!1 &1465428803348860
 GameObject:
   m_ObjectHideFlags: 0

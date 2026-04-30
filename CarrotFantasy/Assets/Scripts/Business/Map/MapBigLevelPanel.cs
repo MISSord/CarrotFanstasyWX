@@ -10,12 +10,6 @@ namespace CarrotFantasy
 
         private MapBigLevelPanel() { }
 
-        private Button btnReturn;
-        private Button btnHelp;
-
-        private Button btnNext;
-        private Button btnLast;
-
         private GridLayoutGroup gridLayout;
         private SlideScrollView slideScroll;
 
@@ -39,12 +33,6 @@ namespace CarrotFantasy
             this.bigLevelPage = new Transform[bigLevelPageCount];
             this.hasRigisterEvent = false;
 
-            this.btnReturn = this.nameTableDic["btn_return"].GetComponent<Button>();
-            this.btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
-
-            this.btnNext = this.nameTableDic["btn_next_page"].GetComponent<Button>();
-            this.btnLast = this.nameTableDic["btn_last_page"].GetComponent<Button>();
-
             this.gridLayout = this.nameTableDic["content"].GetComponent<GridLayoutGroup>();
 
             this.bigLevelContentTrans = this.nameTableDic["content"].transform;
@@ -57,11 +45,11 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
-            this.btnLast.onClick.AddListener(this.ToTheLastLevelPage);
-            this.btnNext.onClick.AddListener(this.ToTheNextLevelPage);
+            XUI.AddButtonListener(this.nameTableDic["btn_last_page"].GetComponent<Button>(), this.ToTheLastLevelPage);
+            XUI.AddButtonListener(this.nameTableDic["btn_next_page"].GetComponent<Button>(), this.ToTheNextLevelPage);
 
-            this.btnReturn.onClick.AddListener(this.ReturnToMainPanel);
-            this.btnHelp.onClick.AddListener(this.ShowHelpPanel);
+            XUI.AddButtonListener(this.nameTableDic["btn_return"].GetComponent<Button>(), this.ReturnToMainPanel);
+            XUI.AddButtonListener(this.nameTableDic["btn_help"].GetComponent<Button>(), this.ShowHelpPanel);
             MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.UpdateBigLevelInfo);
         }
 
@@ -104,7 +92,7 @@ namespace CarrotFantasy
                 Button theBigLevelButtonCom = theBigLevelButtonTrans.GetComponent<Button>();
                 theBigLevelButtonCom.interactable = true;
                 theBigLevelButtonCom.onClick.RemoveAllListeners();
-                theBigLevelButtonCom.onClick.AddListener(() =>
+                XUI.AddButtonListener(theBigLevelButtonCom, () =>
                 {
                     UIViewService.OpenMapNormalLevelPanel(info.bigLevel);
                 });

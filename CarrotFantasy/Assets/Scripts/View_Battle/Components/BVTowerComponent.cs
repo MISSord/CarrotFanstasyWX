@@ -65,7 +65,7 @@ namespace CarrotFantasy
             tower.eventDipatcher.AddListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
             towerView.Init();
             this.towerViewDic.Add(tower, towerView);
-            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/TowerBulid");
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerBulid");
             GameObject build = GameObject.Instantiate(this.buildGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
             build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
@@ -90,7 +90,7 @@ namespace CarrotFantasy
 
             this.towerViewDic.Remove(tower);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Tower, towerView);
-            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/TowerSell");
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerSell");
 
             GameObject sell = GameObject.Instantiate(this.sellGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);
@@ -107,7 +107,7 @@ namespace CarrotFantasy
                 ResourceLoader.Instance.GetGameObject(String.Format(this.prefabUrl, tower.towerID, tower.curLevel + 1)));
             towerView.InitTransform(towerObj.transform);
             towerView.ReloadInfo();
-            UIServer.Instance.audioManager.PlayEffect("AudioClips/NormalMordel/Tower/TowerUpdata");
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerUpdata");
 
             GameObject build = GameObject.Instantiate(this.buildGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);

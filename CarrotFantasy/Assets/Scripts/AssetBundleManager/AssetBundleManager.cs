@@ -474,6 +474,104 @@ public class AssetBundleManager
         return LoadAsset(bundleName, assetName, genericCallback, priority);
     }
 
+    /// <summary>
+    /// 仅加载 AB 包（含依赖），不加载包内具体资源；用于预热磁盘/解压，后续 <see cref="LoadAsset{T}"/> 会更快。
+    /// 编辑器 Development / Debug 模式下不加载真实 AB，直接视为成功。
+    /// </summary>
+    /// <param name="bundleName">清单中的包名（如 audioclips/normalmordel_prefab）。</param>
+    /// <param name="onComplete">是否成功（清单缺失、加载失败为 false）；成功时会保留一次引用计数以免立即被卸载。</param>
+    /// <param name="priority">包加载优先级。</param>
+    public void EnsureBundleLoaded(string bundleName, Action<bool> onComplete = null, LoadPriority priority = LoadPriority.Medium)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+        {
+            GameLogController.Error("EnsureBundleLoaded: bundleName 为空", "AssetBundleManager");
+            onComplete?.Invoke(false);
+            return;
+        }
+
+#if UNITY_EDITOR
+        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        {
+            onComplete?.Invoke(true);
+            return;
+        }
+#endif
+
+        if (!_bundleManifests.ContainsKey(bundleName))
+        {
+            GameLogController.Warning($"EnsureBundleLoaded: 清单中不存在包 {bundleName}", "AssetBundleManager");
+            onComplete?.Invoke(false);
+            return;
+        }
+
+        BundleInfo already = GetBundleInfo(bundleName);
+        if (already != null && already.isLoaded)
+        {
+            onComplete?.Invoke(true);
+            return;
+        }
+
+        BundleInfo bundleInfo = GetOrCreateBundleInfo(bundleName);
+        bundleInfo.AddReference();
+
+        already = GetBundleInfo(bundleName);
+        if (already != null && already.isLoaded)
+        {
+            onComplete?.Invoke(true);
+            return;
+        }
+
+        bool completed = false;
+
+        Action<string> onLoaded = null;
+        Action<string> onFailed = null;
+
+        void Complete(bool ok)
+        {
+            if (completed)
+            {
+                return;
+            }
+
+            completed = true;
+            OnBundleLoaded -= onLoaded;
+            OnBundleLoadFailed -= onFailed;
+            if (!ok)
+            {
+                bundleInfo.RemoveReference();
+            }
+
+            onComplete?.Invoke(ok);
+        }
+
+        onLoaded = (string name) =>
+        {
+            if (name == bundleName)
+            {
+                Complete(true);
+            }
+        };
+        onFailed = (string name) =>
+        {
+            if (name == bundleName)
+            {
+                Complete(false);
+            }
+        };
+
+        OnBundleLoaded += onLoaded;
+        OnBundleLoadFailed += onFailed;
+
+        LoadBundleWithDependencies(bundleName, priority);
+
+        already = GetBundleInfo(bundleName);
+        if (already != null && already.isLoaded)
+        {
+            Complete(true);
+        }
+    }
+
 #if UNITY_EDITOR
     private void UpdateAssetBaseLoad()
     {

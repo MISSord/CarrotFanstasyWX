@@ -279,6 +279,8 @@
     <Compile Include="Assets\Scripts\View_Battle\Panel\GameOverView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\GameWinView.cs" />
     <Compile Include="Assets\Scripts\Business\UI\ButtonClickPlayAudio.cs" />
+    <Compile Include="Assets\Scripts\Business\UI\UIButtonScalePress.cs" />
+    <Compile Include="Assets\Scripts\Business\UI\AudioClipPreloader.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

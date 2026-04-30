@@ -11,9 +11,6 @@ namespace CarrotFantasy
 
         private LoginPanel() { }
 
-        private Button btnLogin;
-        private Button btnResgister;
-        private Button btnBack;
         private bool isResigterState = false;
         private InputField inputAccount;
         private InputField inputPassword;
@@ -36,14 +33,11 @@ namespace CarrotFantasy
             this.nodeInputSurePassword = this.nameTableDic["input_sure_password"];
             this.inputSurePassword = this.nodeInputSurePassword.GetComponent<InputField>();
             this.nodeBtnBack = this.nameTableDic["btn_back"];
-            this.btnBack = this.nodeBtnBack.GetComponent<Button>();
             this.nodeBtnLogin = this.nameTableDic["btn_login"];
-            this.btnLogin = this.nodeBtnLogin.GetComponent<Button>();
-            this.btnResgister = this.nameTableDic["btn_register"].GetComponent<Button>();
 
-            this.btnLogin.onClick.AddListener(this.LoginAccount);
-            this.btnBack.onClick.AddListener(this.BackLoginState);
-            this.btnResgister.onClick.AddListener(this.RegisterEvent);
+            XUI.AddButtonListener(this.nodeBtnLogin.GetComponent<Button>(), this.LoginAccount);
+            XUI.AddButtonListener(this.nodeBtnBack.GetComponent<Button>(), this.BackLoginState);
+            XUI.AddButtonListener(this.nameTableDic["btn_register"].GetComponent<Button>(), this.RegisterEvent);
             this.BackLoginState();
             this.AddListener();
         }
