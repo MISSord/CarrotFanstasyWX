@@ -20,7 +20,6 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            transform.SetSiblingIndex(8);
             this.carrotAnimator = this.nameTableDic["node_carrot"].GetComponent<Animator>();
             this.carrotAnimator.Play("CarrotGrow");
             this.monsterTrans = this.nameTableDic["spr_monster"].transform;
@@ -43,7 +42,7 @@ namespace CarrotFantasy
         {
             Button btnNormal = this.nameTableDic["btn_normal"].GetComponent<Button>();
             Button btnBoss = this.nameTableDic["btn_boss"].GetComponent<Button>();
-            Button btnNetwork = this.nameTableDic["btn_network"].GetComponent<Button>();
+            //Button btnNetwork = this.nameTableDic["btn_network"].GetComponent<Button>();
 
             Button btnExitGame = this.nameTableDic["btn_exit_game"].GetComponent<Button>();
             Button btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
@@ -51,7 +50,7 @@ namespace CarrotFantasy
 
             XUI.AddButtonListener(btnBoss, this.ToBossModel);
             XUI.AddButtonListener(btnNormal, this.ToNormalModel);
-            XUI.AddButtonListener(btnNetwork, this.StartMatch);
+            //XUI.AddButtonListener(btnNetwork, this.StartMatch);
             XUI.AddButtonListener(btnExitGame, this.ExitGame);
             XUI.AddButtonListener(btnHelp, this.ShowHelpPanel);
             XUI.AddButtonListener(btnSet, this.ShowSetPanel);
@@ -65,37 +64,33 @@ namespace CarrotFantasy
 
         public void ShowSetPanel()
         {
-            UIServer.Instance.PlayButtonEffect();
             ViewManager.Instance.OpenView<SetPanel>();
         }
 
         public void ShowHelpPanel()
         {
-            UIServer.Instance.PlayButtonEffect();
             ViewManager.Instance.OpenView<HelpPanel>();
         }
 
         public void ToNormalModel()
         {
-            UIServer.Instance.PlayButtonEffect();
-            UIViewService.OpenMapBigLevelPanel();
+            ViewManager.Instance.OpenView<MapBigLevelPanel>();
         }
 
         public void ToBossModel()
         {
-            UIServer.Instance.PlayButtonEffect();
+
         }
 
-        private void StartMatch()
-        {
-            UIViewService.OpenRoomPanel();
-            RoomServer.Instance.SendStartMatch();
-            UIServer.Instance.PlayButtonEffect();
-        }
+        //private void StartMatch()
+        //{
+        //    UIViewService.OpenRoomPanel();
+        //    RoomServer.Instance.SendStartMatch();
+        //    UIServer.Instance.PlayButtonEffect();
+        //}
 
         public void ExitGame()
         {
-            UIServer.Instance.PlayButtonEffect();
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.GAME_QUIT);
         }
 

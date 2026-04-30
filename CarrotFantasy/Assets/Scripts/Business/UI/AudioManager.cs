@@ -45,7 +45,7 @@ namespace CarrotFantasy
 
         private int musicUidSeed;
         private int currentMusicUid;
-        private string currentMusicKey;
+        private string currentMusicKey; //当前音频名称
 
         private const float RESET_PLAYING_EFFECT_INTERVAL = 0.1f;
         private readonly Dictionary<string, float> effectLastPlayTime = new Dictionary<string, float>(StringComparer.Ordinal);
@@ -259,12 +259,6 @@ namespace CarrotFantasy
                 onPlaybackStarted?.Invoke(uid);
             });
             return uid;
-        }
-
-        /// <summary>兼容入口：等价于 <see cref="PlayMusicByAb"/>。</summary>
-        public int PlayMusic(string bundleName, string assetName, int priority = 1, Action<int> onPlaybackStarted = null)
-        {
-            return this.PlayMusicByAb(bundleName, assetName, priority, onPlaybackStarted);
         }
 
         public void StopMusic()

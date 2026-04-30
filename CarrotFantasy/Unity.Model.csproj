@@ -260,13 +260,11 @@
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\UIViewService.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UiViewAbPaths.cs" />
     <Compile Include="Assets\Scripts\Util\Logging\GameLogController.cs" />
     <Compile Include="Assets\Scripts\Business\Hud\SettingServer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BattleManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BattleUnitPool.cs" />
-    <Compile Include="Assets\Scripts\Util\Panel\PanelEventType.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\GameSceneType.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\SceneLoader.cs" />
     <Compile Include="Assets\Scripts\Util\Loading\LoadingOrchestrator.cs" />

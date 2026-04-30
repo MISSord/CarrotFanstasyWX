@@ -5,10 +5,6 @@ namespace CarrotFantasy
 {
     public class MapBigLevelPanel : BaseView
     {
-        private static MapBigLevelPanel _instance;
-        public static MapBigLevelPanel Instance => _instance ?? (_instance = new MapBigLevelPanel());
-
-        private MapBigLevelPanel() { }
 
         private GridLayoutGroup gridLayout;
         private SlideScrollView slideScroll;
@@ -94,7 +90,8 @@ namespace CarrotFantasy
                 theBigLevelButtonCom.onClick.RemoveAllListeners();
                 XUI.AddButtonListener(theBigLevelButtonCom, () =>
                 {
-                    UIViewService.OpenMapNormalLevelPanel(info.bigLevel);
+                    //UIViewService.OpenMapNormalLevelPanel(info.bigLevel);
+
                 });
             }
             else

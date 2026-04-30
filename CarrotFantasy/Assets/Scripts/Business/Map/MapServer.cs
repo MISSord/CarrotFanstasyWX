@@ -11,6 +11,9 @@ namespace CarrotFantasy
 
         public SingleMapInfo unSaveMapInfo;
 
+        private MapBigLevelPanel mapBigLevelPanel;
+        private MapNormalLevelPanel mapNormalLevelPanel;
+
         public int curBigLevel { get; private set; }
         public int curLevel { get; private set; }
 
@@ -27,6 +30,12 @@ namespace CarrotFantasy
 
             this.curBigLevel = 0;
             this.curLevel = 0;
+
+            mapBigLevelPanel = new MapBigLevelPanel();
+            mapBigLevelPanel.RegisterData();
+
+            mapNormalLevelPanel = new MapNormalLevelPanel();
+            mapNormalLevelPanel.RegisterData();
         }
 
         private void AddListener()

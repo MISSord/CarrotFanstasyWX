@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 761a230ba3c7ca44a9ba70c37f47038b
+guid: f8eae711997d710448816dd813d25a6d
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -107,5 +107,5 @@ TextureImporter:
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0
   userData: 
-  assetBundleName: ui/view/helppanel/images_atlas
+  assetBundleName: ui/rawimages/help_3-hd_6
   assetBundleVariant: 

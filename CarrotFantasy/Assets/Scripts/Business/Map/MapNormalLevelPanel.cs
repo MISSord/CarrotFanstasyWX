@@ -7,10 +7,6 @@ namespace CarrotFantasy
 {
     public class MapNormalLevelPanel : BaseView
     {
-        private static MapNormalLevelPanel _instance;
-        public static MapNormalLevelPanel Instance => _instance ?? (_instance = new MapNormalLevelPanel());
-
-        private MapNormalLevelPanel() { }
 
         private SingleMapInfo[] levelInfoList;
         private string filePath;
