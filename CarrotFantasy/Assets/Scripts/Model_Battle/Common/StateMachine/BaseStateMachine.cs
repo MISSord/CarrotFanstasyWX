@@ -10,8 +10,11 @@ namespace CarrotFantasy
         private Dictionary<String, BaseBattleState> stateDic = new Dictionary<string, BaseBattleState>();
         public EventDispatcher eventDispatcher { get; private set; }
 
+        public BaseBattle Battle { get; private set; }
+
         public BaseStateMachine(BaseBattle battle)
         {
+            this.Battle = battle;
             this.eventDispatcher = battle.eventDispatcher;
         }
 

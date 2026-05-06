@@ -269,8 +269,8 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\ByteArrayBuffer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\PowerOf2.cs" />
     <Compile Include="Assets\ThirdParty\Google.Protobuf\ProtoPreconditions.cs" />
-    <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonDocumentWriter.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonInt32Serializer.cs" />
+    <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonDocumentWriter.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonDiscriminatorAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonTypeMapperOptions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\ByteBufferSlice.cs" />

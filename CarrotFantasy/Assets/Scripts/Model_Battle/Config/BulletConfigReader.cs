@@ -160,7 +160,7 @@ namespace CarrotFantasy
 
         }
 
-        public Dictionary<String, Fix64> getSingleBulletConfig(int id)
+        public Dictionary<String, Fix64> GetSingleBulletConfig(int id)
         {
             return this.bulletBirthParam[id];
         }

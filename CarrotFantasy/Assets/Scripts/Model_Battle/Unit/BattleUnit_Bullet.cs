@@ -39,7 +39,7 @@ namespace CarrotFantasy
         {
             if (this.towerId == 4)
             {
-                this.moveComponent = BattleUnitPool.Instance.getNewUnitComponent<UnitMoveComponent_Bullet>(UnitComponentType.MOVE_BULLET);
+                this.moveComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Bullet>(UnitComponentType.MOVE_BULLET);
                 if (this.moveComponent == null)
                 {
                     this.moveComponent = new UnitMoveComponent_Bullet();
@@ -47,19 +47,19 @@ namespace CarrotFantasy
             }
             else
             {
-                this.moveComponent = BattleUnitPool.Instance.getNewUnitComponent<UnitMoveComponent_Bullet_One>(UnitComponentType.MOVE_BULLET_ONE);
+                this.moveComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Bullet_One>(UnitComponentType.MOVE_BULLET_ONE);
                 if (this.moveComponent == null)
                 {
                     this.moveComponent = new UnitMoveComponent_Bullet_One();
                 }
             }
 
-            this.tranComponent = BattleUnitPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
+            this.tranComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.tranComponent == null)
             {
                 this.tranComponent = new UnitTransformComponent();
             }
-            this.beHitComponent = BattleUnitPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
+            this.beHitComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
             if (this.beHitComponent == null)
             {
                 this.beHitComponent = new UnitBeHitComponent();

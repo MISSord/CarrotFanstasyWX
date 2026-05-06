@@ -29,7 +29,7 @@ namespace CarrotFantasy
         //[SerializeField] 
         private bool clearSpriteOnRelease = true;
 
-        private ImageLoadHandle _currentHandle = ImageLoadHandle.Invalid;
+        private AssetLoadHandle _currentHandle = AssetLoadHandle.Invalid;
         private int _requestVersion = 0;
         [SerializeField, HideInInspector] 
         private int _lastRecordedSpriteInstanceId;
@@ -225,7 +225,7 @@ namespace CarrotFantasy
             if (_currentHandle.IsValid)
             {
                 _currentHandle.Dispose();
-                _currentHandle = ImageLoadHandle.Invalid;
+                _currentHandle = AssetLoadHandle.Invalid;
             }
 
             if (clearSpriteOnRelease && targetImage != null)

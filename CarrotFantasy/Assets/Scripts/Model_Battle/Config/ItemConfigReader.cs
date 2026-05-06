@@ -101,7 +101,7 @@ namespace CarrotFantasy
             });
         }
 
-        public Dictionary<String, Fix64> getSingleItemConfig(int id)
+        public Dictionary<String, Fix64> GetSingleItemConfig(int id)
         {
             return this.itemBirthParam[id];
         }

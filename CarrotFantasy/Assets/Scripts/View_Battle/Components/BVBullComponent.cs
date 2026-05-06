@@ -6,13 +6,14 @@ namespace CarrotFantasy
 {
     public class BVBulletComponent : BaseBattleViewComponent
     {
-        private String prefabUrl;
         private GameObject rootGameObject;
 
         private Dictionary<BattleUnit_Bullet, BattleUnitView_Bullet> bulletDic = new Dictionary<BattleUnit_Bullet, BattleUnitView_Bullet>();
+
+        private readonly Dictionary<string, GameObject> _bulletPrefabTemplates = new Dictionary<string, GameObject>();
+        private readonly Dictionary<string, AssetLoadHandle> _bulletPrefabHandles = new Dictionary<string, AssetLoadHandle>();
         public BVBulletComponent(BattleView_base battleView) : base(battleView)
         {
-            this.prefabUrl = "Prefabs/Game/Tower/ID{0}/Bullect/{1}";
             this.componentType = BattleViewComponentType.BULLET;
         }
 
@@ -43,6 +44,28 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBulletView);
         }
 
+        private GameObject GetBulletPrefabTemplate(int towerId, int bulletLevelIndex)
+        {
+            string bundleName = FightViewPrefabAb.TowerBulletBundleName(towerId);
+            string assetName = bulletLevelIndex.ToString();
+            string cacheKey = bundleName + "/" + assetName;
+            if (_bulletPrefabTemplates.TryGetValue(cacheKey, out GameObject cached) && cached != null)
+            {
+                return cached;
+            }
+
+            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle handle);
+            if (tpl == null)
+            {
+                Debug.LogError($"[BVBulletComponent] 子弹预制体加载失败: bundle={bundleName}, asset={assetName}");
+                return null;
+            }
+
+            _bulletPrefabTemplates[cacheKey] = tpl;
+            _bulletPrefabHandles[cacheKey] = handle;
+            return tpl;
+        }
+
         private void RegisterNewBulletView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.BULLET))
@@ -56,8 +79,15 @@ namespace CarrotFantasy
                 GameObject bulletNode = GameViewObjectPool.Instance.GetNewGameObject(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1));
                 if (bulletNode == null)
                 {
-                    bulletNode = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject(String.Format(this.prefabUrl, bullet.towerId, bullet.towerLevel + 1)));
+                    GameObject tpl = GetBulletPrefabTemplate(bullet.towerId, bullet.towerLevel + 1);
+                    bulletNode = tpl != null ? GameObject.Instantiate(tpl) : null;
                 }
+
+                if (bulletNode == null)
+                {
+                    return;
+                }
+
                 bulletNode.transform.SetParent(this.rootGameObject.transform);
                 bulletView.InitTransform(bulletNode.transform);
                 bulletView.LoadInfo(this.battleView, bullet);
@@ -93,6 +123,13 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
+            foreach (KeyValuePair<string, AssetLoadHandle> kv in _bulletPrefabHandles)
+            {
+                kv.Value.Dispose();
+            }
+
+            _bulletPrefabHandles.Clear();
+            _bulletPrefabTemplates.Clear();
             foreach (KeyValuePair<BattleUnit_Bullet, BattleUnitView_Bullet> info in this.bulletDic)
             {
                 GameViewObjectPool.Instance.PushGameObjectToPool(String.Format("{0}_{1}", info.Key.towerId, info.Key.towerLevel + 1), info.Value.transform.gameObject);

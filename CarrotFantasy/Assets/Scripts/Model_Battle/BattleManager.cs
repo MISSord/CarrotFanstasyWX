@@ -18,6 +18,7 @@ namespace CarrotFantasy
                 return instance;
             }
         }
+
         public BaseBattle baseBattle { get; private set; }
         public BattleView_base baseBattleView { get; private set; }
 
@@ -33,6 +34,7 @@ namespace CarrotFantasy
             if (BattleParamServer.Instance.isPVE == true)
             {
                 this.baseBattle = new PveBattle();
+                this.baseBattle.SetHostBridge(new UnityBattleHostBridge());
                 this.baseBattleView = new PveBattleView(this.baseBattle);
             }
             else
@@ -71,11 +73,31 @@ namespace CarrotFantasy
         private void AddLitener()
         {
             this.baseBattle.eventDispatcher.AddListener(BattleEvent.REPLAY_THE_GAME, this.RestartGame);
+            this.baseBattle.eventDispatcher.AddListener<PveMatchSettlement>(BattleCoreEvent.PVE_MATCH_SETTLED, this.OnPveMatchSettled);
         }
 
         private void RemoveListener()
         {
+            if (this.baseBattle == null) return;
             this.baseBattle.eventDispatcher.RemoveListener(BattleEvent.REPLAY_THE_GAME, this.RestartGame);
+            this.baseBattle.eventDispatcher.RemoveListener<PveMatchSettlement>(BattleCoreEvent.PVE_MATCH_SETTLED, this.OnPveMatchSettled);
+        }
+
+        private void OnPveMatchSettled(PveMatchSettlement settlement)
+        {
+            if (settlement == null) return;
+            if (settlement.IsVictory && settlement.VictoryProgress != null && this.baseBattle.HostBridge != null)
+            {
+                this.baseBattle.HostBridge.SubmitVictoryMapProgress(settlement.VictoryProgress);
+            }
+            if (settlement.IsVictory)
+            {
+                ShowGameWin();
+            }
+            else
+            {
+                ShowGameOver();
+            }
         }
 
         private void RestartGame()
@@ -121,13 +143,27 @@ namespace CarrotFantasy
         {
             this.RemoveListener();
 
-            this.baseBattleView.Dispose();
-            this.baseBattle.Dispose();
+            if (this.baseBattleView != null)
+                this.baseBattleView.Dispose();
+            if (this.baseBattle != null)
+                this.baseBattle.Dispose();
 
             this.baseBattleView = null;
             this.baseBattle = null;
 
             UIServer.Instance.ShowLoadingPanel();
+        }
+
+        private void ShowGameWin()
+        {
+            ViewManager.Instance.OpenView<GameWinView>();
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Perfect");
+        }
+
+        private void ShowGameOver()
+        {
+            ViewManager.Instance.OpenView<GameOverView>();
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Lose");
         }
     }
 }

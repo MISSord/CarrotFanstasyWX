@@ -61,7 +61,7 @@ namespace CarrotFantasy
 
         public virtual void OnTick(float deltaTime)
         {
-            this.updatePosition(deltaTime);
+            this.UpdatePosition(deltaTime);
         }
 
         public virtual void InitComponents() //子类调用
@@ -133,7 +133,7 @@ namespace CarrotFantasy
 
         }
 
-        private void updatePosition(float time)
+        private void UpdatePosition(float time)
         {
             //Vector3 newViewPosition = Vector3.Lerp(transform.position, this.lastPosition, 1 / Vector3.Distance(transform.position, this.lastPosition) * time);
             //this.curViewPosition = newViewPosition;

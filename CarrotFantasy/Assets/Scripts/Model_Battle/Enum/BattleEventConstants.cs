@@ -30,7 +30,9 @@ namespace CarrotFantasy
         public const String BATTLE_UNIT_ADD = "Battle_Unit_Add";
         public const String BATTLE_UNIT_REMOVE = "Battle_Unit_Remove";
 
+        /// <summary>表现层（兼容旧监听）；PVE 结算请改用 <see cref="BattleCoreEvent.PVE_MATCH_SETTLED"/>。</summary>
         public const String SHOW_GAME_FINISH_PAGE = "Show_Game_Finish_Page";
+        /// <summary>表现层（兼容旧监听）；PVE 结算请改用 <see cref="BattleCoreEvent.PVE_MATCH_SETTLED"/>。</summary>
         public const String SHOW_GAME_OVER_PAGE = "Show_Game_Over_Page";
 
         public const String REPLAY_THE_GAME = "Replay_The_Game";
@@ -52,5 +54,23 @@ namespace CarrotFantasy
         public const String TARGET_CHANGE = "Target_Change";
 
         public const String GAME_STATE_CHANGE = "Game_State_Change";
+    }
+
+    public class UnitEvent
+    {
+        public const String POSITION_CHANGE = "position_change";
+        public const String ROTATION_CHANGE = "rotation_change";
+        public const String STATUS_CHANGE = "status_change";
+        public const String FACE_DIRECTION_CHANGE = "face_direction_change"; // 怪物脸的方向
+        public const String TOWER_DIRECTION_CHANGE = "tower_direction_change"; //炮台的方向
+        public const String BODY_RECT_CHANE = "body_rect_change";
+
+        public const String TOWER_UPDATE = "tower_update";
+
+        public const String DAMAGE_CALCULATE_COMPLETE = "damage_calculate_complete";
+
+        public const String KILL_UNIT = "kill_unit";
+
+        public const String HP_CHANGE = "hp_change";
     }
 }

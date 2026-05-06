@@ -42,7 +42,7 @@ namespace CarrotFantasy
             BattleUnit_Item item = new BattleUnit_Item(this.baseBattle);
             item.eventDipatcher.AddListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.AddDeadList);
             int itemId = this.mapComponent.levelInfo.bigLevelID * 100 + mapGrid.state.itemID;
-            item.LoadInfo(this.baseBattle.GetUid(), this.itemConfigReader.getSingleItemConfig(itemId), this.GetPosition(mapGrid), mapGrid.state.itemID);
+            item.LoadInfo(this.baseBattle.GetUid(), this.itemConfigReader.GetSingleItemConfig(itemId), this.GetPosition(mapGrid), mapGrid.state.itemID);
             item.Init();
             item.InitComponents();
             item.LoadInfo1();

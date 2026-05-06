@@ -45,7 +45,5 @@ namespace CarrotFantasy
         {
             this.hasTower = isHave;
         }
-
-
     }
 }

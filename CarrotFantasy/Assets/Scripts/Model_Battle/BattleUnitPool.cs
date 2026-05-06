@@ -54,7 +54,7 @@ namespace CarrotFantasy
             }
         }
 
-        public T getNewBattleUnit<T>(String name) where T : BattleUnit
+        public T GetNewBattleUnit<T>(String name) where T : BattleUnit
         {
             List<BattleUnit> curList;
             if (!curObjectDic.TryGetValue(name, out curList))
@@ -74,7 +74,7 @@ namespace CarrotFantasy
             }
         }
 
-        public T getNewUnitComponent<T>(String name) where T : BaseUnitComponent
+        public T GetNewUnitComponent<T>(String name) where T : BaseUnitComponent
         {
             List<BaseUnitComponent> curList;
             if (!curUnitObjectDic.TryGetValue(name, out curList))

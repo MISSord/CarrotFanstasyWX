@@ -19,15 +19,15 @@ namespace CarrotFantasy
         public UnitMoveComponent_Bullet()
         {
             this.unitComponentType = UnitComponentType.MOVE_BULLET;
-            BattleMapComponent map = (BattleMapComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.MapComponent);
-            mapLeftBottomPosition = map.mapLeftBottomPosition;
-            mapRightTopPosition = map.mapRightTopPosition;
         }
 
         public override void Init()
         {
             this.moveSpeed = ((BattleUnit_Bullet)unit).moveSpeed;
             this.unitTran = (UnitTransformComponent)this.unit.GetComponent(UnitComponentType.TRANSFORM);
+            BattleMapComponent map = (BattleMapComponent)this.unit.baseBattle.GetComponent(BattleComponentType.MapComponent);
+            this.mapLeftBottomPosition = map.mapLeftBottomPosition;
+            this.mapRightTopPosition = map.mapRightTopPosition;
         }
 
         public virtual void RegisterMoveDirect(BattleUnit unit)
@@ -61,7 +61,7 @@ namespace CarrotFantasy
         public override void OnTick(Fix64 deltaTime)
         {
             Fix64 x, y, z;
-            this.unitTran.getLastFramePosition(out x, out y, out z);
+            this.unitTran.GetLastFramePosition(out x, out y, out z);
             x += deltaTime * this.moveSpeedX;
             y += deltaTime * this.moveSpeedY;
             this.unitTran.SetPosition(x, y, z);

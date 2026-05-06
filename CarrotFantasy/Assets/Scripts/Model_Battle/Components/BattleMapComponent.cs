@@ -81,7 +81,7 @@ namespace CarrotFantasy
             this.mapRightTopPosition = new Fix64Vector2(this.gridsList[xColumn - 1, yRow - 1].realX + ratio, this.gridsList[xColumn - 1, yRow - 1].realY + ratio);
         }
 
-        public bool isCanBuildTower(int x, int y) //视图层调用
+        public bool IsCanBuildTower(int x, int y) //视图层调用
         {
             return this.levelInfo.gridPoints[this.GetListNumber(x, y)].canBuild;
         }

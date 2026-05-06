@@ -23,12 +23,12 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            this.tranComponent = BattleUnitPool.Instance.getNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
+            this.tranComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.tranComponent == null)
             {
                 this.tranComponent = new UnitTransformComponent();
             }
-            this.beHitComponent = BattleUnitPool.Instance.getNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
+            this.beHitComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
             if (this.beHitComponent == null)
             {
                 this.beHitComponent = new UnitBeHitComponent();

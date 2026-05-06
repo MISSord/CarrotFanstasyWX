@@ -9,6 +9,7 @@ namespace CarrotFantasy
         public int curFrameId { get; private set; }
         public Fix64 curClock = Fix64.Zero;
         private int uid;
+        private int inputSeqCounter;
         public bool isPause { get; set; }
         public bool isDoulbSpeed { get; private set; }
 
@@ -17,11 +18,19 @@ namespace CarrotFantasy
 
         public BaseStateMachine stateMachine;
 
-        public Fix64 oneFrameTime = new Fix64(0.2f);
-        public Fix64 lastFrameTime = Fix64.Zero;
+        /// <summary>渲染层传入时间的累积余量，用于固定逻辑步长。</summary>
+        private Fix64 logicAccumulator = Fix64.Zero;
 
         public bool isStart = false;
         public bool isIgnoreViewListener = false; //目前用于视图监听器广播过程，服务端为true
+
+        /// <summary>由 BattleManager 或联机/测试运行时注入；未注入时部分宿主能力（提示、提交存档）不执行。</summary>
+        public IBattleHostBridge HostBridge { get; private set; }
+
+        public void SetHostBridge(IBattleHostBridge bridge)
+        {
+            this.HostBridge = bridge;
+        }
 
         public BaseBattle()
         {
@@ -75,31 +84,36 @@ namespace CarrotFantasy
 
         public virtual void Tick(Fix64 deltaTime)
         {
-            this.OnTick(deltaTime);
+            if (this.isPause == true) return;
+
+            this.logicAccumulator += deltaTime;
+            Fix64 logicDt = BattleLogicTiming.LogicDeltaTime;
+            int maxSteps = BattleLogicTiming.MaxLogicStepsPerRenderFrame <= 0 ? 8 : BattleLogicTiming.MaxLogicStepsPerRenderFrame;
+
+            int steps = 0;
+            while (steps < maxSteps && this.logicAccumulator >= logicDt)
+            {
+                this.logicAccumulator -= logicDt;
+                SimulateOneLogicFrame(logicDt);
+                steps++;
+            }
         }
 
-        protected virtual void OnTick(Fix64 time) //未来优化
+        /// <summary>推进一个固定逻辑帧（阶段 2：确定性仿真步）。</summary>
+        protected virtual void SimulateOneLogicFrame(Fix64 logicDt)
         {
-            if (this.isPause == true) return;
-            curClock += time;
-            this.lastFrameTime += time;
-            //if (this.lastFrameTime < this.oneFrameTime)
-            //{
-            //    return;
-            //}
+            curClock += logicDt;
             curFrameId += 1;
             for (int i = 0; i < componentList.Count; i++)
             {
-                componentList[i].OnTick(this.lastFrameTime);
+                componentList[i].OnTick(logicDt);
             }
-            stateMachine.OnTick(time);
+            stateMachine.OnTick(logicDt);
             for (int i = 0; i < componentList.Count; i++)
             {
-                componentList[i].LateTick(this.lastFrameTime);
+                componentList[i].LateTick(logicDt);
             }
             eventDispatcher.DispatchEvent(BattleEvent.AFTER_TICK);
-            this.lastFrameTime = Fix64.Zero;
-            //Debug.Log(String.Format("当前帧数为{0},游戏时间为{1}", this.curFrameId, this.curClock));
         }
 
         public virtual void StartGame()
@@ -127,9 +141,10 @@ namespace CarrotFantasy
             this.isDoulbSpeed = false;
             this.isPause = false;
             this.curFrameId = 0;
-            this.lastFrameTime = Fix64.Zero;
+            this.logicAccumulator = Fix64.Zero;
             this.curClock = Fix64.Zero;
             this.uid = 0;
+            this.inputSeqCounter = 0;
         }
 
         protected virtual void PauseTheGame()
@@ -148,6 +163,13 @@ namespace CarrotFantasy
         {
             this.uid += 1;
             return this.uid;
+        }
+
+        /// <summary>为输入指令分配单调递增序号（提交顺序即确定性顺序）。</summary>
+        public int AllocateInputSequence()
+        {
+            this.inputSeqCounter += 1;
+            return this.inputSeqCounter;
         }
 
         public virtual void Dispose()

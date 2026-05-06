@@ -5,8 +5,6 @@ namespace CarrotFantasy
     /// <summary>战斗内暂停菜单（独立 BaseView）。</summary>
     public class MenuView : BaseView
     {
-        public MenuView() { }
-
         public override void InitData()
         {
             viewName = "MenuView";
@@ -21,15 +19,6 @@ namespace CarrotFantasy
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
         }
 
-        protected override void CloseCallBack()
-        {
-            // 关闭时顺便恢复游戏，避免残留暂停
-            if (BattleManager.Instance?.baseBattle != null)
-            {
-                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
-            }
-        }
-
         protected override void ReleaseCallBack()
         {
             nameTableDic["btn_go_on"].GetComponent<Button>().onClick.RemoveAllListeners();
@@ -39,22 +28,24 @@ namespace CarrotFantasy
 
         private void OnGoOn()
         {
-            UIServer.Instance.PlayButtonEffect();
+            // 关闭时顺便恢复游戏，避免残留暂停
+            if (BattleManager.Instance?.baseBattle != null)
+            {
+                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
+            }
             Close();
         }
 
         private void OnReplay()
         {
-            UIServer.Instance.PlayButtonEffect();
-            Close();
             BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
+            Close();
         }
 
         private void OnChooseOtherLevel()
         {
-            UIServer.Instance.PlayButtonEffect();
-            Close();
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.RETURN_TO_MAIN_SCENE);
+            Close();
         }
     }
 }

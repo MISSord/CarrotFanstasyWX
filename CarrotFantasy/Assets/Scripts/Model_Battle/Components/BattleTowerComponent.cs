@@ -32,7 +32,7 @@ namespace CarrotFantasy
             return x * 100 + y;
         }
 
-        public bool isHaveTower(int x, int y) //地图模块用
+        public bool IsHaveTower(int x, int y) //地图模块用
         {
             return this.curTowerDic.ContainsKey(this.GetExChangeInt(x, y));
         }
@@ -44,10 +44,10 @@ namespace CarrotFantasy
                 int price = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId)["price0"]);
                 if (price > dataComponent.CoinCount)
                 {
-                    UIServer.Instance.ShowTip(LanguageUtil.Instance.GetString(1004));
+                    this.baseBattle.HostBridge?.ShowInsufficientGoldTip();
                     return;
                 }
-                BattleUnit_Tower tower = BattleUnitPool.Instance.getNewBattleUnit<BattleUnit_Tower>(BattleUnitType.TOWER);
+                BattleUnit_Tower tower = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Tower>(BattleUnitType.TOWER);
                 if (tower == null)
                 {
                     tower = new BattleUnit_Tower(this.baseBattle);

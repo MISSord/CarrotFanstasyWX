@@ -19,18 +19,18 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            lastResetTime = onClock();
+            lastResetTime = OnClock();
             //logComponent = baseBattle.GetComponent(BattleComponentType.LogComponent);
         }
 
-        public Fix64 onClock() //战斗模块开始的时间
+        public Fix64 OnClock() //战斗模块开始的时间
         {
             return baseBattle.curClock;
         }
 
         public override void OnTick(Fix64 time)
         {
-            Fix64 curTime = this.onClock();
+            Fix64 curTime = this.OnClock();
             int curUnscheCount = 0; //当前不参与延时调用方法的数量
             for (int i = 0; i < scheList.Count; i++)
             {
@@ -89,7 +89,7 @@ namespace CarrotFantasy
         private ScheObject AddSingleSche(callBack call, float interval)
         {
             int id = GetUniqueId();
-            ScheObject sche = new ScheObject(id, call, interval, this.onClock());
+            ScheObject sche = new ScheObject(id, call, interval, this.OnClock());
             this.scheList.Add(sche);
             this.scheDic.Add(id, sche);
             return sche;

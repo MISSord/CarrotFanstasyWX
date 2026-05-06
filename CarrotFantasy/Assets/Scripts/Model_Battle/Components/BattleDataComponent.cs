@@ -98,7 +98,10 @@ namespace CarrotFantasy
         {
             this.isFinishGame = false;
             this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
-            this.eventDispatcher.DispatchEvent(BattleEvent.SHOW_GAME_OVER_PAGE);
+            PveMatchSettlement settlement = new PveMatchSettlement();
+            settlement.IsVictory = false;
+            settlement.VictoryProgress = null;
+            this.baseBattle.eventDispatcher.DispatchEvent(BattleCoreEvent.PVE_MATCH_SETTLED, settlement);
         }
 
         public void GameOverByMonsterDead()
@@ -120,10 +123,11 @@ namespace CarrotFantasy
             unSaveMapInfo.carrotState = this.CarrotTropyLevel();
             unSaveMapInfo.unLocked = MapInfoType.UNLOCK_LEVEL;
 
-            MapServer.Instance.SendSetSingleMapInfo(unSaveMapInfo);
-
             this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
-            this.eventDispatcher.DispatchEvent(BattleEvent.SHOW_GAME_FINISH_PAGE);
+            PveMatchSettlement settlement = new PveMatchSettlement();
+            settlement.IsVictory = true;
+            settlement.VictoryProgress = unSaveMapInfo;
+            this.baseBattle.eventDispatcher.DispatchEvent(BattleCoreEvent.PVE_MATCH_SETTLED, settlement);
         }
 
         public int CarrotTropyLevel()

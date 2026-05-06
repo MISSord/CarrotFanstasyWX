@@ -59,9 +59,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Editor\UINameTableEditor.cs" />
+    <Compile Include="Assets\Editor\PrefabReferenceFinderWindow.cs" />
     <Compile Include="Assets\Editor\MapTool.cs" />
     <Compile Include="Assets\Editor\BuildEditor\ABPackagerWindow.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\AtlasPacker.cs" />
+    <Compile Include="Assets\Editor\ToggleSelectedActiveEditor.cs" />
     <Compile Include="Assets\Editor\GlobalConfigEditor\GlobalConfigEditor.cs" />
     <Compile Include="Assets\Editor\Helper\EditorResHelper.cs" />
     <Compile Include="Assets\Editor\ImageSlicer.cs" />
@@ -72,12 +74,10 @@
     <Compile Include="Assets\Editor\ReferenceCollectorEditor\ReferenceCollectorEditor.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\AnimationClipExtractor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabABPathPostprocessor.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\PrefabUIImageLoaderAutoBinder.cs" />
     <Compile Include="Assets\Editor\Proto2CsEditor\Proto2CSEditor.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
-    <Compile Include="Assets\Editor\PrefabReferenceFinderWindow.cs" />
-    <Compile Include="Assets\Editor\BuildEditor\PrefabUIImageLoaderAutoBinder.cs" />
-    <Compile Include="Assets\Editor\ToggleSelectedActiveEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />

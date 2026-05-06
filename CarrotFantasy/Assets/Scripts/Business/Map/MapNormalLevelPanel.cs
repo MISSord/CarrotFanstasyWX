@@ -25,6 +25,10 @@ namespace CarrotFantasy
         private List<GameObject> levelContentImageGos;
         private List<GameObject> towerContentImageGos;
 
+        private readonly List<AssetLoadHandle> _panelPrefabHandles = new List<AssetLoadHandle>();
+        private GameObject _tplNodeLevel;
+        private GameObject _tplNodeTower;
+
         public void SetBigLevel(int bigLevelId)
         {
             this.currentBigLevelID = bigLevelId;
@@ -72,9 +76,16 @@ namespace CarrotFantasy
                 ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Left");
             this.nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
                 ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Right");
+            EnsurePanelPrefabTemplate(ref _tplNodeLevel, UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeLevelAsset);
+            if (_tplNodeLevel == null)
+            {
+                Debug.LogError("[MapNormalLevelPanel] node_level 预制体加载失败");
+                return;
+            }
+
             for (int i = 0; i < levelInfoList.Length; i++)
             {
-                levelContentImageGos.Add(this.CreateUIAndSetUIPosition("Prefabs/UI/node_level", levelContentTrans));
+                levelContentImageGos.Add(InstantiateUiUnderParent(_tplNodeLevel, levelContentTrans));
                 String path = theSpritePath + "Level_" + (i + 1).ToString();
                 levelContentImageGos[i].transform.GetComponent<Image>().sprite = ResourceLoader.Instance.loadRes<Sprite>(path);
                 levelContentImageGos[i].transform.Find("img_carrot").gameObject.SetActive(false);
@@ -113,9 +124,17 @@ namespace CarrotFantasy
         {
             if (towerContentImageGos.Count == 0)
             {
-                for (int i = 0; i < this.towerCount; i++)
+                EnsurePanelPrefabTemplate(ref _tplNodeTower, UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeTowerAsset);
+                if (_tplNodeTower == null)
                 {
-                    towerContentImageGos.Add(CreateUIAndSetUIPosition("Prefabs/UI/node_tower", this.nodeTowerTrans));
+                    Debug.LogError("[MapNormalLevelPanel] node_tower 预制体加载失败");
+                }
+                else
+                {
+                    for (int i = 0; i < this.towerCount; i++)
+                    {
+                        towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, this.nodeTowerTrans));
+                    }
                 }
             }
 
@@ -149,9 +168,23 @@ namespace CarrotFantasy
             UIServer.Instance.PlayButtonEffect();
         }
 
-        public GameObject CreateUIAndSetUIPosition(string uiName, Transform parentTrans)
+        private void EnsurePanelPrefabTemplate(ref GameObject tplField, string bundleName, string assetName)
         {
-            GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject(uiName));
+            if (tplField != null)
+            {
+                return;
+            }
+
+            tplField = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle h);
+            if (h.IsValid)
+            {
+                _panelPrefabHandles.Add(h);
+            }
+        }
+
+        private static GameObject InstantiateUiUnderParent(GameObject tpl, Transform parentTrans)
+        {
+            GameObject itemGo = GameObject.Instantiate(tpl);
             itemGo.transform.SetParent(parentTrans, false);
             itemGo.transform.localPosition = Vector3.zero;
             itemGo.transform.localScale = Vector3.one;
@@ -234,6 +267,14 @@ namespace CarrotFantasy
         protected override void ReleaseCallBack()
         {
             this.DestroyLevelUI();
+            for (int i = 0; i < _panelPrefabHandles.Count; i++)
+            {
+                _panelPrefabHandles[i].Dispose();
+            }
+
+            _panelPrefabHandles.Clear();
+            _tplNodeLevel = null;
+            _tplNodeTower = null;
             this.RemoveListener();
         }
     }

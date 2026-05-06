@@ -112,7 +112,6 @@ namespace CarrotFantasy
             }
             this.componentList.Clear();
             this.componentDic.Clear();
-            AssetObjectPool.Instance.Dispose();
             GameViewObjectPool.Instance.Dispose();
             this.bvEventDispatcher.Dispose();
         }

@@ -69,13 +69,13 @@ namespace CarrotFantasy
 
             for (int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
             {
-                BattleUnit_Monster monster = BattleUnitPool.Instance.getNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
+                BattleUnit_Monster monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
                 if (monster == null)
                 {
                     monster = new BattleUnit_Monster(this.baseBattle);
                 }
                 monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
-                monster.LoadInfo(this.baseBattle.GetUid(), this.monsterConfigReader.getSingleMonsterConfig(this.GetMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
+                monster.LoadInfo(this.baseBattle.GetUid(), this.monsterConfigReader.GetSingleMonsterConfig(this.GetMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
                 monster.LoadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
                 monster.Init();
                 monster.LoadInfo3(this.monsterPointList, this.distance);

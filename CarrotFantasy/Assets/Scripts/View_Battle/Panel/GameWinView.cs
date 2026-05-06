@@ -6,10 +6,6 @@ namespace CarrotFantasy
     /// <summary>战斗胜利结算（独立 BaseView）。</summary>
     public class GameWinView : BaseView
     {
-        public GameWinView() { }
-
-        private BattleDataComponent dataComponent;
-
         private Sprite[] carrotSprites; // 0 铜 1 银 2 金
 
         public override void InitData()
@@ -17,15 +13,6 @@ namespace CarrotFantasy
             viewName = "GameWinView";
             layer = UILayer.Hight;
             SetUILoadInfo(0, UiViewAbPaths.NormalMordelPrefab, "GameWinPage");
-
-            TryHookBattleEvents();
-        }
-
-        private void TryHookBattleEvents()
-        {
-            if (BattleManager.Instance?.baseBattle == null) return;
-            dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
-            dataComponent?.eventDispatcher.AddListener(BattleEvent.SHOW_GAME_FINISH_PAGE, ShowGameWin);
         }
 
         protected override void LoadCallBack()
@@ -38,26 +25,8 @@ namespace CarrotFantasy
 
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
-        }
 
-        protected override void ReleaseCallBack()
-        {
-            nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
-            nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
-            dataComponent = null;
-            carrotSprites = null;
-        }
-
-        private void ShowGameWin()
-        {
-            Open(0);
-            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Perfect");
-
-            if (dataComponent == null)
-            {
-                TryHookBattleEvents();
-            }
-
+            BattleDataComponent dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
             int waves = dataComponent.curWaves;
             nameTableDic["txt_result_show"].GetComponent<Text>().text = LanguageUtil.Instance.GetFormatString(
                 1002,
@@ -72,6 +41,13 @@ namespace CarrotFantasy
 
             int trophy = Mathf.Clamp(dataComponent.CarrotTropyLevel(), 1, 3);
             nameTableDic["Img_Carrot"].GetComponent<Image>().sprite = carrotSprites[trophy - 1];
+        }
+
+        protected override void ReleaseCallBack()
+        {
+            nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
+            nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
+            carrotSprites = null;
         }
 
         private void OnReplay()

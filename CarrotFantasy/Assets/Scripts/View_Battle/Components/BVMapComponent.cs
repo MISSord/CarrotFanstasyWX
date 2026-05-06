@@ -1,17 +1,15 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CarrotFantasy
 {
     public class BVMapComponent : BaseBattleViewComponent
     {
+        private readonly List<AssetLoadHandle> _prefabHandles = new List<AssetLoadHandle>();
         public Sprite sprGirdNoramlState;
         public Sprite sprGirdStartState;
         public Sprite sprGirdCantBuildState;
-
         public GridPoint[,] gridPointList;
-        private GameObject rootGameObject;
-
-        private GameObject node_bg;
 
         //地图的有关属性
         //地图
@@ -37,7 +35,17 @@ namespace CarrotFantasy
 
         private void LoadMapGrid()
         {
-            GameObject item = ResourceLoader.Instance.GetGameObject("Prefabs/Game/Grid");
+            GameObject item = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Grid, out AssetLoadHandle h);
+            if (h.IsValid)
+            {
+                _prefabHandles.Add(h);
+            }
+
+            if (item == null)
+            {
+                Debug.LogError("[BVMapComponent] Grid 预制体加载失败");
+                return;
+            }
 
             BattleMapComponent mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
             BattleMapGrid[,] mapGridInfo = mapComponent.gridsList;
@@ -73,6 +81,12 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
+            for (int i = 0; i < _prefabHandles.Count; i++)
+            {
+                _prefabHandles[i].Dispose();
+            }
+
+            _prefabHandles.Clear();
             base.ClearGameInfo();
         }
 

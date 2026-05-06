@@ -4,20 +4,12 @@ using UnityEngine;
 
 class UIDownInfo
 {
-    public ViewLoadSource loadSource;
     public string bundleName;
     public string assetName;
-    public string resourcesPath;
     public UnityEngine.GameObject gameObject;
     public LoadState isLoaded;
     public int order;
     public int loadIndex;
-}
-
-enum ViewLoadSource
-{
-    AssetBundle = 0,
-    Resources = 1,
 }
 
 enum LoadState
@@ -111,11 +103,11 @@ public abstract class BaseView
             for (int i = 0; i < list.Count; ++i)
             {
                 UIDownInfo downInfo = list[i];
-                if (downInfo.loadSource == ViewLoadSource.AssetBundle && downInfo.isLoaded == LoadState.Loaded)
+                if (downInfo.isLoaded == LoadState.Loaded)
                 {
                     AssetBundleManager.Instance.UnloadAsset(downInfo.bundleName, downInfo.assetName);
                 }
-                else if (downInfo.loadSource == ViewLoadSource.AssetBundle && downInfo.isLoaded == LoadState.Loading)
+                else if (downInfo.isLoaded == LoadState.Loading)
                 {
                     AssetBundleManager.Instance.CancelAssetLoad(downInfo.bundleName, downInfo.assetName, downInfo.loadIndex);
                 }
@@ -143,33 +135,10 @@ public abstract class BaseView
         }
         info.Add(new UIDownInfo()
         {
-            loadSource = ViewLoadSource.AssetBundle,
             assetName = asset,
             bundleName = bundle,
             order = layerOrder,
             isLoaded = LoadState.None,
-        });
-    }
-
-    /// <summary>
-    /// 通过 Resources.Load 注册 UI 资源路径（相对 Resources 目录，不带扩展名）。
-    /// </summary>
-    protected void SetUILoadInfoByResources(int index, string resourcesPath)
-    {
-        layerOrder++;
-        List<UIDownInfo> info;
-        if (uiLoadInfoDic.TryGetValue(index, out info) == false)
-        {
-            info = new List<UIDownInfo>();
-            uiLoadInfoDic.Add(index, info);
-        }
-        info.Add(new UIDownInfo()
-        {
-            loadSource = ViewLoadSource.Resources,
-            resourcesPath = resourcesPath,
-            order = layerOrder,
-            isLoaded = LoadState.None,
-            loadIndex = -1,
         });
     }
 
@@ -429,29 +398,10 @@ public abstract class BaseView
             {
                 UIDownInfo info = infos[i];
                 info.isLoaded = LoadState.Loading;
-                if (info.loadSource == ViewLoadSource.Resources)
-                {
-                    if (string.IsNullOrEmpty(info.resourcesPath))
-                    {
-                        Debug.LogError($"[BaseView] Resources 路径为空: view={viewName}, index={index}");
-                        continue;
-                    }
-                    GameObject obj = ResourceLoader.Instance.GetGameObject(info.resourcesPath);
-                    if (obj == null)
-                    {
-                        Debug.LogError($"[BaseView] Resources.Load 失败: path={info.resourcesPath}, view={viewName}, index={index}");
-                        continue;
-                    }
-                    info.loadIndex = -1;
-                    AssetBundleLoadCallBack(obj, info, index);
-                }
-                else
-                {
-                    info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(
-                        info.bundleName,
-                        info.assetName,
-                        (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });
-                }
+                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(
+                    info.bundleName,
+                    info.assetName,
+                    (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });
             }
         }
     }

@@ -102,7 +102,7 @@ namespace CarrotFantasy
             z = (float)this.z;
         }
 
-        public void getLastFramePosition(out Fix64 x, out Fix64 y, out Fix64 z) //这个用于移动过程
+        public void GetLastFramePosition(out Fix64 x, out Fix64 y, out Fix64 z) //这个用于移动过程
         {
             x = this.lastFrameX;
             y = this.lastFrameY;

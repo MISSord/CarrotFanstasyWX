@@ -119,7 +119,7 @@ namespace CarrotFantasy
             });
         }
 
-        public Dictionary<String, Fix64> getSingleMonsterConfig(int id)
+        public Dictionary<String, Fix64> GetSingleMonsterConfig(int id)
         {
             return this.monsterBirthParam[id];
         }

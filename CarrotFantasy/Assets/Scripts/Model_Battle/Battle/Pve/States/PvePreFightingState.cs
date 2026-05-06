@@ -18,9 +18,9 @@ namespace CarrotFantasy
         public override void Init()
         {
             base.Init();
-            this.monsterComponent = (BattleMonsterComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.MonsterComponent);
-            this.scheComponent = (BattleSchedulerComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
-            this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            this.monsterComponent = (BattleMonsterComponent)this.Battle.GetComponent(BattleComponentType.MonsterComponent);
+            this.scheComponent = (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
+            this.dataComponent = (BattleDataComponent)this.Battle.GetComponent(BattleComponentType.DataComponent);
         }
 
         public override void StateIn()

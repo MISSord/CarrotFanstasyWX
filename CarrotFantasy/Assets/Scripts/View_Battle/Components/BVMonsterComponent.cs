@@ -6,8 +6,10 @@ namespace CarrotFantasy
 {
     public class BVMonsterComponent : BaseBattleViewComponent
     {
-        private String pathUrl;
         private GameObject noInstanGameObject;
+        private AssetLoadHandle _monsterPrefabHandle;
+        private GameObject _destroyEffectTemplate;
+        private AssetLoadHandle _destroyEffectHandle;
         private GameObject rootGameObject;
 
         private BattleSchedulerComponent scheComponent;
@@ -17,14 +19,17 @@ namespace CarrotFantasy
         public BVMonsterComponent(BattleView_base battleView) : base(battleView)
         {
             this.componentType = BattleViewComponentType.MONSTER;
-            this.pathUrl = "Prefabs/Game/MonsterPrefab";
         }
 
         public override void Init()
         {
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("MonsterContainer");
-            this.noInstanGameObject = ResourceLoader.Instance.GetGameObject(this.pathUrl);
+            this.noInstanGameObject = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab, out _monsterPrefabHandle);
+            if (this.noInstanGameObject == null)
+            {
+                Debug.LogError("[BVMonsterComponent] MonsterPrefab 加载失败");
+            }
 
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
 
@@ -98,7 +103,12 @@ namespace CarrotFantasy
             GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
             if (sell == null)
             {
-                sell = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/DestoryEffect"));
+                if (_destroyEffectTemplate == null)
+                {
+                        _destroyEffectTemplate = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, out _destroyEffectHandle);
+                }
+
+                sell = _destroyEffectTemplate != null ? GameObject.Instantiate(_destroyEffectTemplate) : null;
             }
             sell.transform.GetComponent<Animator>().enabled = true;
             UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
@@ -112,6 +122,19 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
+            if (_monsterPrefabHandle.IsValid)
+            {
+                _monsterPrefabHandle.Dispose();
+                _monsterPrefabHandle = AssetLoadHandle.Invalid;
+            }
+
+            if (_destroyEffectHandle.IsValid)
+            {
+                _destroyEffectHandle.Dispose();
+                _destroyEffectHandle = AssetLoadHandle.Invalid;
+            }
+
+            _destroyEffectTemplate = null;
             foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
                 GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, info.Value.transform.gameObject);

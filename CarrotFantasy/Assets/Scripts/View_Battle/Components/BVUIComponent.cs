@@ -46,6 +46,8 @@ namespace CarrotFantasy
 
         private GameObject rootGameObject;
 
+        private readonly List<AssetLoadHandle> _prefabHandles = new List<AssetLoadHandle>();
+
         public BVUIComponent(BattleView_base battleView) : base(battleView)
         {
             this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
@@ -79,6 +81,22 @@ namespace CarrotFantasy
             this.eventDispatcher.AddListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.SetTargetSignal);
         }
 
+        private GameObject LoadPrefabTemplateTracked(string bundleName, string assetName)
+        {
+            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle h);
+            if (h.IsValid)
+            {
+                _prefabHandles.Add(h);
+            }
+
+            if (tpl == null)
+            {
+                Debug.LogError($"[BVUIComponent] 预制体加载失败: bundle={bundleName}, asset={assetName}");
+            }
+
+            return tpl;
+        }
+
         private void RemoveListener()
         {
             this.battleView.bvEventDispatcher.RemoveListener<GridPoint>(BattleViewEventType.Select_Grid, this.HandleGrid);
@@ -104,14 +122,26 @@ namespace CarrotFantasy
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("UIContainer");
 
-            this.nodeTowerList = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/UI/tower_list"));
+            GameObject tplTowerList = LoadPrefabTemplateTracked(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.TowerList);
+            if (tplTowerList == null)
+            {
+                return;
+            }
+
+            this.nodeTowerList = GameObject.Instantiate(tplTowerList);
             this.nodeTowerList.transform.SetParent(this.rootGameObject.transform);
             this.nodeTowerList.transform.position = this.battleView.initTran;
             this.nodeTowerList.transform.GetComponent<Canvas>().sortingOrder = 20;
 
+            GameObject tplBtnTower = LoadPrefabTemplateTracked(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.BtnTowerBuild);
+            if (tplBtnTower == null)
+            {
+                return;
+            }
+
             for (int i = 0; i <= this.towerComponent.canBuildTowerListLength - 1; i++)
             {
-                GameObject itemGo = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/UI/btn_tower_build"));
+                GameObject itemGo = GameObject.Instantiate(tplBtnTower);
                 this.buttonTowerList[i] = new ButtonTower();
                 this.buttonTowerList[i].LoadInfo(this);
                 this.buttonTowerList[i].InitInfo(itemGo.transform, this.towerComponent.canBuildTowerList[i]);
@@ -121,7 +151,13 @@ namespace CarrotFantasy
                 itemGo.transform.localScale = Vector3.one;
             }
 
-            this.nodeHandleTowerCanvas = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/UI/handle_tower_canvas"));
+            GameObject tplHandleCanvas = LoadPrefabTemplateTracked(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.HandleTowerCanvas);
+            if (tplHandleCanvas == null)
+            {
+                return;
+            }
+
+            this.nodeHandleTowerCanvas = GameObject.Instantiate(tplHandleCanvas);
             this.nodeHandleTowerCanvas.transform.SetParent(this.rootGameObject.transform);
             this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
             this.nodeHandleTowerCanvas.transform.GetComponent<Canvas>().sortingOrder = 20;
@@ -130,7 +166,13 @@ namespace CarrotFantasy
             this.spriteButtonUpList[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_CanUpLevel"); //能升级
             this.spriteButtonUpList[2] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_ReachHighestLevel"); //满级
 
-            this.nodeMap = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/nodeMap"));
+            GameObject tplNodeMap = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeMap);
+            if (tplNodeMap == null)
+            {
+                return;
+            }
+
+            this.nodeMap = GameObject.Instantiate(tplNodeMap);
             this.nodeMap.transform.SetParent(this.rootGameObject.transform);
             this.nodeMap.transform.position = new Vector3(6, 4.35f, 0);
             Dictionary<String, int> map = this.reader.getMapUIConfig(dataComponent.bigLevel, dataComponent.level);
@@ -141,7 +183,13 @@ namespace CarrotFantasy
             this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sortingOrder = 0;
             this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 4;
 
-            this.nodeTargetSignal = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/node_target_signal"));
+            GameObject tplTargetSignal = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);
+            if (tplTargetSignal == null)
+            {
+                return;
+            }
+
+            this.nodeTargetSignal = GameObject.Instantiate(tplTargetSignal);
             this.nodeTargetSignal.transform.SetParent(this.rootGameObject.transform);
             this.nodeTargetSignal.transform.position = this.battleView.initTran;
 
@@ -154,7 +202,13 @@ namespace CarrotFantasy
 
         private void SetStartPoint()
         {
-            this.nodeMonsterPoint = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/startPoint"));
+            GameObject tplStart = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.StartPoint);
+            if (tplStart == null)
+            {
+                return;
+            }
+
+            this.nodeMonsterPoint = GameObject.Instantiate(tplStart);
             this.nodeMonsterPoint.transform.SetParent(this.rootGameObject.transform);
             Fix64Vector2 startPosition = this.mapComponent.monsterPathList[0];
 
@@ -187,7 +241,13 @@ namespace CarrotFantasy
 
         private void SetCarrot()
         {
-            this.nodeCarrot = GameObject.Instantiate(ResourceLoader.Instance.GetGameObject("Prefabs/Game/Carrot"));
+            GameObject tplCarrot = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
+            if (tplCarrot == null)
+            {
+                return;
+            }
+
+            this.nodeCarrot = GameObject.Instantiate(tplCarrot);
             this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
             this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
             this.carrot.Init();
@@ -436,17 +496,54 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
-            this.carrot.Dispose();
+            if (this.carrot != null)
+            {
+                this.carrot.Dispose();
+            }
+
             for (int i = 0; i < this.buttonTowerList.Length - 1; i++)
             {
                 this.buttonTowerList[i].Dispose();
             }
+
             this.RemoveListener();
             this.selectGrid = null;
-            GameObject.Destroy(this.nodeHandleTowerCanvas);
-            GameObject.Destroy(this.nodeTowerList);
-            GameObject.Destroy(this.nodeCarrot);
-            GameObject.Destroy(this.nodeMap);
+            if (this.nodeHandleTowerCanvas != null)
+            {
+                GameObject.Destroy(this.nodeHandleTowerCanvas);
+            }
+
+            if (this.nodeTowerList != null)
+            {
+                GameObject.Destroy(this.nodeTowerList);
+            }
+
+            if (this.nodeCarrot != null)
+            {
+                GameObject.Destroy(this.nodeCarrot);
+            }
+
+            if (this.nodeMap != null)
+            {
+                GameObject.Destroy(this.nodeMap);
+            }
+
+            if (this.nodeMonsterPoint != null)
+            {
+                GameObject.Destroy(this.nodeMonsterPoint);
+            }
+
+            if (this.nodeTargetSignal != null)
+            {
+                GameObject.Destroy(this.nodeTargetSignal);
+            }
+
+            for (int i = 0; i < _prefabHandles.Count; i++)
+            {
+                _prefabHandles[i].Dispose();
+            }
+
+            _prefabHandles.Clear();
         }
 
         private void ShowTargetSignal()

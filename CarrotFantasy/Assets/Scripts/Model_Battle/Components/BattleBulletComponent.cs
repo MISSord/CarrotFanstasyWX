@@ -36,13 +36,13 @@ namespace CarrotFantasy
 
         public void BuildNewBullet(BattleUnit_Tower tower, BattleUnit target)
         {
-            BattleUnit_Bullet bullet = BattleUnitPool.Instance.getNewBattleUnit<BattleUnit_Bullet>(BattleUnitType.BULLET);
+            BattleUnit_Bullet bullet = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Bullet>(BattleUnitType.BULLET);
             if (bullet == null)
             {
                 bullet = new BattleUnit_Bullet(this.baseBattle);
             }
             bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.AddDeadList);
-            bullet.LoadInfo(this.baseBattle.GetUid(), this.configReader.getSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
+            bullet.LoadInfo(this.baseBattle.GetUid(), this.configReader.GetSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
             bullet.LoadInfo2(tower, target);
             bullet.Init();
             bullet.InitComponents();

@@ -54,7 +54,7 @@ namespace CarrotFantasy
             this.moveTotalTime = moveXTime >= moveYTime ? moveXTime : moveYTime;
 
             Fix64 x, y, z;
-            this.unitTransform.getLastFramePosition(out x, out y, out z);
+            this.unitTransform.GetLastFramePosition(out x, out y, out z);
 
             Fix64 dicXmove = monsterPointList[roadPointIndex + 1].X - x;
             Fix64 dicYmove = monsterPointList[roadPointIndex + 1].Y - y;
@@ -79,7 +79,7 @@ namespace CarrotFantasy
             if (!this.isReachCarrot)
             {
                 Fix64 x, y, z;
-                this.unitTransform.getLastFramePosition(out x, out y, out z);
+                this.unitTransform.GetLastFramePosition(out x, out y, out z);
                 Fix64 DiffDeltaTime = Fix64.Zero;
 
                 if (this.moveCurTime + deltaTime >= this.moveTotalTime)
