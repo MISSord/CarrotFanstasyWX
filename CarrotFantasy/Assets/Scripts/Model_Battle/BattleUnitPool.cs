@@ -94,7 +94,6 @@ namespace CarrotFantasy
             }
         }
 
-
         public void PushObjectToPool(String name, BattleUnit unit)
         {
             List<BattleUnit> curList = this.curObjectDic[name];

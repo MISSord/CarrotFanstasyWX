@@ -61,7 +61,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonSymbol.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonIdAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\EnumerableSerializerBase.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\ByteArray.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\Utf8Encodings.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\UInt64Serializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\INameDecoder.cs" />
@@ -84,7 +83,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonSerializationOptionsAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonJavaScript.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DateTimeSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\InvalidProtocolBufferException.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonBinarySubType.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\JsonWriterContext.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\AbstractClassSerializer.cs" />
@@ -93,7 +91,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\Int16Serializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\OutputBufferChunkSource.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\BsonSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\PropertyInfoExtensions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\DelegateMemberMapConvention.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonStreamExtensions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonReader.cs" />
@@ -159,7 +156,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\IdGenerators\GuidGenerator.cs" />
     <Compile Include="Assets\ThirdParty\DOTween\Modules\DOTweenModuleUI.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonDecimal128Serializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\CodedOutputStream.ComputeSize.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\NoIdMemberConvention.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonDocumentReader.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DiscriminatedInterfaceSerializer.cs" />
@@ -177,7 +173,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonDocumentWrapperSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\ICreatorSelector.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\Decimal128.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\IMessage.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\IBsonPostProcessingAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\IPEndPointSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonDouble.cs" />
@@ -186,7 +181,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Options\TimeSpanUnits.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Exceptions\BsonException.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\LookupIdGeneratorConvention.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\LimitedInputStream.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\NoOpElementNameValidator.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonExtraElementsAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonObjectIdSerializer.cs" />
@@ -233,15 +227,12 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\IBsonPolymorphicSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\LazyBsonArraySerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonBinaryData.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\ICustomDiagnosticMessage.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DynamicDocumentBaseSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DecimalSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\IPAddressSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonStringSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\ByteString.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Exceptions\DuplicateBsonMemberMapAttributeException.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonSymbolSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\CodedOutputStream.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Shared\CanonicalDisposableStruct.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\IBsonWriterExtensions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\TrieNameDecoder.cs" />
@@ -254,11 +245,9 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DictionaryInterfaceImplementerSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\ByteBufferStream.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\EnumSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\MessageParser.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\CreatorMapDelegateCompiler.cs" />
     <Compile Include="Assets\ThirdParty\ILRuntime\LitJson\JsonMapper.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\IBsonReader.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\RepeatedField.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\BsonCreatorMap.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Shared\CanonicalEquatableStruct.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonDoubleSerializer.cs" />
@@ -268,7 +257,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonDocumentBackedClassSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\ByteArrayBuffer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\PowerOf2.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\ProtoPreconditions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonInt32Serializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonDocumentWriter.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonDiscriminatorAttribute.cs" />
@@ -306,7 +294,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\TupleSerializers.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonRequiredAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\JsonWriterSettings.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\StreamExtensions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\AttributedSerializationProvider.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Exceptions\BsonInternalException.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\IClassMapConvention.cs" />
@@ -314,7 +301,6 @@
     <Compile Include="Assets\ThirdParty\DOTween\Modules\DOTweenModuleUtils.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\StructSerializerBase.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\QueueSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\FieldCodec.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\BsonUtils.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Shared\CanonicalDisposableClass.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonBinaryReaderSettings.cs" />
@@ -322,7 +308,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\ReadOnlyCollectionSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\IBsonMemberMapAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\IdGenerators\ZeroIdChecker.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\MessageExtensions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\ByteBufferFactory.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonStreamAdapter.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\MemberNameElementNameConvention.cs" />
@@ -339,7 +324,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\BsonDocumentBackedClass.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonNoIdAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Options\DictionaryRepresentation.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\CodedInputStream.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DoubleSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonObjectId.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\CultureInfoSerializer.cs" />
@@ -369,7 +353,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\ArrayElementNameAccelerator.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonRegularExpressionSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BooleanSerializer.cs" />
-    <Compile Include="Assets\ThirdParty\Google.Protobuf\WireFormat.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonInt64Serializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\IBsonWriter.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonIgnoreIfDefaultAttribute.cs" />
@@ -765,6 +748,10 @@
     </Reference>
     <Reference Include="log4netPlastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>Assets\Plugins\Google.Protobuf\Google.Protobuf.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="unityplastic">

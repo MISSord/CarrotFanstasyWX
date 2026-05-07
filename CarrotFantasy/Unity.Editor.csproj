@@ -67,7 +67,6 @@
     <Compile Include="Assets\Editor\GlobalConfigEditor\GlobalConfigEditor.cs" />
     <Compile Include="Assets\Editor\Helper\EditorResHelper.cs" />
     <Compile Include="Assets\Editor\ImageSlicer.cs" />
-    <Compile Include="Assets\Editor\Proto2CsEditor\InnerProto2CS.cs" />
     <Compile Include="Assets\Editor\BuildEditor\CustomManifestBuilderWindow.cs" />
     <Compile Include="Assets\Editor\UINameEntryDrawer.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\FbxToPrefabProcessor.cs" />
@@ -75,7 +74,6 @@
     <Compile Include="Assets\Editor\AssetsEditor\AnimationClipExtractor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabABPathPostprocessor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabUIImageLoaderAutoBinder.cs" />
-    <Compile Include="Assets\Editor\Proto2CsEditor\Proto2CSEditor.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
   </ItemGroup>
@@ -425,6 +423,10 @@
     </Reference>
     <Reference Include="log4netPlastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>Assets\Plugins\Google.Protobuf\Google.Protobuf.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="unityplastic">
@@ -989,10 +991,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="ET.Core.csproj">
-      <Project>{02E0872A-7C0C-FAC7-83B7-3C57773B8AA5}</Project>
-      <Name>ET.Core</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.ThirdParty.csproj">
       <Project>{3443889E-2D3E-DECA-E537-BB06A1DEBA63}</Project>
       <Name>Unity.ThirdParty</Name>

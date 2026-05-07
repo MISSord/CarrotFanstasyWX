@@ -1,11 +1,12 @@
 using System;
+using CfNet;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
     public class AccountServer : BaseServer<AccountServer>
     {
         private String account;
-        private long gateLoginKey;
         public long userId { get; private set; }
         private bool isInit = false;
 
@@ -36,16 +37,20 @@ namespace CarrotFantasy
 
         public override void AddSocketListener()
         {
-            //ServerProvision.connectionServer.AddListener(HotfixOpcode.A0003_LoginGate_G2C, this.notifyLoginGate);
-            //ServerProvision.connectionServer.AddListener(HotfixOpcode.A0002_Login_R2C, this.notifyLogin);
-            //ServerProvision.connectionServer.AddListener(HotfixOpcode.A0001_Register_R2C, this.notifyRegister);
+            ConnectionServer cs = ServerProvision.connectionServer;
+            if (cs != null)
+            {
+                cs.AddProtobufListener(SimpleBinaryOpcodes.LoginResponse, LoginResponse.Parser, this.OnLoginResponseProto);
+            }
         }
 
         public override void RemoveSocketListener()
         {
-            //ServerProvision.connectionServer.RemoveListener(HotfixOpcode.A0003_LoginGate_G2C, this.notifyLoginGate);
-            //ServerProvision.connectionServer.RemoveListener(HotfixOpcode.A0002_Login_R2C, this.notifyLogin);
-            //ServerProvision.connectionServer.RemoveListener(HotfixOpcode.A0001_Register_R2C, this.notifyRegister);
+            ConnectionServer cs = ServerProvision.connectionServer;
+            if (cs != null)
+            {
+                cs.RemoveProtobufListener(SimpleBinaryOpcodes.LoginResponse);
+            }
         }
 
         public void SetAccountId(String id)
@@ -54,6 +59,7 @@ namespace CarrotFantasy
             {
                 account = id;
             }
+
             isInit = true;
         }
 
@@ -71,59 +77,54 @@ namespace CarrotFantasy
 
         public void LoginAccount(String accout, String password)
         {
-            //ServerProvision.connectionServer.Send(new A0002_Login_C2R() { Account = accout, Password = password });
-            this.account = accout;
+            this.SetAccountId(accout);
+
+            ConnectionServer cs = ServerProvision.connectionServer;
+            if (cs == null)
+            {
+                Debug.LogWarning("LoginAccount: ConnectionServer 未初始化。");
+                return;
+            }
+
+            try
+            {
+                var req = new LoginRequest
+                {
+                    Account = accout ?? string.Empty,
+                    Password = password ?? string.Empty,
+                };
+                cs.SendProtobuf(SimpleBinaryOpcodes.LoginRequest, req);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning(string.Format("LoginAccount: 发送失败 {0}", ex.Message));
+                UIServer.Instance.ShowTip("登录请求无效");
+            }
+        }
+
+        private void OnLoginResponseProto(LoginResponse response)
+        {
+            if (response.Result == 0)
+            {
+                this.userId = response.UserId;
+                this.eventDispatcher.DispatchEvent(LOGIN_SUCCESS);
+                string tip = string.IsNullOrEmpty(response.Message) ? "登录成功,祝你游玩愉快" : response.Message;
+                UIServer.Instance.ShowTip(tip);
+                return;
+            }
+
+            string fail = string.IsNullOrEmpty(response.Message) ? "登录失败" : response.Message;
+            UIServer.Instance.ShowTip(fail);
         }
 
         public void LoginGateAccount()
         {
-            //ServerProvision.connectionServer.Send(new A0003_LoginGate_C2G() { GateLoginKey = this.gateLoginKey });
+            // 网关二阶段鉴权可在此扩展。
         }
 
         public void RegisterAccount(String accout, String password)
         {
-            //ServerProvision.connectionServer.Send(new A0001_Register_C2R { Account = accout, Password = password });
+            // 注册：在 GameNetwork.proto 增加 Register 消息后在此 SendProtobuf。
         }
-
-        //private void notifyLogin(IMessage message)
-        //{
-        //    A0002_Login_R2C messageRealm = (A0002_Login_R2C)message;
-        //    //判断Realm服务器返回结果
-        //    if (messageRealm.Error == ErrorCode.ERR_AccountOrPasswordError)
-        //    {
-        //        UIServer.Instance.ShowTip("登录失败,账号或密码错误");
-        //        return;
-        //    }
-        //    this.setAccountId(this.account);
-        //    this.gateLoginKey = messageRealm.GateLoginKey;
-        //    this.loginGateAccount();
-        //}
-
-        //private void notifyRegister(IMessage message)
-        //{
-        //    A0001_Register_R2C messageRealm = (A0001_Register_R2C)message;
-        //    if (messageRealm.Error == ErrorCode.ERR_AccountAlreadyRegisted)
-        //    {
-        //        UIServer.Instance.ShowTip("注册失败，账号已被注册");
-        //        return;
-        //    }
-
-        //    if (messageRealm.Error == ErrorCode.ERR_RepeatedAccountExist)
-        //    {
-        //        UIServer.Instance.ShowTip("注册失败，出现重复账号");
-        //        return;
-        //    }
-
-        //    //显示登录成功的提示
-        //    UIServer.Instance.ShowTip("注册成功");
-        //}
-
-        //private void notifyLoginGate(IMessage message)
-        //{
-        //    A0003_LoginGate_G2C msg = (A0003_LoginGate_G2C)message;
-        //    this.userId = msg.UserID;
-        //    this.eventDispatcher.DispatchEvent(LOGIN_SUCCESS);
-        //    UIServer.Instance.ShowTip("登录成功,祝你游玩愉快");
-        //}
     }
 }

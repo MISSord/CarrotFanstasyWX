@@ -58,6 +58,7 @@
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleComponentConstants.cs" />
     <Compile Include="Assets\Scripts\Business\Map\BigLevelInfo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVMonsterComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\TowerConfigReader.cs" />
@@ -75,6 +76,7 @@
     <Compile Include="Assets\Scripts\Util\Panel\XUI.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BaseBattle.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\BattlePveJudgeComponent.cs" />
+    <Compile Include="Assets\Scripts\Server\GameNetworkEndpoints.cs" />
     <Compile Include="Assets\Scripts\AssetBundleManager\ResPath.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionServer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleSimpleHitTestComponent.cs" />
@@ -82,6 +84,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\HitTestShape_Base.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\LocatedInfo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Item.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleEventConstants.cs" />
     <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundlePathHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Handle\Handler\HitTestHandler.cs" />
     <Compile Include="Assets\Scripts\Business\UI\AudioManager.cs" />
@@ -116,6 +119,8 @@
     <Compile Include="Assets\Scripts\View_Battle\Panel\NormalModelPanel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\ListenerObj.cs" />
     <Compile Include="Assets\Scripts\GameStateMachine.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Common\BattleLogicTiming.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryPayloadWriter.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattleResult.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatMiniGameConnectionTransport.cs" />
     <Compile Include="Assets\Scripts\Business\BusinessType.cs" />
@@ -128,9 +133,12 @@
     <Compile Include="Assets\Scripts\View_Battle\Enum\BattleViewEventType.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\ButtonTower.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\Shapes\HitTestShape_Rect.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleIdentifiers.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\IBattleHostBridge.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle_Team\BattleTeam_Base.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpBattle.cs" />
+    <Compile Include="Assets\Scripts\Util\ReferenceCollector.cs" />
     <Compile Include="Assets\Scripts\Business\UI\UIButtonScalePress.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneServer.cs" />
     <Compile Include="Assets\Scripts\AssetBundleManager\AssetBundleUpdateChecker.cs" />
@@ -138,6 +146,7 @@
     <Compile Include="Assets\Scripts\AssetBundleManager\FileDownloadHandler.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\PvpModelBattleParams.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleSchedulerComponent.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Event\PveMatchSettlement.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneLayerData.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleMonsterComponent.cs" />
     <Compile Include="Assets\Scripts\Helper\PathHelper.cs" />
@@ -162,6 +171,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleDataComponent.cs" />
     <Compile Include="Assets\Scripts\Other\Define.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\ImageResourceManager.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Event\BattleCoreEvent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\Components\BUVTransformComponent.cs" />
     <Compile Include="Assets\Scripts\Util\MapInfo\MapInfoHelper.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVBullComponent.cs" />
@@ -170,7 +180,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\InputOrder.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\StateMachine\BaseBattleState.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\MonsterConfigReader.cs" />
-    <Compile Include="Assets\Scripts\Server\Connection\ConnectionMessageCodec.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapNormalLevelPanel.cs" />
     <Compile Include="Assets\Scripts\Business\Map\SingleMapInfo.cs" />
     <Compile Include="Assets\Scripts\Business\UI\LoadingView.cs" />
@@ -198,6 +207,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpFightingState.cs" />
     <Compile Include="Assets\Scripts\Util\GameConfig.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnitProperty.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\SimpleBinaryOpcodes.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomPanel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64SinLut.cs" />
@@ -211,6 +221,7 @@
     <Compile Include="Assets\Scripts\Business\Account\LoginPanel.cs" />
     <Compile Include="Assets\Scripts\Util\Sche\Sche.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatSocketBridgeProvider.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Event\BattlePresentationEvent.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapConfigReader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\Round.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleInputComponent.cs" />
@@ -218,7 +229,9 @@
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\UnitBuffComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Map\BattleMapGrid.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Monster.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryPayloadReader.cs" />
     <Compile Include="Assets\Scripts\AssetBundleManager\EditorAssetLoader.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleEnums.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVMapComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveStartState.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpFinishState.cs" />
@@ -230,6 +243,7 @@
     <Compile Include="Assets\Scripts\Util\Scene\GameSceneType.cs" />
     <Compile Include="Assets\Scripts\Entity\Gamer.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatJsBridgeSocket.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Battle\UnityBattleHostBridge.cs" />
     <Compile Include="Assets\Scripts\Server\ServerProvision.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Hit_Test\Shape\Shapes\HitTestShape_Circle.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Bullet.cs" />
@@ -239,6 +253,7 @@
     <Compile Include="Assets\Scripts\Util\Resource\AssetLoadManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpStartState.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomServer.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryFrame.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomEventType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\MenuView.cs" />
@@ -262,26 +277,17 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpPreFightingState.cs" />
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\LevelInfo.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\SimpleBinaryProtocolDemo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BaseUnitViewComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\GameObjectResourceManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BattleManager.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVItemComponent.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UIUtil.cs" />
+    <Compile Include="Assets\Scripts\Util\Resource\FightViewPrefabAb.cs" />
     <Compile Include="Assets\Scripts\Util\Sche\ScheObject.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
-    <Compile Include="Assets\Scripts\Util\Resource\FightViewPrefabAb.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleEnums.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleIdentifiers.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleComponentConstants.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleEventConstants.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\IBattleHostBridge.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Battle\UnityBattleHostBridge.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Common\BattleLogicTiming.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Event\PveMatchSettlement.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Event\BattleCoreEvent.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Event\BattlePresentationEvent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />
@@ -625,6 +631,10 @@
     </Reference>
     <Reference Include="log4netPlastic">
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>Assets\Plugins\Google.Protobuf\Google.Protobuf.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="unityplastic">
@@ -1165,13 +1175,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="ET.Core.csproj">
-      <Project>{02E0872A-7C0C-FAC7-83B7-3C57773B8AA5}</Project>
-      <Name>ET.Core</Name>
-    </ProjectReference>
     <ProjectReference Include="Unity.ThirdParty.csproj">
       <Project>{3443889E-2D3E-DECA-E537-BB06A1DEBA63}</Project>
       <Name>Unity.ThirdParty</Name>
+    </ProjectReference>
+    <ProjectReference Include="CfNet.Generated.csproj">
+      <Project>{F9CB4855-2380-DD7B-1AA5-08CA10B2F275}</Project>
+      <Name>CfNet.Generated</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

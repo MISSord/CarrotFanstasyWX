@@ -1,4 +1,3 @@
-using ETModel;
 using System;
 using UnityEngine;
 
@@ -6,7 +5,7 @@ namespace CarrotFantasy
 {
     public class EditorConnectionTransport : IConnectionTransport
     {
-        public event Action<ushort, IMessage> OnMessage;
+        public event Action<byte[]> OnPacket;
         public event Action<string> OnError;
 
         private string address = string.Empty;
@@ -33,7 +32,7 @@ namespace CarrotFantasy
             this.IsConnected = false;
         }
 
-        public void Send(IMessage message, int messageNumber)
+        public void SendRaw(byte[] packet)
         {
             if (!this.IsConnected)
             {
@@ -41,31 +40,25 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (message == null)
+            if (packet == null || packet.Length < ConnectionBinaryFrame.OpcodeSize)
             {
-                this.OnError?.Invoke("EditorConnectionTransport.Send message is null.");
+                this.OnError?.Invoke("EditorConnectionTransport.SendRaw packet is null or too short.");
                 return;
             }
 
-            if (!ConnectionMessageCodec.TryGetOpcode(message, out ushort opcode))
-            {
-                this.OnError?.Invoke(string.Format("EditorConnectionTransport cannot resolve opcode. messageType: {0}", message.GetType().FullName));
-                return;
-            }
-
-            byte[] packet = ConnectionMessageCodec.EncodePacket(opcode, message);
-            Debug.Log(string.Format("EditorConnectionTransport.Send opcode: {0}, packetBytes: {1}", opcode, packet.Length));
+            ushort opcode = BitConverter.ToUInt16(packet, 0);
+            Debug.Log(string.Format("EditorConnectionTransport.SendRaw opcode: {0}, packetBytes: {1}", opcode, packet.Length));
         }
 
-        public void DispatchIncomingMessage(ushort opcode, IMessage message)
+        public void DispatchIncomingPacket(byte[] packet)
         {
-            this.OnMessage?.Invoke(opcode, message);
+            this.OnPacket?.Invoke(packet);
         }
 
         public void Dispose()
         {
             this.Stop();
-            this.OnMessage = null;
+            this.OnPacket = null;
             this.OnError = null;
         }
     }

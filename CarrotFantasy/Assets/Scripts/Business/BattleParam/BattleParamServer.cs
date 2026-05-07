@@ -10,7 +10,6 @@ namespace CarrotFantasy
     {
         public SingleMapInfo curSingleMapInfo;
         public Stage curStage;
-
         public LevelInfo info;
 
         public int curBigLevel;

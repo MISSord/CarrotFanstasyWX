@@ -1,8 +1,8 @@
 {
     "name": "Unity.Model",
     "references": [
-        "ET.Core",
-        "Unity.ThirdParty"
+        "Unity.ThirdParty",
+        "CfNet.Generated"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [],

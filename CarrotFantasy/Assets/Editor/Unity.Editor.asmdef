@@ -1,7 +1,6 @@
 {
     "name": "Unity.Editor",
     "references": [
-        "ET.Core",
         "Unity.ThirdParty",
         "Unity.Model"
     ],

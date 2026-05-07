@@ -1,6 +1,6 @@
 ﻿using UnityEditor;
 
-namespace ETEditor
+namespace CarrotFantasy.EditorTools
 {
     public class GlobalProtoEditor : EditorWindow
     {

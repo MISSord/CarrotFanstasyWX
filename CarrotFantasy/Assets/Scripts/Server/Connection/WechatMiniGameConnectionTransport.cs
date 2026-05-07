@@ -1,4 +1,3 @@
-using ETModel;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +6,7 @@ namespace CarrotFantasy
 {
     public class WechatMiniGameConnectionTransport : IConnectionTransport
     {
-        public event Action<ushort, IMessage> OnMessage;
+        public event Action<byte[]> OnPacket;
         public event Action<string> OnError;
 
         private string address = string.Empty;
@@ -46,27 +45,26 @@ namespace CarrotFantasy
             {
                 this.bridge.Close();
             }
+
             this.pendingPackets.Clear();
             this.isConnecting = false;
             this.IsConnected = false;
         }
 
-        public void Send(IMessage message, int messageNumber)
+        public void SendRaw(byte[] packet)
         {
-            if (message == null)
+            if (packet == null || packet.Length < ConnectionBinaryFrame.OpcodeSize)
             {
-                this.OnError?.Invoke("WechatMiniGameConnectionTransport.Send message is null.");
+                this.OnError?.Invoke("WechatMiniGameConnectionTransport.SendRaw packet is null or too short.");
                 return;
             }
 
-            if (!ConnectionMessageCodec.TryGetOpcode(message, out ushort opcode))
-            {
-                this.OnError?.Invoke(string.Format("WechatMiniGameConnectionTransport cannot resolve opcode. messageType: {0}", message.GetType().FullName));
-                return;
-            }
+            ushort opcode = BitConverter.ToUInt16(packet, 0);
+            this.TryEnqueueOrSend(packet, opcode);
+        }
 
-            byte[] packet = ConnectionMessageCodec.EncodePacket(opcode, message);
-
+        private void TryEnqueueOrSend(byte[] packet, ushort opcode)
+        {
             if (!this.IsConnected)
             {
                 if (this.isConnecting)
@@ -80,19 +78,19 @@ namespace CarrotFantasy
             }
 
             this.bridge.Send(packet);
-            Debug.Log(string.Format("WechatMiniGameConnectionTransport.Send opcode: {0}, packetBytes: {1}, messageNumber: {2}", opcode, packet.Length, messageNumber));
+            Debug.Log(string.Format("WechatMiniGameConnectionTransport.Send opcode: {0}, packetBytes: {1}", opcode, packet.Length));
         }
 
-        public void DispatchIncomingMessage(ushort opcode, IMessage message)
+        public void DispatchIncomingPacket(byte[] packet)
         {
-            this.OnMessage?.Invoke(opcode, message);
+            this.OnPacket?.Invoke(packet);
         }
 
         public void Dispose()
         {
             this.Stop();
             this.UnbindBridge();
-            this.OnMessage = null;
+            this.OnPacket = null;
             this.OnError = null;
         }
 
@@ -158,13 +156,7 @@ namespace CarrotFantasy
 
         private void HandleBridgeMessage(byte[] packet)
         {
-            if (!ConnectionMessageCodec.TryDecodePacket(packet, out ushort opcode, out IMessage message))
-            {
-                this.OnError?.Invoke("WechatMiniGameConnectionTransport decode packet failed.");
-                return;
-            }
-
-            this.OnMessage?.Invoke(opcode, message);
+            this.OnPacket?.Invoke(packet);
         }
     }
 }

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+// 消费方（改此文件后请跑 Tools/regen-game-network.ps1，并保证 CarrotFantasyServer 能编译）：
+// - CarrotFantasy/…/NetProto/Generated/GameNetwork.cs：由 tools/CfNet.ProtoGen 生成后复制到 Unity
+// - CarrotFantasyServer：csproj 内 <Protobuf Include="..\Proto\GameNetwork.proto" …> 编译时生成（不复制到仓库）
+
+package cfnet;
+
+option csharp_namespace = "CfNet";
+
+// 与帧头 ushort opcode 配合：LoginRequest=200, LoginResponse=201（见 SimpleBinaryOpcodes / SimpleOpcodes）
+
+message LoginRequest {
+  string account = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  // 0 成功，1 格式/解析错误，2 鉴权失败
+  int32 result = 1;
+  int64 user_id = 2;
+  string message = 3;
+}

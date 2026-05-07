@@ -25,7 +25,7 @@ namespace CarrotFantasy
             ViewManager.Instance.Init();
 
             connectionServer = new ConnectionServer();
-            connectionServer.Init();
+            connectionServer.Init(GameNetworkEndpoints.WebSocketUrl);
             sceneServer = new SceneServer();
             sceneServer.Init();
         }
