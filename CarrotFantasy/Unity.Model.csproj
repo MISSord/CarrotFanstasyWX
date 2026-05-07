@@ -71,6 +71,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\BattleUnitPool.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\SlideCanCoverScrollView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BulletConfigReader.cs" />
+    <Compile Include="Assets\Scripts\Util\Helper\PositionHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\PositionInfo.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Event\BattleEventDispatcher.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\XUI.cs" />
@@ -149,13 +150,11 @@
     <Compile Include="Assets\Scripts\Model_Battle\Event\PveMatchSettlement.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneLayerData.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleMonsterComponent.cs" />
-    <Compile Include="Assets\Scripts\Helper\PathHelper.cs" />
     <Compile Include="Assets\Scripts\SRPScheduler.cs" />
     <Compile Include="Assets\Scripts\Util\Scene\BattleScene.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapModel.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\V4.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView_Tower.cs" />
-    <Compile Include="Assets\Scripts\Helper\PositionHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattle.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Tower.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\UIImageLoaderExtensions.cs" />
@@ -258,6 +257,7 @@
     <Compile Include="Assets\Scripts\Util\Panel\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\MenuView.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
+    <Compile Include="Assets\Scripts\Util\Helper\PathHelper.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Stat\BattleStatInfo.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Carrot.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\BattleMapComponent.cs" />

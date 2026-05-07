@@ -1,7 +1,8 @@
 syntax = "proto3";
 
 // 消费方（改此文件后请跑 Tools/regen-game-network.ps1，并保证 CarrotFantasyServer 能编译）：
-// - CarrotFantasy/…/NetProto/Generated/GameNetwork.cs：由 tools/CfNet.ProtoGen 生成后复制到 Unity
+// - CarrotFantasy/…/NetProto/Generated/GameNetwork.cs：由 tools/CfNet.ProtoGen 生成后复制到 Unity。
+//   若生成代码里使用「String」而非「string」，须保留「using System;」（否则 CfNet.Generated 报 CS0246）。
 // - CarrotFantasyServer：csproj 内 <Protobuf Include="..\Proto\GameNetwork.proto" …> 编译时生成（不复制到仓库）
 
 package cfnet;
