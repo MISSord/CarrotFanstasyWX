@@ -16,35 +16,21 @@ namespace CarrotFantasy
             return distanceSQ <= ((shape1.radius + shape2.radius) * (shape1.radius + shape2.radius));
         }
 
-        //圆形碰矩形
+        //圆形碰矩形（AABB）：圆心到矩形上最近点的距离平方与半径平方比较
         public static bool HitTest(HitTestShape_Circle shapeCircle, HitTestShape_Rect shapeRect)
         {
             Fix64 circleCenterX = shapeCircle.centerX;
             Fix64 circleCenterY = shapeCircle.centerY;
-            Fix64 circleRadius = shapeCircle.radius;
-
             Fix64 rectX = shapeRect.x;
             Fix64 rectY = shapeRect.y;
             Fix64 rectSizeX = shapeRect.sizeX;
             Fix64 rectSizeY = shapeRect.sizeY;
 
-            if (Battle_func.PGetDistanceSQ(circleCenterX, circleCenterY, rectX, rectY) < circleRadius)
-            {
-                return true;
-            }
-            else if (Battle_func.PGetDistanceSQ(circleCenterX, circleCenterY, rectX + rectSizeX, rectY) < circleRadius)
-            {
-                return true;
-            }
-            else if (Battle_func.PGetDistanceSQ(circleCenterX, circleCenterY, rectX + rectSizeX, rectY + rectSizeY) < circleRadius)
-            {
-                return true;
-            }
-            else if (Battle_func.PGetDistanceSQ(circleCenterX, circleCenterY, rectX, rectY + rectSizeY) < circleRadius)
-            {
-                return true;
-            }
-            return Battle_func.RectContainsPoint(rectX, rectY, rectSizeX, rectSizeY, circleCenterX, circleCenterY);
+            Fix64 closestX = Fix64.Max(rectX, Fix64.Min(circleCenterX, rectX + rectSizeX));
+            Fix64 closestY = Fix64.Max(rectY, Fix64.Min(circleCenterY, rectY + rectSizeY));
+            Fix64 radiusSq = shapeCircle.radius * shapeCircle.radius;
+            Fix64 distSq = Battle_func.PGetDistanceSQ(circleCenterX, circleCenterY, closestX, closestY);
+            return distSq <= radiusSq;
         }
 
         //圆形碰Obb形
@@ -72,27 +58,23 @@ namespace CarrotFantasy
             Fix64 circleRadius = shapeCircle.radius;
 
             Fix64Vector2 circleCenter = Battle_func.P(circleCenterX, circleCenterY);
-            if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.lb, shapeObbRect.rb) < circleRadius)
+            if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.lb, shapeObbRect.rb) <= circleRadius)
             {
                 return true;
             }
-            else if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.lb, shapeObbRect.rb) < circleRadius)
+            if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.rb, shapeObbRect.rt) <= circleRadius)
             {
                 return true;
             }
-            else if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.lb, shapeObbRect.lt) < circleRadius)
+            if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.rt, shapeObbRect.lt) <= circleRadius)
             {
                 return true;
             }
-            else if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.lt, shapeObbRect.rt) < circleRadius)
+            if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.lt, shapeObbRect.lb) <= circleRadius)
             {
                 return true;
             }
-            else if (Battle_func.PGetDistanceOfPoint2Line(circleCenter, shapeObbRect.rb, shapeObbRect.rt) < circleRadius)
-            {
-                return true;
-            }
-            else if (IsRectContainsPoint(shapeObbRect.lb, shapeObbRect.rb, shapeObbRect.lt, shapeObbRect.rt, circleCenter))
+            if (IsRectContainsPoint(shapeObbRect.lb, shapeObbRect.rb, shapeObbRect.lt, shapeObbRect.rt, circleCenter))
             {
                 return true;
             }
@@ -130,7 +112,7 @@ namespace CarrotFantasy
         public static bool HitTest(HitTestShape_ObbRect shapeObbRect, HitTestShape_Rect shapeRect)
         {
             HitTestShape_ObbRect shapeObbRect2 = new HitTestShape_ObbRect(HitShapeType.OBB_RECT
-                , shapeRect.x + shapeRect.sizeX / Fix64.Two, shapeRect.y + shapeRect.sizeY / Fix64.Two, shapeRect.sizeX, shapeRect.sizeX, Fix64.Zero);
+                , shapeRect.x + shapeRect.sizeX / Fix64.Two, shapeRect.y + shapeRect.sizeY / Fix64.Two, shapeRect.sizeX, shapeRect.sizeY, Fix64.Zero);
             return HitTest(shapeObbRect, shapeObbRect2);
         }
 

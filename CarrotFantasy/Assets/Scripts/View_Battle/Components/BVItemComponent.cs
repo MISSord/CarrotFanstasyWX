@@ -93,8 +93,8 @@ namespace CarrotFantasy
             {
                 BattleUnit_Item item = (BattleUnit_Item)obj;
                 BattleUnitView_Item itemView = this.itemDic[item];
-                GameObject.Destroy(itemView.transform.gameObject);
                 itemView.ClearUnitInfo();
+                GameObject.Destroy(itemView.transform.gameObject);
                 this.itemDic.Remove(item);
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, itemView);
 
@@ -138,8 +138,8 @@ namespace CarrotFantasy
             _destroyEffectTemplate = null;
             foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
             {
-                GameObject.Destroy(info.Value.transform.gameObject);
                 info.Value.ClearUnitInfo();
+                GameObject.Destroy(info.Value.transform.gameObject);
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, info.Value);
             }
             this.itemDic.Clear();

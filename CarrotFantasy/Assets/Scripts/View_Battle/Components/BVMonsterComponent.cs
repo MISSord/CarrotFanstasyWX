@@ -10,6 +10,8 @@ namespace CarrotFantasy
         private AssetLoadHandle _monsterPrefabHandle;
         private GameObject _destroyEffectTemplate;
         private AssetLoadHandle _destroyEffectHandle;
+        private GameObject _monsterCanvasTemplate;
+        private AssetLoadHandle _monsterCanvasHandle;
         private GameObject rootGameObject;
 
         private BattleSchedulerComponent scheComponent;
@@ -29,6 +31,13 @@ namespace CarrotFantasy
             if (this.noInstanGameObject == null)
             {
                 Debug.LogError("[BVMonsterComponent] MonsterPrefab 加载失败");
+            }
+
+            this._monsterCanvasTemplate = GameObjectResourceManager.Instance.LoadPrefabBlocking(
+                FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterCanvas, out this._monsterCanvasHandle);
+            if (this._monsterCanvasTemplate == null)
+            {
+                Debug.LogError("[BVMonsterComponent] MonsterCanvas 预制体加载失败");
             }
 
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
@@ -66,7 +75,11 @@ namespace CarrotFantasy
                     node = GameObject.Instantiate(this.noInstanGameObject);
                     node.transform.SetParent(this.rootGameObject.transform);
                 }
+
+                GameObject hpCanvasGo = this._monsterCanvasTemplate != null
+                    ? GameObject.Instantiate(this._monsterCanvasTemplate) : null;
                 monsterView.InitTransform(node.transform);
+                monsterView.AttachMonsterHpCanvas(hpCanvasGo);
                 monsterView.LoadInfo(this.battleView, monster);
                 monsterView.Init();
 
@@ -93,8 +106,9 @@ namespace CarrotFantasy
                 Debug.Log("移除怪兽视图出错");
                 return;
             }
-            GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, monsterView.transform.gameObject);
+
             monsterView.ClearUnitInfo();
+            GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, monsterView.transform.gameObject);
             this.monsterDic.Remove(monster);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
             AudioManager.Instance.PlayEffectByResources(String.Format("AudioClips/NormalMordel/Monster/{0}/{1}", monster.curLevel, monster.monsterId));
@@ -128,6 +142,14 @@ namespace CarrotFantasy
                 _monsterPrefabHandle = AssetLoadHandle.Invalid;
             }
 
+            if (_monsterCanvasHandle.IsValid)
+            {
+                _monsterCanvasHandle.Dispose();
+                _monsterCanvasHandle = AssetLoadHandle.Invalid;
+            }
+
+            _monsterCanvasTemplate = null;
+
             if (_destroyEffectHandle.IsValid)
             {
                 _destroyEffectHandle.Dispose();
@@ -137,8 +159,8 @@ namespace CarrotFantasy
             _destroyEffectTemplate = null;
             foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
-                GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, info.Value.transform.gameObject);
                 info.Value.ClearUnitInfo();
+                GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.Monster, info.Value.transform.gameObject);
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, info.Value);
             }
             this.monsterDic.Clear();

@@ -69,6 +69,7 @@ namespace CarrotFantasy
                 }
                 this.haveBeHit.Add(bullet.uid);
                 this.curLive -= bullet.damage;
+                this.eventDipatcher.DispatchEvent<int>(BattleEvent.ITEM_DAMAGE_NUMBER, bullet.damage);
                 this.eventDipatcher.DispatchEvent(BattleEvent.ITEM_LIVE_REDUCE);
                 if (this.curLive <= 0)
                 {

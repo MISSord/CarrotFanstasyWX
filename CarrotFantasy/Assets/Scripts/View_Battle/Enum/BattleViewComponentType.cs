@@ -11,6 +11,7 @@ namespace CarrotFantasy
         public const String AUDIO = "audio";
 
         public const String MAP = "map";
+        public const String WORLD_UI = "world_ui";
         public const String MONSTER = "monster";
         public const String BULLET = "bullet";
         public const String TOWER = "tower";

@@ -132,7 +132,7 @@ namespace CarrotFantasy
                 bool isHit = HitTestHandler.HitTest(unit1.bodyHitTestShape, unit2.bodyHitTestShape);
                 if (isHit == true)
                 {
-                    ((BattleUnit_Tower)this.registerUnitDic[BattleUnitType.TOWER][i]).targetUnit = this.targetUnit;
+                    ((BattleUnit_Tower)unit1.unit).targetUnit = this.targetUnit;
                 }
             }
         }

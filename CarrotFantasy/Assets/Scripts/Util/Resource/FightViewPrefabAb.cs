@@ -25,5 +25,7 @@ namespace CarrotFantasy
         public const string StartPoint = "startPoint";
         public const string Carrot = "Carrot";
         public const string MonsterPrefab = "MonsterPrefab";
+        /// <summary>怪物血条 World UI（已从 Monster 本体拆出为独立预制体）。</summary>
+        public const string MonsterCanvas = "MonsterCanvas";
     }
 }

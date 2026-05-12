@@ -289,6 +289,7 @@
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BattleLaunchParams.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Components\BVBattleWorldUiComponent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

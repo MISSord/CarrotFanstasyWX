@@ -26,6 +26,9 @@ namespace CarrotFantasy
 
         public const String MONSTER_DIED = "Monster_Died";
         public const String MONSTER_LIVE_REDUCE = "Monster_Live_Reduce";
+        /// <summary>怪物受击飘字用伤害数值（先于 <see cref="MONSTER_LIVE_REDUCE"/> 派发）。</summary>
+        public const String MONSTER_DAMAGE_NUMBER = "Monster_Damage_Number";
+
 
         public const String BATTLE_UNIT_ADD = "Battle_Unit_Add";
         public const String BATTLE_UNIT_REMOVE = "Battle_Unit_Remove";
@@ -50,6 +53,9 @@ namespace CarrotFantasy
 
         public const String ITEM_DIED = "Item_Died";
         public const String ITEM_LIVE_REDUCE = "Item_Live_Reduce";
+        /// <summary>道具受击飘字用伤害数值（先于 <see cref="ITEM_LIVE_REDUCE"/> 派发）。</summary>
+        public const String ITEM_DAMAGE_NUMBER = "Item_Damage_Number";
+
 
         public const String TARGET_CHANGE = "Target_Change";
 

@@ -10,6 +10,7 @@ namespace CarrotFantasy
         public override void Init()
         {
             this.AddComponent(new BVSceneComponent(this));
+            this.AddComponent(new BVBattleWorldUiComponent(this));
             this.AddComponent(new BVMapComponent(this));
             this.AddComponent(new BVMonsterComponent(this));
             this.AddComponent(new BVTowerComponent(this));
