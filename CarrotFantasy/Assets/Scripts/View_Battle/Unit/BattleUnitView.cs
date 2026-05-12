@@ -9,7 +9,7 @@ namespace CarrotFantasy
         private Dictionary<String, BaseUnitViewComponent> componentDic = new Dictionary<string, BaseUnitViewComponent>();
         private List<BaseUnitViewComponent> componentList = new List<BaseUnitViewComponent>();
 
-        public BattleView_base battleView;
+        public BattleView_base battleView { get; private set; }
         public BattleUnit unit;
         public BattleEventDispatcher unitEventDispatcher;
 
@@ -97,7 +97,6 @@ namespace CarrotFantasy
             this.unitEventDispatcher.AddListener(UnitEvent.STATUS_CHANGE, this.UpdateUnitScale);
             this.unitEventDispatcher.AddListener(UnitEvent.ROTATION_CHANGE, this.UpdateRotation);
             this.unitEventDispatcher.AddListener(UnitEvent.BODY_RECT_CHANE, this.UpdateBodyRect);
-            this.unitEventDispatcher.AddListener(UnitEvent.POSITION_CHANGE, this.GetLastPosition);
         }
 
         public virtual void RemoveListener()
@@ -107,7 +106,6 @@ namespace CarrotFantasy
             this.unitEventDispatcher.RemoveListener(UnitEvent.STATUS_CHANGE, this.UpdateUnitScale);
             this.unitEventDispatcher.RemoveListener(UnitEvent.ROTATION_CHANGE, this.UpdateRotation);
             this.unitEventDispatcher.RemoveListener(UnitEvent.BODY_RECT_CHANE, this.UpdateBodyRect);
-            this.unitEventDispatcher.RemoveListener(UnitEvent.POSITION_CHANGE, this.GetLastPosition);
 
         }
 
@@ -135,6 +133,7 @@ namespace CarrotFantasy
 
         private void UpdatePosition(float time)
         {
+            this.GetLastPosition();
             //Vector3 newViewPosition = Vector3.Lerp(transform.position, this.lastPosition, 1 / Vector3.Distance(transform.position, this.lastPosition) * time);
             //this.curViewPosition = newViewPosition;
             this.curViewPosition = this.lastPosition;

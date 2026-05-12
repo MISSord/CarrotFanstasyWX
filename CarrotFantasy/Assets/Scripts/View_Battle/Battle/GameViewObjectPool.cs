@@ -9,7 +9,6 @@ namespace CarrotFantasy
         private static GameViewObjectPool gamePool;
         private Dictionary<String, List<BattleUnitView>> curObjectDic = new Dictionary<String, List<BattleUnitView>>();
         private Dictionary<String, List<BaseUnitViewComponent>> curUnitObjectDic = new Dictionary<string, List<BaseUnitViewComponent>>();
-
         private Dictionary<String, List<GameObject>> curGameObjectDic = new Dictionary<string, List<GameObject>>();
 
         public static GameViewObjectPool Instance
@@ -146,8 +145,25 @@ namespace CarrotFantasy
 
         public void ClearGameInfo()
         {
-            this.curGameObjectDic.Clear();
+            this.DestroyAndClearAllPooledGameObjects();
             GC.Collect();
+        }
+
+        private void DestroyAndClearAllPooledGameObjects()
+        {
+            foreach (KeyValuePair<String, List<GameObject>> kv in this.curGameObjectDic)
+            {
+                List<GameObject> list = kv.Value;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (list[i] != null)
+                    {
+                        UnityEngine.Object.Destroy(list[i]);
+                    }
+                }
+                list.Clear();
+            }
+            this.curGameObjectDic.Clear();
         }
 
         public void Dispose()
@@ -168,7 +184,7 @@ namespace CarrotFantasy
                 }
             }
             this.curUnitObjectDic.Clear();
-            this.curGameObjectDic.Clear();
+            this.DestroyAndClearAllPooledGameObjects();
 
             gamePool = null;
             GC.Collect();

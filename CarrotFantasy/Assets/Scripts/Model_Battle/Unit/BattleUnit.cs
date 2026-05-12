@@ -16,13 +16,10 @@ namespace CarrotFantasy
         public Dictionary<String, Fix64> birthParam;
         public BaseBattle baseBattle;
 
-        protected bool isPause;
-
         public BattleUnit(BaseBattle battle)
         {
             this.eventDipatcher = new BattleEventDispatcher(this, battle); //可以优化
             this.baseBattle = battle;
-            this.isPause = false;
         }
 
         public virtual void LoadInfo(int uid, Dictionary<String, Fix64> param, Fix64Vector2 birthPosition)  //先loadInfo 再initComponent
@@ -73,15 +70,6 @@ namespace CarrotFantasy
         public void RemoveComponent(String type)
         {
             this.componentDic.Remove(type);
-        }
-
-        public virtual void Start()
-        {
-            for (int i = 0; i <= componentList.Count - 1; i++)
-            {
-                componentList[i].Start();
-            }
-            this.isPause = false;
         }
 
         public String GetUnitType()

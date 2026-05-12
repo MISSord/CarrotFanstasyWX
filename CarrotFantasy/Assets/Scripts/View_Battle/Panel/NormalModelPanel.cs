@@ -27,6 +27,10 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
+            this.battle = BattleManager.Instance.baseBattle;
+            this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            if (this.dataComponent == null) return;
+
             this.nodeTopPage = this.nameTableDic["node_TopPage"];
             this.nodeStartUI = this.nameTableDic["StartUI"];
             this.txtCoin = this.nameTableDic["txt_coin"].GetComponent<Text>();
@@ -40,12 +44,6 @@ namespace CarrotFantasy
 
         private void InitPages()
         {
-            this.battle = BattleManager.Instance.baseBattle;
-            this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
-            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
-            this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
-            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
-            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
             this.isPause = this.battle.isPause;
             this.UpdateCoinText(0);
             this.UpdateRoundText(0);
@@ -65,6 +63,8 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
+            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
+            this.dataComponent.eventDispatcher.AddListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
             BattleManager.Instance.baseBattle.eventDispatcher.AddListener(BattleEvent.START_GAME, this.ShowStartUI);
             BattleManager.Instance.baseBattle.eventDispatcher.AddListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
             XUI.AddButtonListener(this.nameTableDic["Btn_Pause"].GetComponent<Button>(), this.BtnPauseGame);
@@ -73,15 +73,15 @@ namespace CarrotFantasy
 
         private void RemoveListener()
         {
-            BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.ShowStartUI);
+            if (BattleManager.Instance?.baseBattle != null)
+            {
+                BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener(BattleEvent.START_GAME, this.ShowStartUI);
+                BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
+            }
             if (this.dataComponent != null)
             {
                 this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.UpdateCoinText);
                 this.dataComponent.eventDispatcher.RemoveListener<int>(BattleEvent.WAVES_NUMBER_ADD, this.UpdateRoundText);
-            }
-            if (BattleManager.Instance?.baseBattle != null)
-            {
-                BattleManager.Instance.baseBattle.eventDispatcher.RemoveListener<bool>(BattleEvent.GAME_STATE_CHANGE, this.PauseGame);
             }
             this.nameTableDic["Btn_Pause"].GetComponent<Button>().onClick.RemoveAllListeners();
             this.nameTableDic["Btn_Menu"].GetComponent<Button>().onClick.RemoveAllListeners();
@@ -109,6 +109,23 @@ namespace CarrotFantasy
 
         protected override void ReleaseCallBack()
         {
+            if (BattleManager.Instance?.baseBattle != null)
+            {
+                BattleSchedulerComponent sche = (BattleSchedulerComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
+                if (sche != null)
+                {
+                    if (this.schId != 0)
+                    {
+                        sche.SilenceSingleSche(this.schId);
+                    }
+                    if (this.schId_startGame != 0)
+                    {
+                        sche.SilenceSingleSche(this.schId_startGame);
+                    }
+                }
+            }
+            this.schId = 0;
+            this.schId_startGame = 0;
             this.btnPauseSprites = null;
             this.RemoveListener();
         }

@@ -133,7 +133,7 @@ namespace CarrotFantasy
                 {
                     this.eventDipatcher.DispatchEvent<BattleUnit>(BattleEvent.TOWER_ATTACK, targetOne);
                     this.baseBattle.eventDispatcher.DispatchEvent<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this, targetOne);
-                    this.timeVal = Fix64.Zero;
+                    this.timeVal = this.timeVal - this.attackCD;
                 }
             }
             this.monsterList.Clear();

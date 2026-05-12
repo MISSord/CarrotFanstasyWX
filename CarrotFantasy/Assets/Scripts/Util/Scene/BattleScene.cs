@@ -18,7 +18,7 @@ namespace CarrotFantasy
             manager.Init();
             manager.InitBattle();
 
-            Sche.DelayExeOnceTimes(manager.StartGame, 2.0f);
+            manager.ScheduleDelayedStartGame(2.0f);
         }
 
         private void AddListener()

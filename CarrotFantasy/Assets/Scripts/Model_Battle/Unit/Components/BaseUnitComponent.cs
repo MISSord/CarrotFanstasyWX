@@ -1,11 +1,9 @@
-using System;
-
 namespace CarrotFantasy
 {
     public abstract class BaseUnitComponent
     {
         public BattleUnit unit { get; private set; }
-        public String unitComponentType { get; protected set; } //在子类里赋值
+        public string unitComponentType { get; protected set; } //在子类里赋值
 
         public void LoadUnit(BattleUnit unit)
         {
@@ -13,8 +11,6 @@ namespace CarrotFantasy
         }
 
         public virtual void Init() { }
-
-        public virtual void Start() { }
 
         public abstract void OnTick(Fix64 deltaTime);
 

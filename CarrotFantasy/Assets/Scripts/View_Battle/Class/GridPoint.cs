@@ -84,6 +84,11 @@ namespace CarrotFantasy
         /// 有关格子处理的方法
         /// </summary>
 
+        private void OnDestroy()
+        {
+            this.transform.DOKill();
+        }
+
         private void OnMouseDown()
         {
             //选择的是UI则不发生交互

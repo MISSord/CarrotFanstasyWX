@@ -5,12 +5,6 @@ namespace CarrotFantasy
     public class BattleManager : MonoBehaviour //驱动
     {
         private static BattleManager instance;
-
-        private NormalModelPanel panel;
-        private MenuView menuView;
-        private GameWinView gameWinView;
-        private GameOverView gameOverView;
-
         public static BattleManager Instance
         {
             get
@@ -18,9 +12,11 @@ namespace CarrotFantasy
                 return instance;
             }
         }
-
         public BaseBattle baseBattle { get; private set; }
         public BattleView_base baseBattleView { get; private set; }
+
+        /// <summary>全局 Sche 上预约的延时开局任务；重开或 Dispose 前需静默，避免多条回调叠加。</summary>
+        private int _pendingStartGameSchId;
 
         private void Awake()
         {
@@ -44,30 +40,6 @@ namespace CarrotFantasy
             }
             this.baseBattleView.rootGameObject = this.transform.gameObject;
             this.AddLitener();
-            InitBattleViews();
-        }
-
-        private void InitBattleViews()
-        {           
-            // 战斗 UI：集中创建与注册（避免单例）
-            panel = new NormalModelPanel();
-            panel.RegisterData();
-
-            if (menuView == null)
-            {
-                menuView = new MenuView();
-                menuView.RegisterData();
-            }
-            if (gameWinView == null)
-            {
-                gameWinView = new GameWinView();
-                gameWinView.RegisterData();
-            }
-            if (gameOverView == null)
-            {
-                gameOverView = new GameOverView();
-                gameOverView.RegisterData();
-            }
         }
 
         private void AddLitener()
@@ -103,27 +75,47 @@ namespace CarrotFantasy
         private void RestartGame()
         {
             UIServer.Instance.ShowLoadingPanel();
+
+            // 关闭战斗 UI
+            ViewManager.Instance?.CloseAllOpenViews();
+
             this.baseBattleView.ClearGameInfo();
             this.baseBattle.ClearGameInfo();
 
-            // 关闭战斗 UI
-            this.panel?.Close();
-            ViewManager.Instance?.CloseAllOpenViews();
-
-            InitBattleViews();
-
             this.InitBattle();
-            Sche.DelayExeOnceTimes(this.StartGame, 2.0f);
+            this.ScheduleDelayedStartGame(2.0f);
+        }
+
+        private void RunDelayedStartGame()
+        {
+            this._pendingStartGameSchId = 0;
+            this.StartGame();
+        }
+
+        private void CancelPendingDelayedStartGame()
+        {
+            if (this._pendingStartGameSchId != 0)
+            {
+                Sche.SilenceSingleSche(this._pendingStartGameSchId);
+                this._pendingStartGameSchId = 0;
+            }
+        }
+
+        public void ScheduleDelayedStartGame(float delaySeconds)
+        {
+            this.CancelPendingDelayedStartGame();
+            this._pendingStartGameSchId = Sche.DelayExeOnceTimes(this.RunDelayedStartGame, delaySeconds);
         }
 
         public void InitBattle()
         {
             this.baseBattle.Init();
             this.baseBattle.InitComponent();
+
             this.baseBattleView.Init();
             this.baseBattleView.InitComponents();
 
-            this.panel.Open();
+            ViewManager.Instance.OpenView<NormalModelPanel>();
         }
 
         public void StartGame()
@@ -141,10 +133,12 @@ namespace CarrotFantasy
 
         public void Dispose()
         {
+            this.CancelPendingDelayedStartGame();
             this.RemoveListener();
 
             if (this.baseBattleView != null)
                 this.baseBattleView.Dispose();
+
             if (this.baseBattle != null)
                 this.baseBattle.Dispose();
 

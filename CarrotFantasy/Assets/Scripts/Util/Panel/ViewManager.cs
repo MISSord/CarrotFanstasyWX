@@ -222,6 +222,7 @@ public class ViewManager
     // 兼容旧 BasePanel 接口，BaseView 体系下该 uid 关闭逻辑已废弃
     public void ClosePanel(int uid, int closeReason)
     {
+
     }
 
     public void Update()

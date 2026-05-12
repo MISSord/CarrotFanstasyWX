@@ -25,17 +25,17 @@ namespace CarrotFantasy
             BattleDataComponent dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
             for (int i = 0; i < dataComponent.towerIDListLength; i++)
             {
-                GameViewObjectPool.Instance.RegisterGameObject(String.Format("{0}_1", dataComponent.curTowerIDList[i]));
-                GameViewObjectPool.Instance.RegisterGameObject(String.Format("{0}_2", dataComponent.curTowerIDList[i]));
-                GameViewObjectPool.Instance.RegisterGameObject(String.Format("{0}_3", dataComponent.curTowerIDList[i]));
+                GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_1", dataComponent.curTowerIDList[i]));
+                GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_2", dataComponent.curTowerIDList[i]));
+                GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_3", dataComponent.curTowerIDList[i]));
             }
             this.AddListener();
         }
 
         private void AddListener()
         {
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewBulletView);
-            this.eventDispatcher.AddListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBulletView);
+            this.eventDispatcher.AddListener<string, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.RegisterNewBulletView);
+            this.eventDispatcher.AddListener<string, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveBulletView);
         }
 
         private void RemoveListener()

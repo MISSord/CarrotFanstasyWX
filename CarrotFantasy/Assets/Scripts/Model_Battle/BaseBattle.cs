@@ -5,22 +5,21 @@ namespace CarrotFantasy
 {
     public abstract class BaseBattle
     {
-        public EventDispatcher eventDispatcher { get; private set; }
-        public int curFrameId { get; private set; }
-        public Fix64 curClock = Fix64.Zero;
         private int uid;
         private int inputSeqCounter;
+
+        public EventDispatcher eventDispatcher { get; private set; }
+        public int curFrameId { get; private set; }
         public bool isPause { get; set; }
         public bool isDoulbSpeed { get; private set; }
 
         public Dictionary<String, BaseBattleComponent> componentDic = new Dictionary<string, BaseBattleComponent>();
         public List<BaseBattleComponent> componentList = new List<BaseBattleComponent>();
-
         public BaseStateMachine stateMachine;
 
         /// <summary>渲染层传入时间的累积余量，用于固定逻辑步长。</summary>
         private Fix64 logicAccumulator = Fix64.Zero;
-
+        public Fix64 curClock = Fix64.Zero;
         public bool isStart = false;
         public bool isIgnoreViewListener = false; //目前用于视图监听器广播过程，服务端为true
 

@@ -1,5 +1,4 @@
 using LitJson;
-using System;
 using System.IO;
 using UnityEngine;
 
@@ -8,6 +7,11 @@ namespace CarrotFantasy
     //战斗参数服务，记录当前游戏进度
     public class BattleParamServer : BaseServer<BattleParamServer>
     {
+        private NormalModelPanel normalModepanel;
+        private MenuView menuView;
+        private GameWinView gameWinView;
+        private GameOverView gameOverView;
+
         public SingleMapInfo curSingleMapInfo;
         public Stage curStage;
         public LevelInfo info;
@@ -20,7 +24,30 @@ namespace CarrotFantasy
         public override void LoadModule()
         {
             base.LoadModule();
+            this.InitBattleViews();
             this.AddListener();
+        }
+
+        private void InitBattleViews()
+        {
+            normalModepanel = new NormalModelPanel();
+            normalModepanel.RegisterData();
+
+            if (menuView == null)
+            {
+                menuView = new MenuView();
+                menuView.RegisterData();
+            }
+            if (gameWinView == null)
+            {
+                gameWinView = new GameWinView();
+                gameWinView.RegisterData();
+            }
+            if (gameOverView == null)
+            {
+                gameOverView = new GameOverView();
+                gameOverView.RegisterData();
+            }
         }
 
         private void AddListener()
@@ -38,7 +65,7 @@ namespace CarrotFantasy
             this.curStage = MapServer.Instance.mapModel.GetStage(this.curBigLevel, curLevel);
             this.curSingleMapInfo = MapServer.Instance.mapModel.GetSingleMapInfo(this.curBigLevel, curLevel);
 
-            String path = "Level" + this.curBigLevel.ToString() + "_" + this.curLevel.ToString() + ".json";
+            string path = "Level" + this.curBigLevel.ToString() + "_" + this.curLevel.ToString() + ".json";
             this.info = LoadLevelInfoFile(path);
         }
 

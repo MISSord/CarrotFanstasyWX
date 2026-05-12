@@ -127,6 +127,7 @@ namespace CarrotFantasy
             foreach (KeyValuePair<int, BattleUnit_Tower> info in this.curTowerDic)
             {
                 info.Value.ClearInfo();
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.TOWER, info.Value);
             }
             this.curTowerDic.Clear();
         }
@@ -134,6 +135,7 @@ namespace CarrotFantasy
         public override void Dispose()
         {
             this.ClearInfo();
+            base.Dispose();
         }
 
     }

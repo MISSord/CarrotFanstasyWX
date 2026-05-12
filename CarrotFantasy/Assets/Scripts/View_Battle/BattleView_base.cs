@@ -10,7 +10,6 @@ namespace CarrotFantasy
 
         public BaseBattle battle;
         public EventDispatcher eventDispatcher { get; private set; }
-
         public EventDispatcher bvEventDispatcher { get; private set; }
 
         protected Dictionary<String, BaseBattleViewComponent> componentDic = new Dictionary<string, BaseBattleViewComponent>();

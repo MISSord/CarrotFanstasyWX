@@ -18,5 +18,11 @@ namespace CarrotFantasy
         {
 
         }
+
+        public override void Dispose()
+        {
+            this.BeHitCallBack = null;
+            base.Dispose();
+        }
     }
 }

@@ -5,7 +5,7 @@ namespace CarrotFantasy
     public abstract class BaseBattleComponent
     {
         public BaseBattle baseBattle { get; private set; }
-        public String componentType { get; protected set; } //子类赋值
+        public string componentType { get; protected set; } //子类赋值
 
         public EventDispatcher eventDispatcher { get; protected set; }
 

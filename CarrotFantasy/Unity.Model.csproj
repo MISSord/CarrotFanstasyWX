@@ -287,6 +287,7 @@
     <Compile Include="Assets\Scripts\Util\Sche\ScheObject.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\BattleLaunchParams.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -501,7 +501,7 @@ namespace CarrotFantasy
                 this.carrot.Dispose();
             }
 
-            for (int i = 0; i < this.buttonTowerList.Length - 1; i++)
+            for (int i = 0; i < this.buttonTowerList.Length; i++)
             {
                 this.buttonTowerList[i].Dispose();
             }
