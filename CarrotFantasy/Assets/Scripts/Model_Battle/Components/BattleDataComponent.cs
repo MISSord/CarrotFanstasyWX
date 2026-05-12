@@ -108,8 +108,8 @@ namespace CarrotFantasy
         {
             this.isFinishGame = true;
             SingleMapInfo unSaveMapInfo = new SingleMapInfo();
-            unSaveMapInfo.bigLevelId = this.bigLevel;
-            unSaveMapInfo.levelId = this.level;
+            unSaveMapInfo.bigLevelId = (byte)this.bigLevel;
+            unSaveMapInfo.levelId = (byte)this.level;
 
             BattleItemComponent itemComponent = (BattleItemComponent)this.baseBattle.GetComponent(BattleComponentType.ItemComponent);
             if (itemComponent.battleItemList.Count == 0)
@@ -120,7 +120,7 @@ namespace CarrotFantasy
             {
                 unSaveMapInfo.isAllClear = MapInfoType.NOT_ALL_CLEAR;
             }
-            unSaveMapInfo.carrotState = this.CarrotTropyLevel();
+            unSaveMapInfo.carrotState = (byte)this.CarrotTropyLevel();
             unSaveMapInfo.unLocked = MapInfoType.UNLOCK_LEVEL;
 
             this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);

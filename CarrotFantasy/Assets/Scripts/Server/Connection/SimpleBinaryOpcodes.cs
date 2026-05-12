@@ -17,5 +17,17 @@ namespace CarrotFantasy
 
         /// <summary>登录响应 S→C，负载为 Protobuf <c>CfNet.LoginResponse</c>。</summary>
         public const ushort LoginResponse = 201;
+
+        /// <summary>拉取用户地图快照 C→S，负载为 <c>CfNet.GetUserMapRequest</c>。</summary>
+        public const ushort GetUserMapRequest = 202;
+
+        /// <summary>拉取用户地图快照 S→C，负载为 <c>CfNet.GetUserMapResponse</c>。</summary>
+        public const ushort GetUserMapResponse = 203;
+
+        /// <summary>保存单关地图进度 C→S，负载为 <c>CfNet.SetSingleMapRequest</c>。</summary>
+        public const ushort SetSingleMapRequest = 210;
+
+        /// <summary>保存单关地图进度 S→C，负载为 <c>CfNet.SetSingleMapResponse</c>。</summary>
+        public const ushort SetSingleMapResponse = 211;
     }
 }

@@ -42,22 +42,13 @@ namespace CarrotFantasy
             StringBuilder newAllInfo = new StringBuilder();
             String[] allInfo = oldMapInfo.Split(bigInfoSplitSign);
             int level = (mapInfo.bigLevelId - 1) * 5 + mapInfo.levelId;
-            String newInfo = MapInfoConvertString(mapInfo);
-            allInfo[level] = newInfo;
+            String cell = MapInfoConvertString(mapInfo);
+            allInfo[level] = cell;
             for (int i = 1; i <= allInfo.Length - 1; i++)
             {
-                newAllInfo.Append(newInfo[i]);
+                newAllInfo.Append(allInfo[i]);
             }
             return newAllInfo.ToString();
-        }
-
-        public class SingleMapInfo
-        {
-            public int isAllClear;//是否清空此关卡道具 1为清空2为没有清空
-            public int carrotState;//萝卜状态
-            public int levelId;//小关卡ID
-            public int bigLevelId;//大关卡ID
-            public int unLocked;//此关卡是否解锁 1为解锁 2为未解锁
         }
     }
 }

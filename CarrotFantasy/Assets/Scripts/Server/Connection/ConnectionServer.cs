@@ -173,6 +173,16 @@ namespace CarrotFantasy
             Debug.LogWarning(string.Format("ConnectionServer receive packet without listener. opcode: {0}, payloadLen: {1}", opcode, payload.Length));
         }
 
+        /// <summary>当前传输层是否已连接（用于决定是否走服务端存档）。与 <see cref="Send"/> 一致会先 EnsureInit。</summary>
+        public bool IsTransportConnected
+        {
+            get
+            {
+                this.EnsureInit();
+                return this.transport != null && this.transport.IsConnected;
+            }
+        }
+
         public void Dispose()
         {
             this.listenerMap.Clear();

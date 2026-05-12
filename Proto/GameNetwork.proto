@@ -9,7 +9,7 @@ package cfnet;
 
 option csharp_namespace = "CfNet";
 
-// 与帧头 ushort opcode 配合：LoginRequest=200, LoginResponse=201（见 SimpleBinaryOpcodes / SimpleOpcodes）
+// 与帧头 ushort opcode 配合：Login 200→201；拉取全图 202→203；保存单关 210→211（见 SimpleBinaryOpcodes / SimpleOpcodes）
 
 message LoginRequest {
   string account = 1;
@@ -21,4 +21,36 @@ message LoginResponse {
   int32 result = 1;
   int64 user_id = 2;
   string message = 3;
+}
+
+// 拉取用户地图快照 C→S（opcode 202），响应 203；须在登录成功后、同连接会话内发送
+message GetUserMapRequest {
+  int64 user_id = 1;
+}
+
+message GetUserMapResponse {
+  // 0 成功；401 未登录；403 user_id 与会话不一致；1 解析错误
+  int32 result = 1;
+  // 与 MapModel.ParseMapInfo 相同格式（# 分隔，首段可空）；仅 result=0 时有效
+  string map_snapshot = 2;
+  string message = 3;
+  // 既可由客户端发 202 请求后返回，也可由服务端在登录成功后作为主动推送帧下发（opcode 相同）
+}
+
+// 保存单个小关进度 C→S（opcode 210），响应 211
+message SetSingleMapRequest {
+  int64 user_id = 1;
+  int32 big_level_id = 2;
+  int32 level_id = 3;
+  int32 carrot_state = 4;
+  int32 is_all_clear = 5;
+  int32 unlocked = 6;
+}
+
+message SetSingleMapResponse {
+  int32 result = 1; // 0 成功
+  int32 big_level_id = 2;
+  int32 level_id = 3;
+  int32 unlocked = 4;
+  string message = 5;
 }

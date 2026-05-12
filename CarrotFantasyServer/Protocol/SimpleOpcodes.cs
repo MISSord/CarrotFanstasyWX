@@ -28,4 +28,16 @@ public static class SimpleOpcodes
 
     /// <summary>登录响应 S→C。</summary>
     public const ushort LoginResponse = 201;
+
+    /// <summary>拉取用户地图快照 C→S。</summary>
+    public const ushort GetUserMapRequest = 202;
+
+    /// <summary>拉取用户地图快照 S→C。</summary>
+    public const ushort GetUserMapResponse = 203;
+
+    /// <summary>保存单关地图进度 C→S。</summary>
+    public const ushort SetSingleMapRequest = 210;
+
+    /// <summary>保存单关地图进度 S→C。</summary>
+    public const ushort SetSingleMapResponse = 211;
 }

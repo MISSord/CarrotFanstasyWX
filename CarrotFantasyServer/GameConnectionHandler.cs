@@ -1,23 +1,30 @@
-using System;
-using System.Buffers.Binary;
 using System.Net.WebSockets;
 using System.Text;
+using CarrotFantasyServer.PostLogin;
 using CarrotFantasyServer.Protocol;
 using CfNet;
 using Google.Protobuf;
 
 namespace CarrotFantasyServer;
 
-/// <summary>单连接：Binary 帧 = 2 字节小端 opcode + 负载。</summary>
+/// <summary>单连接：Binary 帧 = 2 字节小端 opcode + 负载。每 WebSocket 连接一个实例（Transient）。</summary>
 internal sealed class GameConnectionHandler
 {
     private static readonly Encoding Utf8 = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
     private readonly ILogger<GameConnectionHandler> _logger;
+    private readonly string _dataRoot;
+    private readonly PostLoginPushPipeline _postLoginPushPipeline;
+    private long? _sessionUserId;
 
-    public GameConnectionHandler(ILogger<GameConnectionHandler> logger)
+    public GameConnectionHandler(
+        ILogger<GameConnectionHandler> logger,
+        IWebHostEnvironment env,
+        PostLoginPushPipeline postLoginPushPipeline)
     {
         _logger = logger;
+        _dataRoot = Path.Combine(env.ContentRootPath, "userdata");
+        _postLoginPushPipeline = postLoginPushPipeline;
     }
 
     public async Task HandleAsync(WebSocket webSocket, CancellationToken cancellationToken)
@@ -58,19 +65,49 @@ internal sealed class GameConnectionHandler
                 continue;
             }
 
-            byte[]? response = TryHandleMessage(opcode, body);
-            if (response == null)
+            HandlerOutcome outcome = TryHandleMessage(opcode, body);
+            if (!outcome.HasAnything)
             {
                 continue;
             }
 
-            await webSocket
-                .SendAsync(new ArraySegment<byte>(response), WebSocketMessageType.Binary, true, cancellationToken)
-                .ConfigureAwait(false);
+            if (outcome.Primary != null)
+            {
+                await SendBinaryFrameAsync(webSocket, outcome.Primary, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (outcome.FollowUps is { Count: > 0 })
+            {
+                for (int i = 0; i < outcome.FollowUps.Count; i++)
+                {
+                    await SendBinaryFrameAsync(webSocket, outcome.FollowUps[i], cancellationToken).ConfigureAwait(false);
+                }
+            }
         }
     }
 
-    private byte[]? TryHandleMessage(ushort opcode, byte[] body)
+    private static Task SendBinaryFrameAsync(WebSocket webSocket, byte[] frame, CancellationToken cancellationToken)
+    {
+        return webSocket.SendAsync(new ArraySegment<byte>(frame), WebSocketMessageType.Binary, endOfMessage: true, cancellationToken);
+    }
+
+    private readonly struct HandlerOutcome
+    {
+        public HandlerOutcome(byte[]? primary, IReadOnlyList<byte[]>? followUps = null)
+        {
+            Primary = primary;
+            FollowUps = followUps;
+        }
+
+        public byte[]? Primary { get; }
+
+        /// <summary>在 <see cref="Primary"/> 之后按顺序发送的额外帧（如登录后主动推送）。</summary>
+        public IReadOnlyList<byte[]>? FollowUps { get; }
+
+        public bool HasAnything => Primary != null || FollowUps is { Count: > 0 };
+    }
+
+    private HandlerOutcome TryHandleMessage(ushort opcode, byte[] body)
     {
         try
         {
@@ -78,7 +115,7 @@ internal sealed class GameConnectionHandler
             {
                 case SimpleOpcodes.Ping:
                     _logger.LogDebug("Ping");
-                    return BinaryFrame.Encode(SimpleOpcodes.Pong);
+                    return new HandlerOutcome(BinaryFrame.Encode(SimpleOpcodes.Pong));
 
                 case SimpleOpcodes.EchoUtf8:
                 {
@@ -90,29 +127,38 @@ internal sealed class GameConnectionHandler
                     catch (Exception ex)
                     {
                         _logger.LogWarning(ex, "EchoUtf8 负载不是合法 UTF-8");
-                        return null;
+                        return default;
                     }
 
                     _logger.LogInformation("EchoUtf8: {Text}", text);
                     byte[] replyPayload = Utf8.GetBytes("echo:" + text);
-                    return BinaryFrame.Encode(SimpleOpcodes.EchoUtf8Reply, replyPayload);
+                    return new HandlerOutcome(BinaryFrame.Encode(SimpleOpcodes.EchoUtf8Reply, replyPayload));
                 }
 
                 case SimpleOpcodes.DemoStructuredRequest:
-                    return HandleDemoStructured(body);
+                {
+                    byte[]? r = HandleDemoStructured(body);
+                    return r == null ? default : new HandlerOutcome(r);
+                }
 
                 case SimpleOpcodes.LoginRequest:
                     return HandleLoginProtobuf(body);
 
+                case SimpleOpcodes.GetUserMapRequest:
+                    return new HandlerOutcome(HandleGetUserMapProtobuf(body));
+
+                case SimpleOpcodes.SetSingleMapRequest:
+                    return new HandlerOutcome(HandleSetSingleMapProtobuf(body));
+
                 default:
                     _logger.LogWarning("未实现 opcode={Opcode}, bodyLen={Len}", opcode, body.Length);
-                    return null;
+                    return default;
             }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "处理 opcode {Opcode} 异常", opcode);
-            return null;
+            return default;
         }
     }
 
@@ -156,8 +202,10 @@ internal sealed class GameConnectionHandler
     }
 
     /// <summary>登录：负载为 Protobuf <see cref="LoginRequest"/>。演示规则账号==密码且非空。</summary>
-    private byte[]? HandleLoginProtobuf(byte[] body)
+    private HandlerOutcome HandleLoginProtobuf(byte[] body)
     {
+        _sessionUserId = null;
+
         LoginRequest req;
         try
         {
@@ -166,7 +214,7 @@ internal sealed class GameConnectionHandler
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "LoginRequest Protobuf 解析失败");
-            return BuildLoginResponseProto(1, 0, "请求格式错误");
+            return new HandlerOutcome(BuildLoginResponseProto(1, 0, "请求格式错误"));
         }
 
         string account = req.Account ?? string.Empty;
@@ -174,18 +222,97 @@ internal sealed class GameConnectionHandler
 
         if (string.IsNullOrEmpty(account) || string.IsNullOrEmpty(password))
         {
-            return BuildLoginResponseProto(2, 0, "账号或密码错误");
+            return new HandlerOutcome(BuildLoginResponseProto(2, 0, "账号或密码错误"));
         }
 
         if (!string.Equals(account, password, StringComparison.Ordinal))
         {
             _logger.LogInformation("Login 失败 account={Account}", account);
-            return BuildLoginResponseProto(2, 0, "账号或密码错误");
+            return new HandlerOutcome(BuildLoginResponseProto(2, 0, "账号或密码错误"));
         }
 
         long userId = StableUserIdFromString(account);
+        _sessionUserId = userId;
         _logger.LogInformation("Login 成功 account={Account} userId={UserId}", account, userId);
-        return BuildLoginResponseProto(0, userId, "登录成功");
+
+        byte[] primary = BuildLoginResponseProto(0, userId, "登录成功");
+        IReadOnlyList<byte[]> followUps = _postLoginPushPipeline.BuildFrames(userId, _dataRoot);
+        return new HandlerOutcome(primary, followUps);
+    }
+
+    private byte[] HandleGetUserMapProtobuf(byte[] body)
+    {
+        if (_sessionUserId is null)
+        {
+            return BuildGetUserMapResponseProto(401, string.Empty, "请先登录");
+        }
+
+        GetUserMapRequest req;
+        try
+        {
+            req = GetUserMapRequest.Parser.ParseFrom(body);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "GetUserMapRequest 解析失败");
+            return BuildGetUserMapResponseProto(1, string.Empty, "请求格式错误");
+        }
+
+        if (req.UserId != _sessionUserId.Value)
+        {
+            return BuildGetUserMapResponseProto(403, string.Empty, "用户不匹配");
+        }
+
+        string snapshot = UserMapStore.LoadOrCreate(req.UserId, _dataRoot);
+        return BuildGetUserMapResponseProto(0, snapshot, "ok");
+    }
+
+    private byte[] HandleSetSingleMapProtobuf(byte[] body)
+    {
+        if (_sessionUserId is null)
+        {
+            return BuildSetSingleMapResponseProto(401, 0, 0, 0, "请先登录");
+        }
+
+        SetSingleMapRequest req;
+        try
+        {
+            req = SetSingleMapRequest.Parser.ParseFrom(body);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "SetSingleMapRequest 解析失败");
+            return BuildSetSingleMapResponseProto(1, 0, 0, 0, "请求格式错误");
+        }
+
+        if (req.UserId != _sessionUserId.Value)
+        {
+            return BuildSetSingleMapResponseProto(403, 0, 0, 0, "用户不匹配");
+        }
+
+        if (req.BigLevelId < 1 || req.BigLevelId > 3 || req.LevelId < 1 || req.LevelId > 5)
+        {
+            return BuildSetSingleMapResponseProto(400, 0, 0, 0, "关卡参数无效");
+        }
+
+        try
+        {
+            (int nextBig, int nextSmall) = UserMapStore.ApplyVictoryAndSave(
+                req.UserId,
+                _dataRoot,
+                req.BigLevelId,
+                req.LevelId,
+                req.CarrotState,
+                req.IsAllClear);
+
+            int unlockFlag = nextBig == 0 ? 0 : 1;
+            return BuildSetSingleMapResponseProto(0, nextBig, nextSmall, unlockFlag, "保存成功");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "保存地图失败 userId={UserId}", req.UserId);
+            return BuildSetSingleMapResponseProto(500, 0, 0, 0, "服务器保存失败");
+        }
     }
 
     private static byte[] BuildLoginResponseProto(int result, long userId, string message)
@@ -198,6 +325,32 @@ internal sealed class GameConnectionHandler
         };
 
         return BinaryFrame.Encode(SimpleOpcodes.LoginResponse, resp.ToByteArray());
+    }
+
+    private static byte[] BuildGetUserMapResponseProto(int result, string mapSnapshot, string message)
+    {
+        var resp = new GetUserMapResponse
+        {
+            Result = result,
+            MapSnapshot = mapSnapshot ?? string.Empty,
+            Message = message ?? string.Empty,
+        };
+
+        return BinaryFrame.Encode(SimpleOpcodes.GetUserMapResponse, resp.ToByteArray());
+    }
+
+    private static byte[] BuildSetSingleMapResponseProto(int result, int bigLevelId, int levelId, int unlocked, string message)
+    {
+        var resp = new SetSingleMapResponse
+        {
+            Result = result,
+            BigLevelId = bigLevelId,
+            LevelId = levelId,
+            Unlocked = unlocked,
+            Message = message ?? string.Empty,
+        };
+
+        return BinaryFrame.Encode(SimpleOpcodes.SetSingleMapResponse, resp.ToByteArray());
     }
 
     private static long StableUserIdFromString(string account)

@@ -36,11 +36,11 @@ namespace CarrotFantasy
         {
             String[] mapInfo = singleMapInfo.Split(',');
             SingleMapInfo info = new SingleMapInfo();
-            info.bigLevelId = int.Parse(mapInfo[0]);
-            info.levelId = int.Parse(mapInfo[1]);
-            info.carrotState = int.Parse(mapInfo[2]);
-            info.isAllClear = int.Parse(mapInfo[3]);
-            info.unLocked = int.Parse(mapInfo[4]);
+            info.bigLevelId = byte.Parse(mapInfo[0]);
+            info.levelId = byte.Parse(mapInfo[1]);
+            info.carrotState = byte.Parse(mapInfo[2]);
+            info.isAllClear = byte.Parse(mapInfo[3]);
+            info.unLocked = byte.Parse(mapInfo[4]);
 
             this.allMapInfo[this.GetMapNumber(info)] = info;
         }
@@ -112,7 +112,7 @@ namespace CarrotFantasy
             }
         }
 
-        public void UpdateSingleMapInfoUnLockState(int bigLevel, int level, int unLock)
+        public void UpdateSingleMapInfoUnLockState(int bigLevel, int level, byte unLock)
         {
             if (bigLevel == 0 || level == 0)
             {

@@ -30,6 +30,7 @@ namespace CarrotFantasy
         {
             this.businessDic.Add(BusinessType.UIServer, UIServer.Instance);
             this.businessDic.Add(BusinessType.AccountServer, AccountServer.Instance);
+            this.businessDic.Add(BusinessType.MapServer, MapServer.Instance);
             this.businessDic.Add(BusinessType.SettingServer, SettingServer.Instance);
 
             //this.businessDic.Add(BusinessType.RoomServer, RoomServer.Instance);
