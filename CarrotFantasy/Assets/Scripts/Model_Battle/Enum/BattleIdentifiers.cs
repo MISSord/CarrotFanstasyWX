@@ -6,6 +6,8 @@ namespace CarrotFantasy
     {
         public const String TOWER = "TOWER";
         public const String MONSTER = "MONSTER";
+        /// <summary>流场新模式怪物，与 <see cref="MONSTER"/> 分池。</summary>
+        public const String MONSTER_FLOW = "MONSTER_FLOW";
         public const String ITEM = "ITEM";
         public const String BULLET = "BULLET";
     }

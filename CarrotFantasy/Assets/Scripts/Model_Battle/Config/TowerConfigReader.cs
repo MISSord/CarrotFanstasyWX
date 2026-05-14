@@ -33,7 +33,6 @@ namespace CarrotFantasy
                 { "bodyRadius1", new Fix64(2.5f)},
                 { "bodyRadius2", new Fix64(3)},
                 { "scale", Fix64.One},
-                { "faceDirection", Fix64.Zero},
             });
 
             this.towerBirthParam.Add(2, new Dictionary<String, Fix64>() {
@@ -46,8 +45,6 @@ namespace CarrotFantasy
                 { "bodyRadius1", new Fix64(2.5f)},
                 { "bodyRadius2", new Fix64(3)},
                 { "scale", Fix64.One},
-                { "buildTowerPirce", new Fix64(120)},
-                { "faceDirection", Fix64.Zero},
             });
 
             this.towerBirthParam.Add(3, new Dictionary<String, Fix64>() {
@@ -60,7 +57,6 @@ namespace CarrotFantasy
                 { "bodyRadius1", new Fix64(2.5f)},
                 { "bodyRadius2", new Fix64(3)},
                 { "scale", Fix64.One},
-                { "faceDirection", Fix64.Zero},
             });
 
             this.towerBirthParam.Add(4, new Dictionary<String, Fix64>() {
@@ -73,7 +69,6 @@ namespace CarrotFantasy
                 { "bodyRadius1", new Fix64(2.5f)},
                 { "bodyRadius2", new Fix64(3)},
                 { "scale", Fix64.One},
-                { "faceDirection", Fix64.Zero},
             });
 
             this.towerBirthParam.Add(5, new Dictionary<String, Fix64>() {
@@ -86,7 +81,6 @@ namespace CarrotFantasy
                 { "bodyRadius1", new Fix64(2.5f)},
                 { "bodyRadius2", new Fix64(3)},
                 { "scale", Fix64.One},
-                { "faceDirection", Fix64.Zero},
             });
 
         }

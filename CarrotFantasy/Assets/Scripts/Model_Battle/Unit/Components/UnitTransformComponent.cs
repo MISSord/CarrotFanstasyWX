@@ -11,10 +11,7 @@ namespace CarrotFantasy
 
         public Fix64 faceDirection; //面向的角度 怪兽改这个
         public Fix64 scale; //大小 一般不用
-
         public Fix64 rotation; //炮台改这个
-
-        public Dictionary<String, Fix64> birthParam { get; set; }
 
         public BattleEventDispatcher battleEventDispatcher;
         public HitTestShape_Circle bodyHitTestShape { get; private set; }
@@ -31,10 +28,9 @@ namespace CarrotFantasy
             base.Init();
             Fix64Vector2 birthPosition = this.unit.birthPosition;
             this.battleEventDispatcher = this.unit.eventDipatcher;
-            this.birthParam = this.unit.birthParam;
+            var birthParam = this.unit.birthParam;
 
-
-            this.faceDirection = birthParam["faceDirection"]; //度数
+            this.faceDirection = Fix64.Zero; //度数
             this.rotation = Fix64.Zero; // 0 - 1 貌似
             this.scale = birthParam["scale"];
             this.bodyHitTestShape = new HitTestShape_Circle(HitShapeType.CIRCLE, Fix64.Zero, Fix64.Zero, Fix64.Zero);

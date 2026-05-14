@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace CarrotFantasy
 {
@@ -15,8 +16,7 @@ namespace CarrotFantasy
         {
             this.currentScene = null;
             this.eventDispatcher = new EventDispatcher();
-            GameObject uiCamera = GameObject.Find("UICamera");
-            this.uiCamera = uiCamera.GetComponent<Camera>();
+            this.BindUICameraFromActiveScene();
         }
 
         public Camera GetUICamera()
@@ -61,6 +61,20 @@ namespace CarrotFantasy
 
         private bool LoadSceneProgress(BaseSceneType sceneType, Dictionary<String, dynamic> param)
         {
+            GameSceneType unitySceneType = SceneLoader.ToGameSceneType(sceneType);
+            string unitySceneName = SceneLoader.ToSceneName(unitySceneType);
+            if (!string.IsNullOrEmpty(unitySceneName))
+            {
+                Scene active = SceneManager.GetActiveScene();
+                if (!active.IsValid() || active.name != unitySceneName)
+                {
+                    SceneLoader.Load(unitySceneType, LoadSceneMode.Single);
+                }
+            }
+
+            this.BindUICameraFromActiveScene();
+            ViewManager.Instance?.RebindScenePresentation();
+
             BaseScene targetScene = null;
             switch (sceneType)
             {
@@ -97,6 +111,26 @@ namespace CarrotFantasy
 
             this.currentScene.Init();
             return true;
+        }
+
+        /// <summary>
+        /// Unity 场景切换后重新绑定 UI 摄像机（场景内对象会被卸载重建）。
+        /// </summary>
+        private void BindUICameraFromActiveScene()
+        {
+            GameObject uiCameraGo = GameObject.Find("UICamera");
+            if (uiCameraGo == null)
+            {
+                Debug.LogWarning("[SceneServer] 当前场景中未找到名为 UICamera 的物体。");
+                this.uiCamera = null;
+                return;
+            }
+
+            this.uiCamera = uiCameraGo.GetComponent<Camera>();
+            if (this.uiCamera == null)
+            {
+                Debug.LogWarning("[SceneServer] UICamera 上未找到 Camera 组件。");
+            }
         }
 
         public void Dispose()

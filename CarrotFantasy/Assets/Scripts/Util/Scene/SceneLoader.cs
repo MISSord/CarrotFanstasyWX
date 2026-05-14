@@ -94,6 +94,22 @@ namespace CarrotFantasy
             }
         }
 
+        /// <summary>
+        /// 逻辑场景类型与 <see cref="GameSceneType"/> 的对应关系（无独立 Unity 场景时返回 <see cref="GameSceneType.None"/>）。
+        /// </summary>
+        public static GameSceneType ToGameSceneType(BaseSceneType baseSceneType)
+        {
+            switch (baseSceneType)
+            {
+                case BaseSceneType.MainScene:
+                    return GameSceneType.MainScene;
+                case BaseSceneType.BattleScene:
+                    return GameSceneType.BattleScene;
+                default:
+                    return GameSceneType.None;
+            }
+        }
+
         private IEnumerator LoadSceneCoroutine(
             string sceneName,
             LoadSceneMode loadMode,

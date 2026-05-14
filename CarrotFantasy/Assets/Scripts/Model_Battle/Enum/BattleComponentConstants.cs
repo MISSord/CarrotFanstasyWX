@@ -19,6 +19,7 @@ namespace CarrotFantasy
         public const String MonsterComponent = "MonsterComponent";
         public const String BulletComponent = "BulletComponent";
         public const String ItemComponent = "ItemComponent";
+        public const String FlowFieldComponent = "FlowFieldComponent";
     }
 
     public class UnitComponentType
@@ -34,6 +35,7 @@ namespace CarrotFantasy
         public const String STATUS = "STATUS";//状态
 
         public const String MOVE_MONSTER = "Move_Monster";
+        public const String MOVE_MONSTER_FLOW_FIELD = "Move_Monster_FlowField";
         public const String MOVE_BULLET = "Move_Bullet";
         public const String MOVE_BULLET_ONE = "Move_Bullet_One";
     }

@@ -21,6 +21,12 @@ namespace CarrotFantasy
 
         public bool isPVE = false;
 
+        /// <summary>
+        /// 为 true 时 <see cref="BattleManager"/> 创建 <see cref="FlowFieldPveBattle"/>（流场新模式）；
+        /// 为 false 时创建经典 <see cref="PveBattle"/>。仅当 <see cref="isPVE"/> 为 true 时生效。在进入战斗前由入口设置。
+        /// </summary>
+        public bool useFlowFieldPveBattleMode = false;
+
         public override void LoadModule()
         {
             base.LoadModule();

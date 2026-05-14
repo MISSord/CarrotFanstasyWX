@@ -5,7 +5,10 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/Scenes/Landlords.unity
-    guid: b6dadcc53b9115641aca72f80aec7c50
+  - enabled: 1
+    path: Assets/Game/Scenes/MainScene.unity
+    guid: 4fbae07b63f1e7e40bd7d4b3f24d1c32
+  - enabled: 1
+    path: Assets/Game/Scenes/BattleScene.unity
+    guid: 6e2c4a9f8d0b41e7b3a5c6d8e9f01234
   m_configObjects: {}

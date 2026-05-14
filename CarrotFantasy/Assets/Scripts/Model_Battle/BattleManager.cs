@@ -29,7 +29,15 @@ namespace CarrotFantasy
             AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
             if (BattleParamServer.Instance.isPVE == true)
             {
-                this.baseBattle = new PveBattle();
+                if (BattleParamServer.Instance.useFlowFieldPveBattleMode)
+                {
+                    this.baseBattle = new FlowFieldPveBattle();
+                }
+                else
+                {
+                    this.baseBattle = new PveBattle();
+                }
+
                 this.baseBattle.SetHostBridge(new UnityBattleHostBridge());
                 this.baseBattleView = new PveBattleView(this.baseBattle);
             }

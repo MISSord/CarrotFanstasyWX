@@ -16,7 +16,7 @@ namespace CarrotFantasy
             sceneType = type;
         }
 
-        public void InitSceneObject()
+        public virtual void InitSceneObject()
         {
 
         }

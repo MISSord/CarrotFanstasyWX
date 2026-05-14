@@ -4,10 +4,12 @@ namespace CarrotFantasy
 {
     public class BattleUnit_Monster : BattleUnit
     {
-        public int curLive; //怪物血量
-        public int totalLive; //怪物总血量
-        private UnitMoveComponent_Monster moveTrans;
+        public int curLive;
+        public int totalLive;
         protected UnitTransformComponent unitTransform;
+
+        /// <summary>具体为 <see cref="UnitMoveComponent_Monster"/> 或子类替换的移动组件。</summary>
+        protected BaseUnitComponent locomotionComponent;
 
         private List<int> haveBeHit;
         private bool isHaveDead = false;
@@ -24,6 +26,17 @@ namespace CarrotFantasy
             this.haveBeHit = new List<int>();
         }
 
+        private IMonsterLocomotion Locomotion
+        {
+            get { return (IMonsterLocomotion)this.locomotionComponent; }
+        }
+
+        /// <summary>回收到对象池时使用的池键（经典怪 / 流场怪）。</summary>
+        public static string GetMonsterPoolKey(BattleUnit_Monster monster)
+        {
+            return monster is BattleUnit_MonsterFlow ? BattleUnitType.MONSTER_FLOW : BattleUnitType.MONSTER;
+        }
+
         public override void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
         {
             base.LoadInfo(uid, param, birthPosition);
@@ -37,9 +50,9 @@ namespace CarrotFantasy
             this.monsterId = monsterId;
         }
 
-        public void LoadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
+        public virtual void LoadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
         {
-            this.moveTrans.LoadInfo(monsterPath, distance);
+            ((UnitMoveComponent_Monster)this.locomotionComponent).LoadInfo(monsterPath, distance);
         }
 
         public override void Init()
@@ -49,21 +62,31 @@ namespace CarrotFantasy
             {
                 this.unitTransform = new UnitTransformComponent();
             }
-            this.moveTrans = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Monster>(UnitComponentType.MOVE_MONSTER);
-            if (this.moveTrans == null)
-            {
-                this.moveTrans = new UnitMoveComponent_Monster();
-            }
+
+            this.InstallLocomotion();
+
             UnitBeHitComponent beHit = BattleUnitPool.Instance.GetNewUnitComponent<UnitBeHitComponent>(UnitComponentType.BEHIT);
             if (beHit == null)
             {
                 beHit = new UnitBeHitComponent();
             }
+
             this.AddComponent(this.unitTransform);
-            this.AddComponent(this.moveTrans);
+            this.AddComponent(this.locomotionComponent);
             this.AddComponent(beHit);
 
             beHit.RegisterBeHitCallBack(this.BeHitCallBack);
+        }
+
+        protected virtual void InstallLocomotion()
+        {
+            UnitMoveComponent_Monster m = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Monster>(UnitComponentType.MOVE_MONSTER);
+            if (m == null)
+            {
+                m = new UnitMoveComponent_Monster();
+            }
+
+            this.locomotionComponent = m;
         }
 
         public override void InitComponents()
@@ -97,7 +120,7 @@ namespace CarrotFantasy
 
         public bool IsDead()
         {
-            if (this.moveTrans.isReachCarrot == true)
+            if (this.Locomotion.isReachCarrot == true)
             {
                 return true;
             }
@@ -110,8 +133,8 @@ namespace CarrotFantasy
 
         public override void OnTick(Fix64 deltaTime)
         {
-            this.moveTrans.OnTick(deltaTime);
-            this.EndPointDistance = this.moveTrans.EndPointDistance;
+            this.Locomotion.OnTick(deltaTime);
+            this.EndPointDistance = this.Locomotion.EndPointDistance;
         }
 
         public override void LateTick(Fix64 deltaTime)
@@ -126,6 +149,10 @@ namespace CarrotFantasy
             this.monsterId = 0;
             this.isHaveDead = false;
             this.haveBeHit.Clear();
+            if (this.locomotionComponent != null)
+            {
+                this.Locomotion.ClearMovementState();
+            }
         }
     }
 }

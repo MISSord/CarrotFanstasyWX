@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -9,9 +10,21 @@ namespace CarrotFantasy
             this.prefabUrl = null;
         }
 
+        public override void InitSceneObject()
+        {
+            this.gameObj = GameObject.Find("Global");
+        }
+
+        public override void Dispose()
+        {
+            this.gameObj = null;
+            base.Dispose();
+        }
+
         public override void Init()
         {
             base.Init();
+
             // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
             //Sche.DelayExeOnceTimes(() => {
             //    panel.autoClose();

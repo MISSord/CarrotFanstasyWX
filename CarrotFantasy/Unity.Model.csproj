@@ -290,6 +290,11 @@
     <Compile Include="Assets\Scripts\Model_Battle\BattleLaunchParams.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\BattlePvpDataComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVBattleWorldUiComponent.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_MonsterFlow.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Unit\IMonsterLocomotion.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_MonsterFlowField.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Components\BattleFlowFieldComponent.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Battle\FlowFieldPve\FlowFieldPveBattle.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

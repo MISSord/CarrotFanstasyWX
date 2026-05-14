@@ -73,6 +73,16 @@ public class ViewManager
 
     }
 
+    /// <summary>
+    /// Unity 场景切换后重新绑定场景内的 UI 摄像机与 UILayer 根节点（旧引用可能已被卸载）。
+    /// </summary>
+    public void RebindScenePresentation()
+    {
+        GameObject camera = GameObject.Find("UICamera");
+        uiCamera = camera?.GetComponent<Camera>();
+        uiRoot = GameObject.Find("UILayer");
+    }
+
     public void SetShowPanelActive(bool isCanShow)
     {
         isCanShowPanel = isCanShow;

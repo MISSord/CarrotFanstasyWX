@@ -26,11 +26,13 @@ namespace CarrotFantasy
         public void Init()
         {
             this.RegisterBattleUnit(BattleUnitType.MONSTER);
+            this.RegisterBattleUnit(BattleUnitType.MONSTER_FLOW);
             this.RegisterBattleUnit(BattleUnitType.TOWER);
             this.RegisterBattleUnit(BattleUnitType.BULLET);
 
             this.RegisterUnitComponent(UnitComponentType.TRANSFORM);
             this.RegisterUnitComponent(UnitComponentType.MOVE_MONSTER);
+            this.RegisterUnitComponent(UnitComponentType.MOVE_MONSTER_FLOW_FIELD);
             this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET);
             this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET_ONE);
             this.RegisterUnitComponent(UnitComponentType.BEHIT);

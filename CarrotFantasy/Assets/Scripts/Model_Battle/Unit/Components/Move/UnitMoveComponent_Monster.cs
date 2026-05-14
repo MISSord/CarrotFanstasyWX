@@ -2,7 +2,8 @@ using System.Collections.Generic;
 
 namespace CarrotFantasy
 {
-    public class UnitMoveComponent_Monster : BaseUnitComponent
+    /// <summary>沿关卡折线路径移动的怪物位移组件。</summary>
+    public class UnitMoveComponent_Monster : BaseUnitComponent, IMonsterLocomotion
     {
         private List<Fix64Vector2> monsterPointList;
         protected UnitTransformComponent unitTransform;
@@ -19,8 +20,6 @@ namespace CarrotFantasy
         private Fix64 speedX;
         private Fix64 speedY;
 
-        private Fix64 moveSpeed;
-
         public UnitMoveComponent_Monster()
         {
             this.unitComponentType = UnitComponentType.MOVE_MONSTER;
@@ -33,100 +32,119 @@ namespace CarrotFantasy
 
             this.isReachCarrot = false;
             this.speed = this.unit.birthParam["speed"] != null ? this.unit.birthParam["speed"] : new Fix64(3);
-
-            this.SetSpeed();
         }
 
         public void LoadInfo(List<Fix64Vector2> monsterPath, Fix64 distance)
         {
-            monsterPointList = monsterPath;
-            EndPointDistance = distance;
+            this.monsterPointList = monsterPath;
+            this.EndPointDistance = distance;
+            if (this.monsterPointList != null && this.monsterPointList.Count >= 2)
+            {
+                this.SetSpeed();
+            }
+        }
+
+        public void ClearMovementState()
+        {
+            this.monsterPointList = null;
+            this.isReachCarrot = false;
+            this.roadPointIndex = 0;
+            this.moveCurTime = Fix64.Zero;
+            this.moveTotalTime = Fix64.Zero;
         }
 
         private void SetSpeed()
         {
-            Fix64 dicX = monsterPointList[roadPointIndex + 1].X - monsterPointList[roadPointIndex].X;
-            Fix64 dicY = monsterPointList[roadPointIndex + 1].Y - monsterPointList[roadPointIndex].Y;
+            Fix64 dicX = this.monsterPointList[this.roadPointIndex + 1].X - this.monsterPointList[this.roadPointIndex].X;
+            Fix64 dicY = this.monsterPointList[this.roadPointIndex + 1].Y - this.monsterPointList[this.roadPointIndex].Y;
 
             Fix64 moveXTime = Fix64.Abs(dicX) / this.speed;
             Fix64 moveYTime = Fix64.Abs(dicY) / this.speed;
 
             this.moveTotalTime = moveXTime >= moveYTime ? moveXTime : moveYTime;
 
-            Fix64 x, y, z;
+            Fix64 x;
+            Fix64 y;
+            Fix64 z;
             this.unitTransform.GetLastFramePosition(out x, out y, out z);
 
-            Fix64 dicXmove = monsterPointList[roadPointIndex + 1].X - x;
-            Fix64 dicYmove = monsterPointList[roadPointIndex + 1].Y - y;
+            Fix64 dicXmove = this.monsterPointList[this.roadPointIndex + 1].X - x;
+            Fix64 dicYmove = this.monsterPointList[this.roadPointIndex + 1].Y - y;
 
             this.speedX = dicXmove / this.moveTotalTime;
             this.speedY = dicYmove / this.moveTotalTime;
 
-            if (this.moveTotalTime == moveXTime)
-            {
-                this.moveSpeed = this.speedX;
-            }
-            else if (this.moveTotalTime == moveXTime)
-            {
-                this.moveSpeed = this.speedY;
-            }
-
             this.moveCurTime = Fix64.Zero;
+        }
+
+        private void ReachCarrot()
+        {
+            this.isReachCarrot = true;
+            this.unit.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.CARROT_LIVE_REDUCE);
+            this.unit.eventDipatcher.DispatchEvent<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, (BattleUnit_Monster)this.unit);
         }
 
         public override void OnTick(Fix64 deltaTime)
         {
-            if (!this.isReachCarrot)
+            if (this.isReachCarrot)
             {
-                Fix64 x, y, z;
-                this.unitTransform.GetLastFramePosition(out x, out y, out z);
-                Fix64 DiffDeltaTime = Fix64.Zero;
+                return;
+            }
 
-                if (this.moveCurTime + deltaTime >= this.moveTotalTime)
-                {
-                    deltaTime = this.moveTotalTime - this.moveCurTime;
+            if (this.monsterPointList == null || this.monsterPointList.Count < 2)
+            {
+                return;
+            }
 
-                }
-                x += (deltaTime * this.speedX);
-                y += (deltaTime * this.speedY);
+            Fix64 x;
+            Fix64 y;
+            Fix64 z;
+            this.unitTransform.GetLastFramePosition(out x, out y, out z);
+            Fix64 useDelta = deltaTime;
 
-                this.moveCurTime += deltaTime;
-                Fix64 speed = this.speed;
-                if (speed >= Fix64.Zero)
-                {
-                    this.EndPointDistance -= this.speed;
-                }
-                else
-                {
-                    this.EndPointDistance += this.speed;
-                }
+            if (this.moveCurTime + useDelta >= this.moveTotalTime)
+            {
+                useDelta = this.moveTotalTime - this.moveCurTime;
+            }
 
-                this.unitTransform.SetPosition(x, y, z);
-                if (this.moveCurTime >= this.moveTotalTime)
+            x += useDelta * this.speedX;
+            y += useDelta * this.speedY;
+
+            this.moveCurTime += useDelta;
+            Fix64 spd = this.speed;
+            if (spd >= Fix64.Zero)
+            {
+                this.EndPointDistance -= this.speed;
+            }
+            else
+            {
+                this.EndPointDistance += this.speed;
+            }
+
+            this.unitTransform.SetPosition(x, y, z);
+            if (this.moveCurTime >= this.moveTotalTime)
+            {
+                if (this.roadPointIndex + 1 < this.monsterPointList.Count)
                 {
-                    //怪物的转向
-                    if (roadPointIndex + 1 < monsterPointList.Count)
+                    Fix64 xOffset = this.monsterPointList[this.roadPointIndex].X - this.monsterPointList[this.roadPointIndex + 1].X;
+                    if (xOffset < Fix64.Zero)
                     {
-                        Fix64 xOffset = monsterPointList[roadPointIndex].X - monsterPointList[roadPointIndex + 1].X;
-                        if (xOffset < Fix64.Zero)//右走
-                        {
-                            this.unitTransform.SetFaceDirection(Fix64.Zero);
-                        }
-                        else if (xOffset > Fix64.Zero)
-                        {
-                            this.unitTransform.SetFaceDirection(new Fix64(180));
-                        }
+                        this.unitTransform.SetFaceDirection(Fix64.Zero);
                     }
-                    roadPointIndex++;
-                    if (roadPointIndex >= monsterPointList.Count - 1)
+                    else if (xOffset > Fix64.Zero)
                     {
-                        this.isReachCarrot = true;
-                        this.unit.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.CARROT_LIVE_REDUCE);
-                        this.unit.eventDipatcher.DispatchEvent<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, (BattleUnit_Monster)this.unit);
-                        return;
+                        this.unitTransform.SetFaceDirection(new Fix64(180));
                     }
-                    this.SetSpeed();
                 }
+
+                this.roadPointIndex++;
+                if (this.roadPointIndex >= this.monsterPointList.Count - 1)
+                {
+                    this.ReachCarrot();
+                    return;
+                }
+
+                this.SetSpeed();
             }
         }
     }

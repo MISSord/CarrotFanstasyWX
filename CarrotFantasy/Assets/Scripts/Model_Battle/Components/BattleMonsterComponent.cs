@@ -27,6 +27,8 @@ namespace CarrotFantasy
 
         private Fix64 distance;
 
+        private BattleFlowFieldComponent flowFieldComponent;
+
         public BattleMonsterComponent(BaseBattle bBattle) : base(bBattle)
         {
             this.componentType = BattleComponentType.MonsterComponent;
@@ -50,6 +52,16 @@ namespace CarrotFantasy
             this.birthPoint = map.startPoint;
 
             this.CalcaTheTotalDistance();
+
+            BaseBattleComponent flowComp;
+            if (this.baseBattle.componentDic.TryGetValue(BattleComponentType.FlowFieldComponent, out flowComp))
+            {
+                this.flowFieldComponent = flowComp as BattleFlowFieldComponent;
+            }
+            else
+            {
+                this.flowFieldComponent = null;
+            }
         }
 
         public void BuildNewWavesMonster()
@@ -69,16 +81,45 @@ namespace CarrotFantasy
 
             for (int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
             {
-                BattleUnit_Monster monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
-                if (monster == null)
+                bool useFlowMonster = this.flowFieldComponent != null
+                    && this.flowFieldComponent.useMonsterFlowMovement
+                    && this.flowFieldComponent.IsBuilt;
+
+                BattleUnit_Monster monster;
+                if (useFlowMonster)
                 {
-                    monster = new BattleUnit_Monster(this.baseBattle);
+                    BattleUnit_MonsterFlow mf = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_MonsterFlow>(BattleUnitType.MONSTER_FLOW);
+                    if (mf == null)
+                    {
+                        mf = new BattleUnit_MonsterFlow(this.baseBattle);
+                    }
+
+                    monster = mf;
                 }
+                else
+                {
+                    BattleUnit_Monster m = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster>(BattleUnitType.MONSTER);
+                    if (m == null)
+                    {
+                        m = new BattleUnit_Monster(this.baseBattle);
+                    }
+
+                    monster = m;
+                }
+
                 monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
                 monster.LoadInfo(this.baseBattle.GetUid(), this.monsterConfigReader.GetSingleMonsterConfig(this.GetMonsterId(curMonsterList.mMonsterIDList[i])), birthPoint);
                 monster.LoadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
                 monster.Init();
-                monster.LoadInfo3(this.monsterPointList, this.distance);
+                if (useFlowMonster)
+                {
+                    ((BattleUnit_MonsterFlow)monster).LoadFlowMovement(this.flowFieldComponent);
+                }
+                else
+                {
+                    monster.LoadInfo3(this.monsterPointList, this.distance);
+                }
+
                 monster.InitComponents();
                 this.curNoRegisterList.Add(monster);
             }
@@ -151,7 +192,7 @@ namespace CarrotFantasy
                 //先从其他组件上除去，再从视图移除，最后再自己移除，确保顺序
                 monster.ClearInfo();
                 this.curMonsterDic.Remove(monster.uid);
-                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, monster);
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnit_Monster.GetMonsterPoolKey(monster), monster);
             }
         }
 
@@ -229,12 +270,12 @@ namespace CarrotFantasy
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
                 info.Value.ClearInfo();
-                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, info.Value);
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnit_Monster.GetMonsterPoolKey(info.Value), info.Value);
             }
             for (int i = 0; i <= this.curNoRegisterList.Count - 1; i++)
             {
                 this.curNoRegisterList[i].ClearInfo();
-                BattleUnitPool.Instance.PushObjectToPool(BattleUnitType.MONSTER, this.curNoRegisterList[i]);
+                BattleUnitPool.Instance.PushObjectToPool(BattleUnit_Monster.GetMonsterPoolKey(this.curNoRegisterList[i]), this.curNoRegisterList[i]);
             }
             this.curNoRegisterList.Clear();
             this.curMonsterDic.Clear();

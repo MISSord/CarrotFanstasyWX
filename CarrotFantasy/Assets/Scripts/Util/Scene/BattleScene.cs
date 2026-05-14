@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -7,6 +8,15 @@ namespace CarrotFantasy
         public BattleScene(BaseSceneType type, string name, Dictionary<string, dynamic> param) : base(type, name, param)
         {
             this.prefabUrl = null;
+        }
+
+        public override void InitSceneObject()
+        {
+            this.gameObj = GameObject.Find("BattleRoot");
+            if (this.gameObj == null)
+            {
+                this.gameObj = new GameObject("BattleRoot");
+            }
         }
 
         public override void Init()

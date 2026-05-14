@@ -4,11 +4,22 @@ namespace CarrotFantasy
 {
     public class GameMain : MonoBehaviour  //游戏开始脚本(作为业务层，游戏层可能有所调整)
     {
+        private static GameMain _persistentInstance;
+
         private GameStateMachine gameStateMachine; // 游戏状态机，主要是管理游戏一些主要流程
         private AssetBundleManager assetBundleManager;
 
         private void Awake()
         {
+            if (_persistentInstance != null && _persistentInstance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            _persistentInstance = this;
+            DontDestroyOnLoad(gameObject);
+
             //开始游戏前的工作
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
 

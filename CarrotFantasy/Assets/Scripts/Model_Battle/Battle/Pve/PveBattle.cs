@@ -46,10 +46,15 @@ namespace CarrotFantasy
 
         public override void InitComponent()
         {
-            foreach (KeyValuePair<String, BaseBattleComponent> info in this.componentDic)
-            {
-                info.Value.Init();
-            }
+            this.GetComponent(BattleComponentType.DataComponent).Init();
+            this.GetComponent(BattleComponentType.HitTestComponent).Init();
+            this.GetComponent(BattleComponentType.MapComponent).Init();
+            this.GetComponent(BattleComponentType.ItemComponent).Init();
+            this.GetComponent(BattleComponentType.TowerComponent).Init();
+            this.GetComponent(BattleComponentType.MonsterComponent).Init();
+            this.GetComponent(BattleComponentType.BulletComponent).Init();
+            this.GetComponent(BattleComponentType.InputComponent).Init();
+            this.GetComponent(BattleComponentType.SchedulerComponent).Init();
         }
 
         public override void Dispose()
