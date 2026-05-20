@@ -29,9 +29,13 @@ namespace CarrotFantasy
             AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
             if (BattleParamServer.Instance.isPVE == true)
             {
-                if (BattleParamServer.Instance.useFlowFieldPveBattleMode)
+                if (BattleParamServer.Instance.useHitTestBenchmarkBattle)
                 {
-                    this.baseBattle = new FlowFieldPveBattle();
+                    this.baseBattle = new HitTestBenchmarkBattle();
+                }
+                else if (BattleParamServer.Instance.useSurvivalPveBattleMode)
+                {
+                    this.baseBattle = new SurvivalPveBattle();
                 }
                 else
                 {

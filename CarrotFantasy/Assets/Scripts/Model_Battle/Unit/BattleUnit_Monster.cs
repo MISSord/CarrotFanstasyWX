@@ -2,21 +2,26 @@ using System.Collections.Generic;
 
 namespace CarrotFantasy
 {
-    public class BattleUnit_Monster : BattleUnit
+    /// <summary>
+    /// 怪物单位基类：生命、受击、位移组件挂载与各玩法共用的 Tick。
+    /// 经典 PVE 折线路径见 <see cref="BattleUnit_Monster_Pve"/>；
+    /// 流场 / 测试等玩法在各自子类中安装移动组件。
+    /// </summary>
+    public abstract class BattleUnit_Monster : BattleUnit
     {
         public int curLive;
         public int totalLive;
         protected UnitTransformComponent unitTransform;
 
-        /// <summary>具体为 <see cref="UnitMoveComponent_Monster"/> 或子类替换的移动组件。</summary>
+        /// <summary>由子类 <see cref="InstallLocomotion"/> 安装，须实现 <see cref="IMonsterLocomotion"/>。</summary>
         protected BaseUnitComponent locomotionComponent;
 
         private List<int> haveBeHit;
         private bool isHaveDead = false;
 
-        public int monsterId { get; private set; }
+        public int monsterId { get; protected set; }
 
-        public int curLevel { get; private set; }
+        public int curLevel { get; protected set; }
 
         public Fix64 EndPointDistance { get; private set; }
 
@@ -31,10 +36,15 @@ namespace CarrotFantasy
             get { return (IMonsterLocomotion)this.locomotionComponent; }
         }
 
-        /// <summary>回收到对象池时使用的池键（经典怪 / 流场怪）。</summary>
+        /// <summary>回收到对象池时使用的池键。</summary>
         public static string GetMonsterPoolKey(BattleUnit_Monster monster)
         {
-            return monster is BattleUnit_MonsterFlow ? BattleUnitType.MONSTER_FLOW : BattleUnitType.MONSTER;
+            if (monster is BattleUnit_MonsterFlow)
+            {
+                return BattleUnitType.MONSTER_FLOW;
+            }
+
+            return BattleUnitType.MONSTER;
         }
 
         public override void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
@@ -48,11 +58,6 @@ namespace CarrotFantasy
         {
             this.curLevel = curLevel;
             this.monsterId = monsterId;
-        }
-
-        public virtual void LoadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
-        {
-            ((UnitMoveComponent_Monster)this.locomotionComponent).LoadInfo(monsterPath, distance);
         }
 
         public override void Init()
@@ -78,16 +83,8 @@ namespace CarrotFantasy
             beHit.RegisterBeHitCallBack(this.BeHitCallBack);
         }
 
-        protected virtual void InstallLocomotion()
-        {
-            UnitMoveComponent_Monster m = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Monster>(UnitComponentType.MOVE_MONSTER);
-            if (m == null)
-            {
-                m = new UnitMoveComponent_Monster();
-            }
-
-            this.locomotionComponent = m;
-        }
+        /// <summary>子类安装本玩法对应的移动组件。</summary>
+        protected abstract void InstallLocomotion();
 
         public override void InitComponents()
         {
@@ -97,7 +94,11 @@ namespace CarrotFantasy
 
         public void BeHitCallBack(BattleUnit battleUnit)
         {
-            if (this.isHaveDead == true) return;
+            if (this.isHaveDead == true)
+            {
+                return;
+            }
+
             if (battleUnit.unitType.Equals(BattleUnitType.BULLET))
             {
                 BattleUnit_Bullet bullet = (BattleUnit_Bullet)battleUnit;
@@ -105,6 +106,7 @@ namespace CarrotFantasy
                 {
                     return;
                 }
+
                 this.haveBeHit.Add(bullet.uid);
                 this.curLive -= bullet.damage;
                 this.eventDipatcher.DispatchEvent<int>(BattleEvent.MONSTER_DAMAGE_NUMBER, bullet.damage);
@@ -113,21 +115,22 @@ namespace CarrotFantasy
                 {
                     this.isHaveDead = true;
                     this.eventDipatcher.DispatchEvent<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this);
-                    return;
                 }
             }
         }
 
-        public bool IsDead()
+        public virtual bool IsDead()
         {
-            if (this.Locomotion.isReachCarrot == true)
+            if (this.locomotionComponent != null && this.Locomotion.isReachCarrot)
             {
                 return true;
             }
+
             if (this.curLive <= 0)
             {
                 return true;
             }
+
             return false;
         }
 

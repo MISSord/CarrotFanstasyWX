@@ -19,8 +19,8 @@ namespace CarrotFantasy
         public BVItemComponent(BattleView_base battleView) : base(battleView)
         {
             this.itemComponent = (BattleItemComponent)this.battleView.battle.GetComponent(BattleComponentType.ItemComponent);
-            BattleDataComponent dataComponent = (BattleDataComponent)this.battleView.battle.GetComponent(BattleComponentType.DataComponent);
-            this._itemBigLevel = dataComponent.bigLevel;
+            BattlePVEDataComponent pveData = BattlePVEDataComponent.GetFrom(this.battleView.battle);
+            this._itemBigLevel = pveData != null ? pveData.bigLevel : 1;
             this.componentType = BattleViewComponentType.Item;
         }
 

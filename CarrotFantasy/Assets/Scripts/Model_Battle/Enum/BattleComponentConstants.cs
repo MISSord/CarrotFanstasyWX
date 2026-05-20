@@ -36,6 +36,7 @@ namespace CarrotFantasy
 
         public const String MOVE_MONSTER = "Move_Monster";
         public const String MOVE_MONSTER_FLOW_FIELD = "Move_Monster_FlowField";
+        public const String MOVE_GRID_STRAIGHT = "Move_GridStraight";
         public const String MOVE_BULLET = "Move_Bullet";
         public const String MOVE_BULLET_ONE = "Move_Bullet_One";
     }

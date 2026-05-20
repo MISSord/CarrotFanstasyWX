@@ -20,7 +20,7 @@ namespace CarrotFantasy
         private SpriteRenderer sr;
         private Text hpText;
 
-        private BattleDataComponent dataComponent;
+        private BattlePVEDataComponent dataComponent;
 
         // Use this for initialization
         public void Init()
@@ -33,7 +33,7 @@ namespace CarrotFantasy
             animator = GetComponent<Animator>();
             sr = GetComponent<SpriteRenderer>();
             hpText = transform.Find("HpCanvas/txt_live").GetComponent<Text>();
-            this.dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            this.dataComponent = BattlePVEDataComponent.GetFrom(BattleManager.Instance.baseBattle);
 
             this.dataComponent.eventDispatcher.AddListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
             this.UpdateCarrotUI();

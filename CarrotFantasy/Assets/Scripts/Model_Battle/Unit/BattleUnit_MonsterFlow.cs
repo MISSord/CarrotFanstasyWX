@@ -25,9 +25,5 @@ namespace CarrotFantasy
         {
             ((UnitMoveComponent_MonsterFlowField)this.locomotionComponent).LoadFlowField(flow);
         }
-
-        public override void LoadInfo3(List<Fix64Vector2> monsterPath, Fix64 distance)
-        {
-        }
     }
 }

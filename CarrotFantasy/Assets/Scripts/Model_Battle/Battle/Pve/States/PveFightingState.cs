@@ -3,7 +3,8 @@ namespace CarrotFantasy
     public class PveFightingState : BaseBattleState
     {
         private BattleMonsterComponent monsterComponent;
-        private BattleDataComponent dataComponent;
+        private IBattlePVEWaveMonster waveMonster;
+        private BattlePVEDataComponent dataComponent;
 
         public PveFightingState(BaseStateMachine bstateMachine, string btype = null) : base(bstateMachine, btype)
         {
@@ -14,7 +15,8 @@ namespace CarrotFantasy
         {
             base.Init();
             this.monsterComponent = (BattleMonsterComponent)this.Battle.GetComponent(BattleComponentType.MonsterComponent);
-            this.dataComponent = (BattleDataComponent)this.Battle.GetComponent(BattleComponentType.DataComponent);
+            this.waveMonster = BattlePVEWaveMonster.GetFrom(this.Battle);
+            this.dataComponent = BattlePVEDataComponent.GetFrom(this.Battle);
         }
 
         public override void StateIn()
@@ -34,7 +36,7 @@ namespace CarrotFantasy
             }
             else
             {
-                if (this.monsterComponent.IsCanNewMonsterWaves()) //还有怪物需要生产
+                if (this.waveMonster.IsCanNewMonsterWaves()) //还有怪物需要生产
                 {
                     return BattleStateType.PRE_FIGHTINT;
                 }
@@ -49,6 +51,7 @@ namespace CarrotFantasy
         {
             base.Dispose();
             this.monsterComponent = null;
+            this.waveMonster = null;
             this.dataComponent = null;
         }
     }

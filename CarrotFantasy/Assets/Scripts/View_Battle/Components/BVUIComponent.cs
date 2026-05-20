@@ -14,7 +14,9 @@ namespace CarrotFantasy
 
         private BattleTowerComponent towerComponent;
         private BattleDataComponent dataComponent;
+        private BattlePVEDataComponent pveDataComponent;
         private BattleMapComponent mapComponent;
+        private BattlePVEMapComponent pveMapComponent;
 
         private GameObject nodeTowerList;
 
@@ -52,7 +54,9 @@ namespace CarrotFantasy
         {
             this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
             this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            this.pveDataComponent = BattlePVEDataComponent.GetFrom(this.battle);
             this.mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
+            this.pveMapComponent = BattlePVEMapComponent.GetFrom(this.battle);
             this.buttonTowerList = new ButtonTower[this.towerComponent.canBuildTowerListLength];
             this.spriteButtonUpList = new Sprite[3];
             this.componentType = BattleViewComponentType.UI;
@@ -175,11 +179,16 @@ namespace CarrotFantasy
             this.nodeMap = GameObject.Instantiate(tplNodeMap);
             this.nodeMap.transform.SetParent(this.rootGameObject.transform);
             this.nodeMap.transform.position = new Vector3(6, 4.35f, 0);
-            Dictionary<String, int> map = this.reader.getMapUIConfig(dataComponent.bigLevel, dataComponent.level);
+            if (this.pveDataComponent == null)
+            {
+                return;
+            }
+
+            Dictionary<String, int> map = this.reader.getMapUIConfig(this.pveDataComponent.bigLevel, this.pveDataComponent.level);
             this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sprite = ResourceLoader.Instance.
-                loadRes<Sprite>(String.Format("Pictures/NormalMordel/Game/{0}/BG{1}", dataComponent.bigLevel, map["mapBg"]));
+                loadRes<Sprite>(String.Format("Pictures/NormalMordel/Game/{0}/BG{1}", this.pveDataComponent.bigLevel, map["mapBg"]));
             this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sprite = ResourceLoader.Instance.
-                loadRes<Sprite>(String.Format("Pictures/NormalMordel/Game/{0}/Road{1}", dataComponent.bigLevel, map["mapRoad"]));
+                loadRes<Sprite>(String.Format("Pictures/NormalMordel/Game/{0}/Road{1}", this.pveDataComponent.bigLevel, map["mapRoad"]));
             this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sortingOrder = 0;
             this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 4;
 
@@ -210,12 +219,17 @@ namespace CarrotFantasy
 
             this.nodeMonsterPoint = GameObject.Instantiate(tplStart);
             this.nodeMonsterPoint.transform.SetParent(this.rootGameObject.transform);
-            Fix64Vector2 startPosition = this.mapComponent.monsterPathList[0];
+            if (this.pveMapComponent == null || this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count < 2)
+            {
+                return;
+            }
 
-            bool isRight = this.mapComponent.monsterPathList[1].X - this.mapComponent.monsterPathList[0].X > Fix64.Zero ? true : false;
-            bool isUP = this.mapComponent.monsterPathList[1].Y - this.mapComponent.monsterPathList[0].Y > Fix64.Zero ? true : false;
+            Fix64Vector2 startPosition = this.pveMapComponent.monsterPathList[0];
 
-            if (this.mapComponent.monsterPathList[1].X - this.mapComponent.monsterPathList[0].X != Fix64.Zero) //左或者右
+            bool isRight = this.pveMapComponent.monsterPathList[1].X - this.pveMapComponent.monsterPathList[0].X > Fix64.Zero ? true : false;
+            bool isUP = this.pveMapComponent.monsterPathList[1].Y - this.pveMapComponent.monsterPathList[0].Y > Fix64.Zero ? true : false;
+
+            if (this.pveMapComponent.monsterPathList[1].X - this.pveMapComponent.monsterPathList[0].X != Fix64.Zero) //左或者右
             {
                 if (isRight == true)
                 {
@@ -251,7 +265,12 @@ namespace CarrotFantasy
             this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
             this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
             this.carrot.Init();
-            Fix64Vector2 endPosition = this.mapComponent.monsterPathList[this.mapComponent.monsterPathList.Count - 1];
+            if (this.pveMapComponent == null || this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count == 0)
+            {
+                return;
+            }
+
+            Fix64Vector2 endPosition = this.pveMapComponent.monsterPathList[this.pveMapComponent.monsterPathList.Count - 1];
             this.carrot.transform.position = new Vector3((float)endPosition.X + 0.1f, (float)endPosition.Y + 0.5f, 0);
         }
 

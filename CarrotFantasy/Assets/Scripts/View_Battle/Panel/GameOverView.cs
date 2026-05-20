@@ -17,7 +17,7 @@ namespace CarrotFantasy
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
 
-            BattleDataComponent dataComponent = (BattleDataComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.DataComponent);
+            BattlePVEDataComponent dataComponent = BattlePVEDataComponent.GetFrom(BattleManager.Instance.baseBattle);
             int waves = dataComponent.curWaves;
             nameTableDic["txt_result_show"].GetComponent<Text>().text = LanguageUtil.Instance.GetFormatString(
                 1002,

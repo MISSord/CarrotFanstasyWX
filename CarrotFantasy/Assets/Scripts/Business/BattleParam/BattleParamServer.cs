@@ -22,10 +22,34 @@ namespace CarrotFantasy
         public bool isPVE = false;
 
         /// <summary>
-        /// 为 true 时 <see cref="BattleManager"/> 创建 <see cref="FlowFieldPveBattle"/>（流场新模式）；
+        /// 为 true 时 <see cref="BattleManager"/> 创建 <see cref="SurvivalPveBattle"/>（生存模式）；
         /// 为 false 时创建经典 <see cref="PveBattle"/>。仅当 <see cref="isPVE"/> 为 true 时生效。在进入战斗前由入口设置。
         /// </summary>
-        public bool useFlowFieldPveBattleMode = false;
+        public bool useSurvivalPveBattleMode = false;
+
+        /// <summary>
+        /// 为 true 时进入 <see cref="HitTestBenchmarkBattle"/>（碰撞性能对比），不再走 Pve / Survival Pve。
+        /// </summary>
+        public bool useHitTestBenchmarkBattle = false;
+
+        /// <summary>基准战斗内碰撞实现：true=网格版 <see cref="BattleSimpleHitTestComponent"/>，false=暴力版 <see cref="BattleBruteForceHitTestComponent"/>。</summary>
+        public bool hitTestBenchmarkUseSpatialGrid = true;
+
+        /// <summary>基准战斗 Console 输出间隔（逻辑帧数）。</summary>
+        public int hitTestBenchmarkLogIntervalFrames = 300;
+
+        /// <summary>测试怪/弹刷出间隔（逻辑帧）。</summary>
+        public int testUnitsSpawnIntervalFrames = 15;
+
+        public int testMonstersPerBatch = 4;
+
+        public int testBulletsPerBatch = 8;
+
+        /// <summary>基准/测试战斗地图列数（格子宽）。</summary>
+        public int hitTestMapXColumn = 24;
+
+        /// <summary>基准/测试战斗地图行数（格子高）。</summary>
+        public int hitTestMapYRow = 16;
 
         public override void LoadModule()
         {

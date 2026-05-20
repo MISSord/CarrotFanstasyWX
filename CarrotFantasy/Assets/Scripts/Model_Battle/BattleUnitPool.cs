@@ -33,6 +33,7 @@ namespace CarrotFantasy
             this.RegisterUnitComponent(UnitComponentType.TRANSFORM);
             this.RegisterUnitComponent(UnitComponentType.MOVE_MONSTER);
             this.RegisterUnitComponent(UnitComponentType.MOVE_MONSTER_FLOW_FIELD);
+            this.RegisterUnitComponent(UnitComponentType.MOVE_GRID_STRAIGHT);
             this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET);
             this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET_ONE);
             this.RegisterUnitComponent(UnitComponentType.BEHIT);

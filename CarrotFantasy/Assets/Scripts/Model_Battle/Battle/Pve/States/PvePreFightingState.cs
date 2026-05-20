@@ -7,8 +7,9 @@ namespace CarrotFantasy
         private bool isEnterFighting;
 
         private BattleMonsterComponent monsterComponent;
+        private IBattlePVEWaveMonster waveMonster;
         private BattleSchedulerComponent scheComponent;
-        private BattleDataComponent dataComponent;
+        private BattlePVEDataComponent dataComponent;
 
         public PvePreFightingState(BaseStateMachine bstateMachine, string btype) : base(bstateMachine, btype)
         {
@@ -19,8 +20,9 @@ namespace CarrotFantasy
         {
             base.Init();
             this.monsterComponent = (BattleMonsterComponent)this.Battle.GetComponent(BattleComponentType.MonsterComponent);
+            this.waveMonster = BattlePVEWaveMonster.GetFrom(this.Battle);
             this.scheComponent = (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
-            this.dataComponent = (BattleDataComponent)this.Battle.GetComponent(BattleComponentType.DataComponent);
+            this.dataComponent = BattlePVEDataComponent.GetFrom(this.Battle);
         }
 
         public override void StateIn()
@@ -32,7 +34,7 @@ namespace CarrotFantasy
                 return;
             }
             this.dataComponent.WavesNumberChange();
-            this.monsterComponent.BuildNewWavesMonster();
+            this.waveMonster.BuildNewWavesMonster();
             this.monsterComponent.scheId = scheComponent.DelayExeMultipleTimes(this.monsterComponent.RegisterNewMonster, 2.0f);
             this.isEnterFighting = true;
         }
@@ -50,6 +52,7 @@ namespace CarrotFantasy
         {
             base.Dispose();
             this.monsterComponent = null;
+            this.waveMonster = null;
             this.scheComponent = null;
             this.dataComponent = null;
         }

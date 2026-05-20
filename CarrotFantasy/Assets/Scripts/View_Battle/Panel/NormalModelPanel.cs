@@ -13,6 +13,7 @@ namespace CarrotFantasy
         private GameObject nodePlayingText;
         private Sprite[] btnPauseSprites;
         private BattleDataComponent dataComponent;
+        private BattlePVEDataComponent pveDataComponent;
         private BaseBattle battle;
         private bool isPause;
         private int schId;
@@ -29,6 +30,7 @@ namespace CarrotFantasy
         {
             this.battle = BattleManager.Instance.baseBattle;
             this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            this.pveDataComponent = BattlePVEDataComponent.GetFrom(this.battle);
             if (this.dataComponent == null) return;
 
             this.nodeTopPage = this.nameTableDic["node_TopPage"];
@@ -144,8 +146,13 @@ namespace CarrotFantasy
 
         private void UpdateRoundText(int i)
         {
-            int waves = this.dataComponent.curWaves;
-            this.txtWaveInfo.text = LanguageUtil.Instance.GetFormatString(1001, (waves / 10).ToString(), (waves % 10).ToString(), this.dataComponent.totalWaves.ToString());
+            if (this.pveDataComponent == null)
+            {
+                return;
+            }
+
+            int waves = this.pveDataComponent.curWaves;
+            this.txtWaveInfo.text = LanguageUtil.Instance.GetFormatString(1001, (waves / 10).ToString(), (waves % 10).ToString(), this.pveDataComponent.totalWaves.ToString());
         }
 
         private void UpdateBtnPause()

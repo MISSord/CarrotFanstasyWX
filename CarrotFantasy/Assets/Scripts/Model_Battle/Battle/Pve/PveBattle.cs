@@ -13,12 +13,13 @@ namespace CarrotFantasy
         public override void Init()
         {
             this.stateMachine = new PveStateMachine(this);
-            this.AddComponent(new BattleDataComponent(this));
+            this.AddComponent(new BattlePVEDataComponent(this));
             this.AddComponent(new BattleSimpleHitTestComponent(this));
-            this.AddComponent(new BattleMapComponent(this)); //依赖 data
+
+            this.AddComponent(new BattlePVEMapComponent(this)); //依赖 data
             this.AddComponent(new BattleItemComponent(this)); //依赖map
             this.AddComponent(new BattleTowerComponent(this)); //依赖map data
-            this.AddComponent(new BattleMonsterComponent(this)); //依赖map
+            this.AddComponent(new BattlePVEMonsterComponent(this)); //依赖map
             this.AddComponent(new BattleBulletComponent(this)); //依赖tower
             this.AddComponent(new BattleInputComponent(this)); //依赖map tower
             this.AddComponent(new BattleSchedulerComponent(this));
