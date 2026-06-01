@@ -93,10 +93,10 @@
     <Compile Include="Assets\Scripts\View_Battle\Panel\GameWinView.cs" />
     <Compile Include="Assets\Scripts\Business\UI\TipView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BaseBattleViewComponent.cs" />
-    <Compile Include="Assets\Scripts\Other\Event\EvenDispatcher.cs" />
+    <Compile Include="Assets\Scripts\Util\Event\EvenDispatcher.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Bullet_One.cs" />
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageManager.cs" />
-    <Compile Include="Assets\Scripts\Other\Event\EventObject.cs" />
+    <Compile Include="Assets\Scripts\Util\Event\EventObject.cs" />
     <Compile Include="Assets\Scripts\Server\UI\UIServer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\HitTest\Shape\Shapes\HitTestShape_ObbRect.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFightingState.cs" />
@@ -167,7 +167,7 @@
     <Compile Include="Assets\Scripts\Util\Logging\GameLogController.cs" />
     <Compile Include="Assets\Scripts\Util\Loading\LoadingOrchestrator.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BattleDataComponent.cs" />
-    <Compile Include="Assets\Scripts\Other\Define.cs" />
+    <Compile Include="Assets\Scripts\Util\Define.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\ImageResourceManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Event\BattleCoreEvent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\Components\BUVTransformComponent.cs" />
@@ -268,7 +268,7 @@
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapBigLevelPanel.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneEventType.cs" />
-    <Compile Include="Assets\Scripts\Other\Event\EvenType.cs" />
+    <Compile Include="Assets\Scripts\Util\Event\EvenType.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\UnitBeHitComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Components\BVSceneComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pvp\States\PvpPreFightingState.cs" />
