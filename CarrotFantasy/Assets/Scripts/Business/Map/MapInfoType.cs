@@ -1,3 +1,5 @@
+using System;
+
 namespace CarrotFantasy
 {
     public static class MapInfoType
@@ -11,5 +13,12 @@ namespace CarrotFantasy
 
         public const byte ALL_CLEAR = 1;
         public const byte NOT_ALL_CLEAR = 2;
+    }
+
+    public class MapEventType
+    {
+        public const String MAP_INFO_CHANGE = "Map_Info_Change";
+        public const String CAN_START_GAME = "Can_Start_Game";
+        public const String CANT_START_GAME = "Cant_Start_Game";
     }
 }

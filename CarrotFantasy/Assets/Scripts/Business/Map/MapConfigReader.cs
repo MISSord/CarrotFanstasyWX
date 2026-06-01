@@ -46,7 +46,6 @@ namespace CarrotFantasy
         public int mTotalRound; //一共几波怪
     }
 
-
     public class PlayerManager
     {
         public List<Stage> unLockedNormalModelLevelList;//所有的小关卡

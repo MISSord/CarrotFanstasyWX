@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,31 +6,26 @@ namespace CarrotFantasy
 {
     public class MapNormalLevelPanel : BaseView
     {
+        private const float LevelCellWidth = 1100f;
 
         private SingleMapInfo[] levelInfoList;
-        private string filePath;
         public int currentBigLevelID;
-        public int currentLevelID;
-        private string theSpritePath;
+        public int currentLevelID = 1;
         private int towerCount = 5;
 
-        private Transform levelContentTrans;
+        private SelectableScrollerList<NormalLevelListItem> scrollerList;
         private GameObject nodeLockBtn;
         private Transform nodeTowerTrans;
         private Text txtTotalWaves;
-        private Transform scroller;
-        private SlideScrollView slideScrollView;
 
-        private List<GameObject> levelContentImageGos;
         private List<GameObject> towerContentImageGos;
 
         private readonly List<AssetLoadHandle> _panelPrefabHandles = new List<AssetLoadHandle>();
-        private GameObject _tplNodeLevel;
         private GameObject _tplNodeTower;
 
         public void SetBigLevel(int bigLevelId)
         {
-            this.currentBigLevelID = bigLevelId;
+            currentBigLevelID = bigLevelId;
         }
 
         public override void InitData()
@@ -43,119 +37,131 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            DestroyLevelUI();
-            this.filePath = "Pictures/GameOption/Normal/Level/";
-            this.levelInfoList = MapServer.Instance.mapModel.GetOnceBigLevelMapInfo(currentBigLevelID);
-            this.levelContentImageGos = new List<GameObject>();
-            this.towerContentImageGos = new List<GameObject>();
-            this.currentLevelID = 1;
+            towerContentImageGos = new List<GameObject>();
+            nodeLockBtn = nameTableDic["img_lock_btn"];
+            nodeTowerTrans = nameTableDic["node_tower"].transform;
+            txtTotalWaves = nameTableDic["txt_waves"].GetComponent<Text>();
 
-            this.levelContentTrans = this.nameTableDic["content"].transform;
-            this.nodeLockBtn = this.nameTableDic["img_lock_btn"];
-            this.nodeTowerTrans = this.nameTableDic["node_tower"].transform;
-            this.txtTotalWaves = this.nameTableDic["txt_waves"].GetComponent<Text>();
-            this.scroller = this.nameTableDic["scroller"].transform;
+            var scrollerGo = nameTableDic["scroller"];
+            scrollerList = new SelectableScrollerList<NormalLevelListItem>(scrollerGo, defaultSelectIndex: 0);
+            scrollerList.SetCellSizeGetter(_ => LevelCellWidth);
+            scrollerList.SetOnSelected(OnLevelSelected);
 
-            this.theSpritePath = filePath + currentBigLevelID.ToString() + "/";
+            EnsureTowerTemplates();
+            UpdateTowerUI();
 
-            this.slideScrollView = new SlideScrollView();
-            this.slideScrollView.LoadSrollView(this.scroller, 1100, 300);
-
-            this.LoadLevelUI();
-            this.UpdateLevelUI();
-            this.UpdateTowerUI();
-
-            slideScrollView.Init();
-
-            this.AddListener();
+            AddListener();
         }
 
-        public void LoadLevelUI()
+        protected override void ShowIndexCallBack(int viewIndex)
         {
-            this.nameTableDic["img_bg_left"].GetComponent<Image>().sprite =
-                ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Left");
-            this.nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
-                ResourceLoader.Instance.loadRes<Sprite>(this.theSpritePath + "BG_Right");
-            EnsurePanelPrefabTemplate(ref _tplNodeLevel, UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeLevelAsset);
-            if (_tplNodeLevel == null)
+            if (scrollerList == null)
             {
-                Debug.LogError("[MapNormalLevelPanel] node_level 预制体加载失败");
                 return;
             }
 
-            for (int i = 0; i < levelInfoList.Length; i++)
+            RefreshPanelData();
+            int selectIndex = currentLevelID - 1;
+            if (selectIndex >= 0 && selectIndex < scrollerList.Items.Count)
             {
-                levelContentImageGos.Add(InstantiateUiUnderParent(_tplNodeLevel, levelContentTrans));
-                String path = theSpritePath + "Level_" + (i + 1).ToString();
-                levelContentImageGos[i].transform.GetComponent<Image>().sprite = ResourceLoader.Instance.loadRes<Sprite>(path);
-                levelContentImageGos[i].transform.Find("img_carrot").gameObject.SetActive(false);
-                levelContentImageGos[i].transform.Find("img_all_clear").gameObject.SetActive(false);
+                scrollerList.SetSelectIndex(selectIndex, invokeCallback: false);
             }
-            this.slideScrollView.SetContentLength(levelInfoList.Length);
+
+            UpdateTowerUI();
         }
 
-        private void UpdateLevelUI()
+        private void RefreshPanelData()
         {
-            for (int i = 0; i < levelInfoList.Length; i++)
+            levelInfoList = MapServer.Instance.mapModel.GetOnceBigLevelMapInfo(currentBigLevelID);
+            LoadBackgroundSprites();
+            RefreshLevelList();
+        }
+
+        private void LoadBackgroundSprites()
+        {
+            var spritePath = NormalLevelListItem.MapFilePathBase + currentBigLevelID + "/";
+            nameTableDic["img_bg_left"].GetComponent<Image>().sprite =
+                ResourceLoader.Instance.loadRes<Sprite>(spritePath + "BG_Left");
+            nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
+                ResourceLoader.Instance.loadRes<Sprite>(spritePath + "BG_Right");
+        }
+
+        private void RefreshLevelList()
+        {
+            var items = new List<NormalLevelListItem>();
+            if (levelInfoList != null)
             {
-                SingleMapInfo info = this.levelInfoList[i];
-                if (info.unLocked == MapInfoType.UNLOCK_LEVEL)
+                for (int i = 0; i < levelInfoList.Length; i++)
                 {
-                    if (info.isAllClear == MapInfoType.ALL_CLEAR)
+                    if (levelInfoList[i] == null)
                     {
-                        levelContentImageGos[i].transform.Find("img_all_clear").gameObject.SetActive(true);
+                        continue;
                     }
-                    if (info.carrotState != 0)
-                    {
-                        Image carrotImageGo = levelContentImageGos[i].transform.Find("img_carrot").GetComponent<Image>();
-                        carrotImageGo.gameObject.SetActive(true);
-                        carrotImageGo.sprite = ResourceLoader.Instance.loadRes<Sprite>(filePath + "Carrot_" + info.carrotState);
-                    }
-                    levelContentImageGos[i].transform.Find("img_lock").gameObject.SetActive(false);
+
+                    items.Add(new NormalLevelListItem { mapInfo = levelInfoList[i] });
                 }
-                else
-                {
-                    levelContentImageGos[i].transform.Find("img_lock").gameObject.SetActive(true);
-                }
+            }
+
+            scrollerList.SetItemsList(items);
+        }
+
+        private void OnLevelSelected(int index, NormalLevelListItem item)
+        {
+            if (index < 0 || item?.mapInfo == null)
+            {
+                return;
+            }
+
+            currentLevelID = item.mapInfo.levelId;
+            UpdateTowerUI();
+        }
+
+        private void EnsureTowerTemplates()
+        {
+            if (towerContentImageGos.Count > 0)
+            {
+                return;
+            }
+
+            EnsurePanelPrefabTemplate(ref _tplNodeTower, UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeTowerAsset);
+
+            if (_tplNodeTower == null)
+            {
+                Debug.LogError("[MapNormalLevelPanel] node_tower 预制体加载失败");
+                return;
+            }
+
+            for (int i = 0; i < towerCount; i++)
+            {
+                towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, nodeTowerTrans));
             }
         }
 
         public void UpdateTowerUI()
         {
-            if (towerContentImageGos.Count == 0)
+            if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
             {
-                EnsurePanelPrefabTemplate(ref _tplNodeTower, UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeTowerAsset);
-                if (_tplNodeTower == null)
-                {
-                    Debug.LogError("[MapNormalLevelPanel] node_tower 预制体加载失败");
-                }
-                else
-                {
-                    for (int i = 0; i < this.towerCount; i++)
-                    {
-                        towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, this.nodeTowerTrans));
-                    }
-                }
+                return;
             }
 
-            Stage stage = MapServer.Instance.mapModel.GetStage(this.currentBigLevelID, this.currentLevelID);
-            SingleMapInfo info = this.levelInfoList[this.currentLevelID - 1];
+            Stage stage = MapServer.Instance.mapModel.GetStage(currentBigLevelID, currentLevelID);
+            SingleMapInfo info = levelInfoList[currentLevelID - 1];
+            if (info == null || stage == null)
+            {
+                return;
+            }
 
-            if (info.unLocked == MapInfoType.UNLOCK_LEVEL)
-            {
-                this.nodeLockBtn.SetActive(false);
-            }
-            else
-            {
-                this.nodeLockBtn.SetActive(true);
-            }
-            this.txtTotalWaves.text = stage.mTotalRound.ToString();
+            nodeLockBtn.SetActive(info.unLocked != MapInfoType.UNLOCK_LEVEL);
+            txtTotalWaves.text = stage.mTotalRound.ToString();
+
             for (int i = 0; i < stage.mTowerIDListLength; i++)
             {
                 towerContentImageGos[i].GetComponent<Image>().sprite =
-                    ResourceLoader.Instance.loadRes<Sprite>(filePath + "Tower/Tower_" + stage.mTowerIDList[i].ToString());
+                    ResourceLoader.Instance.loadRes<Sprite>(
+                        NormalLevelListItem.MapFilePathBase + "Tower/Tower_" + stage.mTowerIDList[i]);
                 towerContentImageGos[i].SetActive(true);
             }
+
             for (int i = stage.mTowerIDListLength; i < towerContentImageGos.Count; i++)
             {
                 towerContentImageGos[i].SetActive(false);
@@ -164,7 +170,18 @@ namespace CarrotFantasy
 
         public void StartGame()
         {
-            MapServer.Instance.SendGameMapInfo(this.currentBigLevelID, this.currentLevelID);
+            if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
+            {
+                return;
+            }
+
+            SingleMapInfo info = levelInfoList[currentLevelID - 1];
+            if (info == null || info.unLocked != MapInfoType.UNLOCK_LEVEL)
+            {
+                return;
+            }
+
+            MapServer.Instance.SendGameMapInfo(currentBigLevelID, currentLevelID);
             UIServer.Instance.PlayButtonEffect();
         }
 
@@ -193,25 +210,25 @@ namespace CarrotFantasy
 
         public void ToNextLevel()
         {
-            if (this.currentLevelID >= this.levelInfoList.Length)
+            int next = scrollerList.SelectedIndex + 1;
+            if (next >= scrollerList.Items.Count)
             {
                 return;
             }
-            currentLevelID++;
-            this.slideScrollView.ToNextPage();
-            this.UpdateTowerUI();
+
+            scrollerList.JumpTo(next, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: true);
             UIServer.Instance.PlayPagingEffect();
         }
 
         public void ToLastLevel()
         {
-            if (currentLevelID <= 1)
+            int prev = scrollerList.SelectedIndex - 1;
+            if (prev < 0)
             {
                 return;
             }
-            currentLevelID--;
-            this.slideScrollView.ToLastPage();
-            this.UpdateTowerUI();
+
+            scrollerList.JumpTo(prev, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: true);
             UIServer.Instance.PlayPagingEffect();
         }
 
@@ -224,58 +241,62 @@ namespace CarrotFantasy
         private void ReturnToLastPanel()
         {
             UIServer.Instance.PlayButtonEffect();
-            this.Close();
+            Close();
         }
 
         private void AddListener()
         {
-            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.UpdateMapInfo);
-            XUI.AddButtonListener(this.nameTableDic["btn_start"].GetComponent<Button>(), this.StartGame);
-            XUI.AddButtonListener(this.nameTableDic["btn_last_page"].GetComponent<Button>(), this.ToLastLevel);
-            XUI.AddButtonListener(this.nameTableDic["btn_next_page"].GetComponent<Button>(), this.ToNextLevel);
-            XUI.AddButtonListener(this.nameTableDic["btn_return"].GetComponent<Button>(), this.ReturnToLastPanel);
-            XUI.AddButtonListener(this.nameTableDic["btn_help"].GetComponent<Button>(), this.ShowHelpPanel);
+            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, UpdateMapInfo);
+            XUI.AddButtonListener(nameTableDic["btn_start"].GetComponent<Button>(), StartGame);
+            XUI.AddButtonListener(nameTableDic["btn_last_page"].GetComponent<Button>(), ToLastLevel);
+            XUI.AddButtonListener(nameTableDic["btn_next_page"].GetComponent<Button>(), ToNextLevel);
+            XUI.AddButtonListener(nameTableDic["btn_return"].GetComponent<Button>(), ReturnToLastPanel);
+            XUI.AddButtonListener(nameTableDic["btn_help"].GetComponent<Button>(), ShowHelpPanel);
         }
 
         private void RemoveListener()
         {
-            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, this.UpdateMapInfo);
+            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, UpdateMapInfo);
         }
 
         private void UpdateMapInfo()
         {
-            this.levelInfoList = MapServer.Instance.mapModel.GetOnceBigLevelMapInfo(this.currentBigLevelID);
-            this.UpdateLevelUI();
-        }
+            int selected = scrollerList.SelectedIndex;
+            RefreshPanelData();
 
-        private void DestroyLevelUI()
-        {
-            if (levelContentImageGos == null) return;
-            if (levelContentImageGos.Count > 0)
+            if (selected >= 0 && selected < scrollerList.Items.Count)
             {
-                for (int i = 0; i < levelContentImageGos.Count; i++)
-                {
-                    if (levelContentImageGos[i] != null)
-                        GameObject.Destroy(levelContentImageGos[i]);
-                }
-                if (slideScrollView != null)
-                    slideScrollView.InitScrollLength();
-                levelContentImageGos.Clear();
+                scrollerList.SetSelectIndex(selected, invokeCallback: false);
+                currentLevelID = scrollerList.Items[selected].mapInfo.levelId;
             }
+
+            UpdateTowerUI();
         }
 
         protected override void ReleaseCallBack()
         {
-            this.DestroyLevelUI();
+            if (towerContentImageGos != null && towerContentImageGos.Count > 0)
+            {
+                for (int i = 0; i < towerContentImageGos.Count; i++)
+                {
+                    if (towerContentImageGos[i] != null)
+                    {
+                        GameObject.Destroy(towerContentImageGos[i]);
+                    }
+                }
+
+                towerContentImageGos.Clear();
+            }
+
             for (int i = 0; i < _panelPrefabHandles.Count; i++)
             {
                 _panelPrefabHandles[i].Dispose();
             }
 
             _panelPrefabHandles.Clear();
-            _tplNodeLevel = null;
             _tplNodeTower = null;
-            this.RemoveListener();
+            scrollerList = null;
+            RemoveListener();
         }
     }
 }

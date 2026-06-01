@@ -1,20 +1,12 @@
-using UnityEngine;
+using System.Collections.Generic;
+using EnhancedUI.EnhancedScroller;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
     public class MapBigLevelPanel : BaseView
     {
-
-        private GridLayoutGroup gridLayout;
-        private SlideScrollView slideScroll;
-
-        private int bigLevelPageCount;
-        private Transform[] bigLevelPage;
-        private Transform bigLevelContentTrans;
-
-        private bool hasRigisterEvent;
-        private int curBigLevel = 1;
+        private SelectableScrollerList<BigLevelInfo> scrollerList;
 
         public override void InitData()
         {
@@ -25,96 +17,89 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.bigLevelPageCount = MapServer.Instance.mapModel.GetBigLevelCount();
-            this.bigLevelPage = new Transform[bigLevelPageCount];
-            this.hasRigisterEvent = false;
+            var scrollerGo = nameTableDic["scroller"];
+            scrollerList = new SelectableScrollerList<BigLevelInfo>(scrollerGo, defaultSelectIndex: 0);
+            scrollerList.SetOnSelected(OnBigLevelSelected);
 
-            this.gridLayout = this.nameTableDic["content"].GetComponent<GridLayoutGroup>();
+            AddListener();
+        }
 
-            this.bigLevelContentTrans = this.nameTableDic["content"].transform;
+        protected override void ShowIndexCallBack(int viewIndex)
+        {
+            RefreshBigLevelList();
+            scrollerList.SetSelectIndex(0, invokeCallback: false);
+        }
 
-            this.InitGridLayoutAndSroll();
-            this.LoadBigLevelInfo();
+        private void RefreshBigLevelList()
+        {
+            var model = MapServer.Instance.mapModel;
+            int count = model.GetBigLevelCount();
+            var items = new List<BigLevelInfo>(count);
+            for (int i = 1; i <= count; i++)
+            {
+                items.Add(model.GetBigLevelInfo(i));
+            }
 
-            this.AddListener();
+            scrollerList.SetItemsList(items);
+        }
+
+        private void OnBigLevelSelected(int index, BigLevelInfo info)
+        {
+            if (info == null || info.isLock)
+            {
+                return;
+            }
+
+            OpenNormalLevelPanel(info.bigLevel);
+        }
+
+        private void OpenNormalLevelPanel(int bigLevelId)
+        {
+            if (!ViewManager.Instance.viewTypeDic.TryGetValue(typeof(MapNormalLevelPanel), out BaseView view))
+            {
+                return;
+            }
+
+            var panel = (MapNormalLevelPanel)view;
+            panel.SetBigLevel(bigLevelId);
+            MapServer.Instance.SendGameMapInfo(bigLevelId, 0);
+            ViewManager.Instance.OpenView<MapNormalLevelPanel>();
+            UIServer.Instance.PlayButtonEffect();
         }
 
         private void AddListener()
         {
-            XUI.AddButtonListener(this.nameTableDic["btn_last_page"].GetComponent<Button>(), this.ToTheLastLevelPage);
-            XUI.AddButtonListener(this.nameTableDic["btn_next_page"].GetComponent<Button>(), this.ToTheNextLevelPage);
-
-            XUI.AddButtonListener(this.nameTableDic["btn_return"].GetComponent<Button>(), this.ReturnToMainPanel);
-            XUI.AddButtonListener(this.nameTableDic["btn_help"].GetComponent<Button>(), this.ShowHelpPanel);
-            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, this.UpdateBigLevelInfo);
+            XUI.AddButtonListener(nameTableDic["btn_last_page"].GetComponent<Button>(), ToTheLastLevelPage);
+            XUI.AddButtonListener(nameTableDic["btn_next_page"].GetComponent<Button>(), ToTheNextLevelPage);
+            XUI.AddButtonListener(nameTableDic["btn_return"].GetComponent<Button>(), ReturnToMainPanel);
+            XUI.AddButtonListener(nameTableDic["btn_help"].GetComponent<Button>(), ShowHelpPanel);
+            MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, UpdateBigLevelInfo);
         }
 
         private void RemoveListener()
         {
-            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, this.UpdateBigLevelInfo);
-        }
-
-        private void InitGridLayoutAndSroll()
-        {
-            float sizeChange = 1f;
-            float newCellX = GameConfig.BIG_LEVEL_UNIT_SIZE_X * sizeChange;
-            float newCellY = GameConfig.BIG_LEVEL_UNIT_SIZE_Y * sizeChange;
-            this.gridLayout.cellSize = new Vector2(newCellX, newCellY);
-            float newSpacing = GameConfig.BIG_LEVEL_UNIT_SPACING_X * sizeChange;
-            this.gridLayout.spacing = new Vector2(newSpacing, 0);
-            this.slideScroll = new SlideScrollView();
-            this.slideScroll.LoadSrollView(this.nameTableDic["scroller"].transform, (int)newCellX, (int)newSpacing);
-            this.slideScroll.SetContentLength(this.bigLevelPageCount);
-        }
-
-        private void LoadBigLevelInfo()
-        {
-            for (int i = 0; i <= bigLevelPageCount - 1; i++)
-            {
-                bigLevelPage[i] = bigLevelContentTrans.GetChild(i);
-                this.ShowBigLevelState(MapServer.Instance.mapModel.GetBigLevelInfo(i + 1), bigLevelPage[i], i + 1);
-            }
-            hasRigisterEvent = true;
-        }
-
-        public void ShowBigLevelState(BigLevelInfo info, Transform theBigLevelButtonTrans, int bigLevelID)
-        {
-            if (info.isLock == false)
-            {
-                theBigLevelButtonTrans.Find("img_lock").gameObject.SetActive(false);
-                theBigLevelButtonTrans.Find("img_page").gameObject.SetActive(true);
-                theBigLevelButtonTrans.Find("img_page").Find("txt_page").GetComponent<Text>().text
-                    = info.unlockCount.ToString() + "/" + info.count.ToString();
-                Button theBigLevelButtonCom = theBigLevelButtonTrans.GetComponent<Button>();
-                theBigLevelButtonCom.interactable = true;
-                theBigLevelButtonCom.onClick.RemoveAllListeners();
-                XUI.AddButtonListener(theBigLevelButtonCom, () =>
-                {
-                    //UIViewService.OpenMapNormalLevelPanel(info.bigLevel);
-
-                });
-            }
-            else
-            {
-                theBigLevelButtonTrans.Find("img_lock").gameObject.SetActive(true);
-                theBigLevelButtonTrans.Find("img_page").gameObject.SetActive(false);
-                theBigLevelButtonTrans.GetComponent<Button>().interactable = false;
-            }
+            MapServer.Instance.eventDispatcher.RemoveListener(MapEventType.MAP_INFO_CHANGE, UpdateBigLevelInfo);
         }
 
         public void UpdateBigLevelInfo()
         {
-            for (int i = 0; i <= bigLevelPageCount - 1; i++)
+            int selected = scrollerList.SelectedIndex;
+            RefreshBigLevelList();
+
+            if (selected >= 0 && selected < scrollerList.Items.Count)
             {
-                BigLevelInfo info = MapServer.Instance.mapModel.GetBigLevelInfo(i + 1);
-                this.ShowBigLevelState(info, bigLevelPage[i], i + 1);
+                scrollerList.SetSelectIndex(selected, invokeCallback: false);
+            }
+            else
+            {
+                scrollerList.RefreshVisible();
             }
         }
 
         private void ReturnToMainPanel()
         {
             UIServer.Instance.PlayButtonEffect();
-            this.Close();
+            Close();
         }
 
         private void ShowHelpPanel()
@@ -125,29 +110,32 @@ namespace CarrotFantasy
 
         private void ToTheNextLevelPage()
         {
-            if (this.curBigLevel >= this.bigLevelPageCount)
+            int next = scrollerList.SelectedIndex + 1;
+            if (next >= scrollerList.Items.Count)
             {
                 return;
             }
-            this.curBigLevel++;
-            this.slideScroll.ToNextPage();
+
+            scrollerList.JumpTo(next, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: false);
             UIServer.Instance.PlayPagingEffect();
         }
 
         private void ToTheLastLevelPage()
         {
-            if (this.curBigLevel <= 1)
+            int prev = scrollerList.SelectedIndex - 1;
+            if (prev < 0)
             {
                 return;
             }
-            this.curBigLevel--;
-            this.slideScroll.ToLastPage();
+
+            scrollerList.JumpTo(prev, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: false);
             UIServer.Instance.PlayPagingEffect();
         }
 
         protected override void ReleaseCallBack()
         {
-            this.RemoveListener();
+            RemoveListener();
+            scrollerList = null;
         }
     }
 }

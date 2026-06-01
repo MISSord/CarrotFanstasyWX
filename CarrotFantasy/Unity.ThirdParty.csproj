@@ -400,11 +400,18 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonTrie.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonIgnoreIfNullAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonArraySerializer.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\SmallList.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\EnhancedScrollerCellView.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\IEnhancedScrollerDelegate.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\EnhancedScroller.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\ThirdParty\EnhancedScroller\upgrading from 1.x to 2.x.txt" />
+    <None Include="Assets\ThirdParty\EnhancedScroller\ChangeLog.txt" />
     <None Include="Assets\ThirdParty\DOTween\DOTween.XML" />
     <None Include="Assets\ThirdParty\DOTween\DOTween.dll" />
     <None Include="Assets\ThirdParty\DOTween\readme.txt" />
+    <None Include="Assets\ThirdParty\EnhancedScroller\readme.txt" />
     <None Include="Assets\ThirdParty\Unity.ThirdParty.asmdef" />
     <None Include="Assets\ThirdParty\DOTween\Editor\DOTweenEditor.dll" />
     <None Include="Assets\ThirdParty\DOTween\Editor\DOTweenEditor.XML" />
