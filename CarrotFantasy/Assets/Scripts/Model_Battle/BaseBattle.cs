@@ -26,9 +26,25 @@ namespace CarrotFantasy
         /// <summary>由 BattleManager 或联机/测试运行时注入；未注入时部分宿主能力（提示、提交存档）不执行。</summary>
         public IBattleHostBridge HostBridge { get; private set; }
 
+        /// <summary>本局可复现随机（重开/回放前对同一 RootSeed 调用 <see cref="DeterministicRandomSession.Reset"/>）。</summary>
+        public DeterministicRandomSession RandomSession { get; private set; }
+
         public void SetHostBridge(IBattleHostBridge bridge)
         {
             this.HostBridge = bridge;
+        }
+
+        public void SetRandomSession (DeterministicRandomSession session)
+        {
+            this.RandomSession = session;
+        }
+
+        /// <summary>重开或回放开始时：保持 RootSeed，将序列复位到起点。</summary>
+        public void ResetRandomSession ()
+        {
+            if (this.RandomSession != null) {
+                this.RandomSession.Reset();
+            }
         }
 
         public BaseBattle()

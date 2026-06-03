@@ -80,6 +80,7 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonValue.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\IConvention.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\IMemberMapConvention.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\EnhancedScroller.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonSerializationOptionsAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\ObjectModel\BsonJavaScript.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\DateTimeSerializer.cs" />
@@ -233,6 +234,7 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonStringSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Exceptions\DuplicateBsonMemberMapAttributeException.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonSymbolSerializer.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\SmallList.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Shared\CanonicalDisposableStruct.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\IBsonWriterExtensions.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\TrieNameDecoder.cs" />
@@ -305,6 +307,7 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Shared\CanonicalDisposableClass.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonBinaryReaderSettings.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\UInt16Serializer.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\EnhancedScrollerCellView.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\ReadOnlyCollectionSerializer.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\IBsonMemberMapAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\IdGenerators\ZeroIdChecker.cs" />
@@ -331,6 +334,7 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\TypeNameDiscriminator.cs" />
     <Compile Include="Assets\ThirdParty\DOTween\Modules\DOTweenModuleUnityVersion.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Conventions\AttributeConventionPack.cs" />
+    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\IEnhancedScrollerDelegate.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\EnumerableInterfaceImplementerSerializerBase.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonBinaryWriterContext.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\SerializerBase.cs" />
@@ -400,10 +404,6 @@
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\IO\BsonTrie.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Attributes\BsonIgnoreIfNullAttribute.cs" />
     <Compile Include="Assets\ThirdParty\MongoDB\MongoDB.Bson\Serialization\Serializers\BsonArraySerializer.cs" />
-    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\SmallList.cs" />
-    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\EnhancedScrollerCellView.cs" />
-    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\IEnhancedScrollerDelegate.cs" />
-    <Compile Include="Assets\ThirdParty\EnhancedScroller\Plugins\EnhancedScroller.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\ThirdParty\EnhancedScroller\upgrading from 1.x to 2.x.txt" />

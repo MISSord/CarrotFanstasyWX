@@ -89,6 +89,8 @@ namespace CarrotFantasy
                     return "MainScene";
                 case GameSceneType.BattleScene:
                     return "BattleScene";
+                case GameSceneType.RoguelikeMapScene:
+                    return "Scene";
                 default:
                     return string.Empty;
             }
@@ -105,6 +107,8 @@ namespace CarrotFantasy
                     return GameSceneType.MainScene;
                 case BaseSceneType.BattleScene:
                     return GameSceneType.BattleScene;
+                case BaseSceneType.RoguelikeMapScene:
+                    return GameSceneType.RoguelikeMapScene;
                 default:
                     return GameSceneType.None;
             }

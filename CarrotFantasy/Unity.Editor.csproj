@@ -72,11 +72,13 @@
     <Compile Include="Assets\Editor\AssetsEditor\FbxToPrefabProcessor.cs" />
     <Compile Include="Assets\Editor\ReferenceCollectorEditor\ReferenceCollectorEditor.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\AnimationClipExtractor.cs" />
+    <Compile Include="Assets\Editor\EnhancedScrollerPackageImporter.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabABPathPostprocessor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabUIImageLoaderAutoBinder.cs" />
+    <Compile Include="Assets\Editor\HexWorld\HexWorldMapSampleCreator.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
-    <Compile Include="Assets\Editor\EnhancedScrollerPackageImporter.cs" />
+    <Compile Include="Assets\Editor\HexWorld\HexWorldMapEditorInspector.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />

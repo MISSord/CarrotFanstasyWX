@@ -5,6 +5,7 @@ namespace CarrotFantasy
     public class BattleUnit_Bullet : BattleUnit
     {
         public int damage { get; private set; }
+        public int onHitBuffId { get; private set; }
         public Fix64 moveSpeed;
 
         public int towerId = 0;
@@ -26,6 +27,12 @@ namespace CarrotFantasy
             base.LoadInfo(uid, param, birthPosition);
             this.damage = (int)this.birthParam["damage"];
             this.moveSpeed = this.birthParam["moveSpeed"];
+            this.onHitBuffId = param.ContainsKey("onHitBuffId") ? (int)param["onHitBuffId"] : 0;
+        }
+
+        public bool DestroyOnFirstHit()
+        {
+            return this.birthParam != null && this.birthParam["isRemove"] == Fix64.Zero;
         }
 
         public void LoadInfo2(BattleUnit_Tower tower, BattleUnit target)
@@ -83,7 +90,7 @@ namespace CarrotFantasy
         {
             if (unit.unitType.Equals(BattleUnitType.MONSTER) == true || unit.unitType.Equals(BattleUnitType.ITEM) == true)
             {
-                if (this.birthParam["isRemove"] == Fix64.Zero)
+                if (this.DestroyOnFirstHit())
                 {
                     this.eventDipatcher.DispatchEvent<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this);
                 }
@@ -99,6 +106,15 @@ namespace CarrotFantasy
         public override void LateTick(Fix64 deltaTime)
         {
             this.tranComponent.LateTick(deltaTime);
+        }
+
+        public override void ClearInfo()
+        {
+            this.onHitBuffId = 0;
+            this.towerId = 0;
+            this.towerLevel = 0;
+            this.target = null;
+            base.ClearInfo();
         }
 
         public override void Dispose()

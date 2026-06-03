@@ -14,8 +14,11 @@ namespace CarrotFantasy
         private RectTransform hpBarCanvasRect;
         private Vector3 hpBarLocalOffset;
         private BVBattleWorldUiComponent worldUiCached;
+        private readonly MonsterBuffIconBar buffIconBar = new MonsterBuffIconBar();
         private SpriteRenderer spriteRender;
         private Animator animator;
+        private static readonly Color NormalSpriteTint = Color.white;
+        private static readonly Color StunSpriteTint = new Color(0.72f, 0.72f, 0.78f, 1f);
 
         private String spriteUrl = "Pictures/NormalMordel/Game/{0}/Monster/{1}-1";
         private String animatorUrl = "Animator/AnimatorController/Monster/{0}/{1}";
@@ -50,6 +53,10 @@ namespace CarrotFantasy
             this.slider.gameObject.transform.eulerAngles = Vector3.zero;
 
             this.hpBarLocalOffset = DefaultMonsterHpBarLocalOffset;
+            if (this.hpBarCanvasRect != null)
+            {
+                this.buffIconBar.Create(this.hpBarCanvasRect);
+            }
         }
 
         public override void Init()
@@ -101,6 +108,9 @@ namespace CarrotFantasy
         {
             base.OnTick(deltaTime);
             this.SyncHpBarPosition();
+            this.buffIconBar.OnTick(deltaTime);
+            this.buffIconBar.ResetIconScales();
+            this.RefreshSpriteTint();
         }
 
         private void SyncHpBarPosition()
@@ -118,6 +128,10 @@ namespace CarrotFantasy
             base.InitListener();
             this.unitEventDispatcher.AddListener(BattleEvent.MONSTER_LIVE_REDUCE, this.UpdateLiveNumber);
             this.unitEventDispatcher.AddListener<int>(BattleEvent.MONSTER_DAMAGE_NUMBER, this.OnDamageNumber);
+            this.unitEventDispatcher.AddListener<BuffEventPayload>(UnitEvent.BUFF_ADD, this.OnBuffAdd);
+            this.unitEventDispatcher.AddListener<BuffEventPayload>(UnitEvent.BUFF_REFRESH, this.OnBuffRefresh);
+            this.unitEventDispatcher.AddListener<BuffEventPayload>(UnitEvent.BUFF_REMOVE, this.OnBuffRemove);
+            this.unitEventDispatcher.AddListener(UnitEvent.STATUS_CHANGE, this.RefreshSpriteTint);
         }
 
         public override void RemoveListener()
@@ -127,7 +141,45 @@ namespace CarrotFantasy
             {
                 this.unitEventDispatcher.RemoveListener(BattleEvent.MONSTER_LIVE_REDUCE, this.UpdateLiveNumber);
                 this.unitEventDispatcher.RemoveListener<int>(BattleEvent.MONSTER_DAMAGE_NUMBER, this.OnDamageNumber);
+                this.unitEventDispatcher.RemoveListener<BuffEventPayload>(UnitEvent.BUFF_ADD, this.OnBuffAdd);
+                this.unitEventDispatcher.RemoveListener<BuffEventPayload>(UnitEvent.BUFF_REFRESH, this.OnBuffRefresh);
+                this.unitEventDispatcher.RemoveListener<BuffEventPayload>(UnitEvent.BUFF_REMOVE, this.OnBuffRemove);
+                this.unitEventDispatcher.RemoveListener(UnitEvent.STATUS_CHANGE, this.RefreshSpriteTint);
             }
+        }
+
+        private void OnBuffAdd(BuffEventPayload payload)
+        {
+            this.buffIconBar.ApplyOrRefresh(payload);
+            this.RefreshSpriteTint();
+        }
+
+        private void OnBuffRefresh(BuffEventPayload payload)
+        {
+            this.buffIconBar.ApplyOrRefresh(payload);
+        }
+
+        private void OnBuffRemove(BuffEventPayload payload)
+        {
+            if (payload == null)
+            {
+                return;
+            }
+
+            this.buffIconBar.Remove(payload.buffId);
+            this.RefreshSpriteTint();
+        }
+
+        private void RefreshSpriteTint()
+        {
+            if (this.spriteRender == null)
+            {
+                return;
+            }
+
+            this.spriteRender.color = this.buffIconBar.HasCategory(BuffCategory.Stun)
+                ? StunSpriteTint
+                : NormalSpriteTint;
         }
 
         private void OnDamageNumber(int damage)
@@ -166,6 +218,7 @@ namespace CarrotFantasy
 
         public override void ClearUnitInfo()
         {
+            this.buffIconBar.ClearAll();
             this.DetachHpBarFromWorldLayer();
             this.worldUiCached = null;
             base.ClearUnitInfo();

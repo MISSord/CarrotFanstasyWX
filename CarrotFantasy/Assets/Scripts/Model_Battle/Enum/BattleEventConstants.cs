@@ -78,5 +78,9 @@ namespace CarrotFantasy
         public const String KILL_UNIT = "kill_unit";
 
         public const String HP_CHANGE = "hp_change";
+
+        public const String BUFF_ADD = "buff_add";
+        public const String BUFF_REFRESH = "buff_refresh";
+        public const String BUFF_REMOVE = "buff_remove";
     }
 }

@@ -96,11 +96,14 @@ namespace CarrotFantasy
                 return;
             }
 
+            Fix64 speedMul = MonsterLocomotionUtil.GetSpeedMultiplier(this.unit);
+            Fix64 scaledDelta = deltaTime * speedMul;
+
             Fix64 x;
             Fix64 y;
             Fix64 z;
             this.unitTransform.GetLastFramePosition(out x, out y, out z);
-            Fix64 useDelta = deltaTime;
+            Fix64 useDelta = scaledDelta;
 
             if (this.moveCurTime + useDelta >= this.moveTotalTime)
             {
@@ -114,11 +117,11 @@ namespace CarrotFantasy
             Fix64 spd = this.speed;
             if (spd >= Fix64.Zero)
             {
-                this.EndPointDistance -= this.speed;
+                this.EndPointDistance -= spd * speedMul;
             }
             else
             {
-                this.EndPointDistance += this.speed;
+                this.EndPointDistance += spd * speedMul;
             }
 
             this.unitTransform.SetPosition(x, y, z);

@@ -55,27 +55,29 @@ namespace CarrotFantasy
             return curType;
         }
 
-        public String GetString(int id)
+        public string GetString(int id)
         {
             return curLanguageBag.GetString(id);
         }
 
-        public String GetFormatString(int id, string one)
+        public string GetFormatString(int id, string one)
         {
-            return String.Format(curLanguageBag.GetString(id), one);
+            return string.Format(curLanguageBag.GetString(id), one);
         }
 
-        public String GetFormatString(int id, string one, string two)
+        public string GetFormatString(int id, string one, string two)
         {
-            return String.Format(curLanguageBag.GetString(id), one, two);
+            return string.Format(curLanguageBag.GetString(id), one, two);
         }
-        public String GetFormatString(int id, string one, string two, string three)
+
+        public string GetFormatString(int id, string one, string two, string three)
         {
-            return String.Format(curLanguageBag.GetString(id), one, two, three);
+            return string.Format(curLanguageBag.GetString(id), one, two, three);
         }
-        public String GetFormatString(int id, string[] list)
+
+        public string GetFormatString(int id, string[] list)
         {
-            return String.Format(curLanguageBag.GetString(id), list);
+            return string.Format(curLanguageBag.GetString(id), list);
         }
     }
 }

@@ -37,6 +37,7 @@ namespace CarrotFantasy
             this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET);
             this.RegisterUnitComponent(UnitComponentType.MOVE_BULLET_ONE);
             this.RegisterUnitComponent(UnitComponentType.BEHIT);
+            this.RegisterUnitComponent(UnitComponentType.BUFF);
         }
 
         public void RegisterBattleUnit(String name)

@@ -75,8 +75,20 @@ namespace CarrotFantasy
 
         }
 
+        public void ApplyStandaloneSession(string account, long userId)
+        {
+            this.SetAccountId(account);
+            this.userId = userId;
+        }
+
         public void LoginAccount(String accout, String password)
         {
+            if (StandaloneGameConfig.EnableStandaloneMode)
+            {
+                StandaloneBackendMock.SimulateLogin(accout, password);
+                return;
+            }
+
             this.SetAccountId(accout);
 
             ConnectionServer cs = ServerProvision.connectionServer;

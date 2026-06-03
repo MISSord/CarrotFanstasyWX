@@ -120,6 +120,11 @@ namespace CarrotFantasy
                 return;
             }
 
+            if (StandaloneBackendMock.TryHandleClientRequest(opcode, message))
+            {
+                return;
+            }
+
             byte[] payload = message.ToByteArray();
             this.Send(opcode, payload);
         }

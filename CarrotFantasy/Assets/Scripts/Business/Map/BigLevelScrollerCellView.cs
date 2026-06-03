@@ -5,78 +5,30 @@ namespace CarrotFantasy
 {
     public class BigLevelScrollerCellView : SelectableScrollerCellView<BigLevelInfo>
     {
-        private Transform imgLock;
         private Transform imgPage;
         private Text txtPage;
-        private Button button;
 
-        protected override void Awake()
+        protected override void LoadCallBack()
         {
-            base.Awake();
-            imgLock = transform.Find("img_lock");
-            imgPage = transform.Find("img_page");
-            if (imgPage != null)
-            {
-                var txtTrans = imgPage.Find("txt_page");
-                if (txtTrans != null)
-                {
-                    txtPage = txtTrans.GetComponent<Text>();
-                }
-            }
-
-            button = GetComponent<Button>();
+            imgPage = this.nameTableDic["img_page"].transform;
+            txtPage = this.nameTableDic["txt_page"].GetComponent<Text>();
         }
 
         protected override void OnSetData(BigLevelInfo data, int dataIndex)
         {
-            if (data == null)
-            {
-                return;
-            }
+            GameLogController.Error(data.bigLevel.ToString());
 
-            if (data.isLock == false)
-            {
-                if (imgLock != null)
-                {
-                    imgLock.gameObject.SetActive(false);
-                }
+            RawImage rawimg = this.nameTableDic["raw_bg"].GetComponent<RawImage>();
+            string asset = string.Format("themescene2_{0}", data.bigLevel);
+            string bundle = ResPath.GetRawImagePath(asset);
+            rawimg.SetTexture(bundle, asset);
 
-                if (imgPage != null)
-                {
-                    imgPage.gameObject.SetActive(true);
-                }
+            this.nameTableDic["img_lock"].gameObject.SetActive(data.isLock);
 
-                if (txtPage != null)
-                {
-                    txtPage.text = data.unlockCount.ToString() + "/" + data.count.ToString();
-                }
+            Text txt_page = this.nameTableDic["txt_page"].GetComponent<Text>();
+            txt_page.text = LanguageUtil.Instance.GetFormatString(105, data.unlockCount.ToString(), data.count.ToString());
 
-                if (button != null)
-                {
-                    button.interactable = true;
-                }
-            }
-            else
-            {
-                if (imgLock != null)
-                {
-                    imgLock.gameObject.SetActive(true);
-                }
-
-                if (imgPage != null)
-                {
-                    imgPage.gameObject.SetActive(false);
-                }
-
-                if (button != null)
-                {
-                    button.interactable = false;
-                }
-            }
         }
 
-        public override void SetSelected(bool selected)
-        {
-        }
     }
 }

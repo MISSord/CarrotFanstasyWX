@@ -7,6 +7,7 @@ namespace CarrotFantasy
     {
         None = 0,
         MainScene = 1,
-        BattleScene = 2
+        BattleScene = 2,
+        RoguelikeMapScene = 3,
     }
 }

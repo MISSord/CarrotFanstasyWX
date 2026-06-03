@@ -18,6 +18,9 @@ namespace CarrotFantasy
         /// <summary>全局 Sche 上预约的延时开局任务；重开或 Dispose 前需静默，避免多条回调叠加。</summary>
         private int _pendingStartGameSchId;
 
+        /// <summary>本局战斗随机种子；重开复用，保证与首局相同序列。</summary>
+        int _battleRandomSeed;
+
         private void Awake()
         {
             instance = this;
@@ -32,6 +35,10 @@ namespace CarrotFantasy
                 if (BattleParamServer.Instance.useHitTestBenchmarkBattle)
                 {
                     this.baseBattle = new HitTestBenchmarkBattle();
+                }
+                else if (BattleParamServer.Instance.useRoguelikePveBattleMode)
+                {
+                    this.baseBattle = new RoguelikePveBattle();
                 }
                 else if (BattleParamServer.Instance.useSurvivalPveBattleMode)
                 {
@@ -70,6 +77,15 @@ namespace CarrotFantasy
         private void OnPveMatchSettled(PveMatchSettlement settlement)
         {
             if (settlement == null) return;
+
+            if (BattleParamServer.Instance != null &&
+                BattleParamServer.Instance.useRoguelikePveBattleMode &&
+                RoguelikeRunManager.Instance != null)
+            {
+                RoguelikeRunManager.Instance.HandlePveMatchSettled(settlement);
+                return;
+            }
+
             if (settlement.IsVictory && settlement.VictoryProgress != null && this.baseBattle.HostBridge != null)
             {
                 this.baseBattle.HostBridge.SubmitVictoryMapProgress(settlement.VictoryProgress);
@@ -93,6 +109,7 @@ namespace CarrotFantasy
 
             this.baseBattleView.ClearGameInfo();
             this.baseBattle.ClearGameInfo();
+            // _battleRandomSeed 不变 → InitBattle 内 ResetRandomSession，序列与首局一致
 
             this.InitBattle();
             this.ScheduleDelayedStartGame(2.0f);
@@ -121,6 +138,7 @@ namespace CarrotFantasy
 
         public void InitBattle()
         {
+            ApplyBattleRandomSession();
             this.baseBattle.Init();
             this.baseBattle.InitComponent();
 
@@ -128,6 +146,44 @@ namespace CarrotFantasy
             this.baseBattleView.InitComponents();
 
             ViewManager.Instance.OpenView<NormalModelPanel>();
+        }
+
+        /// <summary>
+        /// 设置本局种子（场景入口可经 <see cref="BattleLaunchParams.BattleRandomSeed"/> 传入）。
+        /// 为 0 且尚未有过种子时，按当前关卡合成。
+        /// </summary>
+        public void SetBattleRandomSeed (int seed)
+        {
+            _battleRandomSeed = seed == 0 ? 1 : seed;
+        }
+
+        void ApplyBattleRandomSession ()
+        {
+            if (_battleRandomSeed == 0) {
+                _battleRandomSeed = ResolveDefaultBattleRandomSeed();
+            }
+
+            if (this.baseBattle.RandomSession == null ||
+                this.baseBattle.RandomSession.RootSeed != _battleRandomSeed) {
+                this.baseBattle.SetRandomSession(
+                    new DeterministicRandomSession(_battleRandomSeed)
+                );
+            }
+            else {
+                this.baseBattle.ResetRandomSession();
+            }
+        }
+
+        static int ResolveDefaultBattleRandomSeed ()
+        {
+            if (BattleParamServer.Instance == null) {
+                return 1;
+            }
+
+            return DeterministicSeed.ForClassicLevel(
+                BattleParamServer.Instance.curBigLevel,
+                BattleParamServer.Instance.curLevel
+            );
         }
 
         public void StartGame()

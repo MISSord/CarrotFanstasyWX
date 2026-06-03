@@ -38,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 165, y: 0}
-  m_SizeDelta: {x: 183.20001, y: 187}
+  m_SizeDelta: {x: 96, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222656925356061936
 CanvasRenderer:
@@ -148,7 +148,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_32
-  _lastRecordedSpriteInstanceId: 24108
+  _lastRecordedSpriteInstanceId: 23212
 --- !u!1 &1494301574538940
 GameObject:
   m_ObjectHideFlags: 0
@@ -243,7 +243,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/stages_bg-hd_0
   defaultAssetName: stages_bg-hd_0
-  _lastRecordedSpriteInstanceId: 24102
+  _lastRecordedSpriteInstanceId: 23226
 --- !u!114 &887766554433221102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -265,8 +265,6 @@ MonoBehaviour:
     uiReference: {fileID: 1054686842716696}
   - name: btn_next_page
     uiReference: {fileID: 1494814632147052}
-  - name: content
-    uiReference: {fileID: 0}
   - name: scroller
     uiReference: {fileID: 1680603175216414}
 --- !u!1 &1494814632147052
@@ -307,7 +305,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: -150, y: 0}
-  m_SizeDelta: {x: 183.19995, y: 187}
+  m_SizeDelta: {x: 96, y: 96}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222124607894670442
 CanvasRenderer:
@@ -417,7 +415,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_26
-  _lastRecordedSpriteInstanceId: 24112
+  _lastRecordedSpriteInstanceId: 23222
 --- !u!1 &1680603175216414
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,10 +451,10 @@ RectTransform:
   m_Father: {fileID: 1849813620170330597}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1700, y: 1000}
+  m_SizeDelta: {x: 0, y: 653}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &114002763360939194
 MonoBehaviour:
@@ -639,7 +637,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_1
-  _lastRecordedSpriteInstanceId: 24122
+  _lastRecordedSpriteInstanceId: 23228
 --- !u!1 &5161565909190315285
 GameObject:
   m_ObjectHideFlags: 0
@@ -676,8 +674,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -30.5}
-  m_SizeDelta: {x: 0, y: -213.5}
+  m_AnchoredPosition: {x: 0, y: -68.5}
+  m_SizeDelta: {x: 0, y: -137}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &7443495680128512157
 GameObject:
@@ -717,7 +715,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 50, y: 0}
-  m_SizeDelta: {x: 101.29999, y: 82.642}
+  m_SizeDelta: {x: 40, y: 32}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &7232466992655225347
 CanvasRenderer:
@@ -827,7 +825,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_41
-  _lastRecordedSpriteInstanceId: 24120
+  _lastRecordedSpriteInstanceId: 23246
 --- !u!1 &7443709657981402647
 GameObject:
   m_ObjectHideFlags: 0
@@ -866,7 +864,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: -89, y: 0}
-  m_SizeDelta: {x: 104.30005, y: 101.7}
+  m_SizeDelta: {x: 44, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7228349189045272327
 CanvasRenderer:
@@ -976,7 +974,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_42
-  _lastRecordedSpriteInstanceId: 24114
+  _lastRecordedSpriteInstanceId: 23240
 --- !u!1 &7443717128759601441
 GameObject:
   m_ObjectHideFlags: 0
@@ -1014,7 +1012,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 16, y: 0}
-  m_SizeDelta: {x: 304, y: 82.7}
+  m_SizeDelta: {x: 116, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7232560787419760755
 CanvasRenderer:
@@ -1068,4 +1066,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_32
-  _lastRecordedSpriteInstanceId: 24140
+  _lastRecordedSpriteInstanceId: 23248

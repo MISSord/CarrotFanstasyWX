@@ -20,6 +20,7 @@ namespace CarrotFantasy
         public const String BulletComponent = "BulletComponent";
         public const String ItemComponent = "ItemComponent";
         public const String FlowFieldComponent = "FlowFieldComponent";
+        public const String RoguelikeRunBridgeComponent = "RoguelikeRunBridgeComponent";
     }
 
     public class UnitComponentType
@@ -33,6 +34,7 @@ namespace CarrotFantasy
         public const String TRAIN = "Train"; //传输
 
         public const String STATUS = "STATUS";//状态
+        public const String BUFF = "Buff";
 
         public const String MOVE_MONSTER = "Move_Monster";
         public const String MOVE_MONSTER_FLOW_FIELD = "Move_Monster_FlowField";

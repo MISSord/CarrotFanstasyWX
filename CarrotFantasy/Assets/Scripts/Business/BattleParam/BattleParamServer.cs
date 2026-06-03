@@ -28,6 +28,12 @@ namespace CarrotFantasy
         public bool useSurvivalPveBattleMode = false;
 
         /// <summary>
+        /// 为 true 时 <see cref="BattleManager"/> 创建 <see cref="RoguelikePveBattle"/>（肉鸽模式）。
+        /// 优先级高于 <see cref="useSurvivalPveBattleMode"/> 与经典 <see cref="PveBattle"/>。
+        /// </summary>
+        public bool useRoguelikePveBattleMode = false;
+
+        /// <summary>
         /// 为 true 时进入 <see cref="HitTestBenchmarkBattle"/>（碰撞性能对比），不再走 Pve / Survival Pve。
         /// </summary>
         public bool useHitTestBenchmarkBattle = false;
@@ -97,6 +103,35 @@ namespace CarrotFantasy
 
             string path = "Level" + this.curBigLevel.ToString() + "_" + this.curLevel.ToString() + ".json";
             this.info = LoadLevelInfoFile(path);
+        }
+
+        /// <summary>肉鸽战斗入口：由 <see cref="RoguelikeRunManager"/> 在切场景前调用。</summary>
+        public void PrepareRoguelikeEncounter(int encounterId, int bigLevel, int level)
+        {
+            this.isPVE = true;
+            this.useRoguelikePveBattleMode = true;
+            this.useSurvivalPveBattleMode = false;
+            this.useHitTestBenchmarkBattle = false;
+            this.curBigLevel = bigLevel;
+            this.curLevel = level;
+
+            if (MapServer.Instance != null && MapServer.Instance.mapModel != null)
+            {
+                this.curStage = MapServer.Instance.mapModel.GetStage(bigLevel, level);
+                this.curSingleMapInfo = MapServer.Instance.mapModel.GetSingleMapInfo(bigLevel, level);
+            }
+
+            string path = "Level" + bigLevel.ToString() + "_" + level.ToString() + ".json";
+            this.info = LoadLevelInfoFile(path);
+        }
+
+        /// <summary>若未走 <see cref="LoadModule"/>，战斗 UI 注册可延迟到此。</summary>
+        public void EnsureBattleViewsLoaded()
+        {
+            if (this.normalModepanel == null)
+            {
+                this.InitBattleViews();
+            }
         }
 
         private void GetPVPBattleParams()

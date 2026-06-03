@@ -10,6 +10,7 @@ namespace CarrotFantasy
             this.zhLangage.Add(102, "");
             this.zhLangage.Add(103, "正在匹配...");
             this.zhLangage.Add(104, "(匹配时间:{0})正在匹配");
+            this.zhLangage.Add(105, "{0}/{1}");
 
             //Battle
             this.zhLangage.Add(1001, " {0} {1}  / {2} 波怪物");

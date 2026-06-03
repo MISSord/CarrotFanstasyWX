@@ -1,5 +1,94 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &4613175541630294259
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 598815912341204344}
+  - component: {fileID: 2758541264443455952}
+  - component: {fileID: 6236349413750036548}
+  - component: {fileID: 7570685429873571970}
+  m_Layer: 5
+  m_Name: raw_bg
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &598815912341204344
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613175541630294259}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 9033622714310952805}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 648, y: 512}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2758541264443455952
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613175541630294259}
+  m_CullTransparentMesh: 0
+--- !u!114 &6236349413750036548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613175541630294259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: ef54a415765ec5144920256d4ae7a205, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!114 &7570685429873571970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4613175541630294259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/themescene2_2
+  defaultAssetName: themescene2_2
+  _lastRecordedSpriteInstanceId: 22960
 --- !u!1 &9098207798166842383
 GameObject:
   m_ObjectHideFlags: 0
@@ -10,10 +99,10 @@ GameObject:
   m_Component:
   - component: {fileID: 9033622714310952805}
   - component: {fileID: 9031674530269826717}
-  - component: {fileID: 9211843847999481097}
   - component: {fileID: 9212073048813616277}
-  - component: {fileID: 4021745724053970129}
   - component: {fileID: 1153209648811117153}
+  - component: {fileID: 4560864994907353252}
+  - component: {fileID: 7622207865017185840}
   m_Layer: 5
   m_Name: BigLevelNode
   m_TagString: Untagged
@@ -33,16 +122,17 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 598815912341204344}
   - {fileID: 9033431165235081741}
   - {fileID: 9033585649017040065}
   - {fileID: 9033622481180207039}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_SizeDelta: {x: 648, y: 512}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9031674530269826717
 CanvasRenderer:
@@ -52,36 +142,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9098207798166842383}
   m_CullTransparentMesh: 0
---- !u!114 &9211843847999481097
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9098207798166842383}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: ef54a415765ec5144920256d4ae7a205, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
 --- !u!114 &9212073048813616277
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -122,25 +182,10 @@ MonoBehaviour:
     m_SelectedTrigger: Highlighted
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 9211843847999481097}
+  m_TargetGraphic: {fileID: 0}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!114 &4021745724053970129
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9098207798166842383}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/themescene2_2
-  defaultAssetName: themescene2_2
-  _lastRecordedSpriteInstanceId: 24146
 --- !u!114 &1153209648811117153
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -154,6 +199,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cellIdentifier: 
+--- !u!114 &4560864994907353252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9098207798166842383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiEntries:
+  - name: raw_bg
+    uiReference: {fileID: 4613175541630294259}
+  - name: img_bg
+    uiReference: {fileID: 9098662794295679887}
+  - name: img_lock
+    uiReference: {fileID: 9098697560849737987}
+  - name: img_page
+    uiReference: {fileID: 9098555660109256399}
+  - name: txt_page
+    uiReference: {fileID: 9098512659142649717}
+--- !u!114 &7622207865017185840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9098207798166842383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e4f2a1b3d5476e9f0a1b2c3d4e5f60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &9098512659142649717
 GameObject:
   m_ObjectHideFlags: 0
@@ -190,8 +274,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 3.255, y: 12.9}
-  m_SizeDelta: {x: 139.21, y: 62.25}
+  m_AnchoredPosition: {x: 0, y: 11}
+  m_SizeDelta: {x: 139, y: 62.25}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9031654804943302915
 CanvasRenderer:
@@ -283,12 +367,12 @@ RectTransform:
   m_Children:
   - {fileID: 9034210741320610179}
   m_Father: {fileID: 9033622714310952805}
-  m_RootOrder: 2
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 336.1, y: -388.2}
-  m_SizeDelta: {x: 132.7, y: 94.2}
+  m_AnchoredPosition: {x: 181, y: 226}
+  m_SizeDelta: {x: 88, y: 64}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9031236905476738037
 CanvasRenderer:
@@ -342,7 +426,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: Items03-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 23104
+  _lastRecordedSpriteInstanceId: 22990
 --- !u!1 &9098662794295679887
 GameObject:
   m_ObjectHideFlags: 0
@@ -375,12 +459,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9033622714310952805}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 269, y: 266}
-  m_SizeDelta: {x: 376.7, y: 78.8}
+  m_AnchoredPosition: {x: -133, y: 70}
+  m_SizeDelta: {x: 216, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9030970012776094287
 CanvasRenderer:
@@ -434,7 +518,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_9
-  _lastRecordedSpriteInstanceId: 24158
+  _lastRecordedSpriteInstanceId: 22992
 --- !u!1 &9098697560849737987
 GameObject:
   m_ObjectHideFlags: 0
@@ -453,7 +537,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &9033585649017040065
 RectTransform:
   m_ObjectHideFlags: 0
@@ -467,12 +551,12 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9033622714310952805}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 437, y: -271}
-  m_SizeDelta: {x: 300.77, y: 300.8}
+  m_AnchoredPosition: {x: 259, y: -156}
+  m_SizeDelta: {x: 176, y: 204}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &9031223368260954447
 CanvasRenderer:
@@ -526,4 +610,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_10
-  _lastRecordedSpriteInstanceId: 24152
+  _lastRecordedSpriteInstanceId: 22988

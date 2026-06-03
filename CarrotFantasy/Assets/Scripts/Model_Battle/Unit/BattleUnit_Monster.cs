@@ -15,6 +15,7 @@ namespace CarrotFantasy
 
         /// <summary>由子类 <see cref="InstallLocomotion"/> 安装，须实现 <see cref="IMonsterLocomotion"/>。</summary>
         protected BaseUnitComponent locomotionComponent;
+        protected UnitBuffComponent buffComponent;
 
         private List<int> haveBeHit;
         private bool isHaveDead = false;
@@ -76,11 +77,23 @@ namespace CarrotFantasy
                 beHit = new UnitBeHitComponent();
             }
 
+            this.buffComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitBuffComponent>(UnitComponentType.BUFF);
+            if (this.buffComponent == null)
+            {
+                this.buffComponent = new UnitBuffComponent();
+            }
+
             this.AddComponent(this.unitTransform);
             this.AddComponent(this.locomotionComponent);
             this.AddComponent(beHit);
+            this.AddComponent(this.buffComponent);
 
             beHit.RegisterBeHitCallBack(this.BeHitCallBack);
+        }
+
+        public UnitBuffComponent GetBuffComponent()
+        {
+            return this.buffComponent;
         }
 
         /// <summary>子类安装本玩法对应的移动组件。</summary>
@@ -94,29 +107,45 @@ namespace CarrotFantasy
 
         public void BeHitCallBack(BattleUnit battleUnit)
         {
-            if (this.isHaveDead == true)
+            if (battleUnit.unitType.Equals(BattleUnitType.BULLET) == false)
             {
                 return;
             }
 
-            if (battleUnit.unitType.Equals(BattleUnitType.BULLET))
+            BattleUnit_Bullet bullet = (BattleUnit_Bullet)battleUnit;
+            if (BattleMonsterDamage.TryResolveBulletHit(this, bullet) == false)
             {
-                BattleUnit_Bullet bullet = (BattleUnit_Bullet)battleUnit;
-                if (this.haveBeHit.Contains(bullet.uid))
-                {
-                    return;
-                }
-
-                this.haveBeHit.Add(bullet.uid);
-                this.curLive -= bullet.damage;
-                this.eventDipatcher.DispatchEvent<int>(BattleEvent.MONSTER_DAMAGE_NUMBER, bullet.damage);
-                this.eventDipatcher.DispatchEvent(BattleEvent.MONSTER_LIVE_REDUCE);
-                if (this.curLive <= 0)
-                {
-                    this.isHaveDead = true;
-                    this.eventDipatcher.DispatchEvent<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this);
-                }
+                return;
             }
+        }
+
+        public bool IsDamageImmune()
+        {
+            return this.isHaveDead == true || this.curLive <= 0;
+        }
+
+        public bool HasBeenHitByBullet(int bulletUid)
+        {
+            return this.haveBeHit.Contains(bulletUid);
+        }
+
+        public void RegisterBulletHit(int bulletUid)
+        {
+            if (this.haveBeHit.Contains(bulletUid) == false)
+            {
+                this.haveBeHit.Add(bulletUid);
+            }
+        }
+
+        public void TryMarkDeadFromDamage()
+        {
+            if (this.curLive > 0 || this.isHaveDead == true)
+            {
+                return;
+            }
+
+            this.isHaveDead = true;
+            this.eventDipatcher.DispatchEvent<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this);
         }
 
         public virtual bool IsDead()
@@ -136,8 +165,20 @@ namespace CarrotFantasy
 
         public override void OnTick(Fix64 deltaTime)
         {
-            this.Locomotion.OnTick(deltaTime);
-            this.EndPointDistance = this.Locomotion.EndPointDistance;
+            if (this.buffComponent != null && this.buffComponent.BlocksMovement() == false)
+            {
+                this.Locomotion.OnTick(deltaTime);
+                this.EndPointDistance = this.Locomotion.EndPointDistance;
+            }
+            else if (this.buffComponent != null && this.buffComponent.BlocksMovement())
+            {
+                this.EndPointDistance = this.Locomotion.EndPointDistance;
+            }
+
+            if (this.buffComponent != null)
+            {
+                this.buffComponent.OnTick(deltaTime);
+            }
         }
 
         public override void LateTick(Fix64 deltaTime)
@@ -147,7 +188,12 @@ namespace CarrotFantasy
 
         public override void ClearInfo()
         {
+            if (this.buffComponent != null)
+            {
+                this.buffComponent.ClearAllBuffs();
+            }
             base.ClearInfo();
+            this.buffComponent = null;
             this.curLevel = 0;
             this.monsterId = 0;
             this.isHaveDead = false;

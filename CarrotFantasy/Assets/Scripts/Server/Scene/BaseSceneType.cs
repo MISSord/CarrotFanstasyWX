@@ -5,6 +5,7 @@ namespace CarrotFantasy
         LoginScene = 1,
         MainScene = 2,
         BattleScene = 3,
+        RoguelikeMapScene = 4,
     }
 
 

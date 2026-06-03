@@ -22,6 +22,7 @@ namespace CarrotFantasy
 
         private readonly List<AssetLoadHandle> _panelPrefabHandles = new List<AssetLoadHandle>();
         private GameObject _tplNodeTower;
+        private bool _isLoadTower = false;
 
         public void SetBigLevel(int bigLevelId)
         {
@@ -35,9 +36,37 @@ namespace CarrotFantasy
             SetUILoadInfo(0, UiViewAbPaths.MapViewPrefab, "MapLevelPanel");
         }
 
+        protected override void ReleaseCallBack()
+        {
+            if (towerContentImageGos != null && towerContentImageGos.Count > 0)
+            {
+                for (int i = 0; i < towerContentImageGos.Count; i++)
+                {
+                    if (towerContentImageGos[i] != null)
+                    {
+                        GameObject.Destroy(towerContentImageGos[i]);
+                    }
+                }
+                towerContentImageGos.Clear();
+            }
+
+            for (int i = 0; i < _panelPrefabHandles.Count; i++)
+            {
+                _panelPrefabHandles[i].Dispose();
+            }
+            _panelPrefabHandles.Clear();
+
+            _tplNodeTower = null;
+            scrollerList = null;
+            _isLoadTower = false;
+
+            RemoveListener();
+        }
+
         protected override void LoadCallBack()
         {
-            towerContentImageGos = new List<GameObject>();
+            _isLoadTower = false;
+
             nodeLockBtn = nameTableDic["img_lock_btn"];
             nodeTowerTrans = nameTableDic["node_tower"].transform;
             txtTotalWaves = nameTableDic["txt_waves"].GetComponent<Text>();
@@ -48,9 +77,13 @@ namespace CarrotFantasy
             scrollerList.SetOnSelected(OnLevelSelected);
 
             EnsureTowerTemplates();
-            UpdateTowerUI();
-
             AddListener();
+
+            var spritePath = NormalLevelListItem.MapFilePathBase + currentBigLevelID + "/";
+            RawImage img_left = nameTableDic["img_bg_left"].GetComponent<RawImage>();
+            //img_left.SetTexture();
+            //nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
+            //    ResourceLoader.Instance.loadRes<Sprite>(spritePath + "BG_Right");
         }
 
         protected override void ShowIndexCallBack(int viewIndex)
@@ -61,6 +94,7 @@ namespace CarrotFantasy
             }
 
             RefreshPanelData();
+
             int selectIndex = currentLevelID - 1;
             if (selectIndex >= 0 && selectIndex < scrollerList.Items.Count)
             {
@@ -73,17 +107,7 @@ namespace CarrotFantasy
         private void RefreshPanelData()
         {
             levelInfoList = MapServer.Instance.mapModel.GetOnceBigLevelMapInfo(currentBigLevelID);
-            LoadBackgroundSprites();
             RefreshLevelList();
-        }
-
-        private void LoadBackgroundSprites()
-        {
-            var spritePath = NormalLevelListItem.MapFilePathBase + currentBigLevelID + "/";
-            nameTableDic["img_bg_left"].GetComponent<Image>().sprite =
-                ResourceLoader.Instance.loadRes<Sprite>(spritePath + "BG_Left");
-            nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
-                ResourceLoader.Instance.loadRes<Sprite>(spritePath + "BG_Right");
         }
 
         private void RefreshLevelList()
@@ -118,28 +142,31 @@ namespace CarrotFantasy
 
         private void EnsureTowerTemplates()
         {
-            if (towerContentImageGos.Count > 0)
-            {
-                return;
-            }
+            towerContentImageGos = new List<GameObject>();
 
-            EnsurePanelPrefabTemplate(ref _tplNodeTower, UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeTowerAsset);
+            GameObjectResourceManager.Instance.LoadPrefab(UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeTowerAsset, (GameObject obj) => {
+                _tplNodeTower = obj;
+                for (int i = 0; i < towerCount; i++)
+                {
+                    towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, nodeTowerTrans));
+                    _isLoadTower = true;
+                    UpdateTowerUI();
+                }
+            });
+        }
 
-            if (_tplNodeTower == null)
-            {
-                Debug.LogError("[MapNormalLevelPanel] node_tower 预制体加载失败");
-                return;
-            }
-
-            for (int i = 0; i < towerCount; i++)
-            {
-                towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, nodeTowerTrans));
-            }
+        private GameObject InstantiateUiUnderParent(GameObject tpl, Transform parentTrans)
+        {
+            GameObject itemGo = GameObject.Instantiate(tpl);
+            itemGo.transform.SetParent(parentTrans, false);
+            itemGo.transform.localPosition = Vector3.zero;
+            itemGo.transform.localScale = Vector3.one;
+            return itemGo;
         }
 
         public void UpdateTowerUI()
         {
-            if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
+            if (_isLoadTower == false || levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
             {
                 return;
             }
@@ -185,28 +212,6 @@ namespace CarrotFantasy
             UIServer.Instance.PlayButtonEffect();
         }
 
-        private void EnsurePanelPrefabTemplate(ref GameObject tplField, string bundleName, string assetName)
-        {
-            if (tplField != null)
-            {
-                return;
-            }
-
-            tplField = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle h);
-            if (h.IsValid)
-            {
-                _panelPrefabHandles.Add(h);
-            }
-        }
-
-        private static GameObject InstantiateUiUnderParent(GameObject tpl, Transform parentTrans)
-        {
-            GameObject itemGo = GameObject.Instantiate(tpl);
-            itemGo.transform.SetParent(parentTrans, false);
-            itemGo.transform.localPosition = Vector3.zero;
-            itemGo.transform.localScale = Vector3.one;
-            return itemGo;
-        }
 
         public void ToNextLevel()
         {
@@ -273,30 +278,6 @@ namespace CarrotFantasy
             UpdateTowerUI();
         }
 
-        protected override void ReleaseCallBack()
-        {
-            if (towerContentImageGos != null && towerContentImageGos.Count > 0)
-            {
-                for (int i = 0; i < towerContentImageGos.Count; i++)
-                {
-                    if (towerContentImageGos[i] != null)
-                    {
-                        GameObject.Destroy(towerContentImageGos[i]);
-                    }
-                }
 
-                towerContentImageGos.Clear();
-            }
-
-            for (int i = 0; i < _panelPrefabHandles.Count; i++)
-            {
-                _panelPrefabHandles[i].Dispose();
-            }
-
-            _panelPrefabHandles.Clear();
-            _tplNodeTower = null;
-            scrollerList = null;
-            RemoveListener();
-        }
     }
 }

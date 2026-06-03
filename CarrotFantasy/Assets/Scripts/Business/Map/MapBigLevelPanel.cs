@@ -45,8 +45,14 @@ namespace CarrotFantasy
 
         private void OnBigLevelSelected(int index, BigLevelInfo info)
         {
-            if (info == null || info.isLock)
+            if (info == null)
             {
+                return;
+            }
+
+            if (info.isLock)
+            {
+                UIServer.Instance.ShowTip("该大关尚未解锁");
                 return;
             }
 

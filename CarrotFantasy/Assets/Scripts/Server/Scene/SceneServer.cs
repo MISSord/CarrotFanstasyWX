@@ -84,6 +84,9 @@ namespace CarrotFantasy
                 case BaseSceneType.BattleScene:
                     targetScene = new BattleScene(sceneType, "BattleScene", param);
                     break;
+                case BaseSceneType.RoguelikeMapScene:
+                    targetScene = new RoguelikeMapScene(sceneType, "RoguelikeMapScene", param);
+                    break;
                 default:
                     Debug.Log("场景加载失败");
                     break;

@@ -16,6 +16,12 @@ namespace CarrotFantasy
         public float StartGameDelaySeconds = 2f;
 
         /// <summary>
+        /// 本局战斗随机种子。为 0 时由 <see cref="BattleManager"/> 按关卡参数合成。
+        /// 重开/回放须传入与首局相同的种子。
+        /// </summary>
+        public int BattleRandomSeed;
+
+        /// <summary>
         /// 从场景切换字典解析可选参数。约定键：<c>battleViewRoot</c>（GameObject）、<c>startGameDelay</c>（秒，数值）。
         /// 使用 <see cref="object"/> 而非 dynamic，避免 Unity 下缺少 Microsoft.CSharp 运行时绑定导致的 CS0656。
         /// </summary>

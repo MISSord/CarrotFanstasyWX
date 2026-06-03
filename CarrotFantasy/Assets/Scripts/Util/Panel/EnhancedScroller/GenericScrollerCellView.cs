@@ -16,11 +16,14 @@ namespace CarrotFantasy
             OnSetData(data, dataIndex);
         }
 
-        protected abstract void OnSetData(TData data, int dataIndex);
+        protected virtual void OnSetData(TData data, int dataIndex)
+        {
+
+        }
 
         public override void RefreshCellView()
         {
-            OnSetData(CachedData, dataIndex);
+
         }
     }
 }

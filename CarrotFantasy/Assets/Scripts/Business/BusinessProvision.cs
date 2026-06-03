@@ -32,9 +32,10 @@ namespace CarrotFantasy
             this.businessDic.Add(BusinessType.AccountServer, AccountServer.Instance);
             this.businessDic.Add(BusinessType.MapServer, MapServer.Instance);
             this.businessDic.Add(BusinessType.SettingServer, SettingServer.Instance);
+            this.businessDic.Add(BusinessType.RoguelikeRunServer, RoguelikeRunServer.Instance);
+            this.businessDic.Add(BusinessType.BattleParamServer, BattleParamServer.Instance);
 
             //this.businessDic.Add(BusinessType.RoomServer, RoomServer.Instance);
-            //this.businessDic.Add(BusinessType.BattleParamServer, BattleParamServer.Instance);
 
             this.eventDispatcher.AddListener(CommonEventType.GAME_QUIT, this.Dispose);
         }
@@ -46,6 +47,11 @@ namespace CarrotFantasy
                 info.Value.LoadModule();
                 info.Value.AddSocketListener();
                 this.businessList.Add(info.Value);
+            }
+
+            if (StandaloneGameConfig.EnableStandaloneMode)
+            {
+                StandaloneBackendMock.BootstrapDefaultSession();
             }
         }
 

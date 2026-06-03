@@ -92,6 +92,11 @@ namespace CarrotFantasy
         /// </summary>
         private void OnLoginSuccessBootstrapMap()
         {
+            if (StandaloneGameConfig.EnableStandaloneMode)
+            {
+                return;
+            }
+
             this.ApplyMapSnapshot(MapInfoHelper.GetInitMapInfo());
         }
 
@@ -116,6 +121,34 @@ namespace CarrotFantasy
             this.unSaveMapInfo = unSaveMapInfo;
 
             ConnectionServer cs = ServerProvision.connectionServer;
+            bool canUseStandaloneMock = StandaloneGameConfig.EnableStandaloneMode
+                && StandaloneBackendMock.HasSession
+                && cs != null
+                && AccountServer.Instance.userId != 0;
+            if (canUseStandaloneMock)
+            {
+                try
+                {
+                    var req = new SetSingleMapRequest
+                    {
+                        UserId = AccountServer.Instance.userId,
+                        BigLevelId = unSaveMapInfo.bigLevelId,
+                        LevelId = unSaveMapInfo.levelId,
+                        CarrotState = unSaveMapInfo.carrotState,
+                        IsAllClear = unSaveMapInfo.isAllClear,
+                    };
+                    cs.SendProtobuf(SimpleBinaryOpcodes.SetSingleMapRequest, req);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning(string.Format("SendSetSingleMapInfo(standalone): {0}", ex.Message));
+                    this.ApplyVictoryOffline(unSaveMapInfo);
+                    this.unSaveMapInfo = null;
+                }
+
+                return;
+            }
+
             if (cs == null || !cs.IsTransportConnected || AccountServer.Instance.userId == 0)
             {
                 this.ApplyVictoryOffline(unSaveMapInfo);

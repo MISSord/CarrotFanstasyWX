@@ -124,7 +124,7 @@ namespace CarrotFantasy
             TryApplyJumpSelection(dataIndex);
         }
 
-        public void Select(int index, bool invokeCallback = true, bool refreshVisible = true)
+        public void Select(int index, bool invokeCallback = true, bool refreshVisible = false)
         {
             if (_binder.Count == 0)
             {
@@ -154,7 +154,14 @@ namespace CarrotFantasy
         internal void HandleCellClick(int index)
         {
             ClearPendingJumpSelect();
-            Select(index, invokeCallback: true, refreshVisible: true);
+            if (index >= 0 && index < _binder.Count && index == SelectedIndex)
+            {
+                // 已选中行再次点击：仍触发业务回调（例如打开详情），避免“点了没反应”
+                _onSelected?.Invoke(index, _binder.Items[index]);
+                return;
+            }
+
+            Select(index, invokeCallback: true, refreshVisible: false);
         }
 
         private void OnJumpComplete()

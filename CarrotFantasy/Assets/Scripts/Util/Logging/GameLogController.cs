@@ -81,6 +81,26 @@ public static class GameLogController
         Write(GameLogLevel.Info, message, tag, context);
     }
 
+    /// <summary>
+    /// 将多段字符串以空格拼接后按 Info 级别输出。例：<c>LogJoin("a", "b", index.ToString())</c> → "a b {index}"。
+    /// </summary>
+    public static void LogJoin(params string[] parts)
+    {
+        Log(JoinParts(parts));
+    }
+
+    /// <summary>带模块 tag 的 <see cref="LogJoin"/>。</summary>
+    public static void LogJoin(string tag, params string[] parts)
+    {
+        Log(JoinParts(parts), tag);
+    }
+
+    /// <summary>将多段字符串以空格拼接后按 Info 级别输出，可指定 Unity 上下文对象。</summary>
+    public static void LogJoin(Object context, params string[] parts)
+    {
+        Log(JoinParts(parts), null, context);
+    }
+
     public static void Verbose(string message, string tag = null, Object context = null)
     {
         if (!IsEnabled(GameLogLevel.Verbose, tag))
@@ -100,6 +120,31 @@ public static class GameLogController
         if (!IsEnabled(GameLogLevel.Error, tag))
             return;
         Write(GameLogLevel.Error, message, tag, context);
+    }
+
+    public static void ErrorJoin(params string[] parts)
+    {
+        Error(JoinParts(parts));
+    }
+
+    public static void ErrorJoin(string tag, params string[] parts)
+    {
+        Error(JoinParts(parts), tag);
+    }
+
+    private static string JoinParts(string[] parts)
+    {
+        if (parts == null || parts.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        if (parts.Length == 1)
+        {
+            return parts[0] ?? string.Empty;
+        }
+
+        return string.Join(" ", parts);
     }
 
     private static void Write(GameLogLevel level, string message, string tag, Object context)

@@ -106,6 +106,8 @@ namespace CarrotFantasy
             Fix64 z;
             this.unitTransform.GetLastFramePosition(out x, out y, out z);
 
+            Fix64 speedMul = MonsterLocomotionUtil.GetSpeedMultiplier(this.unit);
+
             if (this.flowField == null || !this.flowField.IsBuilt)
             {
                 Fix64 dxToGoal = this.goalCenterX - x;
@@ -120,7 +122,7 @@ namespace CarrotFantasy
 
                 if (lenG > Fix64.Zero)
                 {
-                    Fix64 stepG = this.speed * deltaTime;
+                    Fix64 stepG = this.speed * deltaTime * speedMul;
                     if (stepG > lenG)
                     {
                         stepG = lenG;
@@ -180,7 +182,7 @@ namespace CarrotFantasy
             }
 
             Fix64 len = Fix64.Sqrt(lenSq);
-            Fix64 step = this.speed * deltaTime;
+            Fix64 step = this.speed * deltaTime * speedMul;
             if (step > len)
             {
                 step = len;

@@ -66,6 +66,7 @@ namespace CarrotFantasy
                 { "damage", new Fix64(20)},
                 { "moveSpeed", new Fix64(4)},
                 { "isRemove", Fix64.Zero},
+                { "onHitBuffId", new Fix64(1002)},
             });
 
             this.bulletBirthParam.Add(301, new Dictionary<String, Fix64>() {
@@ -106,6 +107,7 @@ namespace CarrotFantasy
                 { "damage", new Fix64(10)},
                 { "moveSpeed", new Fix64(4)},
                 { "isRemove", Fix64.One},
+                { "onHitBuffId", new Fix64(1001)},
             });
 
             this.bulletBirthParam.Add(402, new Dictionary<String, Fix64>() {
@@ -116,6 +118,7 @@ namespace CarrotFantasy
                 { "damage", new Fix64(15)},
                 { "moveSpeed", new Fix64(4)},
                 { "isRemove", Fix64.One},
+                { "onHitBuffId", new Fix64(1001)},
             });
 
             this.bulletBirthParam.Add(403, new Dictionary<String, Fix64>() {
@@ -126,6 +129,7 @@ namespace CarrotFantasy
                 { "damage", new Fix64(20)},
                 { "moveSpeed", new Fix64(4)},
                 { "isRemove", Fix64.One},
+                { "onHitBuffId", new Fix64(1001)},
             });
 
             this.bulletBirthParam.Add(501, new Dictionary<String, Fix64>() {

@@ -13,19 +13,71 @@ namespace CarrotFantasy
         private Button button;
         private int boundBigLevelId;
 
-        protected override void Awake()
+        protected override void LoadCallBack()
         {
-            base.Awake();
-            levelImage = GetComponent<Image>();
-            imgLock = transform.Find("img_lock");
-            imgCarrot = transform.Find("img_carrot");
-            if (imgCarrot != null)
+            CacheUiRefs();
+        }
+
+        protected override void OnNameTableMissing()
+        {
+            base.OnNameTableMissing();
+            CacheUiRefsFromHierarchy();
+        }
+
+        private void CacheUiRefs()
+        {
+            //levelImage = GetUiComponent<Image>("img_level");
+            //if (levelImage == null)
+            //{
+            //    levelImage = GetComponent<Image>();
+            //}
+
+            //imgLock = GetUiTransform("img_lock");
+            //imgCarrot = GetUiTransform("img_carrot");
+            //carrotImage = GetUiComponent<Image>("img_carrot");
+            //imgAllClear = GetUiTransform("img_all_clear");
+            //button = GetUiComponent<Button>("btn");
+            //if (button == null)
+            //{
+            //    button = GetComponent<Button>();
+            //}
+
+            //if (imgLock == null || imgCarrot == null || imgAllClear == null)
+            //{
+            //    CacheUiRefsFromHierarchy();
+            //}
+        }
+
+        private void CacheUiRefsFromHierarchy()
+        {
+            if (levelImage == null)
             {
-                carrotImage = imgCarrot.GetComponent<Image>();
+                levelImage = GetComponent<Image>();
             }
 
-            imgAllClear = transform.Find("img_all_clear");
-            button = GetComponent<Button>();
+            if (imgLock == null)
+            {
+                imgLock = transform.Find("img_lock");
+            }
+
+            if (imgCarrot == null)
+            {
+                imgCarrot = transform.Find("img_carrot");
+                if (imgCarrot != null)
+                {
+                    carrotImage = imgCarrot.GetComponent<Image>();
+                }
+            }
+
+            if (imgAllClear == null)
+            {
+                imgAllClear = transform.Find("img_all_clear");
+            }
+
+            if (button == null)
+            {
+                button = GetComponent<Button>();
+            }
         }
 
         protected override void OnSetData(NormalLevelListItem data, int dataIndex)
