@@ -1,10 +1,24 @@
-set GEN_CLIENT=dotnet ..\Tools\Luban\Luban.dll
+@echo off
+cd /d "%~dp0"
 
-%GEN_CLIENT% -j cfg --^
- -d Defines\__root__.xml ^
- --input_data_dir Datas ^
- --output_data_dir output_json ^
- --output_code_dir ..\..\CarrotFantasy\Assets\Scripts\Config ^
- --gen_types code_cs_unity_json,data_json ^
- -s all
+set LUBAN_DLL=..\Luban\Luban.dll
+set OUT_CODE=..\..\CarrotFantasy\Assets\Scripts\Config\Luban
+set OUT_DATA=..\..\CarrotFantasy\Assets\Resources\Config\Luban
+
+if not exist "%LUBAN_DLL%" (
+    echo [ERROR] Luban not found: %LUBAN_DLL%
+    pause
+    exit /b 1
+)
+
+echo Exporting Luban config (client / cs-simple-json / json)...
+dotnet "%LUBAN_DLL%" -t client -c cs-simple-json -d json --conf __root__.conf -x "outputCodeDir=%OUT_CODE%" -x "outputDataDir=%OUT_DATA%"
+if errorlevel 1 (
+    echo [ERROR] Export failed.
+    pause
+    exit /b 1
+)
+
+echo [OK] Code: %OUT_CODE%
+echo [OK] Data: %OUT_DATA%
 pause

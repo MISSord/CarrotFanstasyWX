@@ -13,8 +13,7 @@ namespace CarrotFantasy
         public BattleBulletComponent(BaseBattle bBattle) : base(bBattle)
         {
             this.componentType = BattleComponentType.BulletComponent;
-            this.configReader = new BulletConfigReader();
-            this.configReader.Init();
+            this.configReader = BulletConfigReader.Instance;
         }
 
         public override void Init()

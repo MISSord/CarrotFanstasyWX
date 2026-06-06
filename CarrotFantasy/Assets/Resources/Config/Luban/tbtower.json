@@ -1,0 +1,93 @@
+[
+  {
+    "TowerId": 1,
+    "Name": "",
+    "Price1": 100,
+    "Price2": 120,
+    "Price3": 140,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  },
+  {
+    "TowerId": 2,
+    "Name": "",
+    "Price1": 120,
+    "Price2": 140,
+    "Price3": 160,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  },
+  {
+    "TowerId": 3,
+    "Name": "",
+    "Price1": 140,
+    "Price2": 160,
+    "Price3": 180,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  },
+  {
+    "TowerId": 4,
+    "Name": "",
+    "Price1": 160,
+    "Price2": 180,
+    "Price3": 200,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  },
+  {
+    "TowerId": 5,
+    "Name": "",
+    "Price1": 160,
+    "Price2": 180,
+    "Price3": 200,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  },
+  {
+    "TowerId": 6,
+    "Name": "",
+    "Price1": 100,
+    "Price2": 120,
+    "Price3": 140,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  },
+  {
+    "TowerId": 7,
+    "Name": "",
+    "Price1": 100,
+    "Price2": 120,
+    "Price3": 140,
+    "AttackCd": 1,
+    "BodyRadius1": 2,
+    "BodyRadius2": 2.5,
+    "BodyRadius3": 3,
+    "Scale": 1,
+    "MaxLevel": 3
+  }
+]

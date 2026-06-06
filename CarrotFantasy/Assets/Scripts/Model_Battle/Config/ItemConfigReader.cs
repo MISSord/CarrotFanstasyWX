@@ -1,109 +1,63 @@
 using System;
 using System.Collections.Generic;
+using cfg;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
     public class ItemConfigReader
     {
-        public Dictionary<int, Dictionary<String, Fix64>> itemBirthParam = new Dictionary<int, Dictionary<string, Fix64>>();
+        public Dictionary<int, Dictionary<string, Fix64>> itemBirthParam = new Dictionary<int, Dictionary<string, Fix64>>();
+
+        static ItemConfigReader instance;
+
+        public static ItemConfigReader Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new ItemConfigReader();
+                    instance.Init();
+                }
+
+                return instance;
+            }
+        }
 
         public void Init()
         {
-            this.itemBirthParam.Add(100, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(300)},
-                { "money", new Fix64(100)},
-            });
-            this.itemBirthParam.Add(101, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(300)},
-                { "money", new Fix64(100)},
-            });
-            this.itemBirthParam.Add(102, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.6f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(300)},
-                { "money", new Fix64(100)},
-            });
-            this.itemBirthParam.Add(103, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(100)},
-                { "money", new Fix64(30)},
-            });
-            this.itemBirthParam.Add(104, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(200)},
-                { "money", new Fix64(50)},
-            });
-            this.itemBirthParam.Add(105, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(300)},
-                { "money", new Fix64(100)},
-            });
-            this.itemBirthParam.Add(106, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(100)},
-                { "money", new Fix64(30)},
-            });
-            this.itemBirthParam.Add(107, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(100)},
-                { "money", new Fix64(30)},
-            });
-            this.itemBirthParam.Add(108, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(300)},
-                { "money", new Fix64(100)},
-            });
-            this.itemBirthParam.Add(109, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.5f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "live", new Fix64(150)},
-                { "money", new Fix64(35)},
-            });
+            this.itemBirthParam.Clear();
+
+            foreach (ItemDef def in LubanConfigLoader.Tables.TbItem.DataList)
+            {
+                this.itemBirthParam[def.ItemTypeId] = ToBirthParam(def);
+            }
         }
 
-        public Dictionary<String, Fix64> GetSingleItemConfig(int id)
+        static Dictionary<string, Fix64> ToBirthParam(ItemDef def)
         {
-            return this.itemBirthParam[id];
+            return new Dictionary<string, Fix64>
+            {
+                { "faceDirection", new Fix64(def.FaceDirection) },
+                { "bodyRadius", new Fix64(def.BodyRadius) },
+                { "scale", new Fix64(def.Scale) },
+                { "offsetX", new Fix64(def.OffsetX) },
+                { "offsetY", new Fix64(def.OffsetY) },
+                { "live", new Fix64(def.Live) },
+                { "money", new Fix64(def.Money) },
+            };
+        }
+
+        public Dictionary<string, Fix64> GetSingleItemConfig(int itemTypeId)
+        {
+            if (this.itemBirthParam.TryGetValue(itemTypeId, out Dictionary<string, Fix64> param))
+            {
+                return param;
+            }
+
+            Debug.LogError("Item config missing: " + itemTypeId);
+            return null;
         }
     }
 }

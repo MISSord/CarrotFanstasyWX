@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using EnhancedUI.EnhancedScroller;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
     public class MapBigLevelPanel : BaseView
     {
-        private SelectableScrollerList<BigLevelInfo> scrollerList;
+        private SelectableScrollerList<BigLevelInfo, BigLevelCellView> scrollerList;
 
         public override void InitData()
         {
@@ -18,7 +17,7 @@ namespace CarrotFantasy
         protected override void LoadCallBack()
         {
             var scrollerGo = nameTableDic["scroller"];
-            scrollerList = new SelectableScrollerList<BigLevelInfo>(scrollerGo, defaultSelectIndex: 0);
+            scrollerList = new SelectableScrollerList<BigLevelInfo, BigLevelCellView>(scrollerGo, defaultSelectIndex: 0);
             scrollerList.SetOnSelected(OnBigLevelSelected);
 
             AddListener();
@@ -77,7 +76,7 @@ namespace CarrotFantasy
         {
             XUI.AddButtonListener(nameTableDic["btn_last_page"].GetComponent<Button>(), ToTheLastLevelPage);
             XUI.AddButtonListener(nameTableDic["btn_next_page"].GetComponent<Button>(), ToTheNextLevelPage);
-            XUI.AddButtonListener(nameTableDic["btn_return"].GetComponent<Button>(), ReturnToMainPanel);
+            //XUI.AddButtonListener(nameTableDic["btn_return"].GetComponent<Button>(), ReturnToMainPanel);
             XUI.AddButtonListener(nameTableDic["btn_help"].GetComponent<Button>(), ShowHelpPanel);
             MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, UpdateBigLevelInfo);
         }
@@ -102,16 +101,9 @@ namespace CarrotFantasy
             }
         }
 
-        private void ReturnToMainPanel()
-        {
-            UIServer.Instance.PlayButtonEffect();
-            Close();
-        }
-
         private void ShowHelpPanel()
         {
             ViewManager.Instance.OpenView<HelpPanel>();
-            UIServer.Instance.PlayButtonEffect();
         }
 
         private void ToTheNextLevelPage()

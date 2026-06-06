@@ -127,11 +127,6 @@ public static class GameLogController
         Error(JoinParts(parts));
     }
 
-    public static void ErrorJoin(string tag, params string[] parts)
-    {
-        Error(JoinParts(parts), tag);
-    }
-
     private static string JoinParts(string[] parts)
     {
         if (parts == null || parts.Length == 0)

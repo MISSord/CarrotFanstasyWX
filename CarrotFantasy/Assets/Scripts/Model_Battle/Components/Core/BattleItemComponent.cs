@@ -13,8 +13,7 @@ namespace CarrotFantasy
 
         public BattleItemComponent(BaseBattle bBattle) : base(bBattle)
         {
-            this.itemConfigReader = new ItemConfigReader();
-            this.itemConfigReader.Init();
+            this.itemConfigReader = ItemConfigReader.Instance;
             this.componentType = BattleComponentType.ItemComponent;
         }
 
@@ -41,8 +40,8 @@ namespace CarrotFantasy
         {
             BattleUnit_Item item = new BattleUnit_Item(this.baseBattle);
             item.eventDipatcher.AddListener<BattleUnit_Item>(BattleEvent.ITEM_DIED, this.AddDeadList);
-            int itemId = this.dataComponent.bigLevel * 100 + mapGrid.state.itemID;
-            item.LoadInfo(this.baseBattle.GetUid(), this.itemConfigReader.GetSingleItemConfig(itemId), this.GetPosition(mapGrid), mapGrid.state.itemID);
+            int itemTypeId = mapGrid.state.itemID;
+            item.LoadInfo(this.baseBattle.GetUid(), this.itemConfigReader.GetSingleItemConfig(itemTypeId), this.GetPosition(mapGrid), itemTypeId);
             item.Init();
             item.InitComponents();
             item.LoadInfo1();

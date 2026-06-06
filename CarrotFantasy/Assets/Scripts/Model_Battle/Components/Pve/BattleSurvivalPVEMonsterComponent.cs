@@ -100,7 +100,7 @@ namespace CarrotFantasy
                 monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
                 monster.LoadInfo(
                     this.baseBattle.GetUid(),
-                    this.monsterConfigReader.GetSingleMonsterConfig(this.GetMonsterId(curMonsterList.mMonsterIDList[i])),
+                    this.monsterConfigReader.GetSingleMonsterConfig(curMonsterList.mMonsterIDList[i]),
                     this.birthPoint);
                 monster.LoadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
                 monster.Init();
@@ -108,11 +108,6 @@ namespace CarrotFantasy
                 monster.InitComponents();
                 this.curNoRegisterList.Add(monster);
             }
-        }
-
-        public int GetMonsterId(int monsterId)
-        {
-            return this.battleDataComponent.bigLevel * 100 + monsterId;
         }
 
         public bool IsCanNewMonsterWaves()

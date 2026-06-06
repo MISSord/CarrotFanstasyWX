@@ -1,127 +1,65 @@
 using System;
 using System.Collections.Generic;
+using cfg;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
     public class MonsterConfigReader
     {
-        public Dictionary<int, Dictionary<String, Fix64>> monsterBirthParam = new Dictionary<int, Dictionary<string, Fix64>>();
+        public Dictionary<int, Dictionary<string, Fix64>> monsterBirthParam = new Dictionary<int, Dictionary<string, Fix64>>();
+
+        static MonsterConfigReader instance;
+
+        public static MonsterConfigReader Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = new MonsterConfigReader();
+                    instance.Init();
+                }
+
+                return instance;
+            }
+        }
 
         public void Init()
         {
-            this.monsterBirthParam.Add(101, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(80)},
-            });
-            this.monsterBirthParam.Add(102, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(80)},
-            });
-            this.monsterBirthParam.Add(103, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(80)},
-            });
-            this.monsterBirthParam.Add(104, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(100)},
-            });
-            this.monsterBirthParam.Add(105, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(100)},
-            });
-            this.monsterBirthParam.Add(106, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(100)},
-            });
-            this.monsterBirthParam.Add(107, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(100)},
-            });
-            this.monsterBirthParam.Add(108, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(100)},
-            });
-            this.monsterBirthParam.Add(109, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(100)},
-            });
-            this.monsterBirthParam.Add(110, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(110)},
-            });
-            this.monsterBirthParam.Add(111, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.3f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(150)},
-            });
-            this.monsterBirthParam.Add(112, new Dictionary<String, Fix64>() {
-                { "faceDirection", Fix64.Zero},
-                { "bodyRadius", new Fix64(0.6f)},
-                { "scale", Fix64.One},
-                { "offsetX", Fix64.Zero},
-                { "offsetY", Fix64.Zero},
-                { "speed", Fix64.One},
-                { "live", new Fix64(300)},
-            });
+            this.monsterBirthParam.Clear();
+
+            foreach (MonsterDef def in LubanConfigLoader.Tables.TbMonster.DataList)
+            {
+                this.monsterBirthParam[def.MonsterId] = ToBirthParam(def);
+            }
         }
 
-        public Dictionary<String, Fix64> GetSingleMonsterConfig(int id)
+        static Dictionary<string, Fix64> ToBirthParam(MonsterDef def)
         {
-            return this.monsterBirthParam[id];
+            Fix64 bodyRadius = def.MonsterId == 12 ? new Fix64(0.6f) : new Fix64(0.3f);
+
+            return new Dictionary<string, Fix64>
+            {
+                { "faceDirection", new Fix64(def.FaceDirection) },
+                { "bodyRadius", bodyRadius },
+                { "scale", new Fix64(def.Scale) },
+                { "offsetX", new Fix64(def.OffsetX) },
+                { "offsetY", new Fix64(def.OffsetY) },
+                { "speed", Fix64.One },
+                { "live", new Fix64(def.Hp) },
+            };
+        }
+
+        public Dictionary<string, Fix64> GetSingleMonsterConfig(int monsterId)
+        {
+            if (this.monsterBirthParam.TryGetValue(monsterId, out Dictionary<string, Fix64> param))
+            {
+                return param;
+            }
+
+            Debug.LogError("Monster config missing: " + monsterId);
+            return null;
         }
     }
 }

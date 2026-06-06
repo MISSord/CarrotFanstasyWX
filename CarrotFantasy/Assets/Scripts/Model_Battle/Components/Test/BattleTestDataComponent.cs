@@ -5,7 +5,7 @@ namespace CarrotFantasy
     /// </summary>
     public class BattleTestDataComponent : BattleDataComponent
     {
-        /// <summary>怪物配置表前缀（<c>bigLevel * 100 + monsterId</c>）。</summary>
+        /// <summary>测试怪物显示用章节 id（<see cref="BattleUnit_Monster.LoadInfo2"/>）。</summary>
         public int monsterConfigBigLevel { get; private set; }
 
         public BattleTestDataComponent(BaseBattle bBattle) : base(bBattle)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 class UIDownInfo
 {
@@ -470,12 +471,27 @@ public abstract class BaseView
                     transform = infos[0].gameObject.transform;
                 }
                 this.LoadCallBack();
+                this.TrySetViewDefaultFunction();
             }
             this.LoadIndexCallBack(targetIndex);
             this.FlushShowView(targetIndex);
 
             this.isLoadedDic[targetIndex] = LoadState.Loaded;
             this.CheckIsNeedLoad();
+        }
+    }
+
+    private void TrySetViewDefaultFunction()
+    {
+        // 预设关闭功能
+        GameObject btn_close = this.nameTableDic["btn_close_window"];
+        if(btn_close != null)
+        {
+            Button close = btn_close.transform.GetComponent<Button>();
+            if (close != null)
+            {
+                XUI.AddButtonListener(close, this.Close);
+            }
         }
     }
 

@@ -31,8 +31,7 @@ namespace CarrotFantasy
             this.curNoRegisterList = new List<BattleUnit_Monster>();
             this.curDeadMonsterList = new List<BattleUnit_Monster>();
             this.scheId = 0;
-            this.monsterConfigReader = new MonsterConfigReader();
-            this.monsterConfigReader.Init();
+            this.monsterConfigReader = MonsterConfigReader.Instance;
         }
 
         public void RegisterNewMonster()

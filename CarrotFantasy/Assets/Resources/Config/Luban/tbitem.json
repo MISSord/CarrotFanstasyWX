@@ -1,0 +1,112 @@
+[
+  {
+    "ItemTypeId": 0,
+    "Name": "",
+    "Live": 300,
+    "Money": 100,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 1,
+    "Name": "",
+    "Live": 300,
+    "Money": 100,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 2,
+    "Name": "",
+    "Live": 300,
+    "Money": 100,
+    "BodyRadius": 0.6,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 3,
+    "Name": "",
+    "Live": 100,
+    "Money": 30,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 4,
+    "Name": "",
+    "Live": 200,
+    "Money": 50,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 5,
+    "Name": "",
+    "Live": 300,
+    "Money": 100,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 6,
+    "Name": "",
+    "Live": 100,
+    "Money": 30,
+    "BodyRadius": 0.3,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 7,
+    "Name": "",
+    "Live": 100,
+    "Money": 30,
+    "BodyRadius": 0.3,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 8,
+    "Name": "",
+    "Live": 300,
+    "Money": 100,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "ItemTypeId": 9,
+    "Name": "",
+    "Live": 150,
+    "Money": 35,
+    "BodyRadius": 0.5,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  }
+]

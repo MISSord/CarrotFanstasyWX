@@ -1,0 +1,65 @@
+[
+  {
+    "MonsterId": 1,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 2,
+    "Name": "",
+    "Hp": 120,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 3,
+    "Name": "",
+    "Hp": 140,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 4,
+    "Name": "",
+    "Hp": 160,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 5,
+    "Name": "",
+    "Hp": 160,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 6,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 7,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  }
+]

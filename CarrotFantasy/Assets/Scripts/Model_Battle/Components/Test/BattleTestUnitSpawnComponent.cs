@@ -41,10 +41,8 @@ namespace CarrotFantasy
         {
             this.mapComponent = this.baseBattle.GetComponent(BattleComponentType.MapComponent) as BattleTestMapComponent;
             this.dataComponent = this.baseBattle.GetComponent(BattleComponentType.DataComponent) as BattleTestDataComponent;
-            this.monsterConfigReader = new MonsterConfigReader();
-            this.monsterConfigReader.Init();
-            this.bulletConfigReader = new BulletConfigReader();
-            this.bulletConfigReader.Init();
+            this.monsterConfigReader = MonsterConfigReader.Instance;
+            this.bulletConfigReader = BulletConfigReader.Instance;
 
             uint seed = (uint)(this.dataComponent.monsterConfigBigLevel * 1000 + 17 + 0xBEEF);
             this.rng = new BattleTestRandom(seed);
@@ -139,15 +137,13 @@ namespace CarrotFantasy
             Fix64Vector2 birth = BattleTestGridCellPicker.CellToWorld(this.mapComponent, startGx, startGy);
             Fix64Vector2 target = BattleTestGridCellPicker.CellToWorld(this.mapComponent, targetGx, targetGy);
 
-            int visualMonsterId = this.rng.NextInt(1, 7);
-            int configId = this.dataComponent.monsterConfigBigLevel * 100 + visualMonsterId;
-            if (!this.monsterConfigReader.monsterBirthParam.ContainsKey(configId))
+            int visualMonsterId = this.rng.NextInt(1, 13);
+            if (!this.monsterConfigReader.monsterBirthParam.ContainsKey(visualMonsterId))
             {
-                configId = 101;
                 visualMonsterId = 1;
             }
 
-            Dictionary<string, Fix64> param = this.monsterConfigReader.GetSingleMonsterConfig(configId);
+            Dictionary<string, Fix64> param = this.monsterConfigReader.GetSingleMonsterConfig(visualMonsterId);
 
             BattleUnit_Monster_Test monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster_Test>(BattleUnitType.MONSTER);
             if (monster == null)

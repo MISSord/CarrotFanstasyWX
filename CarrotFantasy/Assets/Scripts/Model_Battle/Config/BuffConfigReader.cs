@@ -1,11 +1,13 @@
 using System.Collections.Generic;
+using cfg;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
     public class BuffConfigReader
     {
-        private static BuffConfigReader instance;
-        private readonly Dictionary<int, BuffDef> buffDefs = new Dictionary<int, BuffDef>();
+        static BuffConfigReader instance;
+        readonly Dictionary<int, BuffDef> buffDefs = new Dictionary<int, BuffDef>();
 
         public static BuffConfigReader Instance
         {
@@ -16,33 +18,27 @@ namespace CarrotFantasy
                     instance = new BuffConfigReader();
                     instance.Init();
                 }
+
                 return instance;
             }
         }
 
         public void Init()
         {
-            if (this.buffDefs.Count > 0)
+            this.buffDefs.Clear();
+
+            foreach (cfg.BuffDef def in LubanConfigLoader.Tables.TbBuff.DataList)
             {
-                return;
+                this.buffDefs[def.BuffId] = new BuffDef
+                {
+                    id = def.BuffId,
+                    category = (BuffCategory)(int)def.Category,
+                    duration = new Fix64(def.Duration),
+                    tickInterval = new Fix64(def.TickInterval),
+                    tickDamage = def.TickDamage,
+                    param0 = new Fix64(def.Param0),
+                };
             }
-
-            AddDef(1001, BuffCategory.Slow, new Fix64(3f), Fix64.Zero, 0, new Fix64(0.35f));
-            AddDef(1002, BuffCategory.Dot, new Fix64(5f), Fix64.One, 2, Fix64.Zero);
-            AddDef(1003, BuffCategory.Stun, new Fix64(2f), Fix64.Zero, 0, Fix64.Zero);
-        }
-
-        private void AddDef(int id, BuffCategory category, Fix64 duration, Fix64 tickInterval, int tickDamage, Fix64 param0)
-        {
-            this.buffDefs.Add(id, new BuffDef
-            {
-                id = id,
-                category = category,
-                duration = duration,
-                tickInterval = tickInterval,
-                tickDamage = tickDamage,
-                param0 = param0,
-            });
         }
 
         public bool TryGetDef(int buffId, out BuffDef def)

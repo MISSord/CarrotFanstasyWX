@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 114517398109328406}
   - component: {fileID: 114665830279711462}
   - component: {fileID: 1261842064463457249}
+  - component: {fileID: 2955495010811897538}
   m_Layer: 5
   m_Name: btn_last_page
   m_TagString: Untagged
@@ -37,7 +38,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 165, y: 0}
+  m_AnchoredPosition: {x: 165, y: 30}
   m_SizeDelta: {x: 96, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222656925356061936
@@ -149,6 +150,27 @@ MonoBehaviour:
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_32
   _lastRecordedSpriteInstanceId: 23212
+--- !u!114 &2955495010811897538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054686842716696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b53b6eedae9d6b14ba956841278281b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scaleTarget: {fileID: 0}
+  releasedScale: {x: 1, y: 1, z: 1}
+  pressedScale: {x: 0.92, y: 0.92, z: 1}
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  pressEase: 6
+  releaseEase: 6
+  useUnscaledTime: 0
+  resetToReleasedOnEnable: 1
 --- !u!1 &1494301574538940
 GameObject:
   m_ObjectHideFlags: 0
@@ -158,9 +180,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 224011173146289344}
-  - component: {fileID: 2754934933567004919}
-  - component: {fileID: 6736340619192570059}
-  - component: {fileID: 4080699268460504556}
   - component: {fileID: 887766554433221102}
   m_Layer: 5
   m_Name: MapBigLevelPanel
@@ -181,6 +200,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 2936640417062827037}
   - {fileID: 500380782734956937}
   - {fileID: 1849813620170330597}
   m_Father: {fileID: 0}
@@ -191,59 +211,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &2754934933567004919
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1494301574538940}
-  m_CullTransparentMesh: 0
---- !u!114 &6736340619192570059
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1494301574538940}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 88296c850aad51b4299256b411804862, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!114 &4080699268460504556
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1494301574538940}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/stages_bg-hd_0
-  defaultAssetName: stages_bg-hd_0
-  _lastRecordedSpriteInstanceId: 23226
 --- !u!114 &887766554433221102
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -257,7 +224,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiEntries:
-  - name: btn_return
+  - name: btn_close_window
     uiReference: {fileID: 7443495680128512157}
   - name: btn_help
     uiReference: {fileID: 7443709657981402647}
@@ -280,6 +247,7 @@ GameObject:
   - component: {fileID: 114780607313991806}
   - component: {fileID: 114220466328831936}
   - component: {fileID: 6542355104169373659}
+  - component: {fileID: 8123992239159800648}
   m_Layer: 5
   m_Name: btn_next_page
   m_TagString: Untagged
@@ -304,7 +272,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -150, y: 0}
+  m_AnchoredPosition: {x: -150, y: 30}
   m_SizeDelta: {x: 96, y: 96}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222124607894670442
@@ -416,6 +384,27 @@ MonoBehaviour:
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_26
   _lastRecordedSpriteInstanceId: 23222
+--- !u!114 &8123992239159800648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1494814632147052}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b53b6eedae9d6b14ba956841278281b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scaleTarget: {fileID: 0}
+  releasedScale: {x: 1, y: 1, z: 1}
+  pressedScale: {x: 0.92, y: 0.92, z: 1}
+  pressDuration: 0.08
+  releaseDuration: 0.12
+  pressEase: 6
+  releaseEase: 6
+  useUnscaledTime: 0
+  resetToReleasedOnEnable: 1
 --- !u!1 &1680603175216414
 GameObject:
   m_ObjectHideFlags: 0
@@ -578,7 +567,7 @@ RectTransform:
   - {fileID: 7229903135921826061}
   - {fileID: 7229319040339745527}
   m_Father: {fileID: 224011173146289344}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
@@ -638,6 +627,95 @@ MonoBehaviour:
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_1
   _lastRecordedSpriteInstanceId: 23228
+--- !u!1 &3765526303574767443
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2936640417062827037}
+  - component: {fileID: 5070874722503370246}
+  - component: {fileID: 2874591995106453389}
+  - component: {fileID: 5336218248008069992}
+  m_Layer: 5
+  m_Name: RawImage
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2936640417062827037
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3765526303574767443}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 224011173146289344}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &5070874722503370246
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3765526303574767443}
+  m_CullTransparentMesh: 1
+--- !u!114 &2874591995106453389
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3765526303574767443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Texture: {fileID: 2800000, guid: 88296c850aad51b4299256b411804862, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!114 &5336218248008069992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3765526303574767443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/rawimages/stages_bg-hd_0
+  defaultAssetName: stages_bg-hd_0
+  _lastRecordedSpriteInstanceId: 23238
 --- !u!1 &5161565909190315285
 GameObject:
   m_ObjectHideFlags: 0
@@ -670,7 +748,7 @@ RectTransform:
   - {fileID: 224470143532660000}
   - {fileID: 224560781277801818}
   m_Father: {fileID: 224011173146289344}
-  m_RootOrder: 1
+  m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -691,7 +769,7 @@ GameObject:
   - component: {fileID: 7412258722267251073}
   - component: {fileID: 7732720207114282481}
   m_Layer: 5
-  m_Name: btn_return
+  m_Name: btn_close_window
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -706,8 +784,8 @@ RectTransform:
   m_GameObject: {fileID: 7443495680128512157}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 500380782734956937}
   m_RootOrder: 1

@@ -6,14 +6,12 @@ namespace CarrotFantasy
 {
     public class MapNormalLevelPanel : BaseView
     {
-        private const float LevelCellWidth = 1100f;
-
         private SingleMapInfo[] levelInfoList;
         public int currentBigLevelID;
         public int currentLevelID = 1;
         private int towerCount = 5;
 
-        private SelectableScrollerList<NormalLevelListItem> scrollerList;
+        private SelectableScrollerList<NormalLevelListItem, NormalLevelCellView> scrollerList;
         private GameObject nodeLockBtn;
         private Transform nodeTowerTrans;
         private Text txtTotalWaves;
@@ -72,18 +70,22 @@ namespace CarrotFantasy
             txtTotalWaves = nameTableDic["txt_waves"].GetComponent<Text>();
 
             var scrollerGo = nameTableDic["scroller"];
-            scrollerList = new SelectableScrollerList<NormalLevelListItem>(scrollerGo, defaultSelectIndex: 0);
-            scrollerList.SetCellSizeGetter(_ => LevelCellWidth);
+            scrollerList = new SelectableScrollerList<NormalLevelListItem, NormalLevelCellView>(scrollerGo);
             scrollerList.SetOnSelected(OnLevelSelected);
 
             EnsureTowerTemplates();
             AddListener();
 
-            var spritePath = NormalLevelListItem.MapFilePathBase + currentBigLevelID + "/";
+            string asset = string.Format("Level_{0}_BG_Left", currentBigLevelID);
+            string bundle = ResPath.GetRawImagePath(asset);
             RawImage img_left = nameTableDic["img_bg_left"].GetComponent<RawImage>();
-            //img_left.SetTexture();
-            //nameTableDic["img_bg_right"].GetComponent<Image>().sprite =
-            //    ResourceLoader.Instance.loadRes<Sprite>(spritePath + "BG_Right");
+            img_left.SetTexture(bundle, asset);
+
+            asset = string.Format("Level_{0}_BG_Right", currentBigLevelID);
+            bundle = ResPath.GetRawImagePath(asset);
+            img_left = nameTableDic["img_bg_right"].GetComponent<RawImage>();
+            img_left.SetTexture(bundle, asset);
+
         }
 
         protected override void ShowIndexCallBack(int viewIndex)
@@ -195,22 +197,21 @@ namespace CarrotFantasy
             }
         }
 
-        public void StartGame()
-        {
-            if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
-            {
-                return;
-            }
+        //public void StartGame()
+        //{
+        //    if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
+        //    {
+        //        return;
+        //    }
 
-            SingleMapInfo info = levelInfoList[currentLevelID - 1];
-            if (info == null || info.unLocked != MapInfoType.UNLOCK_LEVEL)
-            {
-                return;
-            }
+        //    SingleMapInfo info = levelInfoList[currentLevelID - 1];
+        //    if (info == null || info.unLocked != MapInfoType.UNLOCK_LEVEL)
+        //    {
+        //        return;
+        //    }
 
-            MapServer.Instance.SendGameMapInfo(currentBigLevelID, currentLevelID);
-            UIServer.Instance.PlayButtonEffect();
-        }
+        //    MapServer.Instance.SendGameMapInfo(currentBigLevelID, currentLevelID);
+        //}
 
 
         public void ToNextLevel()
@@ -222,7 +223,6 @@ namespace CarrotFantasy
             }
 
             scrollerList.JumpTo(next, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: true);
-            UIServer.Instance.PlayPagingEffect();
         }
 
         public void ToLastLevel()
@@ -234,13 +234,11 @@ namespace CarrotFantasy
             }
 
             scrollerList.JumpTo(prev, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: true);
-            UIServer.Instance.PlayPagingEffect();
         }
 
         public void ShowHelpPanel()
         {
             ViewManager.Instance.OpenView<HelpPanel>();
-            UIServer.Instance.PlayButtonEffect();
         }
 
         private void ReturnToLastPanel()
@@ -252,10 +250,9 @@ namespace CarrotFantasy
         private void AddListener()
         {
             MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, UpdateMapInfo);
-            XUI.AddButtonListener(nameTableDic["btn_start"].GetComponent<Button>(), StartGame);
+            //XUI.AddButtonListener(nameTableDic["btn_start"].GetComponent<Button>(), StartGame);
             XUI.AddButtonListener(nameTableDic["btn_last_page"].GetComponent<Button>(), ToLastLevel);
             XUI.AddButtonListener(nameTableDic["btn_next_page"].GetComponent<Button>(), ToNextLevel);
-            XUI.AddButtonListener(nameTableDic["btn_return"].GetComponent<Button>(), ReturnToLastPanel);
             XUI.AddButtonListener(nameTableDic["btn_help"].GetComponent<Button>(), ShowHelpPanel);
         }
 
@@ -277,7 +274,5 @@ namespace CarrotFantasy
 
             UpdateTowerUI();
         }
-
-
     }
 }

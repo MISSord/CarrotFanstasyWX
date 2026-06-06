@@ -15,6 +15,8 @@ namespace CarrotFantasy
         private EnhancedScroller scroller;
         [SerializeField]
         private EnhancedScrollerCellView cellPrefab;
+
+        public EnhancedScrollerCellView CellPrefab => cellPrefab;
         private float fallbackCellSize = 10f;
 
         private IScrollerBinder _binder;
@@ -27,6 +29,11 @@ namespace CarrotFantasy
             {
                 scroller.Delegate = this;
             }
+        }
+
+        public void SetCellPrefab(EnhancedScrollerCellView prefab)
+        {
+            cellPrefab = prefab;
         }
 
         /// <summary>

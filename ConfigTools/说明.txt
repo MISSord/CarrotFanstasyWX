@@ -1,1 +1,15 @@
-config文件夹是MiniTemplate
+config 文件夹是 MiniTemplate（Luban 配表）
+
+导表：
+  双击 Config/Config/gen.bat 或 ConfigTools/gen_code_json.bat
+
+Unity 运行时依赖（导表后若报 CS0246 Luban / SimpleJSON）：
+  已放在 CarrotFantasy/Assets/Scripts/LubanLib/
+  勿删除；重新拉代码后若缺失请从仓库恢复该目录。
+
+导出位置：
+  代码 -> CarrotFantasy/Assets/Scripts/Config/Luban/
+  数据 -> CarrotFantasy/Assets/Resources/Config/Luban/
+
+已接入 Luban 的数据表：
+  Tower.xlsx / Monster.xlsx / Bullet.xlsx / Buff.xlsx / Item.xlsx
