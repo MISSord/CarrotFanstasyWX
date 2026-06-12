@@ -17,10 +17,11 @@ namespace CarrotFantasy
         public BattleTowerComponent(BaseBattle bBattle) : base(bBattle)
         {
             this.componentType = BattleComponentType.TowerComponent;
-            if (BattleParamServer.Instance != null && BattleParamServer.Instance.curStage != null)
+            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            if (launchParams?.Stage != null)
             {
-                this.canBuildTowerList = BattleParamServer.Instance.curStage.mTowerIDList;
-                this.canBuildTowerListLength = BattleParamServer.Instance.curStage.mTowerIDListLength;
+                this.canBuildTowerList = launchParams.Stage.mTowerIDList;
+                this.canBuildTowerListLength = launchParams.Stage.mTowerIDListLength;
             }
             else
             {

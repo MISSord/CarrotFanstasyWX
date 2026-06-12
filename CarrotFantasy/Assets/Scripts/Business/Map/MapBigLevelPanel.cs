@@ -67,7 +67,6 @@ namespace CarrotFantasy
 
             var panel = (MapNormalLevelPanel)view;
             panel.SetBigLevel(bigLevelId);
-            MapServer.Instance.SendGameMapInfo(bigLevelId, 0);
             ViewManager.Instance.OpenView<MapNormalLevelPanel>();
             UIServer.Instance.PlayButtonEffect();
         }

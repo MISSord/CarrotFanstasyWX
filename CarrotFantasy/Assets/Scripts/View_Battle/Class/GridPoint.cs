@@ -23,11 +23,29 @@ namespace CarrotFantasy
 
 
 
+        bool IsSpriteRendererAlive()
+        {
+            return this.spriteRenderer != null;
+        }
+
         public void InitTrans(BattleView_base battleView)
         {
             this.battleView = battleView;
             this.spriteRenderer = transform.GetComponent<SpriteRenderer>();
-            levelUpSignalGo = transform.Find("LevelUpSignal").gameObject;
+            if (!this.IsSpriteRendererAlive())
+            {
+                Debug.LogWarning("[GridPoint] 缺少 SpriteRenderer: " + name, this);
+                return;
+            }
+
+            Transform levelUpSignal = transform.Find("LevelUpSignal");
+            if (levelUpSignal == null)
+            {
+                Debug.LogWarning("[GridPoint] 缺少 LevelUpSignal: " + name, this);
+                return;
+            }
+
+            levelUpSignalGo = levelUpSignal.gameObject;
             levelUpSignalGo.SetActive(false);
         }
 
@@ -45,15 +63,26 @@ namespace CarrotFantasy
 
         public void StartGame()
         {
+            if (!this.IsSpriteRendererAlive())
+            {
+                return;
+            }
+
             this.spriteRenderer.sprite = this.startSprite;
-            Tween t = DOTween.To(() => spriteRenderer.color, toColor => spriteRenderer.color = toColor, new Color(1, 1, 1, 0.2f), 3);
-            t.OnComplete(ChangeSpriteToGrid);
+            this.spriteRenderer.DOKill();
+            this.spriteRenderer
+                .DOColor(new Color(1, 1, 1, 0.2f), 3f)
+                .OnComplete(ChangeSpriteToGrid);
         }
 
         //改回原来样式的Sprite
         private void ChangeSpriteToGrid()
         {
-            spriteRenderer.enabled = false;
+            if (!this.IsSpriteRendererAlive())
+            {
+                return;
+            }
+
             spriteRenderer.color = new Color(1, 1, 1, 1);
 
             if (this.mapGrid.state.canBuild)
@@ -64,12 +93,19 @@ namespace CarrotFantasy
             {
                 spriteRenderer.sprite = this.cantBuildSprite;
             }
+
+            this.UpdateGrid();
         }
 
 
         //更新格子状态
         public void UpdateGrid()
         {
+            if (!this.IsSpriteRendererAlive())
+            {
+                return;
+            }
+
             if (this.mapGrid.state.canBuild)
             {
                 spriteRenderer.enabled = true;
@@ -86,6 +122,11 @@ namespace CarrotFantasy
 
         private void OnDestroy()
         {
+            if (this.spriteRenderer != null)
+            {
+                this.spriteRenderer.DOKill();
+            }
+
             this.transform.DOKill();
         }
 
@@ -98,6 +139,11 @@ namespace CarrotFantasy
 
         public void ShowGrid()
         {
+            if (!this.IsSpriteRendererAlive())
+            {
+                return;
+            }
+
             if (this.mapGrid.hasTower == true)
             {
                 spriteRenderer.enabled = true;
@@ -117,6 +163,11 @@ namespace CarrotFantasy
 
         public void HideGrid()
         {
+            if (!this.IsSpriteRendererAlive())
+            {
+                return;
+            }
+
             if (this.mapGrid.hasTower == true)
             {
                 //隐藏建塔列表
@@ -136,13 +187,25 @@ namespace CarrotFantasy
         //显示此格子不能够去建塔
         public void ShowCantBuild()
         {
-            spriteRenderer.enabled = true;
-            Tween t = DOTween.To(() => spriteRenderer.color, toColor => spriteRenderer.color = toColor, new Color(1, 1, 1, 0), 2f);
-            t.OnComplete(() =>
+            if (!this.IsSpriteRendererAlive())
             {
-                spriteRenderer.enabled = false;
-                spriteRenderer.color = new Color(1, 1, 1, 1);
-            });
+                return;
+            }
+
+            spriteRenderer.enabled = true;
+            spriteRenderer.DOKill();
+            spriteRenderer
+                .DOColor(new Color(1, 1, 1, 0), 2f)
+                .OnComplete(() =>
+                {
+                    if (!this.IsSpriteRendererAlive())
+                    {
+                        return;
+                    }
+
+                    spriteRenderer.enabled = false;
+                    spriteRenderer.color = new Color(1, 1, 1, 1);
+                });
         }
     }
 }

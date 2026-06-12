@@ -11,7 +11,7 @@ namespace CarrotFantasy {
 
         public static string GetGameOptionImagePath()
         {
-            return "ui/view/gameoption/image_atlas";
+            return "ui/view/gameoption/images_atlas";
         }
     }
 }

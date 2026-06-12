@@ -38,6 +38,7 @@ namespace CarrotFantasy
         {
             this.monsterPointList = monsterPath;
             this.EndPointDistance = distance;
+            this.EnsureSpeedInitialized();
             if (this.monsterPointList != null && this.monsterPointList.Count >= 2)
             {
                 this.SetSpeed();
@@ -53,15 +54,63 @@ namespace CarrotFantasy
             this.moveTotalTime = Fix64.Zero;
         }
 
+        void EnsureSpeedInitialized()
+        {
+            if (this.speed > Fix64.Zero)
+            {
+                return;
+            }
+
+            Fix64 configuredSpeed;
+            if (this.unit != null &&
+                this.unit.birthParam != null &&
+                this.unit.birthParam.TryGetValue("speed", out configuredSpeed) &&
+                configuredSpeed > Fix64.Zero)
+            {
+                this.speed = configuredSpeed;
+                return;
+            }
+
+            this.speed = new Fix64(3);
+        }
+
         private void SetSpeed()
         {
-            Fix64 dicX = this.monsterPointList[this.roadPointIndex + 1].X - this.monsterPointList[this.roadPointIndex].X;
-            Fix64 dicY = this.monsterPointList[this.roadPointIndex + 1].Y - this.monsterPointList[this.roadPointIndex].Y;
+            this.EnsureSpeedInitialized();
 
-            Fix64 moveXTime = Fix64.Abs(dicX) / this.speed;
-            Fix64 moveYTime = Fix64.Abs(dicY) / this.speed;
+            while (this.roadPointIndex < this.monsterPointList.Count - 1)
+            {
+                Fix64 dicX = this.monsterPointList[this.roadPointIndex + 1].X - this.monsterPointList[this.roadPointIndex].X;
+                Fix64 dicY = this.monsterPointList[this.roadPointIndex + 1].Y - this.monsterPointList[this.roadPointIndex].Y;
+
+                if (Fix64.Abs(dicX) > Fix64.Zero || Fix64.Abs(dicY) > Fix64.Zero)
+                {
+                    break;
+                }
+
+                this.roadPointIndex++;
+            }
+
+            if (this.roadPointIndex >= this.monsterPointList.Count - 1)
+            {
+                this.moveTotalTime = Fix64.Zero;
+                this.speedX = Fix64.Zero;
+                this.speedY = Fix64.Zero;
+                this.moveCurTime = Fix64.Zero;
+                return;
+            }
+
+            Fix64 dicXSegment = this.monsterPointList[this.roadPointIndex + 1].X - this.monsterPointList[this.roadPointIndex].X;
+            Fix64 dicYSegment = this.monsterPointList[this.roadPointIndex + 1].Y - this.monsterPointList[this.roadPointIndex].Y;
+
+            Fix64 moveXTime = Fix64.Abs(dicXSegment) / this.speed;
+            Fix64 moveYTime = Fix64.Abs(dicYSegment) / this.speed;
 
             this.moveTotalTime = moveXTime >= moveYTime ? moveXTime : moveYTime;
+            if (this.moveTotalTime <= Fix64.Zero)
+            {
+                this.moveTotalTime = new Fix64(0.001f);
+            }
 
             Fix64 x;
             Fix64 y;

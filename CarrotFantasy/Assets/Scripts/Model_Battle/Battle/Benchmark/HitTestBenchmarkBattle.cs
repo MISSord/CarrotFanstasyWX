@@ -2,7 +2,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 碰撞性能对比用 PVE：与 <see cref="PveBattle"/> 相同玩法组件，仅碰撞实现可在网格版 / 暴力版间切换。
-    /// 由 <see cref="BattleParamServer.useHitTestBenchmarkBattle"/> 与 <see cref="BattleParamServer.hitTestBenchmarkUseSpatialGrid"/> 控制。
+    /// 由 <see cref="PveModelBattleParams.Mode"/> = <see cref="BattlePveMode.HitTestBenchmark"/> 与 <see cref="BattleParamServer.hitTestBenchmarkUseSpatialGrid"/> 控制。
     /// </summary>
     public class HitTestBenchmarkBattle : BaseBattle
     {

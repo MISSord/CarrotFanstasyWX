@@ -5,6 +5,7 @@ namespace CarrotFantasy
         private static ServerProvision _server;
         public static SceneServer sceneServer;
         public static ConnectionServer connectionServer;
+        public static BattleSessionHost battleSessionHost;
 
         public static ServerProvision Instance
         {
@@ -16,7 +17,6 @@ namespace CarrotFantasy
                 }
                 return _server;
             }
-
         }
 
         public void Init()
@@ -28,6 +28,8 @@ namespace CarrotFantasy
             connectionServer.Init(GameNetworkEndpoints.WebSocketUrl);
             sceneServer = new SceneServer();
             sceneServer.Init();
+
+            battleSessionHost = new BattleSessionHost();
         }
     }
 }

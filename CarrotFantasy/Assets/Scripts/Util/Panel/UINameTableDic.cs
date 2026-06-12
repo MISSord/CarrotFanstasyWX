@@ -28,6 +28,13 @@ public class UINameTableDic
             return null;
         }
 
+        if (gameObject == null)
+        {
+            this.RemoveStaleEntry(name);
+            Debug.LogWarning($"物体已销毁: {name}");
+            return null;
+        }
+
         Dictionary<Type, Component> compDic;
         if (cachedComponents.TryGetValue(name, out compDic))
         {
@@ -80,7 +87,21 @@ public class UINameTableDic
             Debug.LogWarning($"没有该物体: {name}");
             return null;
         }
+
+        if (gameObject == null)
+        {
+            this.RemoveStaleEntry(name);
+            Debug.LogWarning($"物体已销毁: {name}");
+            return null;
+        }
+
         return gameObject;
+    }
+
+    void RemoveStaleEntry(string name)
+    {
+        this.uiEntries.Remove(name);
+        this.cachedComponents.Remove(name);
     }
 
     /// <summary>

@@ -20,6 +20,11 @@ namespace CarrotFantasy
 
         public int scheId { get; set; }
 
+        private List<float> waveSpawnOffsets;
+        private int nextSpawnIndex;
+        private Fix64 waveSpawnStartClock;
+        private bool waveSpawnActive;
+
         public override void Init()
         {
         }
@@ -32,6 +37,22 @@ namespace CarrotFantasy
             this.curDeadMonsterList = new List<BattleUnit_Monster>();
             this.scheId = 0;
             this.monsterConfigReader = MonsterConfigReader.Instance;
+        }
+
+        /// <summary>设置本波每只怪相对波次开始的时间偏移（秒），与 <see cref="curNoRegisterList"/> 顺序一致。</summary>
+        public void SetWaveSpawnSchedule(IList<float> offsets)
+        {
+            this.waveSpawnOffsets = offsets != null ? new List<float>(offsets) : new List<float>();
+            this.nextSpawnIndex = 0;
+            this.waveSpawnActive = this.waveSpawnOffsets.Count > 0;
+        }
+
+        /// <summary>记录本波起点战斗时钟，配合 <see cref="SetWaveSpawnSchedule"/> 在 Tick 中按时间轴出场。</summary>
+        public void BeginWaveSpawn()
+        {
+            this.waveSpawnStartClock = this.baseBattle.curClock;
+            this.nextSpawnIndex = 0;
+            this.waveSpawnActive = this.waveSpawnOffsets != null && this.waveSpawnOffsets.Count > 0;
         }
 
         public void RegisterNewMonster()
@@ -54,7 +75,39 @@ namespace CarrotFantasy
         protected virtual void OnAllPendingMonstersRegistered()
         {
             this.RemoveSchId();
+            this.StopWaveSpawnSchedule();
             Debug.Log("注册新的怪兽工作完成");
+        }
+
+        protected void StopWaveSpawnSchedule()
+        {
+            this.waveSpawnActive = false;
+            this.waveSpawnOffsets = null;
+            this.nextSpawnIndex = 0;
+        }
+
+        private void TickWaveSpawnSchedule()
+        {
+            if (!this.waveSpawnActive || this.waveSpawnOffsets == null || this.curNoRegisterList.Count == 0)
+            {
+                return;
+            }
+
+            Fix64 now = this.baseBattle.curClock;
+            while (this.waveSpawnActive
+                   && this.waveSpawnOffsets != null
+                   && this.nextSpawnIndex < this.waveSpawnOffsets.Count
+                   && this.curNoRegisterList.Count > 0)
+            {
+                Fix64 releaseAt = this.waveSpawnStartClock + new Fix64(this.waveSpawnOffsets[this.nextSpawnIndex]);
+                if (now < releaseAt)
+                {
+                    break;
+                }
+
+                this.RegisterNewMonster();
+                this.nextSpawnIndex++;
+            }
         }
 
         protected void AddDeadList(BattleUnit_Monster monster)
@@ -77,6 +130,7 @@ namespace CarrotFantasy
         public override void OnTick(Fix64 time)
         {
             base.OnTick(time);
+            this.TickWaveSpawnSchedule();
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
                 info.Value.OnTick(time);
@@ -134,6 +188,7 @@ namespace CarrotFantasy
         public override void ClearInfo()
         {
             base.ClearInfo();
+            this.StopWaveSpawnSchedule();
             foreach (KeyValuePair<int, BattleUnit_Monster> info in this.curMonsterDic)
             {
                 info.Value.ClearInfo();

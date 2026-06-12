@@ -64,23 +64,34 @@ public class ViewManager
         viewList.Add(UILayer.Hight, new List<BaseView>(4));
         viewList.Add(UILayer.Max, new List<BaseView>(4));
 
-        GameObject camera = GameObject.Find("UICamera");
-        uiCamera = camera?.GetComponent<Camera>();
-
-        uiRoot = GameObject.Find("UILayer");
+        BindPersistentUiPresentation();
 
         baseView = Resources.Load<GameObject>("BaseView");
 
     }
 
     /// <summary>
-    /// Unity 场景切换后重新绑定场景内的 UI 摄像机与 UILayer 根节点（旧引用可能已被卸载）。
+    /// 场景切换后确保仍使用 DontDestroyOnLoad 的全局 UILayer / UICamera，并移除新场景中的重复节点。
     /// </summary>
     public void RebindScenePresentation()
     {
-        GameObject camera = GameObject.Find("UICamera");
-        uiCamera = camera?.GetComponent<Camera>();
-        uiRoot = GameObject.Find("UILayer");
+        BindPersistentUiPresentation();
+    }
+
+    void BindPersistentUiPresentation()
+    {
+        uiRoot = UIPresentationPersistence.EnsureGlobalUiLayer();
+        uiCamera = UIPresentationPersistence.EnsureGlobalUiCamera();
+
+        if (uiRoot == null)
+        {
+            Debug.LogWarning("[ViewManager] 未找到 UILayer，请确认场景中存在该节点。");
+        }
+
+        if (uiCamera == null)
+        {
+            Debug.LogWarning("[ViewManager] 未找到 UICamera，UI Canvas 可能无法渲染。");
+        }
     }
 
     public void SetShowPanelActive(bool isCanShow)

@@ -41,13 +41,45 @@ namespace CarrotFantasy
                 bullet = new BattleUnit_Bullet(this.baseBattle);
             }
             bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.AddDeadList);
-            bullet.LoadInfo(this.baseBattle.GetUid(), this.configReader.GetSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1), tower.birthPosition);
+            Dictionary<string, Fix64> bulletParam =
+                this.configReader.GetSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1);
+            ApplyGlobalTowerDamageBonus(bulletParam);
+            bullet.LoadInfo(this.baseBattle.GetUid(), bulletParam, tower.birthPosition);
             bullet.LoadInfo2(tower, target);
             bullet.Init();
             bullet.InitComponents();
             this.curBulletList.Add(bullet);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.BULLET, bullet);
             //Debug.Log("注册新的子弹");
+        }
+
+        private void ApplyGlobalTowerDamageBonus(Dictionary<string, Fix64> bulletParam)
+        {
+            if (bulletParam == null || !bulletParam.ContainsKey("damage"))
+            {
+                return;
+            }
+
+            BattleGlobalBuffComponent globalBuff = BattleGlobalBuffComponent.GetFrom(this.baseBattle);
+            if (globalBuff == null)
+            {
+                return;
+            }
+
+            Fix64 multiplier = globalBuff.GetTowerDamageMultiplier();
+            if (multiplier <= Fix64.One)
+            {
+                return;
+            }
+
+            int baseDamage = (int)bulletParam["damage"];
+            int scaledDamage = (int)(new Fix64(baseDamage) * multiplier);
+            if (scaledDamage < 1)
+            {
+                scaledDamage = 1;
+            }
+
+            bulletParam["damage"] = new Fix64(scaledDamage);
         }
 
         private void AddDeadList(BattleUnit_Bullet monster)

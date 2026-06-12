@@ -21,6 +21,7 @@ namespace CarrotFantasy
         public const String ItemComponent = "ItemComponent";
         public const String FlowFieldComponent = "FlowFieldComponent";
         public const String RoguelikeRunBridgeComponent = "RoguelikeRunBridgeComponent";
+        public const String GlobalBuffComponent = "GlobalBuffComponent";
     }
 
     public class UnitComponentType

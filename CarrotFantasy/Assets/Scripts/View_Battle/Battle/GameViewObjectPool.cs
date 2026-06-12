@@ -7,9 +7,9 @@ namespace CarrotFantasy
     public class GameViewObjectPool
     {
         private static GameViewObjectPool gamePool;
-        private Dictionary<String, List<BattleUnitView>> curObjectDic = new Dictionary<String, List<BattleUnitView>>();
-        private Dictionary<String, List<BaseUnitViewComponent>> curUnitObjectDic = new Dictionary<string, List<BaseUnitViewComponent>>();
-        private Dictionary<String, List<GameObject>> curGameObjectDic = new Dictionary<string, List<GameObject>>();
+        private readonly Dictionary<String, Stack<BattleUnitView>> curObjectDic = new Dictionary<String, Stack<BattleUnitView>>();
+        private readonly Dictionary<String, Stack<BaseUnitViewComponent>> curUnitObjectDic = new Dictionary<string, Stack<BaseUnitViewComponent>>();
+        private readonly Dictionary<String, Stack<GameObject>> curGameObjectDic = new Dictionary<string, Stack<GameObject>>();
 
         public static GameViewObjectPool Instance
         {
@@ -36,8 +36,7 @@ namespace CarrotFantasy
         {
             if (!curObjectDic.ContainsKey(name))
             {
-                List<BattleUnitView> battleList = new List<BattleUnitView>();
-                curObjectDic.Add(name, battleList);
+                curObjectDic.Add(name, new Stack<BattleUnitView>());
             }
         }
 
@@ -45,8 +44,7 @@ namespace CarrotFantasy
         {
             if (!curGameObjectDic.ContainsKey(name))
             {
-                List<GameObject> battleList = new List<GameObject>();
-                curGameObjectDic.Add(name, battleList);
+                curGameObjectDic.Add(name, new Stack<GameObject>());
             }
         }
 
@@ -54,140 +52,121 @@ namespace CarrotFantasy
         {
             if (!curUnitObjectDic.ContainsKey(name))
             {
-                List<BaseUnitViewComponent> battleList = new List<BaseUnitViewComponent>();
-                curUnitObjectDic.Add(name, battleList);
+                curUnitObjectDic.Add(name, new Stack<BaseUnitViewComponent>());
             }
         }
 
         public GameObject GetNewGameObject(String name)
         {
-            List<GameObject> curList;
-            if (!curGameObjectDic.TryGetValue(name, out curList))
+            Stack<GameObject> curStack;
+            if (!curGameObjectDic.TryGetValue(name, out curStack) || curStack.Count == 0)
             {
-                Debug.LogError(String.Format("没有注册{0}", name));
+                if (!curGameObjectDic.ContainsKey(name))
+                {
+                    Debug.LogError(String.Format("没有注册{0}", name));
+                }
                 return null;
             }
-            if (curList.Count == 0)
-            {
-                return null;
-            }
-            else
-            {
-                GameObject cur = curList[0];
-                curList.RemoveAt(0);
-                return cur;
-            }
+
+            return curStack.Pop();
         }
 
         public T getNewBattleUnitView<T>(String name) where T : BattleUnitView
         {
-            List<BattleUnitView> curList;
-            if (!curObjectDic.TryGetValue(name, out curList))
+            Stack<BattleUnitView> curStack;
+            if (!curObjectDic.TryGetValue(name, out curStack) || curStack.Count == 0)
             {
-                Debug.LogError(String.Format("没有注册{0}", name));
+                if (!curObjectDic.ContainsKey(name))
+                {
+                    Debug.LogError(String.Format("没有注册{0}", name));
+                }
                 return null;
             }
-            if (curList.Count == 0)
-            {
-                return null;
-            }
-            else
-            {
-                BattleUnitView cur = curList[0];
-                curList.RemoveAt(0);
-                return (T)cur;
-            }
+
+            return (T)curStack.Pop();
         }
 
         public T getNewUnitViewComponent<T>(String name) where T : BaseUnitViewComponent
         {
-            List<BaseUnitViewComponent> curList;
-            if (!curUnitObjectDic.TryGetValue(name, out curList))
+            Stack<BaseUnitViewComponent> curStack;
+            if (!curUnitObjectDic.TryGetValue(name, out curStack) || curStack.Count == 0)
             {
-                Debug.LogError(String.Format("没有注册{0}", name));
+                if (!curUnitObjectDic.ContainsKey(name))
+                {
+                    Debug.LogError(String.Format("没有注册{0}", name));
+                }
                 return null;
             }
-            if (curList.Count == 0)
-            {
-                return null;
-            }
-            else
-            {
-                BaseUnitViewComponent cur = curList[0];
-                curList.RemoveAt(0);
-                return (T)cur;
-            }
-        }
 
+            return (T)curStack.Pop();
+        }
 
         public void PushViewObjectToPool(String name, BattleUnitView unit)
         {
-            List<BattleUnitView> curList = this.curObjectDic[name];
-            curList.Add(unit);
-            //Debug.Log(String.Format("{0}放回到视图对象池，目前长度{1}", name, curList.Count));
+            Stack<BattleUnitView> curStack = this.curObjectDic[name];
+            curStack.Push(unit);
         }
 
         public void PushViewObjectToPool(String name, BaseUnitViewComponent unit)
         {
-            List<BaseUnitViewComponent> curList = this.curUnitObjectDic[name];
-            curList.Add(unit);
-            //Debug.Log(String.Format("{0}放回到视图组件对象池，目前长度{1}", name, curList.Count));
+            Stack<BaseUnitViewComponent> curStack = this.curUnitObjectDic[name];
+            curStack.Push(unit);
         }
 
         public void PushGameObjectToPool(String name, GameObject node)
         {
-            List<GameObject> curList = this.curGameObjectDic[name];
-            node.transform.position = BattleManager.Instance.baseBattleView.initTran;
-            curList.Add(node);
-            //Debug.Log(String.Format("{0}放回到视图游戏对象池，目前长度{1}", name, curList.Count));
-
+            Stack<GameObject> curStack = this.curGameObjectDic[name];
+            node.transform.position = BattleView_base.OffscreenPoolPosition;
+            curStack.Push(node);
         }
 
         public void ClearGameInfo()
         {
             this.DestroyAndClearAllPooledGameObjects();
-            GC.Collect();
+            BattleViewEffectHelper.ResetTemplates();
         }
 
         private void DestroyAndClearAllPooledGameObjects()
         {
-            foreach (KeyValuePair<String, List<GameObject>> kv in this.curGameObjectDic)
+            foreach (KeyValuePair<String, Stack<GameObject>> kv in this.curGameObjectDic)
             {
-                List<GameObject> list = kv.Value;
-                for (int i = 0; i < list.Count; i++)
+                Stack<GameObject> stack = kv.Value;
+                while (stack.Count > 0)
                 {
-                    if (list[i] != null)
+                    GameObject go = stack.Pop();
+                    if (go != null)
                     {
-                        UnityEngine.Object.Destroy(list[i]);
+                        UnityEngine.Object.Destroy(go);
                     }
                 }
-                list.Clear();
             }
             this.curGameObjectDic.Clear();
         }
 
         public void Dispose()
         {
-            foreach (KeyValuePair<String, List<BattleUnitView>> info in this.curObjectDic)
+            foreach (KeyValuePair<String, Stack<BattleUnitView>> info in this.curObjectDic)
             {
-                for (int i = 0; i < info.Value.Count; i++)
+                while (info.Value.Count > 0)
                 {
-                    info.Value[i].Dispose();
+                    info.Value.Pop().Dispose();
                 }
             }
             this.curObjectDic.Clear();
-            foreach (KeyValuePair<String, List<BaseUnitViewComponent>> info in this.curUnitObjectDic)
+
+            foreach (KeyValuePair<String, Stack<BaseUnitViewComponent>> info in this.curUnitObjectDic)
             {
-                for (int i = 0; i < info.Value.Count; i++)
+                while (info.Value.Count > 0)
                 {
-                    info.Value[i].Dispose();
+                    info.Value.Pop().Dispose();
                 }
             }
             this.curUnitObjectDic.Clear();
+
             this.DestroyAndClearAllPooledGameObjects();
 
+            BattleViewEffectHelper.ResetTemplates();
             gamePool = null;
-            GC.Collect();
         }
     }
 }

@@ -12,11 +12,13 @@ namespace CarrotFantasy
 
         public SingleMapInfo unSaveMapInfo;
 
+        /// <summary>最近一次从地图进战斗的关卡，用于回主场景恢复选关界面。</summary>
+        public int LastEnteredBigLevelId { get; private set; }
+
+        public int LastEnteredLevelId { get; private set; }
+
         private MapBigLevelPanel mapBigLevelPanel;
         private MapNormalLevelPanel mapNormalLevelPanel;
-
-        public int curBigLevel { get; private set; }
-        public int curLevel { get; private set; }
 
         protected override void OnSingletonInit()
         {
@@ -29,14 +31,22 @@ namespace CarrotFantasy
             base.LoadModule();
             this.AddAccountListener();
 
-            this.curBigLevel = 0;
-            this.curLevel = 0;
-
             mapBigLevelPanel = new MapBigLevelPanel();
             mapBigLevelPanel.RegisterData();
 
             mapNormalLevelPanel = new MapNormalLevelPanel();
             mapNormalLevelPanel.RegisterData();
+        }
+
+        public void RememberLastBattleLevel(int bigLevelId, int levelId)
+        {
+            if (bigLevelId <= 0 || levelId <= 0)
+            {
+                return;
+            }
+
+            this.LastEnteredBigLevelId = bigLevelId;
+            this.LastEnteredLevelId = levelId;
         }
 
         private void AddAccountListener()
@@ -174,12 +184,6 @@ namespace CarrotFantasy
                 UIServer.Instance.ShowTip("同步失败，请检查网络后重试");
                 this.unSaveMapInfo = null;
             }
-        }
-
-        public void SendGameMapInfo(int bigLevel, int level)
-        {
-            this.curBigLevel = bigLevel;
-            this.curLevel = level;
         }
 
         private void OnSetSingleMapResponseProto(SetSingleMapResponse msg)

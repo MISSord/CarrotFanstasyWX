@@ -265,7 +265,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: pause_1
-  _lastRecordedSpriteInstanceId: 27224
+  _lastRecordedSpriteInstanceId: 24946
 --- !u!1 &1291467742513814
 GameObject:
   m_ObjectHideFlags: 0
@@ -475,7 +475,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: Items02-hd_165
-  _lastRecordedSpriteInstanceId: 27190
+  _lastRecordedSpriteInstanceId: 25254
 --- !u!1 &1516941657730048
 GameObject:
   m_ObjectHideFlags: 0
@@ -567,7 +567,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: Items02-hd_68
-  _lastRecordedSpriteInstanceId: 25392
+  _lastRecordedSpriteInstanceId: 25256
 --- !u!1 &1618489538536258
 GameObject:
   m_ObjectHideFlags: 0
@@ -663,7 +663,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: touming-hd.pvr_13
-  _lastRecordedSpriteInstanceId: 27252
+  _lastRecordedSpriteInstanceId: 25238
 --- !u!1 &1641655574077848
 GameObject:
   m_ObjectHideFlags: 0
@@ -928,7 +928,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: menu_1
-  _lastRecordedSpriteInstanceId: 27216
+  _lastRecordedSpriteInstanceId: 25252
 --- !u!1 &1848390176524954
 GameObject:
   m_ObjectHideFlags: 0
@@ -1151,7 +1151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: speed_1
-  _lastRecordedSpriteInstanceId: 27236
+  _lastRecordedSpriteInstanceId: 25244
 --- !u!1 &1892918214648344
 GameObject:
   m_ObjectHideFlags: 0
@@ -1323,7 +1323,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover0-hd_0
-  _lastRecordedSpriteInstanceId: 27436
+  _lastRecordedSpriteInstanceId: 25246
 --- !u!1 &7047203246734822491
 GameObject:
   m_ObjectHideFlags: 0

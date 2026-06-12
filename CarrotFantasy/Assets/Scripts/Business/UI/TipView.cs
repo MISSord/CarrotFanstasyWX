@@ -27,7 +27,7 @@ namespace CarrotFantasy
 
             this.scheId = -1;
 
-            Vector2 curSize = UIUtil.Instance.currentScreenSize;
+            Vector2 curSize = UIServer.Instance.curSetScreenSize;
             this.defaultPosition = new Vector3(0, -(curSize.y / 2 + PREFAB_HEIGHT), 0.5f);
             this.transform.localPosition = this.defaultPosition;
 

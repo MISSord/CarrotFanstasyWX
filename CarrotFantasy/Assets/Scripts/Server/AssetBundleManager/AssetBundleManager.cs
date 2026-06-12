@@ -575,16 +575,21 @@ public class AssetBundleManager
 #if UNITY_EDITOR
     private void UpdateAssetBaseLoad()
     {
-        if (assetBaseLoadInfos.Count <= 0) return;
+        if (assetBaseLoadInfos.Count <= 0)
+        {
+            return;
+        }
+
         for (int i = 0; i < assetBaseLoadInfos.Count; ++i)
         {
             AssetBaseLoadInfo info = assetBaseLoadInfos[i];
-            UnityEngine.Object asset = EditorAssetLoader.LoadAssetAtPath(info.bundleName, info.assetName, info.expectedType);
-            if (asset != null && info._callback != null)
-            {
-                info._callback(asset);
-            }
+            UnityEngine.Object asset = EditorAssetLoader.LoadAssetAtPath(
+                info.bundleName,
+                info.assetName,
+                info.expectedType);
+            info._callback?.Invoke(asset);
         }
+
         assetBaseLoadInfos.Clear();
     }
 #endif

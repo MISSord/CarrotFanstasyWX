@@ -5,6 +5,10 @@ namespace CarrotFantasy
     public class BattleEvent
     {
         public const String START_GAME = "Start_game";
+        /// <summary>开场倒计时音效；由 <see cref="PveStartState"/> 按统一 intro 时长派发。</summary>
+        public const String START_GAME_INTRO_COUNTDOWN = "Start_game_intro_countdown";
+        /// <summary>开场 UI 结束（隐藏 StartUI、播放 GO）；与进入 PRE_FIGHTING 同步。</summary>
+        public const String START_GAME_INTRO_END = "Start_game_intro_end";
         public const String END_GAME = "end_game";
 
         public const String AFTER_TICK = "after_tick";

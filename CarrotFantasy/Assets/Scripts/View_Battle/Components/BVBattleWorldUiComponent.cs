@@ -35,12 +35,101 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            Transform parent = this.battleView.rootGameObject.transform;
+            this.EnsureCanvasesReady();
+        }
+
+        /// <summary>保证血条/飘字 Canvas 挂在 BattleRoot 下。</summary>
+        public void EnsureCanvasesReady()
+        {
+            GameObject viewRoot = this.battleView != null ? this.battleView.rootGameObject : null;
+            if (viewRoot == null)
+            {
+                Debug.LogError("[BVBattleWorldUiComponent] 战斗视图根节点无效，无法创建 World UI Canvas。");
+                return;
+            }
+
+            Transform parent = viewRoot.transform;
+            if (IsCanvasAttached(this.hpCanvasGo, parent) && IsCanvasAttached(this.damageCanvasGo, parent))
+            {
+                if (this.hpCanvasRect == null && this.hpCanvasGo != null)
+                {
+                    this.hpCanvasRect = this.hpCanvasGo.GetComponent<RectTransform>();
+                }
+
+                if (this.damageCanvasRect == null && this.damageCanvasGo != null)
+                {
+                    this.damageCanvasRect = this.damageCanvasGo.GetComponent<RectTransform>();
+                }
+
+                return;
+            }
+
+            DestroyCanvas(ref this.hpCanvasGo, ref this.hpCanvasRect);
+            DestroyCanvas(ref this.damageCanvasGo, ref this.damageCanvasRect);
 
             this.hpCanvasGo = CreateWorldUiCanvas("BattleHpBarCanvas", HpCanvasSortOrder, parent);
             this.damageCanvasGo = CreateWorldUiCanvas("BattleDamageFloatCanvas", DamageCanvasSortOrder, parent);
             this.hpCanvasRect = this.hpCanvasGo.GetComponent<RectTransform>();
             this.damageCanvasRect = this.damageCanvasGo.GetComponent<RectTransform>();
+        }
+
+        static bool IsCanvasAttached(GameObject canvasGo, Transform expectedParent)
+        {
+            return canvasGo != null && expectedParent != null && canvasGo.transform.parent == expectedParent;
+        }
+
+        static void DestroyCanvas(ref GameObject canvasGo, ref RectTransform canvasRect)
+        {
+            if (canvasGo != null)
+            {
+                Object.Destroy(canvasGo);
+            }
+
+            canvasGo = null;
+            canvasRect = null;
+        }
+
+        /// <summary>从 MonsterCanvas 预制体提取 HPSlider，挂到共享 BattleHpBarCanvas 下（不保留独立 Canvas）。</summary>
+        public GameObject CreateMonsterHpBar(GameObject monsterCanvasTemplate)
+        {
+            this.EnsureCanvasesReady();
+
+            if (monsterCanvasTemplate == null)
+            {
+                Debug.LogError("[BVBattleWorldUiComponent] MonsterCanvas 模板为空。");
+                return null;
+            }
+
+            if (this.hpCanvasRect == null)
+            {
+                Debug.LogError("[BVBattleWorldUiComponent] BattleHpBarCanvas 未就绪。");
+                return null;
+            }
+
+            GameObject canvasInstance = GameObject.Instantiate(monsterCanvasTemplate);
+            Transform sliderTr = canvasInstance.transform.Find("HPSlider");
+            if (sliderTr == null)
+            {
+                Object.Destroy(canvasInstance);
+                Debug.LogError("[BVBattleWorldUiComponent] MonsterCanvas 预制体缺少 HPSlider。");
+                return null;
+            }
+
+            RectTransform canvasRect = canvasInstance.GetComponent<RectTransform>();
+            RectTransform sliderRect = sliderTr.GetComponent<RectTransform>();
+            if (canvasRect != null && sliderRect != null)
+            {
+                sliderRect.sizeDelta = canvasRect.sizeDelta;
+                sliderRect.pivot = canvasRect.pivot;
+                sliderRect.anchorMin = new Vector2(0.5f, 0.5f);
+                sliderRect.anchorMax = new Vector2(0.5f, 0.5f);
+                sliderRect.anchoredPosition = Vector2.zero;
+            }
+
+            sliderTr.SetParent(this.hpCanvasRect, false);
+            sliderTr.localScale = Vector3.one;
+            Object.Destroy(canvasInstance);
+            return sliderTr.gameObject;
         }
 
         private static GameObject CreateWorldUiCanvas(string name, int sortOrder, Transform parent)
@@ -138,15 +227,23 @@ namespace CarrotFantasy
             return text;
         }
 
+        static Font cachedDefaultUiFont;
+
         private static Font GetDefaultUIFont()
         {
-            Font f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (cachedDefaultUiFont != null)
+            {
+                return cachedDefaultUiFont;
+            }
+
+            Font f = Font.CreateDynamicFontFromOSFont("Arial", 16);
             if (f == null)
             {
                 f = Resources.GetBuiltinResource<Font>("Arial.ttf");
             }
 
-            return f;
+            cachedDefaultUiFont = f;
+            return cachedDefaultUiFont;
         }
 
         private void ReturnDamageText(Text text)
@@ -165,6 +262,12 @@ namespace CarrotFantasy
                 DamageFloatEntry e = this.activeFloats[i];
                 e.remain -= time;
                 e.rect.localPosition += e.velocity * time;
+                if (e.text == null)
+                {
+                    this.activeFloats.RemoveAt(i);
+                    continue;
+                }
+
                 if (e.remain <= 0f)
                 {
                     this.ReturnDamageText(e.text);

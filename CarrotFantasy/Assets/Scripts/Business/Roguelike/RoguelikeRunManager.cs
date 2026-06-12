@@ -124,14 +124,11 @@ namespace CarrotFantasy
                 RoguelikeRunServer.Instance.SyncMapProgress(this.mapRuntime.ExportProgress());
             }
 
-            BattleParamServer.Instance.PrepareRoguelikeEncounter(
+            BattleLauncher.StartRoguelikeEncounter(
                 encounterId,
                 this.defaultBigLevel,
                 this.defaultLevel
             );
-            BattleParamServer.Instance.EnsureBattleViewsLoaded();
-
-            ServerProvision.sceneServer.LoadScene(BaseSceneType.BattleScene, null);
         }
 
         void HandleShopRequested(int pointId)

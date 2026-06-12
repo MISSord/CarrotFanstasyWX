@@ -3,7 +3,7 @@ using UnityEngine.UI;
 namespace CarrotFantasy
 {
     /// <summary>战斗失败结算（独立 BaseView）。</summary>
-    public class GameOverView : BaseView
+    public class GameOverView : BattleBoundView
     {
         public override void InitData()
         {
@@ -14,34 +14,39 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
+            if (!this.IsBattleBound || this.pveDataComponent == null)
+            {
+                return;
+            }
+
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
 
-            BattlePVEDataComponent dataComponent = BattlePVEDataComponent.GetFrom(BattleManager.Instance.baseBattle);
-            int waves = dataComponent.curWaves;
+            int waves = this.pveDataComponent.curWaves;
             nameTableDic["txt_result_show"].GetComponent<Text>().text = LanguageUtil.Instance.GetFormatString(
                 1002,
                 (waves / 10).ToString(),
                 (waves % 10).ToString(),
-                dataComponent.totalWaves.ToString());
+                this.pveDataComponent.totalWaves.ToString());
 
             nameTableDic["txt_level_show"].GetComponent<Text>().text = LanguageUtil.Instance.GetFormatString(
                 1003,
-                dataComponent.bigLevel.ToString(),
-                dataComponent.level.ToString());
+                this.pveDataComponent.bigLevel.ToString(),
+                this.pveDataComponent.level.ToString());
         }
 
         protected override void ReleaseCallBack()
         {
             nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
             nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
+            this.ClearBattleBinding();
         }
 
         private void OnReplay()
         {
             UIServer.Instance.PlayButtonEffect();
             Close();
-            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
+            this.battle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
         }
 
         private void OnChooseOtherLevel()
@@ -52,4 +57,3 @@ namespace CarrotFantasy
         }
     }
 }
-

@@ -29,13 +29,24 @@ namespace CarrotFantasy
         {
             base.Init();
 
-            if (BattleParamServer.Instance != null && BattleParamServer.Instance.isPVE)
+            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            if (launchParams != null)
             {
-                this.bigLevel = BattleParamServer.Instance.curBigLevel;
-                this.level = BattleParamServer.Instance.curLevel;
-                this.totalWaves = BattleParamServer.Instance.curStage.mTotalRound;
-                this.curTowerIDList = BattleParamServer.Instance.curStage.mTowerIDList;
-                this.towerIDListLength = this.curTowerIDList.Length;
+                this.bigLevel = launchParams.BigLevelId;
+                this.level = launchParams.LevelId;
+
+                LevelInfo levelInfo = launchParams.LevelInfo;
+                this.totalWaves = LevelWaveQuery.GetTotalWaves(levelInfo);
+                if (this.totalWaves <= 0 && launchParams.Stage != null)
+                {
+                    this.totalWaves = launchParams.Stage.mTotalRound;
+                }
+
+                if (launchParams.Stage != null)
+                {
+                    this.curTowerIDList = launchParams.Stage.mTowerIDList;
+                    this.towerIDListLength = this.curTowerIDList != null ? this.curTowerIDList.Length : 0;
+                }
             }
 
             this.curWaves = 0;

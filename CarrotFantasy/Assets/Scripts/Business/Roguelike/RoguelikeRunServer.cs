@@ -257,7 +257,7 @@ namespace CarrotFantasy
             return true;
         }
 
-        /// <summary>汇总背包对单局战斗的加成（由 <see cref="BattleRoguelikeRunBridgeComponent"/> 应用）。</summary>
+        /// <summary>汇总背包对单局战斗的加成（由 <see cref="BattleLauncher"/> 写入开战参数并由 <see cref="BattleGlobalBuffComponent"/> 应用）。</summary>
         public void CollectBattleModifiers(out int startCoinBonus, out int towerDamagePercentBonus)
         {
             startCoinBonus = 0;

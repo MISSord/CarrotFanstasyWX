@@ -6,7 +6,7 @@ namespace CarrotFantasy
     {
         public const String LOAD_SCENE_PREPARE = "load_scene";
         public const String LOAD_SCENE_ONLOADING = "";
-        public const String LOAD_SCENE_FINISH = "";
+        public const String LOAD_SCENE_FINISH = "load_scene_finish";
 
         public const String RELOAD_SCENE_PREPARE = "reload_scene";
         public const String RELOAD_SCENE_ONLOADING = "";

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -29,19 +30,125 @@ namespace CarrotFantasy
             }
         }
 
+        public static SceneLoader RunnerInstance
+        {
+            get { return Runner; }
+        }
+
+        public static Coroutine StartRoutine(IEnumerator routine)
+        {
+            return Runner.StartCoroutine(routine);
+        }
+
         /// <summary>
         /// 同步加载指定场景。
         /// </summary>
-        public static void Load(GameSceneType sceneType, LoadSceneMode loadMode = LoadSceneMode.Single)
+        public static bool TryLoad(GameSceneType sceneType, LoadSceneMode loadMode, out string error)
         {
+            error = null;
+            string scenePath = ToScenePath(sceneType);
             string sceneName = ToSceneName(sceneType);
-            if (string.IsNullOrEmpty(sceneName))
+            if (string.IsNullOrEmpty(scenePath) || string.IsNullOrEmpty(sceneName))
             {
-                Debug.LogError($"[SceneLoader] 未找到场景映射: {sceneType}");
-                return;
+                error = "未找到场景映射: " + sceneType;
+                return false;
             }
 
-            SceneManager.LoadScene(sceneName, loadMode);
+            int buildIndex = SceneUtility.GetBuildIndexByScenePath(scenePath);
+            if (buildIndex < 0)
+            {
+                error = scenePath + " 未加入 Build Settings";
+                return false;
+            }
+
+            SceneManager.LoadScene(buildIndex, loadMode);
+
+            Scene active = SceneManager.GetActiveScene();
+            if (!active.IsValid() || active.name != sceneName)
+            {
+                error = "LoadScene 后 active=" + active.name +
+                        " 期望=" + sceneName +
+                        " loaded=[" + BuildLoadedSceneNameList() + "]";
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// 同步加载指定场景（失败时仅打 LogError，保持旧调用方兼容）。
+        /// </summary>
+        public static void Load(GameSceneType sceneType, LoadSceneMode loadMode = LoadSceneMode.Single)
+        {
+            if (!TryLoad(sceneType, loadMode, out string error))
+            {
+                Debug.LogError("[SceneLoader] " + error);
+            }
+        }
+
+        /// <summary>
+        /// 异步加载指定场景；完成回调返回是否加载成功且 active 场景名匹配。
+        /// </summary>
+        public static void TryLoadAsync(
+            GameSceneType sceneType,
+            LoadSceneMode loadMode,
+            Action<bool> onCompleted,
+            Action<float> onProgress = null)
+        {
+            Runner.StartCoroutine(TryLoadAsyncCoroutine(sceneType, loadMode, onCompleted, onProgress));
+        }
+
+        static IEnumerator TryLoadAsyncCoroutine(
+            GameSceneType sceneType,
+            LoadSceneMode loadMode,
+            Action<bool> onCompleted,
+            Action<float> onProgress)
+        {
+            string scenePath = ToScenePath(sceneType);
+            string sceneName = ToSceneName(sceneType);
+            if (string.IsNullOrEmpty(scenePath) || string.IsNullOrEmpty(sceneName))
+            {
+                Debug.LogError("[SceneLoader] 未找到场景映射: " + sceneType);
+                onCompleted?.Invoke(false);
+                yield break;
+            }
+
+            int buildIndex = SceneUtility.GetBuildIndexByScenePath(scenePath);
+            if (buildIndex < 0)
+            {
+                Debug.LogError("[SceneLoader] " + scenePath + " 未加入 Build Settings");
+                onCompleted?.Invoke(false);
+                yield break;
+            }
+
+            AsyncOperation operation = SceneManager.LoadSceneAsync(buildIndex, loadMode);
+            if (operation == null)
+            {
+                Debug.LogError("[SceneLoader] 场景异步加载失败: " + sceneName);
+                onCompleted?.Invoke(false);
+                yield break;
+            }
+
+            while (!operation.isDone)
+            {
+                float normalizedProgress = Mathf.Clamp01(operation.progress / 0.9f);
+                onProgress?.Invoke(normalizedProgress);
+                yield return null;
+            }
+
+            onProgress?.Invoke(1f);
+
+            Scene active = SceneManager.GetActiveScene();
+            bool ok = active.IsValid() && active.name == sceneName;
+            if (!ok)
+            {
+                Debug.LogError(
+                    "[SceneLoader] LoadSceneAsync 后 active=" + active.name +
+                    " 期望=" + sceneName +
+                    " loaded=[" + BuildLoadedSceneNameList() + "]");
+            }
+
+            onCompleted?.Invoke(ok);
         }
 
         /// <summary>
@@ -76,6 +183,76 @@ namespace CarrotFantasy
             }
 
             SceneManager.LoadScene(current.name, loadMode);
+        }
+
+        /// <summary>
+        /// 在已加载场景列表中按名称查找（比 GetSceneByName 更可靠，兼容编辑器直接 Play 的场景）。
+        /// </summary>
+        public static Scene FindLoadedSceneByName(string unitySceneName)
+        {
+            if (string.IsNullOrEmpty(unitySceneName))
+            {
+                return default;
+            }
+
+            Scene active = SceneManager.GetActiveScene();
+            if (active.IsValid() && active.name == unitySceneName)
+            {
+                return active;
+            }
+
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (scene.IsValid() && scene.name == unitySceneName)
+                {
+                    return scene;
+                }
+            }
+
+            Scene byName = SceneManager.GetSceneByName(unitySceneName);
+            if (byName.IsValid())
+            {
+                return byName;
+            }
+
+            return default;
+        }
+
+        public static string BuildLoadedSceneNameList()
+        {
+            var sb = new StringBuilder(64);
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                Scene scene = SceneManager.GetSceneAt(i);
+                if (sb.Length > 0)
+                {
+                    sb.Append(',');
+                }
+
+                sb.Append(scene.name);
+                sb.Append(scene.isLoaded ? "(loaded)" : "(not loaded)");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// 把枚举转换成 Unity 场景资源路径。
+        /// </summary>
+        public static string ToScenePath(GameSceneType sceneType)
+        {
+            switch (sceneType)
+            {
+                case GameSceneType.MainScene:
+                    return "Assets/Game/Scenes/MainScene.unity";
+                case GameSceneType.BattleScene:
+                    return "Assets/Game/Scenes/BattleScene.unity";
+                case GameSceneType.RoguelikeMapScene:
+                    return "Assets/Game/Scenes/Scene.unity";
+                default:
+                    return string.Empty;
+            }
         }
 
         /// <summary>

@@ -32,9 +32,10 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            if (BattleParamServer.Instance != null)
+            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            if (launchParams != null)
             {
-                this.levelInfo = BattleParamServer.Instance.info;
+                this.levelInfo = launchParams.LevelInfo;
             }
 
             this.roundInfo = this.levelInfo != null ? this.levelInfo.roundInfo : null;
@@ -87,27 +88,41 @@ namespace CarrotFantasy
                 return;
             }
 
-            Round.RoundInfo curMonsterList = this.roundInfo[curWaves - 1];
-
-            for (int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
+            Round.RoundInfo curRound = this.roundInfo[curWaves - 1];
+            WaveSpawnPlan plan = SpawnPlanCompiler.Compile(curRound);
+            if (plan.Count == 0)
             {
-                BattleUnit_MonsterFlow monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_MonsterFlow>(BattleUnitType.MONSTER_FLOW);
-                if (monster == null)
-                {
-                    monster = new BattleUnit_MonsterFlow(this.baseBattle);
-                }
-
-                monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
-                monster.LoadInfo(
-                    this.baseBattle.GetUid(),
-                    this.monsterConfigReader.GetSingleMonsterConfig(curMonsterList.mMonsterIDList[i]),
-                    this.birthPoint);
-                monster.LoadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
-                monster.Init();
-                monster.LoadFlowMovement(this.flowFieldComponent);
-                monster.InitComponents();
-                this.curNoRegisterList.Add(monster);
+                Debug.LogError(String.Format("当前波次无怪物配置: wave={0}", curWaves));
+                return;
             }
+
+            for (int i = 0; i < plan.Count; i++)
+            {
+                this.curNoRegisterList.Add(this.CreateMonsterFlow(plan.MonsterIds[i]));
+            }
+
+            this.SetWaveSpawnSchedule(plan.SpawnOffsets);
+            this.BeginWaveSpawn();
+        }
+
+        private BattleUnit_MonsterFlow CreateMonsterFlow(int monsterConfigId)
+        {
+            BattleUnit_MonsterFlow monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_MonsterFlow>(BattleUnitType.MONSTER_FLOW);
+            if (monster == null)
+            {
+                monster = new BattleUnit_MonsterFlow(this.baseBattle);
+            }
+
+            monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
+            monster.LoadInfo(
+                this.baseBattle.GetUid(),
+                this.monsterConfigReader.GetSingleMonsterConfig(monsterConfigId),
+                this.birthPoint);
+            monster.LoadInfo2(this.battleDataComponent.bigLevel, monsterConfigId);
+            monster.Init();
+            monster.LoadFlowMovement(this.flowFieldComponent);
+            monster.InitComponents();
+            return monster;
         }
 
         public bool IsCanNewMonsterWaves()

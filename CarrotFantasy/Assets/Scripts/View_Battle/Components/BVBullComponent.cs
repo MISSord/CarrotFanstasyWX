@@ -10,8 +10,6 @@ namespace CarrotFantasy
 
         private Dictionary<BattleUnit_Bullet, BattleUnitView_Bullet> bulletDic = new Dictionary<BattleUnit_Bullet, BattleUnitView_Bullet>();
 
-        private readonly Dictionary<string, GameObject> _bulletPrefabTemplates = new Dictionary<string, GameObject>();
-        private readonly Dictionary<string, AssetLoadHandle> _bulletPrefabHandles = new Dictionary<string, AssetLoadHandle>();
         public BVBulletComponent(BattleView_base battleView) : base(battleView)
         {
             this.componentType = BattleViewComponentType.BULLET;
@@ -19,7 +17,13 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
+            BVSceneComponent scene = this.battleView.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
+            if (scene == null)
+            {
+                Debug.LogError("[BVBulletComponent] BVSceneComponent 未注册。");
+                return;
+            }
+
             this.rootGameObject = scene.RegisterGameContainer("BulletContainer");
 
             BattleDataComponent dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
@@ -29,6 +33,7 @@ namespace CarrotFantasy
                 GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_2", dataComponent.curTowerIDList[i]));
                 GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_3", dataComponent.curTowerIDList[i]));
             }
+            this.RemoveListener();
             this.AddListener();
         }
 
@@ -48,22 +53,14 @@ namespace CarrotFantasy
         {
             string bundleName = FightViewPrefabAb.TowerBulletBundleName(towerId);
             string assetName = bulletLevelIndex.ToString();
-            string cacheKey = bundleName + "/" + assetName;
-            if (_bulletPrefabTemplates.TryGetValue(cacheKey, out GameObject cached) && cached != null)
+            GameObject tpl;
+            if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
             {
-                return cached;
+                return tpl;
             }
 
-            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle handle);
-            if (tpl == null)
-            {
-                Debug.LogError($"[BVBulletComponent] 子弹预制体加载失败: bundle={bundleName}, asset={assetName}");
-                return null;
-            }
-
-            _bulletPrefabTemplates[cacheKey] = tpl;
-            _bulletPrefabHandles[cacheKey] = handle;
-            return tpl;
+            Debug.LogError($"[BVBulletComponent] 子弹预制体未预加载: bundle={bundleName}, asset={assetName}");
+            return null;
         }
 
         private void RegisterNewBulletView(String type, BattleUnit unit)
@@ -123,13 +120,6 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
-            foreach (KeyValuePair<string, AssetLoadHandle> kv in _bulletPrefabHandles)
-            {
-                kv.Value.Dispose();
-            }
-
-            _bulletPrefabHandles.Clear();
-            _bulletPrefabTemplates.Clear();
             foreach (KeyValuePair<BattleUnit_Bullet, BattleUnitView_Bullet> info in this.bulletDic)
             {
                 GameViewObjectPool.Instance.PushGameObjectToPool(String.Format("{0}_{1}", info.Key.towerId, info.Key.towerLevel + 1), info.Value.transform.gameObject);

@@ -5,7 +5,6 @@ namespace CarrotFantasy
 {
     public class BVMapComponent : BaseBattleViewComponent
     {
-        private readonly List<AssetLoadHandle> _prefabHandles = new List<AssetLoadHandle>();
         public Sprite sprGirdNoramlState;
         public Sprite sprGirdStartState;
         public Sprite sprGirdCantBuildState;
@@ -27,32 +26,54 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            this.sprGirdNoramlState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Grid");
-            this.sprGirdStartState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/StartSprite");
-            this.sprGirdCantBuildState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/cantBuild");
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridNormal, out this.sprGirdNoramlState))
+            {
+                Debug.LogError("[BVMapComponent] Grid Sprite 未预加载");
+            }
+
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridStart, out this.sprGirdStartState))
+            {
+                Debug.LogError("[BVMapComponent] StartSprite 未预加载");
+            }
+
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridCantBuild, out this.sprGirdCantBuildState))
+            {
+                Debug.LogError("[BVMapComponent] cantBuild Sprite 未预加载");
+            }
+
             this.LoadMapGrid();
         }
 
         private void LoadMapGrid()
         {
-            GameObject item = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Grid, out AssetLoadHandle h);
-            if (h.IsValid)
+            BVSceneComponent scene = this.battleView.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
+            if (scene == null)
             {
-                _prefabHandles.Add(h);
+                Debug.LogError("[BVMapComponent] BVSceneComponent 未注册，跳过格子创建。");
+                return;
             }
 
-            if (item == null)
+            GameObject gridList = scene.RegisterGameContainer("GridContainer");
+            if (gridList == null)
             {
-                Debug.LogError("[BVMapComponent] Grid 预制体加载失败");
+                Debug.LogError("[BVMapComponent] GridContainer 未就绪，跳过格子创建。");
+                return;
+            }
+
+            GameObject item;
+            if (!BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.Grid,
+                out item))
+            {
+                Debug.LogError("[BVMapComponent] Grid 预制体未预加载");
                 return;
             }
 
             BattleMapComponent mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
             BattleMapGrid[,] mapGridInfo = mapComponent.gridsList;
 
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
-            GameObject gridList = scene.RegisterGameContainer("GridContainer");
-
+            int created = 0;
             for (int x = 0; x < this.xColumn; x++)
             {
                 for (int y = 0; y < this.yRow; y++)
@@ -60,33 +81,64 @@ namespace CarrotFantasy
                     GameObject itemGo = GameObject.Instantiate(item);
                     itemGo.transform.position = new Vector3((float)mapGridInfo[x, y].realX, (float)mapGridInfo[x, y].realY, 0);
                     itemGo.transform.SetParent(gridList.transform);
-                    this.gridPointList[x, y] = itemGo.transform.GetComponent<GridPoint>();
-                    this.gridPointList[x, y].InitTrans(this.battleView);
-                    this.gridPointList[x, y].InitInfo(x, y);
+                    GridPoint gridPoint = itemGo.GetComponent<GridPoint>();
+                    if (gridPoint == null)
+                    {
+                        Debug.LogError("[BVMapComponent] Grid 预制体缺少 GridPoint 组件");
+                        continue;
+                    }
+
+                    this.gridPointList[x, y] = gridPoint;
+                    gridPoint.InitTrans(this.battleView);
+                    gridPoint.InitInfo(x, y);
+                    created++;
                 }
             }
+
+            BattleFlowLog.Step(
+                "LoadMapGrid",
+                "columns=" + this.xColumn +
+                " rows=" + this.yRow +
+                " created=" + created +
+                " GridContainer#" + gridList.GetInstanceID());
         }
 
 
         public override void Start()
         {
+            if (this.gridPointList == null)
+            {
+                return;
+            }
+
             for (int x = 0; x < this.xColumn; x++)
             {
                 for (int y = 0; y < this.yRow; y++)
                 {
-                    this.gridPointList[x, y].StartGame();
+                    GridPoint gridPoint = this.gridPointList[x, y];
+                    if (gridPoint == null)
+                    {
+                        continue;
+                    }
+
+                    gridPoint.StartGame();
                 }
             }
         }
 
         public override void ClearGameInfo()
         {
-            for (int i = 0; i < _prefabHandles.Count; i++)
+            if (this.gridPointList != null)
             {
-                _prefabHandles[i].Dispose();
+                for (int x = 0; x < this.xColumn; x++)
+                {
+                    for (int y = 0; y < this.yRow; y++)
+                    {
+                        this.gridPointList[x, y] = null;
+                    }
+                }
             }
 
-            _prefabHandles.Clear();
             base.ClearGameInfo();
         }
 

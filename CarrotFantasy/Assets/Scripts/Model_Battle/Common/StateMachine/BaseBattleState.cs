@@ -6,7 +6,7 @@ namespace CarrotFantasy
     {
         public BaseStateMachine stateMachine;
 
-        /// <summary>当前战斗内核引用；替代 BattleManager.Instance.baseBattle。</summary>
+        /// <summary>当前战斗内核引用；由状态机构造注入，不通过全局单例访问。</summary>
         protected BaseBattle Battle => (stateMachine as BaseStateMachine)?.Battle;
 
         public BaseBattleState(BaseStateMachine bstateMachine, String btype) : base(btype)

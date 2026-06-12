@@ -31,9 +31,32 @@ namespace CarrotFantasy
             });
         }
 
+        public bool TryGetMapUIConfig(int bigLevel, int level, out Dictionary<String, int> config)
+        {
+            int key = bigLevel * 100 + level;
+            if (this.mapUIParam.TryGetValue(key, out config))
+            {
+                return true;
+            }
+
+            if (this.mapUIParam.TryGetValue(101, out config))
+            {
+                return false;
+            }
+
+            config = new Dictionary<string, int>
+            {
+                { "mapBg", 0 },
+                { "mapRoad", 1 },
+            };
+            return false;
+        }
+
         public Dictionary<String, int> getMapUIConfig(int bigLevel, int level)
         {
-            return this.mapUIParam[bigLevel * 100 + level];
+            Dictionary<String, int> config;
+            TryGetMapUIConfig(bigLevel, level, out config);
+            return config;
         }
     }
 }

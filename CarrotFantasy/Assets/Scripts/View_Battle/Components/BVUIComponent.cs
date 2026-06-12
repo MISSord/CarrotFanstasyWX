@@ -48,8 +48,6 @@ namespace CarrotFantasy
 
         private GameObject rootGameObject;
 
-        private readonly List<AssetLoadHandle> _prefabHandles = new List<AssetLoadHandle>();
-
         public BVUIComponent(BattleView_base battleView) : base(battleView)
         {
             this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
@@ -85,20 +83,16 @@ namespace CarrotFantasy
             this.eventDispatcher.AddListener<BattleUnit>(BattleEvent.TARGET_CHANGE, this.SetTargetSignal);
         }
 
-        private GameObject LoadPrefabTemplateTracked(string bundleName, string assetName)
+        private GameObject GetPrefabTemplate(string bundleName, string assetName)
         {
-            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle h);
-            if (h.IsValid)
+            GameObject tpl;
+            if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
             {
-                _prefabHandles.Add(h);
+                return tpl;
             }
 
-            if (tpl == null)
-            {
-                Debug.LogError($"[BVUIComponent] 预制体加载失败: bundle={bundleName}, asset={assetName}");
-            }
-
-            return tpl;
+            Debug.LogError($"[BVUIComponent] 预制体未预加载: bundle={bundleName}, asset={assetName}");
+            return null;
         }
 
         private void RemoveListener()
@@ -112,8 +106,23 @@ namespace CarrotFantasy
 
             this.eventDispatcher.RemoveListener<int>(BattleEvent.COIN_CHANGE, this.RefreshButtonInfo);
 
-            this.tranButtonSell.GetComponent<Button>().onClick.RemoveAllListeners();
-            this.tranButtonUp.GetComponent<Button>().onClick.RemoveAllListeners();
+            if (this.tranButtonSell != null)
+            {
+                Button sellButton = this.tranButtonSell.GetComponent<Button>();
+                if (sellButton != null)
+                {
+                    sellButton.onClick.RemoveAllListeners();
+                }
+            }
+
+            if (this.tranButtonUp != null)
+            {
+                Button upButton = this.tranButtonUp.GetComponent<Button>();
+                if (upButton != null)
+                {
+                    upButton.onClick.RemoveAllListeners();
+                }
+            }
 
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, this.UpdateNodeState);
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.UpdateTargetSignal);
@@ -123,10 +132,26 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
-            this.rootGameObject = scene.RegisterGameContainer("UIContainer");
+            if (this.nodeMap != null && this.rootGameObject != null)
+            {
+                return;
+            }
 
-            GameObject tplTowerList = LoadPrefabTemplateTracked(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.TowerList);
+            BVSceneComponent scene = this.battleView.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
+            if (scene == null)
+            {
+                Debug.LogError("[BVUIComponent] BVSceneComponent 未注册。");
+                return;
+            }
+
+            this.rootGameObject = scene.RegisterGameContainer("UIContainer");
+            if (this.rootGameObject == null)
+            {
+                Debug.LogError("[BVUIComponent] UIContainer 未就绪。");
+                return;
+            }
+
+            GameObject tplTowerList = GetPrefabTemplate(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.TowerList);
             if (tplTowerList == null)
             {
                 return;
@@ -137,7 +162,7 @@ namespace CarrotFantasy
             this.nodeTowerList.transform.position = this.battleView.initTran;
             this.nodeTowerList.transform.GetComponent<Canvas>().sortingOrder = 20;
 
-            GameObject tplBtnTower = LoadPrefabTemplateTracked(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.BtnTowerBuild);
+            GameObject tplBtnTower = GetPrefabTemplate(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.BtnTowerBuild);
             if (tplBtnTower == null)
             {
                 return;
@@ -155,7 +180,7 @@ namespace CarrotFantasy
                 itemGo.transform.localScale = Vector3.one;
             }
 
-            GameObject tplHandleCanvas = LoadPrefabTemplateTracked(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.HandleTowerCanvas);
+            GameObject tplHandleCanvas = GetPrefabTemplate(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.HandleTowerCanvas);
             if (tplHandleCanvas == null)
             {
                 return;
@@ -166,11 +191,22 @@ namespace CarrotFantasy
             this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
             this.nodeHandleTowerCanvas.transform.GetComponent<Canvas>().sortingOrder = 20;
 
-            this.spriteButtonUpList[0] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_CantUpLevel"); //不能升级
-            this.spriteButtonUpList[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_CanUpLevel"); //能升级
-            this.spriteButtonUpList[2] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/Btn_ReachHighestLevel"); //满级
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.BtnCantUpLevel, out this.spriteButtonUpList[0]))
+            {
+                Debug.LogError("[BVUIComponent] Btn_CantUpLevel 未预加载");
+            }
 
-            GameObject tplNodeMap = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeMap);
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.BtnCanUpLevel, out this.spriteButtonUpList[1]))
+            {
+                Debug.LogError("[BVUIComponent] Btn_CanUpLevel 未预加载");
+            }
+
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.BtnReachHighestLevel, out this.spriteButtonUpList[2]))
+            {
+                Debug.LogError("[BVUIComponent] Btn_ReachHighestLevel 未预加载");
+            }
+
+            GameObject tplNodeMap = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeMap);
             if (tplNodeMap == null)
             {
                 return;
@@ -181,18 +217,59 @@ namespace CarrotFantasy
             this.nodeMap.transform.position = new Vector3(6, 4.35f, 0);
             if (this.pveDataComponent == null)
             {
+                Debug.LogError("[BVUIComponent] 缺少 BattlePVEDataComponent，跳过小地图贴图。");
                 return;
             }
 
-            Dictionary<String, int> map = this.reader.getMapUIConfig(this.pveDataComponent.bigLevel, this.pveDataComponent.level);
-            this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sprite = ResourceLoader.Instance.
-                loadRes<Sprite>(String.Format("Pictures/NormalMordel/Game/{0}/BG{1}", this.pveDataComponent.bigLevel, map["mapBg"]));
-            this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sprite = ResourceLoader.Instance.
-                loadRes<Sprite>(String.Format("Pictures/NormalMordel/Game/{0}/Road{1}", this.pveDataComponent.bigLevel, map["mapRoad"]));
+            Dictionary<String, int> map;
+            if (!this.reader.TryGetMapUIConfig(this.pveDataComponent.bigLevel, this.pveDataComponent.level, out map) ||
+                map == null)
+            {
+                Debug.LogWarning(
+                    "[BVUIComponent] 未找到小地图 UI 配置，使用默认: bigLevel=" + this.pveDataComponent.bigLevel +
+                    ", level=" + this.pveDataComponent.level);
+                map = new Dictionary<string, int>
+                {
+                    { "mapBg", 0 },
+                    { "mapRoad", 1 },
+                };
+            }
+
+            int mapBgIndex;
+            int mapRoadIndex;
+            if (!map.TryGetValue("mapBg", out mapBgIndex))
+            {
+                mapBgIndex = 0;
+            }
+
+            if (!map.TryGetValue("mapRoad", out mapRoadIndex))
+            {
+                mapRoadIndex = 1;
+            }
+
+            Sprite mapBgSprite;
+            if (FightViewSpriteAb.TryGetMapBg(mapBgIndex, out mapBgSprite))
+            {
+                this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sprite = mapBgSprite;
+            }
+            else
+            {
+                Debug.LogError("[BVUIComponent] 小地图 BG 未预加载: index=" + mapBgIndex);
+            }
+
+            Sprite mapRoadSprite;
+            if (FightViewSpriteAb.TryGetMapRoad(mapRoadIndex, out mapRoadSprite))
+            {
+                this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sprite = mapRoadSprite;
+            }
+            else
+            {
+                Debug.LogError("[BVUIComponent] 小地图 Road 未预加载: index=" + mapRoadIndex);
+            }
             this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sortingOrder = 0;
             this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 4;
 
-            GameObject tplTargetSignal = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);
+            GameObject tplTargetSignal = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);
             if (tplTargetSignal == null)
             {
                 return;
@@ -211,7 +288,7 @@ namespace CarrotFantasy
 
         private void SetStartPoint()
         {
-            GameObject tplStart = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.StartPoint);
+            GameObject tplStart = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.StartPoint);
             if (tplStart == null)
             {
                 return;
@@ -255,7 +332,7 @@ namespace CarrotFantasy
 
         private void SetCarrot()
         {
-            GameObject tplCarrot = LoadPrefabTemplateTracked(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
+            GameObject tplCarrot = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
             if (tplCarrot == null)
             {
                 return;
@@ -264,7 +341,13 @@ namespace CarrotFantasy
             this.nodeCarrot = GameObject.Instantiate(tplCarrot);
             this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
             this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
-            this.carrot.Init();
+            if (this.carrot == null)
+            {
+                Debug.LogError("[BVUIComponent] 萝卜预制体缺少 Carrot 组件。");
+                return;
+            }
+
+            this.carrot.Init(this.battleView.battle);
             if (this.pveMapComponent == null || this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count == 0)
             {
                 return;
@@ -450,7 +533,7 @@ namespace CarrotFantasy
             if (tower.isMaxLevel == true) return;
             InputOrder order = new InputOrder();
             order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.UPDATE_ORDER);
-            ((BattleInputComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
+            ((BattleInputComponent)this.battle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
             this.selectGrid.HideGrid();
         }
 
@@ -463,7 +546,7 @@ namespace CarrotFantasy
             }
             InputOrder order = new InputOrder();
             order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.REMOVE_ORDER);
-            ((BattleInputComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
+            ((BattleInputComponent)this.battle.GetComponent(BattleComponentType.InputComponent)).AddOrder(order);
             this.selectGrid.HideGrid();
         }
 
@@ -520,9 +603,16 @@ namespace CarrotFantasy
                 this.carrot.Dispose();
             }
 
-            for (int i = 0; i < this.buttonTowerList.Length; i++)
+            if (this.buttonTowerList != null)
             {
-                this.buttonTowerList[i].Dispose();
+                for (int i = 0; i < this.buttonTowerList.Length; i++)
+                {
+                    ButtonTower buttonTower = this.buttonTowerList[i];
+                    if (buttonTower != null)
+                    {
+                        buttonTower.Dispose();
+                    }
+                }
             }
 
             this.RemoveListener();
@@ -556,13 +646,6 @@ namespace CarrotFantasy
             {
                 GameObject.Destroy(this.nodeTargetSignal);
             }
-
-            for (int i = 0; i < _prefabHandles.Count; i++)
-            {
-                _prefabHandles[i].Dispose();
-            }
-
-            _prefabHandles.Clear();
         }
 
         private void ShowTargetSignal()

@@ -1,7 +1,7 @@
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 碰撞/性能测试用数据：不读关卡、波次、萝卜与 <see cref="BattleParamServer.info"/>。
+    /// 碰撞/性能测试用数据：不读关卡、波次、萝卜与 <see cref="PveModelBattleParams"/>。
     /// </summary>
     public class BattleTestDataComponent : BattleDataComponent
     {

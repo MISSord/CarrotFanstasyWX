@@ -11,10 +11,7 @@ namespace CarrotFantasy
         private int _itemBigLevel;
         private GameObject rootGameObject;
 
-        private readonly Dictionary<string, GameObject> _itemPrefabTemplates = new Dictionary<string, GameObject>();
-        private readonly Dictionary<string, AssetLoadHandle> _itemPrefabHandles = new Dictionary<string, AssetLoadHandle>();
-        private GameObject _destroyEffectTemplate;
-        private AssetLoadHandle _destroyEffectHandle;
+        private readonly HashSet<string> _registeredItemPoolKeys = new HashSet<string>();
 
         public BVItemComponent(BattleView_base battleView) : base(battleView)
         {
@@ -26,15 +23,25 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.DestroyEffect);
+            this.RemoveListener();
+            this.itemDic.Clear();
 
-            BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
+            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+
+            BVSceneComponent scene = this.battleView.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
+            if (scene == null)
+            {
+                Debug.LogError("[BVItemComponent] BVSceneComponent 未注册。");
+                return;
+            }
+
             this.rootGameObject = scene.RegisterGameContainer("ItemContainer");
             List<BattleUnit_Item> itemList = this.itemComponent.battleItemList;
             for (int i = 0; i <= itemList.Count - 1; i++)
             {
                 this.CreateItemView(itemList[i]);
             }
+            this.RemoveListener();
             this.AddListener();
         }
 
@@ -48,39 +55,84 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveItemView);
         }
 
+        static string GetItemPoolKey(int bigLevel, int itemId)
+        {
+            return string.Format("Item_{0}_{1}", bigLevel, itemId);
+        }
+
+        void EnsureItemPoolRegistered(int itemId)
+        {
+            string poolKey = GetItemPoolKey(this._itemBigLevel, itemId);
+            if (this._registeredItemPoolKeys.Add(poolKey))
+            {
+                GameViewObjectPool.Instance.RegisterGameObject(poolKey);
+            }
+        }
+
         private GameObject GetItemPrefabTemplate(int bigLevel, int itemId)
         {
             string bundleName = FightViewPrefabAb.ItemBundleName(bigLevel);
             string assetName = itemId.ToString();
-            string cacheKey = bundleName + "/" + assetName;
-            if (_itemPrefabTemplates.TryGetValue(cacheKey, out GameObject cached) && cached != null)
+            GameObject tpl;
+            if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
             {
-                return cached;
+                return tpl;
             }
 
-            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle handle);
-            if (tpl == null)
-            {
-                Debug.LogError($"[BVItemComponent] 道具预制体加载失败: bundle={bundleName}, asset={assetName}");
-                return null;
-            }
-
-            _itemPrefabTemplates[cacheKey] = tpl;
-            _itemPrefabHandles[cacheKey] = handle;
-            return tpl;
+            Debug.LogError($"[BVItemComponent] 道具预制体未预加载: bundle={bundleName}, asset={assetName}");
+            return null;
         }
 
-        private void CreateItemView(BattleUnit_Item item)
+        private GameObject RentItemGameObject(int itemId)
         {
-            BattleUnitView_Item itemView = new BattleUnitView_Item();
-            GameObject tpl = GetItemPrefabTemplate(_itemBigLevel, item.itemId);
-            if (tpl == null)
+            this.EnsureItemPoolRegistered(itemId);
+            string poolKey = GetItemPoolKey(this._itemBigLevel, itemId);
+            GameObject itemGo = GameViewObjectPool.Instance.GetNewGameObject(poolKey);
+            if (itemGo == null)
+            {
+                GameObject tpl = GetItemPrefabTemplate(this._itemBigLevel, itemId);
+                if (tpl == null)
+                {
+                    return null;
+                }
+
+                itemGo = GameObject.Instantiate(tpl);
+            }
+
+            itemGo.transform.SetParent(this.rootGameObject.transform);
+            return itemGo;
+        }
+
+        private void ReturnItemGameObject(int itemId, GameObject itemGo)
+        {
+            if (itemGo == null)
             {
                 return;
             }
 
-            GameObject itemGo = GameObject.Instantiate(tpl);
-            itemGo.transform.SetParent(this.rootGameObject.transform);
+            string poolKey = GetItemPoolKey(this._itemBigLevel, itemId);
+            GameViewObjectPool.Instance.PushGameObjectToPool(poolKey, itemGo);
+        }
+
+        private void CreateItemView(BattleUnit_Item item)
+        {
+            if (item == null || this.itemDic.ContainsKey(item))
+            {
+                return;
+            }
+
+            BattleUnitView_Item itemView = GameViewObjectPool.Instance.getNewBattleUnitView<BattleUnitView_Item>(BattleUnitViewType.Item);
+            if (itemView == null)
+            {
+                itemView = new BattleUnitView_Item();
+            }
+
+            GameObject itemGo = RentItemGameObject(item.itemId);
+            if (itemGo == null)
+            {
+                return;
+            }
+
             itemView.InitTransform(itemGo.transform);
             itemView.LoadInfo(this.battleView, item);
             itemView.Init();
@@ -89,57 +141,36 @@ namespace CarrotFantasy
 
         private void RemoveItemView(String type, BattleUnit obj)
         {
-            if (type.Equals(BattleUnitType.ITEM))
+            if (!type.Equals(BattleUnitType.ITEM))
             {
-                BattleUnit_Item item = (BattleUnit_Item)obj;
-                BattleUnitView_Item itemView = this.itemDic[item];
-                itemView.ClearUnitInfo();
-                GameObject.Destroy(itemView.transform.gameObject);
-                this.itemDic.Remove(item);
-                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, itemView);
-
-                //特效
-                GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
-                if (sell == null)
-                {
-                    if (_destroyEffectTemplate == null)
-                    {
-                        _destroyEffectTemplate = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, out _destroyEffectHandle);
-                    }
-
-                    sell = _destroyEffectTemplate != null ? GameObject.Instantiate(_destroyEffectTemplate) : null;
-                }
-                sell.transform.GetComponent<Animator>().enabled = true;
-                UnitTransformComponent tran = (UnitTransformComponent)obj.GetComponent(UnitComponentType.TRANSFORM);
-                sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-                Sche.DelayExeOnceTimes(() =>
-                {
-                    sell.transform.GetComponent<Animator>().enabled = false;
-                    GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
-                }, 0.5f);
+                return;
             }
+
+            BattleUnit_Item item = (BattleUnit_Item)obj;
+            if (!this.itemDic.TryGetValue(item, out BattleUnitView_Item itemView))
+            {
+                return;
+            }
+
+            int itemId = item.itemId;
+            GameObject itemGo = itemView.transform != null ? itemView.transform.gameObject : null;
+            itemView.ClearUnitInfo();
+            this.ReturnItemGameObject(itemId, itemGo);
+            this.itemDic.Remove(item);
+            GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, itemView);
+            BattleViewEffectHelper.PlayDestroyAt(obj);
         }
 
         public override void ClearGameInfo()
         {
-            foreach (KeyValuePair<string, AssetLoadHandle> kv in _itemPrefabHandles)
-            {
-                kv.Value.Dispose();
-            }
+            _registeredItemPoolKeys.Clear();
 
-            _itemPrefabHandles.Clear();
-            _itemPrefabTemplates.Clear();
-            if (_destroyEffectHandle.IsValid)
-            {
-                _destroyEffectHandle.Dispose();
-                _destroyEffectHandle = AssetLoadHandle.Invalid;
-            }
-
-            _destroyEffectTemplate = null;
             foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
             {
+                int itemId = info.Key.itemId;
+                GameObject itemGo = info.Value.transform != null ? info.Value.transform.gameObject : null;
                 info.Value.ClearUnitInfo();
-                GameObject.Destroy(info.Value.transform.gameObject);
+                this.ReturnItemGameObject(itemId, itemGo);
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, info.Value);
             }
             this.itemDic.Clear();
@@ -151,6 +182,5 @@ namespace CarrotFantasy
             this.ClearGameInfo();
             base.Dispose();
         }
-
     }
 }

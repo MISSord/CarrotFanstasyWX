@@ -87,6 +87,7 @@ namespace CarrotFantasy
             if (scheDic.TryGetValue(id, out sche))
             {
                 sche.isUnscheduled = true;
+                sche.ucallBack = null;
                 scheDic.Remove(id);
             }
         }

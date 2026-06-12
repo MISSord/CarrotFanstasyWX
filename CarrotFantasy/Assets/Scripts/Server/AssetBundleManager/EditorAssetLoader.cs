@@ -28,7 +28,7 @@ public static class EditorAssetLoader
                 UnityEngine.Object loadedAsset = TryLoadBestMatch(path, assetName, expectedType);
                 if (loadedAsset != null)
                 {
-                    Debug.Log($"资源加载成功：{path} -> {loadedAsset.name} ({loadedAsset.GetType().Name})");
+                    //Debug.Log($"资源加载成功：{path} -> {loadedAsset.name} ({loadedAsset.GetType().Name})");
                     return loadedAsset;
                 }
             }

@@ -85,9 +85,26 @@ namespace CarrotFantasy
 
             if (sourceAsset == null)
             {
-                bool wasRecorded = _lastRecordedSpriteInstanceId != 0;
-                _lastRecordedSpriteInstanceId = 0;
-                return wasRecorded;
+                bool cleared = false;
+                if (_lastRecordedSpriteInstanceId != 0)
+                {
+                    _lastRecordedSpriteInstanceId = 0;
+                    cleared = true;
+                }
+
+                if (!string.IsNullOrEmpty(defaultBundleName))
+                {
+                    defaultBundleName = string.Empty;
+                    cleared = true;
+                }
+
+                if (!string.IsNullOrEmpty(defaultAssetName))
+                {
+                    defaultAssetName = string.Empty;
+                    cleared = true;
+                }
+
+                return cleared;
             }
 
             int spriteId = sourceAsset.GetInstanceID();

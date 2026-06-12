@@ -24,23 +24,42 @@ namespace CarrotFantasy
         public override void Init()
         {
             base.Init();
+            this.RestoreMainSceneUi();
+        }
 
-            // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
-            //Sche.DelayExeOnceTimes(() => {
-            //    panel.autoClose();
-            //    UIViewService.OpenMainPanel();
-            //    UIServer.Instance.FadeLoadingPanel();
-            //    if (AccountServer.Instance.userId == 0)
-            //    {
-            //        UIViewService.OpenLoginPanel();
-            //    }
-            //    if(MapServer.Instance.curBigLevel != 0)
-            //    {
-            //        UIViewService.OpenMapBigLevelPanel();
-            //        UIViewService.OpenMapNormalLevelPanel(MapServer.Instance.curBigLevel);
-            //    }
-            //}, 2f);
+        /// <summary>
+        /// 战斗返回主场景时恢复选关界面；首次进游戏（无进关记录）由 EnterGameState 打开 MainPanel。
+        /// </summary>
+        void RestoreMainSceneUi()
+        {
+            MapServer mapServer = MapServer.Instance;
+            if (mapServer == null || mapServer.LastEnteredBigLevelId <= 0)
+            {
+                return;
+            }
 
+            if (ViewManager.Instance == null)
+            {
+                BattleFlowLog.Abort("RestoreMainSceneUi", "ViewManager=null");
+                return;
+            }
+
+            ViewManager.Instance.OpenView<MapBigLevelPanel>();
+
+            if (!ViewManager.Instance.viewTypeDic.TryGetValue(typeof(MapNormalLevelPanel), out BaseView levelView))
+            {
+                BattleFlowLog.Abort("RestoreMainSceneUi", "MapNormalLevelPanel 未注册");
+                return;
+            }
+
+            var levelPanel = (MapNormalLevelPanel)levelView;
+            levelPanel.RestoreSelection(mapServer.LastEnteredBigLevelId, mapServer.LastEnteredLevelId);
+            ViewManager.Instance.OpenView<MapNormalLevelPanel>();
+
+            BattleFlowLog.Step(
+                "RestoreMainSceneUi",
+                "bigLevel=" + mapServer.LastEnteredBigLevelId +
+                " level=" + mapServer.LastEnteredLevelId);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,9 +9,17 @@ namespace CarrotFantasy
     public class SceneServer
     {
         private EventDispatcher eventDispatcher;
-        private Camera uiCamera; //固定的
-        private Camera mainCamera; // 主摄像机（主要是拍3D物体）
+        private Camera uiCamera;
+        private Camera mainCamera;
         public BaseScene currentScene;
+
+        bool isLoading;
+        Coroutine loadRoutine;
+
+        public bool IsLoading
+        {
+            get { return this.isLoading; }
+        }
 
         public void Init()
         {
@@ -34,41 +43,175 @@ namespace CarrotFantasy
             return currentScene;
         }
 
-        //public Dictionary<PanelLayerType, GameObject> GetPanelLayerInfo()
-        //{
-        //    return this.currentScene.getLayerDic();
-        //}
-
         private void RemoveScene()
         {
+            if (this.currentScene == null)
+            {
+                return;
+            }
+
             ViewManager.Instance.CloseAllPanel(PanelCloseReasonType.SCENE_CHANGE, this.currentScene.sceneType);
             ViewManager.Instance.SetShowPanelActive(false);
-            this.currentScene.Dispose(); //卸载旧场景
+            this.currentScene.Dispose();
+            this.currentScene = null;
         }
 
+        static bool ShouldSkipSameSceneLoad(BaseSceneType sceneType, BaseScene current)
+        {
+            if (current == null)
+            {
+                return false;
+            }
+
+            if (current.sceneType != sceneType)
+            {
+                return false;
+            }
+
+            // 战斗每次进关都走完整重载，不因逻辑层仍标记为 BattleScene 而跳过
+            return sceneType != BaseSceneType.BattleScene;
+        }
+
+        /// <summary>异步切换逻辑场景；Unity 场景就绪后才 InitSceneObject / Init。</summary>
+        public void LoadScene(BaseSceneType sceneType, Dictionary<String, dynamic> param, Action<bool> onComplete = null)
+        {
+            if (this.isLoading)
+            {
+                BattleFlowLog.Abort("LoadScene", "已有场景加载进行中，忽略 " + sceneType);
+                onComplete?.Invoke(false);
+                return;
+            }
+
+            if (ShouldSkipSameSceneLoad(sceneType, this.currentScene))
+            {
+                onComplete?.Invoke(false);
+                return;
+            }
+
+            if (this.loadRoutine != null)
+            {
+                this.isLoading = false;
+                SceneLoader.RunnerInstance.StopCoroutine(this.loadRoutine);
+                this.loadRoutine = null;
+            }
+
+            this.isLoading = true;
+            this.loadRoutine = SceneLoader.StartRoutine(this.LoadSceneRoutine(sceneType, param, onComplete));
+        }
+
+        /// <summary>兼容旧调用；返回 false 表示未启动加载。</summary>
         public bool LoadScene(BaseSceneType sceneType, Dictionary<String, dynamic> param)
         {
-            bool isLoad = false;
-            if (this.currentScene != null)
+            if (this.isLoading)
             {
-                if (this.currentScene.sceneType == sceneType) return isLoad;
-                this.RemoveScene();
+                return false;
             }
-            //ResourceLoader.Instance.setSceneType(sceneType); 切换场景，卸载旧场景资源（）
-            isLoad = this.LoadSceneProgress(sceneType, param);
-            return isLoad;
+
+            if (ShouldSkipSameSceneLoad(sceneType, this.currentScene))
+            {
+                return false;
+            }
+
+            this.LoadScene(sceneType, param, null);
+            return true;
         }
 
-        private bool LoadSceneProgress(BaseSceneType sceneType, Dictionary<String, dynamic> param)
+        IEnumerator LoadSceneRoutine(BaseSceneType sceneType, Dictionary<String, dynamic> param, Action<bool> onComplete)
+        {
+            try
+            {
+                if (this.currentScene != null)
+                {
+                    this.RemoveScene();
+                }
+
+                bool success = false;
+                yield return this.LoadUnitySceneAndInitRoutine(sceneType, param, result => success = result);
+                onComplete?.Invoke(success);
+            }
+            finally
+            {
+                this.isLoading = false;
+                this.loadRoutine = null;
+            }
+        }
+
+        IEnumerator LoadUnitySceneAndInitRoutine(
+            BaseSceneType sceneType,
+            Dictionary<String, dynamic> param,
+            Action<bool> onComplete)
         {
             GameSceneType unitySceneType = SceneLoader.ToGameSceneType(sceneType);
             string unitySceneName = SceneLoader.ToSceneName(unitySceneType);
+
             if (!string.IsNullOrEmpty(unitySceneName))
             {
                 Scene active = SceneManager.GetActiveScene();
-                if (!active.IsValid() || active.name != unitySceneName)
+                if (sceneType == BaseSceneType.BattleScene)
                 {
-                    SceneLoader.Load(unitySceneType, LoadSceneMode.Single);
+                    BattleFlowLog.Step(
+                        "LoadSceneProgress",
+                        "before load active=" + active.name + " target=" + unitySceneName);
+                }
+
+                bool needUnityLoad = sceneType == BaseSceneType.BattleScene ||
+                                     !active.IsValid() ||
+                                     active.name != unitySceneName;
+
+                if (needUnityLoad)
+                {
+                    bool loadDone = false;
+                    bool loadOk = false;
+                    SceneLoader.TryLoadAsync(
+                        unitySceneType,
+                        LoadSceneMode.Single,
+                        ok =>
+                        {
+                            loadOk = ok;
+                            loadDone = true;
+                        });
+
+                    while (!loadDone)
+                    {
+                        yield return null;
+                    }
+
+                    if (!loadOk)
+                    {
+                        if (sceneType == BaseSceneType.BattleScene)
+                        {
+                            BattleFlowLog.Abort("LoadSceneProgress", "Unity 场景异步加载失败: " + unitySceneName);
+                        }
+                        else
+                        {
+                            Debug.LogError("[SceneServer] Unity 场景异步加载失败: " + unitySceneName);
+                        }
+
+                        onComplete?.Invoke(false);
+                        yield break;
+                    }
+                }
+
+                if (!this.TryEnsureUnitySceneActive(unitySceneName, out string sceneError))
+                {
+                    if (sceneType == BaseSceneType.BattleScene)
+                    {
+                        BattleFlowLog.Abort("LoadSceneProgress", sceneError);
+                    }
+                    else
+                    {
+                        Debug.LogError("[SceneServer] " + sceneError);
+                    }
+
+                    onComplete?.Invoke(false);
+                    yield break;
+                }
+
+                if (sceneType == BaseSceneType.BattleScene)
+                {
+                    BattleFlowLog.Step(
+                        "LoadSceneProgress",
+                        "SceneReady active=" + SceneManager.GetActiveScene().name);
                 }
             }
 
@@ -91,55 +234,82 @@ namespace CarrotFantasy
                     Debug.Log("场景加载失败");
                     break;
             }
+
             if (targetScene == null)
             {
+                onComplete?.Invoke(false);
+                yield break;
+            }
+
+            this.currentScene = targetScene;
+            this.currentScene.InitSceneObject();
+            this.eventDispatcher.DispatchEvent(SceneEventType.LOAD_SCENE_FINISH);
+            this.currentScene.Init();
+
+            if (sceneType == BaseSceneType.BattleScene &&
+                (ServerProvision.battleSessionHost == null ||
+                 !ServerProvision.battleSessionHost.HasActiveSession))
+            {
+                BattleFlowLog.Abort("LoadSceneProgress", "BattleScene Init 未能开启 Session，回滚");
+                BaseScene failedScene = this.currentScene;
+                this.currentScene = null;
+                failedScene.Dispose();
+                onComplete?.Invoke(false);
+                yield break;
+            }
+
+            ViewManager.Instance?.SetShowPanelActive(true);
+
+            onComplete?.Invoke(true);
+        }
+
+        bool TryEnsureUnitySceneActive(string unitySceneName, out string error)
+        {
+            error = null;
+            Scene targetScene = SceneLoader.FindLoadedSceneByName(unitySceneName);
+            if (!targetScene.IsValid())
+            {
+                Scene active = SceneManager.GetActiveScene();
+                error = unitySceneName +
+                        " 未加载; active=" + active.name +
+                        " sceneCount=" + SceneManager.sceneCount +
+                        " loaded=[" + SceneLoader.BuildLoadedSceneNameList() + "]";
                 return false;
             }
-            this.currentScene = targetScene;
 
-            //this.mainCamera = currentScene.GetMainCamera();
-            //if (this.mainCamera != null)
-            //{
-            //    this.uiCamera.clearFlags = CameraClearFlags.Depth;
-            //}
-            //else
-            //{
-            //    this.uiCamera.clearFlags = CameraClearFlags.Color;
-            //}
+            Scene activeScene = SceneManager.GetActiveScene();
+            if (activeScene != targetScene)
+            {
+                BattleFlowLog.Step(
+                    "LoadSceneProgress",
+                    "SetActiveScene " + unitySceneName + " (was " + activeScene.name + ")");
+                SceneManager.SetActiveScene(targetScene);
+            }
 
-            this.currentScene.InitSceneObject();
-
-            //ViewManager.Instance.SetShowPanelActive(true); //其实不一定需要这句
-            this.eventDispatcher.DispatchEvent(SceneEventType.LOAD_SCENE_FINISH);
-
-            this.currentScene.Init();
             return true;
         }
 
-        /// <summary>
-        /// Unity 场景切换后重新绑定 UI 摄像机（场景内对象会被卸载重建）。
-        /// </summary>
-        private void BindUICameraFromActiveScene()
+        void BindUICameraFromActiveScene()
         {
-            GameObject uiCameraGo = GameObject.Find("UICamera");
-            if (uiCameraGo == null)
+            if (ViewManager.Instance != null)
             {
-                Debug.LogWarning("[SceneServer] 当前场景中未找到名为 UICamera 的物体。");
-                this.uiCamera = null;
-                return;
+                ViewManager.Instance.RebindScenePresentation();
+                this.uiCamera = ViewManager.Instance.GetUICamera();
+                if (this.uiCamera != null)
+                {
+                    return;
+                }
             }
 
-            this.uiCamera = uiCameraGo.GetComponent<Camera>();
+            this.uiCamera = UIPresentationPersistence.EnsureGlobalUiCamera();
             if (this.uiCamera == null)
             {
-                Debug.LogWarning("[SceneServer] UICamera 上未找到 Camera 组件。");
+                Debug.LogWarning("[SceneServer] 当前场景中未找到名为 UICamera 的物体。");
             }
         }
 
         public void Dispose()
         {
-
         }
-
     }
 }

@@ -27,6 +27,12 @@ namespace CarrotFantasy
             currentBigLevelID = bigLevelId;
         }
 
+        public void RestoreSelection(int bigLevelId, int levelId)
+        {
+            this.currentBigLevelID = bigLevelId;
+            this.currentLevelID = levelId > 0 ? levelId : 1;
+        }
+
         public override void InitData()
         {
             viewName = "MapNormalLevelPanel";
@@ -151,9 +157,10 @@ namespace CarrotFantasy
                 for (int i = 0; i < towerCount; i++)
                 {
                     towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, nodeTowerTrans));
-                    _isLoadTower = true;
-                    UpdateTowerUI();
                 }
+
+                _isLoadTower = true;
+                UpdateTowerUI();
             });
         }
 
@@ -181,37 +188,39 @@ namespace CarrotFantasy
             }
 
             nodeLockBtn.SetActive(info.unLocked != MapInfoType.UNLOCK_LEVEL);
-            txtTotalWaves.text = stage.mTotalRound.ToString();
+            txtTotalWaves.text = LevelWaveQuery.GetTotalWaves(currentBigLevelID, currentLevelID).ToString();
 
-            for (int i = 0; i < stage.mTowerIDListLength; i++)
+            int showCount = Mathf.Min(stage.mTowerIDListLength, towerContentImageGos.Count);
+            for (int i = 0; i < showCount; i++)
             {
-                towerContentImageGos[i].GetComponent<Image>().sprite =
-                    ResourceLoader.Instance.loadRes<Sprite>(
-                        NormalLevelListItem.MapFilePathBase + "Tower/Tower_" + stage.mTowerIDList[i]);
+                Image towerimg = towerContentImageGos[i].GetComponent<Image>();
+                string asset = "tower_" + stage.mTowerIDList[i];
+                string bundle = ResPath.GetGameOptionImagePath();
+                towerimg.SetSprite(bundle, asset);
                 towerContentImageGos[i].SetActive(true);
             }
 
-            for (int i = stage.mTowerIDListLength; i < towerContentImageGos.Count; i++)
+            for (int i = showCount; i < towerContentImageGos.Count; i++)
             {
                 towerContentImageGos[i].SetActive(false);
             }
         }
 
-        //public void StartGame()
-        //{
-        //    if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
-        //    {
-        //        return;
-        //    }
+        public void StartGame()
+        {
+            if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
+            {
+                return;
+            }
 
-        //    SingleMapInfo info = levelInfoList[currentLevelID - 1];
-        //    if (info == null || info.unLocked != MapInfoType.UNLOCK_LEVEL)
-        //    {
-        //        return;
-        //    }
+            SingleMapInfo info = levelInfoList[currentLevelID - 1];
+            if (info == null || info.unLocked != MapInfoType.UNLOCK_LEVEL)
+            {
+                return;
+            }
 
-        //    MapServer.Instance.SendGameMapInfo(currentBigLevelID, currentLevelID);
-        //}
+            BattleLauncher.StartClassicLevel(currentBigLevelID, currentLevelID);
+        }
 
 
         public void ToNextLevel()
@@ -241,16 +250,10 @@ namespace CarrotFantasy
             ViewManager.Instance.OpenView<HelpPanel>();
         }
 
-        private void ReturnToLastPanel()
-        {
-            UIServer.Instance.PlayButtonEffect();
-            Close();
-        }
-
         private void AddListener()
         {
             MapServer.Instance.eventDispatcher.AddListener(MapEventType.MAP_INFO_CHANGE, UpdateMapInfo);
-            //XUI.AddButtonListener(nameTableDic["btn_start"].GetComponent<Button>(), StartGame);
+            XUI.AddButtonListener(nameTableDic["btn_start"].GetComponent<Button>(), StartGame);
             XUI.AddButtonListener(nameTableDic["btn_last_page"].GetComponent<Button>(), ToLastLevel);
             XUI.AddButtonListener(nameTableDic["btn_next_page"].GetComponent<Button>(), ToNextLevel);
             XUI.AddButtonListener(nameTableDic["btn_help"].GetComponent<Button>(), ShowHelpPanel);

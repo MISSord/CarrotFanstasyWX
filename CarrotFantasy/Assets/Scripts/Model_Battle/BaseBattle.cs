@@ -23,7 +23,7 @@ namespace CarrotFantasy
         public bool isStart = false;
         public bool isIgnoreViewListener = false; //目前用于视图监听器广播过程，服务端为true
 
-        /// <summary>由 BattleManager 或联机/测试运行时注入；未注入时部分宿主能力（提示、提交存档）不执行。</summary>
+        /// <summary>由 BattleSessionHost 或联机/测试运行时注入；未注入时部分宿主能力（提示、提交存档）不执行。</summary>
         public IBattleHostBridge HostBridge { get; private set; }
 
         /// <summary>本局可复现随机（重开/回放前对同一 RootSeed 调用 <see cref="DeterministicRandomSession.Reset"/>）。</summary>

@@ -249,7 +249,6 @@ public class LoginState : BaseGameState
 
     public LoginState(GameContext context) : base(context)
     {
-        // loginManager = BattleManager.Instance.LoginManager;
         //downView = new DownLoadView();
         //downView.RegisterData();
     }
@@ -308,11 +307,9 @@ public class EnterGameState : BaseGameState
 
 public class InGameState : IGameState
 {
-    //private IInGameManager inGameManager;
 
     public InGameState()
     {
-        // inGameManager = BattleManager.Instance.InGameManager;
     }
 
     public void Enter()

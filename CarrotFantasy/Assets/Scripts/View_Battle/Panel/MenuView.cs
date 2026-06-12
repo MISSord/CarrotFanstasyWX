@@ -3,7 +3,7 @@ using UnityEngine.UI;
 namespace CarrotFantasy
 {
     /// <summary>战斗内暂停菜单（独立 BaseView）。</summary>
-    public class MenuView : BaseView
+    public class MenuView : BattleBoundView
     {
         public override void InitData()
         {
@@ -14,6 +14,11 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
+            if (!this.IsBattleBound)
+            {
+                return;
+            }
+
             XUI.AddButtonListener(nameTableDic["btn_go_on"].GetComponent<Button>(), OnGoOn);
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
@@ -24,21 +29,18 @@ namespace CarrotFantasy
             nameTableDic["btn_go_on"].GetComponent<Button>().onClick.RemoveAllListeners();
             nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
             nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
+            this.ClearBattleBinding();
         }
 
         private void OnGoOn()
         {
-            // 关闭时顺便恢复游戏，避免残留暂停
-            if (BattleManager.Instance?.baseBattle != null)
-            {
-                BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
-            }
+            this.battle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);
             Close();
         }
 
         private void OnReplay()
         {
-            BattleManager.Instance.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
+            this.battle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
             Close();
         }
 
@@ -49,4 +51,3 @@ namespace CarrotFantasy
         }
     }
 }
-

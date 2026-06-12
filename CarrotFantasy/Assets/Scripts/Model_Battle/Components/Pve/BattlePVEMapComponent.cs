@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 经典 / 流场 PVE 地图：从 <see cref="BattleParamServer.info"/> 加载关卡格子、怪物路径与建造规则。
+    /// 经典 / 流场 PVE 地图：从 <see cref="PveModelBattleParams.LevelInfo"/> 加载关卡格子、怪物路径与建造规则。
     /// </summary>
     public class BattlePVEMapComponent : BattleMapComponent, IBattleMapLevelData
     {
@@ -35,7 +35,8 @@ namespace CarrotFantasy
         public override void Init()
         {
             this.InitGridSizeFromData();
-            this.LevelInfo = BattleParamServer.Instance != null ? BattleParamServer.Instance.info : null;
+            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            this.LevelInfo = launchParams != null ? launchParams.LevelInfo : null;
             this.LoadMapGrid();
             this.LoadLevelMapInfo();
         }

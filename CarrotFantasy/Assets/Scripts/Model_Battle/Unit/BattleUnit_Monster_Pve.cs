@@ -22,7 +22,7 @@ namespace CarrotFantasy
             this.locomotionComponent = m;
         }
 
-        /// <summary>在 <see cref="Init"/> 之后、<see cref="InitComponents"/> 之前调用。</summary>
+        /// <summary>在 <see cref="Init"/> 与 <see cref="InitComponents"/> 之后调用，确保移动速度已初始化。</summary>
         public void LoadPathMovement(List<Fix64Vector2> monsterPath, Fix64 distance)
         {
             ((UnitMoveComponent_Monster)this.locomotionComponent).LoadInfo(monsterPath, distance);

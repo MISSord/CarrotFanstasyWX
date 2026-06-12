@@ -3,7 +3,9 @@ namespace CarrotFantasy
     public class PveStartState : BaseBattleState
     {
         private bool isTimeToPreFighting;
-        private int scheId;
+        private int introEndScheId;
+        private int countdownScheId;
+
         public PveStartState(BaseStateMachine bstateMachine, string btype) : base(bstateMachine, btype)
         {
             this.isTimeToPreFighting = false;
@@ -12,9 +14,20 @@ namespace CarrotFantasy
         public override void StateIn()
         {
             base.StateIn();
-            BattleSchedulerComponent sch = (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
-            this.scheId = sch.DelayExeOnceTimes(() => { this.isTimeToPreFighting = true; }, 4.0f);
+            BattleSchedulerComponent sch =
+                (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
+            float introDelay = BattleParamAccess.EffectiveStartGameDelaySeconds;
+
             this.Battle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
+            this.countdownScheId = sch.DelayExeMultipleTimes(
+                () => { this.Battle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME_INTRO_COUNTDOWN); },
+                1.0f);
+            this.introEndScheId = sch.DelayExeOnceTimes(() =>
+            {
+                sch.SilenceSingleSche(this.countdownScheId);
+                this.Battle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME_INTRO_END);
+                this.isTimeToPreFighting = true;
+            }, introDelay);
         }
 
         public override string OnTick(Fix64 time)
@@ -28,9 +41,10 @@ namespace CarrotFantasy
 
         public override void StateOut()
         {
-            //双重保险
-            BattleSchedulerComponent sch = (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
-            sch.SilenceSingleSche(this.scheId);
+            BattleSchedulerComponent sch =
+                (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
+            sch.SilenceSingleSche(this.introEndScheId);
+            sch.SilenceSingleSche(this.countdownScheId);
         }
 
         public override void Dispose()

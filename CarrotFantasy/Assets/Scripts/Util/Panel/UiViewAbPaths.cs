@@ -17,10 +17,7 @@ namespace CarrotFantasy
 
         /// <summary>入口 Loading 面板所在 AB（需在编辑器中为对应预制体指定该 bundle）。</summary>
         public const string StartLoadPanelBundle = "ui/view/startload_prefab";
-
         public const string StartLoadPanelAsset = "StartLoadPanel";
-
-        public const string MapNodeLevelAsset = "node_level";
-        public const string MapNodeTowerAsset = "node_tower";
+        public const string MapNodeTowerAsset = "TowerNode";
     }
 }

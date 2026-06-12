@@ -133,6 +133,11 @@ namespace CarrotFantasy
 
         private void UpdatePosition(float time)
         {
+            if (this.transformComponent == null || this.transform == null)
+            {
+                return;
+            }
+
             this.GetLastPosition();
             //Vector3 newViewPosition = Vector3.Lerp(transform.position, this.lastPosition, 1 / Vector3.Distance(transform.position, this.lastPosition) * time);
             //this.curViewPosition = newViewPosition;
@@ -147,6 +152,11 @@ namespace CarrotFantasy
 
         private void InitViewPosition()
         {
+            if (this.transformComponent == null || this.transform == null)
+            {
+                return;
+            }
+
             this.GetLastPosition();
             this.curViewPosition = this.lastPosition;
             this.RefreshUnityTransform();
@@ -158,6 +168,11 @@ namespace CarrotFantasy
 
         private void GetLastPosition()
         {
+            if (this.transformComponent == null)
+            {
+                return;
+            }
+
             this.transformComponent.GetPosition(out this.lastPosition.x, out this.lastPosition.y, out this.lastPosition.z);
         }
 
@@ -176,11 +191,21 @@ namespace CarrotFantasy
 
         private void UpdateUnityPosition()
         {
+            if (this.transform == null)
+            {
+                return;
+            }
+
             this.transform.localPosition = this.curViewPosition;
         }
 
         private void InitViewFaceDirection()
         {
+            if (this.transformComponent == null || this.transform == null)
+            {
+                return;
+            }
+
             this.curViewFaceDirection = (float)this.transformComponent.faceDirection;
             this.transform.localRotation = Quaternion.Euler(0, this.curViewFaceDirection, 0);
             for (int i = 0; i <= this.componentList.Count - 1; i++)
@@ -192,8 +217,12 @@ namespace CarrotFantasy
         protected virtual void UpdateFaceDirection() //根据移动的方向进行调整
         {
             float faceDirection = (float)this.transformComponent.faceDirection;
-            this.transform.localRotation = Quaternion.Euler(0, this.curViewFaceDirection, 0);
             this.curViewFaceDirection = faceDirection;
+            this.transform.localRotation = Quaternion.Euler(0, this.curViewFaceDirection, 0);
+            for (int i = 0; i <= this.componentList.Count - 1; i++)
+            {
+                this.componentList[i].SetUnitFaceDirection(this.curViewFaceDirection);
+            }
         }
 
         public virtual void ClearUnitInfo()

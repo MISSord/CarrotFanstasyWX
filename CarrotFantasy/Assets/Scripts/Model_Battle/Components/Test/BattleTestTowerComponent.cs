@@ -1,6 +1,6 @@
 namespace CarrotFantasy
 {
-    /// <summary>测试战斗用塔组件：可建造列表来自 <see cref="BattleTestDataComponent"/>，不依赖 <see cref="BattleParamServer.curStage"/>。</summary>
+    /// <summary>测试战斗用塔组件：可建造列表来自 <see cref="BattleTestDataComponent"/>，不依赖关卡 Stage 配置。</summary>
     public class BattleTestTowerComponent : BattleTowerComponent
     {
         public BattleTestTowerComponent(BaseBattle bBattle) : base(bBattle)

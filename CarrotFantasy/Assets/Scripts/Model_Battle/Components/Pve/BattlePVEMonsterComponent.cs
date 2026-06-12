@@ -32,9 +32,10 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            if (BattleParamServer.Instance != null)
+            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            if (launchParams != null)
             {
-                this.levelInfo = BattleParamServer.Instance.info;
+                this.levelInfo = launchParams.LevelInfo;
             }
 
             this.roundInfo = this.levelInfo != null ? this.levelInfo.roundInfo : null;
@@ -74,27 +75,41 @@ namespace CarrotFantasy
                 return;
             }
 
-            Round.RoundInfo curMonsterList = this.roundInfo[curWaves - 1];
-
-            for (int i = 0; i < curMonsterList.mMonsterIDList.Length; i++)
+            Round.RoundInfo curRound = this.roundInfo[curWaves - 1];
+            WaveSpawnPlan plan = SpawnPlanCompiler.Compile(curRound);
+            if (plan.Count == 0)
             {
-                BattleUnit_Monster_Pve monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster_Pve>(BattleUnitType.MONSTER);
-                if (monster == null)
-                {
-                    monster = new BattleUnit_Monster_Pve(this.baseBattle);
-                }
-
-                monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
-                monster.LoadInfo(
-                    this.baseBattle.GetUid(),
-                    this.monsterConfigReader.GetSingleMonsterConfig(curMonsterList.mMonsterIDList[i]),
-                    this.birthPoint);
-                monster.LoadInfo2(this.battleDataComponent.bigLevel, curMonsterList.mMonsterIDList[i]);
-                monster.Init();
-                monster.LoadPathMovement(this.monsterPointList, this.distance);
-                monster.InitComponents();
-                this.curNoRegisterList.Add(monster);
+                Debug.LogError(String.Format("当前波次无怪物配置: wave={0}", curWaves));
+                return;
             }
+
+            for (int i = 0; i < plan.Count; i++)
+            {
+                this.curNoRegisterList.Add(this.CreateMonsterPve(plan.MonsterIds[i]));
+            }
+
+            this.SetWaveSpawnSchedule(plan.SpawnOffsets);
+            this.BeginWaveSpawn();
+        }
+
+        private BattleUnit_Monster_Pve CreateMonsterPve(int monsterConfigId)
+        {
+            BattleUnit_Monster_Pve monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster_Pve>(BattleUnitType.MONSTER);
+            if (monster == null)
+            {
+                monster = new BattleUnit_Monster_Pve(this.baseBattle);
+            }
+
+            monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
+            monster.LoadInfo(
+                this.baseBattle.GetUid(),
+                this.monsterConfigReader.GetSingleMonsterConfig(monsterConfigId),
+                this.birthPoint);
+            monster.LoadInfo2(this.battleDataComponent.bigLevel, monsterConfigId);
+            monster.Init();
+            monster.InitComponents();
+            monster.LoadPathMovement(this.monsterPointList, this.distance);
+            return monster;
         }
 
         private void CalcaTheTotalDistance()

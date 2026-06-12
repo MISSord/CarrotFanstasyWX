@@ -116,10 +116,9 @@ namespace CarrotFantasy
                 return;
             }
 
-            List<int> keys = new List<int>(this.slots.Keys);
-            for (int i = 0; i < keys.Count; i++)
+            foreach (KeyValuePair<int, BuffIconSlot> pair in this.slots)
             {
-                BuffIconSlot slot = this.slots[keys[i]];
+                BuffIconSlot slot = pair.Value;
                 slot.remainingSeconds -= deltaTime;
                 if (slot.remainingSeconds < 0f)
                 {
@@ -240,13 +239,14 @@ namespace CarrotFantasy
             rt.localScale = new Vector3(1.15f, 1.15f, 1f);
         }
 
-        public void ResetIconScales()
+        public void ResetPulsedIconScales()
         {
             foreach (KeyValuePair<int, BuffIconSlot> pair in this.slots)
             {
-                if (pair.Value.root != null)
+                RectTransform rt = pair.Value.root;
+                if (rt != null && rt.localScale != Vector3.one)
                 {
-                    pair.Value.root.localScale = Vector3.one;
+                    rt.localScale = Vector3.one;
                 }
             }
         }
@@ -265,15 +265,23 @@ namespace CarrotFantasy
             return whiteSprite;
         }
 
+        static Font cachedDefaultFont;
+
         private static Font GetDefaultFont()
         {
-            Font f = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (cachedDefaultFont != null)
+            {
+                return cachedDefaultFont;
+            }
+
+            Font f = Font.CreateDynamicFontFromOSFont("Arial", 16);
             if (f == null)
             {
                 f = Resources.GetBuiltinResource<Font>("Arial.ttf");
             }
 
-            return f;
+            cachedDefaultFont = f;
+            return cachedDefaultFont;
         }
     }
 }

@@ -20,8 +20,15 @@ namespace CarrotFantasy
         {
             this.transform = transform;
             this.towerID = towerId;
-            this.canClickSprite = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/" + towerID.ToString() + "/CanClick1");
-            this.cantClickSprite = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Tower/" + towerID.ToString() + "/CanClick0");
+            if (!FightViewSpriteAb.TryGetTowerButton(this.towerID, true, out this.canClickSprite))
+            {
+                Debug.LogError("[ButtonTower] CanClick1 未预加载: towerId=" + this.towerID);
+            }
+
+            if (!FightViewSpriteAb.TryGetTowerButton(this.towerID, false, out this.cantClickSprite))
+            {
+                Debug.LogError("[ButtonTower] CanClick0 未预加载: towerId=" + this.towerID);
+            }
 
             this.image = this.transform.GetComponent<Image>();
             this.button = this.transform.GetComponent<Button>();
@@ -58,7 +65,7 @@ namespace CarrotFantasy
                     this.uiComponent.selectGrid.mapGrid.x, this.uiComponent.selectGrid.mapGrid.y, InputOrderType.ADD_ORDER);
                 curOrder.SetTowerId(this.towerID);
 
-                ((BattleInputComponent)BattleManager.Instance.baseBattle.GetComponent(BattleComponentType.InputComponent)).AddOrder(curOrder);
+                ((BattleInputComponent)this.uiComponent.battle.GetComponent(BattleComponentType.InputComponent)).AddOrder(curOrder);
             }
             this.uiComponent.HandleGrid(this.uiComponent.selectGrid);
         }

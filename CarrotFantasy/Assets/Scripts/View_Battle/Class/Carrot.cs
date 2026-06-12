@@ -22,18 +22,32 @@ namespace CarrotFantasy
 
         private BattlePVEDataComponent dataComponent;
 
-        // Use this for initialization
-        public void Init()
+        public void Init(BaseBattle battle)
         {
             sprites = new Sprite[7];
             for (int i = 0; i < sprites.Length; i++)
             {
-                sprites[i] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Carrot/" + i.ToString());
+                if (!FightViewSpriteAb.TryGetCarrotState(i, out sprites[i]))
+                {
+                    Debug.LogError("[Carrot] 状态 Sprite 未预加载: index=" + i);
+                }
             }
-            animator = GetComponent<Animator>();
-            sr = GetComponent<SpriteRenderer>();
-            hpText = transform.Find("HpCanvas/txt_live").GetComponent<Text>();
-            this.dataComponent = BattlePVEDataComponent.GetFrom(BattleManager.Instance.baseBattle);
+
+            this.animator = this.GetComponent<Animator>();
+            this.sr = this.GetComponent<SpriteRenderer>();
+
+            Transform hpTextTransform = this.transform.Find("HpCanvas/txt_live");
+            if (hpTextTransform != null)
+            {
+                this.hpText = hpTextTransform.GetComponent<Text>();
+            }
+
+            this.dataComponent = BattlePVEDataComponent.GetFrom(battle);
+            if (this.dataComponent == null)
+            {
+                Debug.LogError("[Carrot] BattlePVEDataComponent 未就绪，跳过萝卜 UI 绑定。");
+                return;
+            }
 
             this.dataComponent.eventDispatcher.AddListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
             this.UpdateCarrotUI();
@@ -55,9 +69,14 @@ namespace CarrotFantasy
 
         private void OnMouseDown()
         {
-            if (dataComponent.carrotLive >= 10)
+            if (this.dataComponent == null)
             {
-                animator.Play("Touch");
+                return;
+            }
+
+            if (this.dataComponent.carrotLive >= 10)
+            {
+                this.animator.Play("Touch");
                 int randomNum = UnityEngine.Random.Range(1, 4);
                 AudioManager.Instance.PlayEffectByResources(
                     String.Format("NormalMordel/Carrot/{0}", randomNum.ToString()));
@@ -66,6 +85,11 @@ namespace CarrotFantasy
 
         public void UpdateCarrotUI()
         {
+            if (this.dataComponent == null || this.hpText == null || this.sr == null)
+            {
+                return;
+            }
+
             int hp = dataComponent.carrotLive;
             this.hpText.text = hp.ToString();
 
@@ -86,7 +110,10 @@ namespace CarrotFantasy
 
         public void Dispose()
         {
-            this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
+            if (this.dataComponent != null)
+            {
+                this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
+            }
         }
     }
 }

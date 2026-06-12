@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    //战斗参数服务，记录当前游戏进度
+    /// <summary>战斗参数服务：仅持有当前 <see cref="CurrentPveParams"/> 与基准测试配置。</summary>
     public class BattleParamServer : BaseServer<BattleParamServer>
     {
         private NormalModelPanel normalModepanel;
@@ -12,33 +12,10 @@ namespace CarrotFantasy
         private GameWinView gameWinView;
         private GameOverView gameOverView;
 
-        public SingleMapInfo curSingleMapInfo;
-        public Stage curStage;
-        public LevelInfo info;
+        /// <summary>最近一次开战参数，Model 层经 <see cref="BattleParamAccess"/> 读取。</summary>
+        public PveModelBattleParams CurrentPveParams { get; private set; }
 
-        public int curBigLevel;
-        public int curLevel;
-
-        public bool isPVE = false;
-
-        /// <summary>
-        /// 为 true 时 <see cref="BattleManager"/> 创建 <see cref="SurvivalPveBattle"/>（生存模式）；
-        /// 为 false 时创建经典 <see cref="PveBattle"/>。仅当 <see cref="isPVE"/> 为 true 时生效。在进入战斗前由入口设置。
-        /// </summary>
-        public bool useSurvivalPveBattleMode = false;
-
-        /// <summary>
-        /// 为 true 时 <see cref="BattleManager"/> 创建 <see cref="RoguelikePveBattle"/>（肉鸽模式）。
-        /// 优先级高于 <see cref="useSurvivalPveBattleMode"/> 与经典 <see cref="PveBattle"/>。
-        /// </summary>
-        public bool useRoguelikePveBattleMode = false;
-
-        /// <summary>
-        /// 为 true 时进入 <see cref="HitTestBenchmarkBattle"/>（碰撞性能对比），不再走 Pve / Survival Pve。
-        /// </summary>
-        public bool useHitTestBenchmarkBattle = false;
-
-        /// <summary>基准战斗内碰撞实现：true=网格版 <see cref="BattleSimpleHitTestComponent"/>，false=暴力版 <see cref="BattleBruteForceHitTestComponent"/>。</summary>
+        /// <summary>基准战斗碰撞实现：true=网格版，false=暴力版。</summary>
         public bool hitTestBenchmarkUseSpatialGrid = true;
 
         /// <summary>基准战斗 Console 输出间隔（逻辑帧数）。</summary>
@@ -61,7 +38,6 @@ namespace CarrotFantasy
         {
             base.LoadModule();
             this.InitBattleViews();
-            this.AddListener();
         }
 
         private void InitBattleViews()
@@ -86,43 +62,21 @@ namespace CarrotFantasy
             }
         }
 
-        private void AddListener()
+        /// <summary>将开战参数写入本服务，供 Model_Battle 各组件 Init 时读取。</summary>
+        public void ApplyPveParams(PveModelBattleParams launchParams)
         {
-            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVE_GAME, this.GetPVEBattleParams);
-            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.READY_START_PVP_GAME, this.GetPVPBattleParams);
-        }
-
-        private void GetPVEBattleParams()
-        {
-            this.isPVE = true;
-            this.curBigLevel = MapServer.Instance.curBigLevel;
-            this.curLevel = MapServer.Instance.curLevel;
-
-            this.curStage = MapServer.Instance.mapModel.GetStage(this.curBigLevel, curLevel);
-            this.curSingleMapInfo = MapServer.Instance.mapModel.GetSingleMapInfo(this.curBigLevel, curLevel);
-
-            string path = "Level" + this.curBigLevel.ToString() + "_" + this.curLevel.ToString() + ".json";
-            this.info = LoadLevelInfoFile(path);
-        }
-
-        /// <summary>肉鸽战斗入口：由 <see cref="RoguelikeRunManager"/> 在切场景前调用。</summary>
-        public void PrepareRoguelikeEncounter(int encounterId, int bigLevel, int level)
-        {
-            this.isPVE = true;
-            this.useRoguelikePveBattleMode = true;
-            this.useSurvivalPveBattleMode = false;
-            this.useHitTestBenchmarkBattle = false;
-            this.curBigLevel = bigLevel;
-            this.curLevel = level;
-
-            if (MapServer.Instance != null && MapServer.Instance.mapModel != null)
+            if (launchParams == null)
             {
-                this.curStage = MapServer.Instance.mapModel.GetStage(bigLevel, level);
-                this.curSingleMapInfo = MapServer.Instance.mapModel.GetSingleMapInfo(bigLevel, level);
+                return;
             }
 
-            string path = "Level" + bigLevel.ToString() + "_" + level.ToString() + ".json";
-            this.info = LoadLevelInfoFile(path);
+            launchParams.EnsureLevelDataLoaded();
+            this.CurrentPveParams = launchParams;
+        }
+
+        public void ClearPveParams()
+        {
+            this.CurrentPveParams = null;
         }
 
         /// <summary>若未走 <see cref="LoadModule"/>，战斗 UI 注册可延迟到此。</summary>
@@ -134,36 +88,23 @@ namespace CarrotFantasy
             }
         }
 
-        private void GetPVPBattleParams()
-        {
-
-        }
-
-        private void RemoveListener()
-        {
-            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVE_GAME, this.GetPVEBattleParams);
-            BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.READY_START_PVP_GAME, this.GetPVPBattleParams);
-        }
-
         public override void Dispose()
         {
-            this.RemoveListener();
+            this.ClearPveParams();
             base.Dispose();
         }
 
-        //读取关卡文件解析json转化为LevelInfo对象
         public LevelInfo LoadLevelInfoFile(string fileName)
         {
-            LevelInfo levelInfo = new LevelInfo();
             string filePath = Application.streamingAssetsPath + "/Json/Level/" + fileName;
             if (File.Exists(filePath))
             {
                 StreamReader sr = new StreamReader(filePath);
                 string jsonStr = sr.ReadToEnd();
                 sr.Close();
-                levelInfo = JsonMapper.ToObject<LevelInfo>(jsonStr);
-                return levelInfo;
+                return JsonMapper.ToObject<LevelInfo>(jsonStr);
             }
+
             Debug.Log("文件加载失败，加载路径是" + filePath);
             return null;
         }

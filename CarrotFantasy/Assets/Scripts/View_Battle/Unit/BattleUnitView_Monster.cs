@@ -20,7 +20,6 @@ namespace CarrotFantasy
         private static readonly Color NormalSpriteTint = Color.white;
         private static readonly Color StunSpriteTint = new Color(0.72f, 0.72f, 0.78f, 1f);
 
-        private String spriteUrl = "Pictures/NormalMordel/Game/{0}/Monster/{1}-1";
         private String animatorUrl = "Animator/AnimatorController/Monster/{0}/{1}";
 
         public override void InitTransform(Transform node)
@@ -30,28 +29,26 @@ namespace CarrotFantasy
             this.animator = this.transform.GetComponent<Animator>();
         }
 
-        /// <summary>由 <see cref="BVMonsterComponent"/> 在加载独立 MonsterCanvas 预制体后调用。</summary>
-        public void AttachMonsterHpCanvas(GameObject monsterCanvasInstance)
+        /// <summary>由 <see cref="BVMonsterComponent"/> 挂载共享 Canvas 下的 HPSlider 实例。</summary>
+        public void AttachMonsterHpBar(GameObject hpBarRoot)
         {
-            if (monsterCanvasInstance == null)
+            if (hpBarRoot == null)
             {
-                Debug.LogError("[BattleUnitView_Monster] MonsterCanvas 实例为空，请检查 fightpart_prefab 中 MonsterCanvas 资源。");
+                Debug.LogError("[BattleUnitView_Monster] 怪物血条为空，请检查 MonsterCanvas 预加载与 BattleHpBarCanvas。");
                 return;
             }
 
-            this.hpBarCanvasInstance = monsterCanvasInstance;
-            this.hpBarCanvasRect = monsterCanvasInstance.GetComponent<RectTransform>();
-            Transform sliderTr = monsterCanvasInstance.transform.Find("HPSlider");
-            if (sliderTr == null)
+            this.hpBarCanvasInstance = hpBarRoot;
+            this.hpBarCanvasRect = hpBarRoot.GetComponent<RectTransform>();
+            this.slider = hpBarRoot.GetComponent<Slider>();
+            if (this.slider == null)
             {
-                Debug.LogError("[BattleUnitView_Monster] MonsterCanvas 下缺少 HPSlider。");
+                Debug.LogError("[BattleUnitView_Monster] 血条节点缺少 Slider 组件。");
                 return;
             }
 
-            this.slider = sliderTr.GetComponent<Slider>();
             this.slider.value = 1;
             this.slider.gameObject.transform.eulerAngles = Vector3.zero;
-
             this.hpBarLocalOffset = DefaultMonsterHpBarLocalOffset;
             if (this.hpBarCanvasRect != null)
             {
@@ -62,11 +59,18 @@ namespace CarrotFantasy
         public override void Init()
         {
             this.CacheWorldUi();
-            this.AttachHpBarToWorldLayer();
             base.Init();
             BattleUnit_Monster monster = (BattleUnit_Monster)this.unit;
-            this.spriteRender.sprite = ResourceLoader.Instance.loadRes<Sprite>(
-                String.Format(this.spriteUrl, monster.curLevel, monster.monsterId));
+            Sprite portrait;
+            if (FightViewSpriteAb.TryGetMonsterPortrait(monster.monsterId, out portrait))
+            {
+                this.spriteRender.sprite = portrait;
+            }
+            else
+            {
+                Debug.LogError("[BattleUnitView_Monster] 怪物 Sprite 未预加载: id=" + monster.monsterId);
+            }
+
             this.animator.runtimeAnimatorController = ResourceLoader.Instance.loadRes<RuntimeAnimatorController>(
                 String.Format(this.animatorUrl, monster.curLevel, monster.monsterId));
             this.animator.Play(monster.monsterId.ToString());
@@ -80,16 +84,8 @@ namespace CarrotFantasy
                 return;
             }
 
-            BaseBattleViewComponent c = this.battleView.GetComponent(BattleViewComponentType.WORLD_UI);
+            BaseBattleViewComponent c = this.battleView.TryGetComponent(BattleViewComponentType.WORLD_UI);
             this.worldUiCached = c as BVBattleWorldUiComponent;
-        }
-
-        private void AttachHpBarToWorldLayer()
-        {
-            if (this.worldUiCached != null && this.hpBarCanvasRect != null)
-            {
-                this.worldUiCached.AttachHpBarToSharedCanvas(this.hpBarCanvasRect);
-            }
         }
 
         private void DetachHpBarFromWorldLayer()
@@ -109,8 +105,7 @@ namespace CarrotFantasy
             base.OnTick(deltaTime);
             this.SyncHpBarPosition();
             this.buffIconBar.OnTick(deltaTime);
-            this.buffIconBar.ResetIconScales();
-            this.RefreshSpriteTint();
+            this.buffIconBar.ResetPulsedIconScales();
         }
 
         private void SyncHpBarPosition()

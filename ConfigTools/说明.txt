@@ -13,3 +13,8 @@ Unity 运行时依赖（导表后若报 CS0246 Luban / SimpleJSON）：
 
 已接入 Luban 的数据表：
   Tower.xlsx / Monster.xlsx / Bullet.xlsx / Buff.xlsx / Item.xlsx
+
+关卡刷怪配表（CSV，非 Luban）：
+  ConfigTools/LevelSpawn/*.csv
+  Unity 菜单：CarrotFantasy -> 关卡刷怪表 -> 导入 ConfigTools/LevelSpawn 下全部 CSV
+  导入后写入 CarrotFantasy/Assets/Game/Json/Level 与 StreamingAssets 同名关卡 JSON 的 roundInfo

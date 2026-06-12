@@ -1,14 +1,27 @@
+using UnityEngine;
+
 namespace CarrotFantasy
 {
     public class PveBattleView : BattleView_base
     {
-        public PveBattleView(BaseBattle battle) : base(battle)
+        public PveBattleView(BaseBattle battle, GameObject viewRoot, BattleViewHost viewHost)
+            : base(battle, viewRoot, viewHost)
         {
-            this.rootGameObject = ServerProvision.sceneServer.currentScene.gameObj;
         }
 
         public override void Init()
         {
+            this.EnsureViewComponentsRegistered();
+            base.Init();
+        }
+
+        void EnsureViewComponentsRegistered()
+        {
+            if (this.HasRegisteredComponents)
+            {
+                return;
+            }
+
             this.AddComponent(new BVSceneComponent(this));
             this.AddComponent(new BVBattleWorldUiComponent(this));
             this.AddComponent(new BVMapComponent(this));
@@ -22,8 +35,17 @@ namespace CarrotFantasy
         public override void ClearGameInfo()
         {
             base.ClearGameInfo();
+            BattleViewPrefabPreloader.Clear();
+            BattleViewSpritePreloader.Clear();
             GameViewObjectPool.Instance.ClearGameInfo();
         }
 
+        public override void ShutdownContentOnly()
+        {
+            base.ShutdownContentOnly();
+            BattleViewPrefabPreloader.Clear();
+            BattleViewSpritePreloader.Clear();
+            GameViewObjectPool.Instance.ClearGameInfo();
+        }
     }
 }

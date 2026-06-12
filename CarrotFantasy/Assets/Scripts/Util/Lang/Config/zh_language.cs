@@ -19,10 +19,11 @@ namespace CarrotFantasy
 
         public string GetString(int id)
         {
-            if (zhLangage[id] != null)
+            if (this.zhLangage.TryGetValue(id, out string value))
             {
-                return zhLangage[id];
+                return value;
             }
+
             return null;
         }
     }
