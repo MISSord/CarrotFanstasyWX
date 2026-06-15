@@ -31,7 +31,7 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            PveModelBattleParams launchParams = this.baseBattle.LaunchParams;
             this.snapshot = BattleGlobalBuffCompiler.Compile(launchParams);
         }
 

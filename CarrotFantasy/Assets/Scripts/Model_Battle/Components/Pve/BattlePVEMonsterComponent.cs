@@ -32,7 +32,7 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            PveModelBattleParams launchParams = this.baseBattle.LaunchParams;
             if (launchParams != null)
             {
                 this.levelInfo = launchParams.LevelInfo;

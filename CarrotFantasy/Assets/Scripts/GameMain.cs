@@ -73,6 +73,7 @@ namespace CarrotFantasy
             ViewManager.Instance?.Update();
             AssetBundleManager.Instance.Update();
             Sche.Tick(new Fix64(Time.deltaTime));
+            // 战斗 Running 后由 Session 驱动 Model 固定逻辑帧 + View 渲染 Tick
             ServerProvision.battleSessionHost?.Tick(Time.deltaTime);
 
             if (BusinessProvision.Instance.IsGameQuit == true)

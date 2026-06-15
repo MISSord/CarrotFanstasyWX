@@ -29,6 +29,14 @@ namespace CarrotFantasy
         /// <summary>本局可复现随机（重开/回放前对同一 RootSeed 调用 <see cref="DeterministicRandomSession.Reset"/>）。</summary>
         public DeterministicRandomSession RandomSession { get; private set; }
 
+        /// <summary>本局开战参数，Model 层统一从此读取。</summary>
+        public PveModelBattleParams LaunchParams { get; private set; }
+
+        public void SetLaunchParams(PveModelBattleParams launchParams)
+        {
+            this.LaunchParams = launchParams;
+        }
+
         public void SetHostBridge(IBattleHostBridge bridge)
         {
             this.HostBridge = bridge;
@@ -197,6 +205,7 @@ namespace CarrotFantasy
             this.componentList.Clear();
             this.componentDic.Clear();
             this.RemoveListener();
+            this.LaunchParams = null;
             BattleUnitPool.Instance.Dispose();
             this.eventDispatcher.Dispose();
         }

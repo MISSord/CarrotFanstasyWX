@@ -16,7 +16,7 @@ namespace CarrotFantasy
             base.StateIn();
             BattleSchedulerComponent sch =
                 (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
-            float introDelay = BattleParamAccess.EffectiveStartGameDelaySeconds;
+            float introDelay = BattleParamAccess.GetEffectiveStartGameDelaySeconds(this.Battle);
 
             this.Battle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
             this.countdownScheId = sch.DelayExeMultipleTimes(

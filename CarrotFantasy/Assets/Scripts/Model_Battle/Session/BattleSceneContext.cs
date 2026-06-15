@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 namespace CarrotFantasy
 {
     /// <summary>单次战斗的 Unity 场景壳引用；由 BattleScene 就绪后注入 Session，不写入 config。</summary>
+    /// <remarks>BuildViewAndStart 等异步步骤前应调用 <see cref="IsSceneAlive"/>，防止场景已卸载仍挂 View。</remarks>
     public sealed class BattleSceneContext
     {
         public GameObject BattleRoot { get; }

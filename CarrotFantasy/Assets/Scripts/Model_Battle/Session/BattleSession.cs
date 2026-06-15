@@ -5,26 +5,30 @@ namespace CarrotFantasy
     public enum BattleSessionPhase
     {
         None = 0,
+        /// <summary>创建 PveBattle、注册组件、Init/InitComponent（流程 1/4）</summary>
         InitializingModel,
+        /// <summary>异步预加载战斗 Prefab/Sprite（流程 2/4）</summary>
         LoadingAssets,
+        /// <summary>构建 PveBattleView、格子容器、战斗 UI（流程 3/4）</summary>
         BuildingView,
+        /// <summary>StartGame 已调用，Tick 生效（流程 4/4）</summary>
         Running,
         Disposed,
     }
 
     /// <summary>
     /// 单局战斗会话，严格线性：模型初始化 → 资源预加载 → 视图构建 → 开战。
-    /// 场景壳引用只通过 <see cref="BattleSceneContext"/> 获取，不在 config 中缓存。
     /// </summary>
     public sealed class BattleSession
     {
-        readonly BattleSessionConfig config;
+        readonly PveModelBattleParams launchParams;
         readonly BattleSceneContext sceneContext;
-        readonly BattleSessionHost sessionHost;
 
         BaseBattle battle;
         BattleView_base view;
         BattleSessionPhase phase = BattleSessionPhase.None;
+
+        /// <summary>Restart/TearDown 时递增，异步预加载回调携带 token 校验，防止过期回调误建 View。</summary>
         int runToken;
         int battleRandomSeed;
         bool disposed;
@@ -44,37 +48,26 @@ namespace CarrotFantasy
             get { return this.phase; }
         }
 
-        public BattleSession(
-            BattleSessionConfig sessionConfig,
-            BattleSceneContext context,
-            BattleSessionHost host)
+        public BattleSession(PveModelBattleParams launchParams, BattleSceneContext context)
         {
-            this.config = sessionConfig;
+            this.launchParams = launchParams;
             this.sceneContext = context;
-            this.sessionHost = host;
         }
 
+        /// <summary>进关入口：先同步初始化 Model，再启动异步视图流水线。</summary>
         public void Run()
         {
-            if (this.disposed || this.config == null)
+            if (this.disposed || this.launchParams == null)
             {
-                BattleFlowLog.Abort("Run", "disposed=" + this.disposed + " configNull=" + (this.config == null));
+                BattleFlowLog.Abort("Run", "disposed=" + this.disposed + " launchParamsNull=" + (this.launchParams == null));
                 return;
             }
-
-            BattleFlowLog.Step(
-                "Run 开始",
-                "runToken=" + this.runToken +
-                " root#" + (this.sceneContext != null && this.sceneContext.BattleRoot != null
-                    ? this.sceneContext.BattleRoot.GetInstanceID().ToString()
-                    : "null") +
-                " level=" + this.config.Params.BigLevelId + "-" + this.config.Params.LevelId);
 
             AudioClipPreloader.RunBattleDefaults(null);
             AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
 
-            this.SetupModel();
-            this.BeginViewPipeline(this.runToken);
+            this.SetupModel(); // 1/4 InitializingModel
+            this.BeginViewPipeline(this.runToken); // 2/4 → 3/4 → 4/4
         }
 
         public void Restart()
@@ -90,7 +83,6 @@ namespace CarrotFantasy
             }
 
             this.runToken++;
-            BattleFlowLog.Step("Restart", "runToken=" + this.runToken);
             ViewManager.Instance?.CloseAllOpenViews();
             this.ResetForReplay();
             this.BeginViewPipeline(this.runToken);
@@ -114,12 +106,6 @@ namespace CarrotFantasy
 
         public void TearDown(bool destroyViewHierarchy)
         {
-            BattleFlowLog.Step(
-                "TearDown",
-                "destroyViewHierarchy=" + destroyViewHierarchy +
-                " phase=" + this.phase +
-                " runToken=" + this.runToken);
-
             this.disposed = true;
             this.runToken++;
             this.RemoveListeners();
@@ -156,24 +142,17 @@ namespace CarrotFantasy
             this.TearDown(true);
         }
 
+        /// <summary>流程 1/4：按 Mode 创建战斗实例并 Init 全部 Model 组件。</summary>
         void SetupModel()
         {
             this.phase = BattleSessionPhase.InitializingModel;
-            BattleFlowLog.Step("1/4 SetupModel", "phase=" + this.phase);
-
             this.CreateBattle();
             this.AddListeners();
             this.InitBattleModel(resetExisting: false);
-
-            BattleFlowLog.Step(
-                "1/4 SetupModel 完成",
-                "battle=" + (this.battle != null ? this.battle.GetType().Name : "null") +
-                " view=" + (this.view != null ? "已存在" : "null(预期)"));
         }
 
         void ResetForReplay()
         {
-            BattleFlowLog.Step("ResetForReplay", "runToken=" + this.runToken);
             this.view.TearDownSceneContainers();
             this.view.ClearGameInfo();
             this.battle.ClearGameInfo();
@@ -187,6 +166,7 @@ namespace CarrotFantasy
             this.battle.InitComponent();
         }
 
+        /// <summary>流程 2/4：AB 预加载完成后回调 <see cref="BuildViewAndStart"/>。</summary>
         void BeginViewPipeline(int token)
         {
             if (!this.TryIsActiveRun(token, "BeginViewPipeline"))
@@ -195,15 +175,13 @@ namespace CarrotFantasy
             }
 
             this.phase = BattleSessionPhase.LoadingAssets;
-            BattleFlowLog.Step("2/4 BeginViewPipeline", "phase=" + this.phase + " runToken=" + token);
 
             BattleViewAssetPreloader.Run(this.battle, () => this.BuildViewAndStart(token));
         }
 
+        /// <summary>流程 3/4 → 4/4：建 View、校验容器、开 NormalModelPanel，最后 StartGame。</summary>
         void BuildViewAndStart(int token)
         {
-            BattleFlowLog.Step("3/4 BuildViewAndStart 回调", "runToken=" + token + " phase=" + this.phase);
-
             if (!this.TryIsActiveRun(token, "BuildViewAndStart"))
             {
                 return;
@@ -227,8 +205,6 @@ namespace CarrotFantasy
                 return;
             }
 
-            BattleFlowLog.ViewHostSnapshot("BuildViewAndStart/ViewHost", viewHost);
-
             this.phase = BattleSessionPhase.BuildingView;
 
             if (!BattleViewPrefabPreloader.TryGetTemplate(
@@ -244,28 +220,15 @@ namespace CarrotFantasy
             if (createdView)
             {
                 this.view = new PveBattleView(this.battle, this.sceneContext.BattleRoot, viewHost);
-                BattleFlowLog.Step(
-                    "BuildViewAndStart 创建 View",
-                    "root#" + this.sceneContext.BattleRoot.GetInstanceID() +
-                    " ViewHost#" + viewHost.GetInstanceID());
-            }
-            else
-            {
-                BattleFlowLog.Step("BuildViewAndStart 复用 View", "hasComponents=" + this.view.HasRegisteredComponents);
             }
 
             this.view.Init();
-            BattleFlowLog.Step(
-                "BuildViewAndStart view.Init",
-                "hasComponents=" + this.view.HasRegisteredComponents);
 
             if (!this.view.InitContentComponents())
             {
                 BattleFlowLog.Abort("BuildViewAndStart", "InitContentComponents 返回 false");
                 return;
             }
-
-            BattleFlowLog.ViewHostSnapshot("BuildViewAndStart/InitContent 后", viewHost);
 
             int containerCount = viewHost.GetSceneContainerChildCount();
             int gridCount = viewHost.GetContainerChildCount("GridContainer");
@@ -298,18 +261,15 @@ namespace CarrotFantasy
 
             BattleFlowLog.Step(
                 "4/4 Running",
-                "phase=" + this.phase +
-                " runToken=" + token +
-                " sceneChildren=" + containerCount +
-                " gridChildren=" + gridCount +
-                " battle.isStart=" + this.battle.isStart +
-                " view.isStart=" + this.view.isStart);
+                "containers=" + containerCount +
+                " grids=" + gridCount);
         }
 
+        /// <summary>按开战 Mode 选择战斗实现，并将本局参数注入 BaseBattle。</summary>
         void CreateBattle()
         {
-            PveModelBattleParams launchParams = this.config.Params;
-            this.battle = CreatePveBattle(launchParams.Mode);
+            this.battle = CreatePveBattle(this.launchParams.Mode);
+            this.battle.SetLaunchParams(this.launchParams);
             this.battle.SetHostBridge(new UnityBattleHostBridge());
         }
 
@@ -371,22 +331,23 @@ namespace CarrotFantasy
 
         void OnPveMatchSettled(PveMatchSettlement settlement)
         {
-            this.sessionHost.HandlePveMatchSettled(settlement);
+            BattleSettlementPresenter.Handle(this.battle, settlement);
         }
 
+        /// <summary>重开时保持 battleRandomSeed，仅 Reset 随机序列以保证可复现。</summary>
         void ApplyRandomSession(bool resetExisting)
         {
             if (this.battleRandomSeed == 0)
             {
-                if (this.config.BattleRandomSeed != 0)
+                if (this.launchParams.BattleRandomSeed != 0)
                 {
-                    this.battleRandomSeed = this.config.BattleRandomSeed;
+                    this.battleRandomSeed = this.launchParams.BattleRandomSeed;
                 }
                 else
                 {
                     this.battleRandomSeed = DeterministicSeed.ForClassicLevel(
-                        this.config.Params.BigLevelId,
-                        this.config.Params.LevelId);
+                        this.launchParams.BigLevelId,
+                        this.launchParams.LevelId);
                 }
             }
 

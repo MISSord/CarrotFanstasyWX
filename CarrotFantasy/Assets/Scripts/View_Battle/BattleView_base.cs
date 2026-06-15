@@ -74,8 +74,6 @@ namespace CarrotFantasy
                 return false;
             }
 
-            BattleFlowLog.ViewHostSnapshot("InitContentComponents/前", this.ViewHost);
-
             this.ViewHost.EnsureStandardContentContainers();
 
             BVBattleWorldUiComponent worldUi = this.TryGetComponent(BattleViewComponentType.WORLD_UI) as BVBattleWorldUiComponent;
@@ -104,7 +102,6 @@ namespace CarrotFantasy
                 }
             }
 
-            BattleFlowLog.ViewHostSnapshot("InitContentComponents/后", this.ViewHost);
             return true;
         }
 

@@ -11,7 +11,7 @@ namespace CarrotFantasy
         public const string BattleUnitySceneName = "BattleScene";
 
         const float DefaultOrthoSize = 5f;
-        static readonly Vector3 DefaultCameraPosition = new Vector3(0f, 0f, -10f);
+        static readonly Vector3 DefaultCameraPosition = new Vector3(6.6f, 4.4f, -10f);
 
         /// <summary>场景进入时解析 BattleRoot，并清理 DontDestroyOnLoad 中的残留副本。</summary>
         public static GameObject ResolveBattleRootForSceneEntry()
@@ -86,22 +86,14 @@ namespace CarrotFantasy
             int rootCount = CountNamedRoots(roots, BattleRootName);
             if (rootCount > 1)
             {
-                BattleFlowLog.Step(
-                    "FindBattleRoot",
-                    "警告：场景内存在 " + rootCount +
-                    " 个 BattleRoot，请检查场景是否重复。不会自动 Destroy。");
+                Debug.LogWarning(
+                    "[BattleScenePresentation] 场景内存在 " + rootCount +
+                    " 个 BattleRoot，请检查场景是否重复");
             }
 
             GameObject chosen = rootWithSceneContainer != null ? rootWithSceneContainer : namedRoot;
             if (chosen != null)
             {
-                BattleFlowLog.Step(
-                    "FindBattleRoot",
-                    "scene=" + targetScene.name +
-                    " BattleRoot#" + chosen.GetInstanceID() +
-                    " hasSceneContainer=" + (rootWithSceneContainer != null) +
-                    " childCount=" + chosen.transform.childCount +
-                    " rootCount=" + rootCount);
                 return chosen;
             }
 
@@ -185,19 +177,11 @@ namespace CarrotFantasy
             {
                 if (duplicateCount > 0)
                 {
-                    BattleFlowLog.Step(
-                        "ResolveSceneContainer",
-                        "警告：BattleRoot#" + battleRoot.GetInstanceID() +
-                        " 下存在多个 SceneContainer，使用第一个 #" +
-                        canonical.gameObject.GetInstanceID());
+                    Debug.LogWarning(
+                        "[BattleScenePresentation] BattleRoot#" + battleRoot.GetInstanceID() +
+                        " 下存在多个 SceneContainer，使用第一个");
                 }
 
-                BattleFlowLog.Step(
-                    "ResolveSceneContainer",
-                    "复用 SceneContainer#" + canonical.gameObject.GetInstanceID() +
-                    " children=" + canonical.childCount +
-                    " BattleRoot#" + battleRoot.GetInstanceID() +
-                    " siblings=[" + childNames + "]");
                 return canonical.gameObject;
             }
 
@@ -224,10 +208,9 @@ namespace CarrotFantasy
                     GameObject root = roots[j];
                     if (root != null && root.name == BattleRootName)
                     {
-                        BattleFlowLog.Step(
-                            "CleanupStaleBattleRoots",
-                            "警告：DontDestroyOnLoad 中存在残留 BattleRoot#" + root.GetInstanceID() +
-                            "，不会自动 Destroy，请检查是否误 Move 到 DDOL");
+                        Debug.LogWarning(
+                            "[BattleScenePresentation] DontDestroyOnLoad 中存在残留 BattleRoot#" +
+                            root.GetInstanceID() + "，请检查是否误 Move 到 DDOL");
                     }
                 }
             }
@@ -244,11 +227,6 @@ namespace CarrotFantasy
             Scene activeScene = SceneManager.GetActiveScene();
             if (activeScene != rootScene)
             {
-                BattleFlowLog.Step(
-                    "EnsureBattleRootInActiveScene",
-                    "SetActiveScene " + rootScene.name +
-                    " (BattleRoot#" + battleRoot.GetInstanceID() +
-                    ", was " + activeScene.name + ")");
                 SceneManager.SetActiveScene(rootScene);
             }
         }

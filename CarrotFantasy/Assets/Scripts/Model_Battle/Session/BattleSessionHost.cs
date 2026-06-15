@@ -1,12 +1,9 @@
-using UnityEngine;
-
 namespace CarrotFantasy
 {
-    /// <summary>DDOL 战斗会话宿主：编排 Session、Tick、结算；不依赖 MonoBehaviour 生命周期。</summary>
+    /// <summary>DDOL 战斗会话宿主：持有 Session、转发 Tick；不依赖 MonoBehaviour 生命周期。</summary>
     public sealed class BattleSessionHost
     {
         BattleSession session;
-        BattleSceneContext sceneContext;
 
         public BaseBattle baseBattle
         {
@@ -28,11 +25,15 @@ namespace CarrotFantasy
             get { return this.session != null && this.session.Phase != BattleSessionPhase.Disposed; }
         }
 
-        public void BeginSession(BattleSessionConfig config, BattleSceneContext context)
+        /// <summary>
+        /// 由 <see cref="BattleScene.TryBeginSession"/> 调用。
+        /// 若已有 Session 先 TearDown，再创建新 Session 并同步执行 Run。
+        /// </summary>
+        public void BeginSession(PveModelBattleParams launchParams, BattleSceneContext context)
         {
-            if (config == null)
+            if (launchParams == null)
             {
-                BattleFlowLog.Abort("BeginSession", "config=null");
+                BattleFlowLog.Abort("BeginSession", "launchParams=null");
                 return;
             }
 
@@ -44,39 +45,25 @@ namespace CarrotFantasy
 
             if (this.session != null)
             {
-                BattleFlowLog.Step(
-                    "BeginSession 替换旧会话",
-                    "oldPhase=" + this.session.Phase);
                 this.session.TearDown(destroyViewHierarchy: true);
                 this.session = null;
             }
 
-            this.sceneContext = context;
-
             BattleFlowLog.Step(
                 "BeginSession",
-                "BattleRoot#" + context.BattleRoot.GetInstanceID() +
-                " ViewHost#" + context.ViewHost.GetInstanceID() +
-                " level=" + config.Params.BigLevelId + "-" + config.Params.LevelId);
+                "level=" + launchParams.BigLevelId + "-" + launchParams.LevelId);
 
-            this.session = new BattleSession(config, context, this);
+            this.session = new BattleSession(launchParams, context);
             this.session.Run();
         }
 
         public void EndSession(bool clearLaunchParams = true, bool destroyViewHierarchy = true)
         {
-            BattleFlowLog.Step(
-                "EndSession",
-                "destroyViewHierarchy=" + destroyViewHierarchy +
-                " phase=" + (this.session != null ? this.session.Phase.ToString() : "null"));
-
             if (this.session != null)
             {
                 this.session.TearDown(destroyViewHierarchy);
                 this.session = null;
             }
-
-            this.sceneContext = null;
 
             if (clearLaunchParams && BattleParamServer.Instance != null)
             {
@@ -84,6 +71,7 @@ namespace CarrotFantasy
             }
         }
 
+        /// <summary>由 <see cref="GameMain.Update"/> 每帧驱动；仅 Running 阶段推进逻辑帧与视图 Tick。</summary>
         public void Tick(float deltaSeconds)
         {
             if (this.session == null)
@@ -92,56 +80,6 @@ namespace CarrotFantasy
             }
 
             this.session.Tick(deltaSeconds);
-        }
-
-        internal void HandlePveMatchSettled(PveMatchSettlement settlement)
-        {
-            if (settlement == null)
-            {
-                return;
-            }
-
-            if (BattleParamAccess.CurrentMode == BattlePveMode.Roguelike &&
-                RoguelikeRunManager.Instance != null)
-            {
-                RoguelikeRunManager.Instance.HandlePveMatchSettled(settlement);
-                return;
-            }
-
-            if (settlement.IsVictory && settlement.VictoryProgress != null && this.baseBattle != null &&
-                this.baseBattle.HostBridge != null)
-            {
-                this.baseBattle.HostBridge.SubmitVictoryMapProgress(settlement.VictoryProgress);
-            }
-
-            if (settlement.IsVictory)
-            {
-                this.ShowGameWin();
-            }
-            else
-            {
-                this.ShowGameOver();
-            }
-        }
-
-        void ShowGameWin()
-        {
-            if (this.baseBattle != null)
-            {
-                BattleViewOpener.Open<GameWinView>(this.baseBattle);
-            }
-
-            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Perfect");
-        }
-
-        void ShowGameOver()
-        {
-            if (this.baseBattle != null)
-            {
-                BattleViewOpener.Open<GameOverView>(this.baseBattle);
-            }
-
-            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Lose");
         }
     }
 }

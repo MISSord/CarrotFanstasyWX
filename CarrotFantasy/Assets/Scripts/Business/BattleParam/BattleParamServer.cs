@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    /// <summary>战斗参数服务：仅持有当前 <see cref="CurrentPveParams"/> 与基准测试配置。</summary>
+    /// <summary>战斗参数服务</summary>
     public class BattleParamServer : BaseServer<BattleParamServer>
     {
         private NormalModelPanel normalModepanel;
@@ -12,7 +12,7 @@ namespace CarrotFantasy
         private GameWinView gameWinView;
         private GameOverView gameOverView;
 
-        /// <summary>最近一次开战参数，Model 层经 <see cref="BattleParamAccess"/> 读取。</summary>
+        /// <summary>最近一次开战参数；BattleScene.Init 读取，Session 创建后注入 <see cref="BaseBattle.LaunchParams"/>。</summary>
         public PveModelBattleParams CurrentPveParams { get; private set; }
 
         /// <summary>基准战斗碰撞实现：true=网格版，false=暴力版。</summary>
@@ -62,7 +62,10 @@ namespace CarrotFantasy
             }
         }
 
-        /// <summary>将开战参数写入本服务，供 Model_Battle 各组件 Init 时读取。</summary>
+        /// <summary>
+        /// 将开战参数写入本服务（含 EnsureLevelDataLoaded），供 BattleScene.Init 读取；
+        /// Session 创建后 Model 从 <see cref="BaseBattle.LaunchParams"/> 读取。
+        /// </summary>
         public void ApplyPveParams(PveModelBattleParams launchParams)
         {
             if (launchParams == null)

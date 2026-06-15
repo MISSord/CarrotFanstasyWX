@@ -4,8 +4,8 @@ using UnityEngine;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 战斗视图资源预加载：Prefab 与 Sprite 异步完成或超时后回调。
-    /// 仅通过 <see cref="AssetLoadManager"/> 等待 AB 回调，不干预 <see cref="AssetBundleManager"/>。
+    /// 战斗视图资源预加载（Session 流程 2/4）。
+    /// Prefab 与 Sprite 两路并行，均完成或超时后回调 <see cref="BattleSession.BuildViewAndStart"/>。
     /// </summary>
     public static class BattleViewAssetPreloader
     {
@@ -18,30 +18,26 @@ namespace CarrotFantasy
                 return;
             }
 
-            BattleFlowLog.Step("2/4 预加载开始", "timeout=" + timeoutSeconds + "s");
-
+            // 两批 AB 均结束才进入 BuildViewAndStart
             int pending = 2;
-            void OnOneBatchFinished(string batchName)
+            void OnOneBatchFinished()
             {
                 if (pending <= 0)
                 {
-                    BattleFlowLog.Step("预加载批次重复回调", batchName);
                     return;
                 }
 
                 pending--;
-                BattleFlowLog.Step("预加载批次完成", batchName + " remaining=" + pending);
-
                 if (pending <= 0)
                 {
                     ReportCriticalMissing();
-                    BattleFlowLog.Step("2/4 预加载全部完成", "即将进入 BuildViewAndStart");
+                    BattleFlowLog.Step("2/4 预加载全部完成");
                     onComplete?.Invoke();
                 }
             }
 
-            BattleViewPrefabPreloader.Run(battle, () => OnOneBatchFinished("Prefab"), timeoutSeconds);
-            BattleViewSpritePreloader.Run(battle, () => OnOneBatchFinished("Sprite"), timeoutSeconds);
+            BattleViewPrefabPreloader.Run(battle, OnOneBatchFinished, timeoutSeconds);
+            BattleViewSpritePreloader.Run(battle, OnOneBatchFinished, timeoutSeconds);
         }
 
         static void ReportCriticalMissing()
@@ -57,9 +53,6 @@ namespace CarrotFantasy
 
             if (hasGridPrefab && hasGridSprite)
             {
-                BattleFlowLog.Step(
-                    "预加载关键资源检查",
-                    "GridPrefab=OK GridSprite=OK");
                 return;
             }
 

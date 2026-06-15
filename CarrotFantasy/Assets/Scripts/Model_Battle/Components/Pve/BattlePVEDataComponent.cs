@@ -29,7 +29,7 @@ namespace CarrotFantasy
         {
             base.Init();
 
-            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            PveModelBattleParams launchParams = this.baseBattle.LaunchParams;
             if (launchParams != null)
             {
                 this.bigLevel = launchParams.BigLevelId;

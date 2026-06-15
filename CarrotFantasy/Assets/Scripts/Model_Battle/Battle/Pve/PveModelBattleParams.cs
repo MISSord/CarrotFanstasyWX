@@ -44,14 +44,12 @@ namespace CarrotFantasy
 
         public static PveModelBattleParams CreateClassic(int bigLevelId, int levelId)
         {
-            var p = new PveModelBattleParams
+            return new PveModelBattleParams
             {
                 BigLevelId = bigLevelId,
                 LevelId = levelId,
                 Mode = BattlePveMode.Classic,
             };
-            p.EnsureLevelDataLoaded();
-            return p;
         }
 
         public static PveModelBattleParams CreateRoguelike(int bigLevelId, int levelId)

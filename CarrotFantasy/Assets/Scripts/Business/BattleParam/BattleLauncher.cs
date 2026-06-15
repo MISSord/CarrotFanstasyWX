@@ -2,9 +2,13 @@ using System.Collections.Generic;
 
 namespace CarrotFantasy
 {
-    /// <summary>统一 PVE 开战入口：传入大小关与全局 Buff 后切战斗场景。</summary>
+    /// <summary>
+    /// 统一 PVE 开战入口（流程第 0 步）。
+    /// 调用链：组装参数 → ApplyPveParams → LoadScene(BattleScene) → BeginSession → BaseBattle.LaunchParams。
+    /// </summary>
     public static class BattleLauncher
     {
+        /// <summary>经典模式进关；可选全局 Buff 写入开战参数。</summary>
         public static void StartClassicLevel(int bigLevelId, int levelId, IList<int> globalBuffIds = null)
         {
             PveModelBattleParams p = PveModelBattleParams.CreateClassic(bigLevelId, levelId);
@@ -27,15 +31,18 @@ namespace CarrotFantasy
             StartPve(p);
         }
 
-        public static void StartPve(PveModelBattleParams launchParams)
+        /// <summary>
+        /// 所有 PVE 模式的最终入口。参数经 ApplyPveParams 落盘，Session 创建时注入 BaseBattle.LaunchParams。
+        /// </summary>
+        private static void StartPve(PveModelBattleParams launchParams)
         {
             if (launchParams == null)
             {
                 return;
             }
 
-            launchParams.EnsureLevelDataLoaded();
             MapServer.Instance?.RememberLastBattleLevel(launchParams.BigLevelId, launchParams.LevelId);
+
             BattleParamServer.Instance.ApplyPveParams(launchParams);
             BattleParamServer.Instance.EnsureBattleViewsLoaded();
 
@@ -45,6 +52,7 @@ namespace CarrotFantasy
                 return;
             }
 
+            // 异步切 Unity 场景 → SceneServer 创建 BattleScene → BeginSession（见 BattleSessionHost）
             ServerProvision.sceneServer.LoadScene(
                 BaseSceneType.BattleScene,
                 null,

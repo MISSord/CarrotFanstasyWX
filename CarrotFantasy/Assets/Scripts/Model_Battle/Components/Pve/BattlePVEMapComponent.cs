@@ -35,7 +35,7 @@ namespace CarrotFantasy
         public override void Init()
         {
             this.InitGridSizeFromData();
-            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            PveModelBattleParams launchParams = this.baseBattle.LaunchParams;
             this.LevelInfo = launchParams != null ? launchParams.LevelInfo : null;
             this.LoadMapGrid();
             this.LoadLevelMapInfo();

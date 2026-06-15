@@ -1,10 +1,26 @@
 namespace CarrotFantasy
 {
-    /// <summary>Model 层读取当前开战参数的统一入口（避免散落读取 <see cref="BattleParamServer"/> 平铺字段）。</summary>
+    /// <summary>
+    /// 开战参数读取入口。优先读当前 Session 内 <see cref="BaseBattle.LaunchParams"/>；
+    /// Session 尚未创建时回退 <see cref="BattleParamServer.CurrentPveParams"/>（进关过渡期）。
+    /// </summary>
     public static class BattleParamAccess
     {
-        public static PveModelBattleParams Current =>
-            BattleParamServer.Instance != null ? BattleParamServer.Instance.CurrentPveParams : null;
+        public static PveModelBattleParams Current
+        {
+            get
+            {
+                PveModelBattleParams fromBattle = ServerProvision.battleSessionHost?.baseBattle?.LaunchParams;
+                if (fromBattle != null)
+                {
+                    return fromBattle;
+                }
+
+                return BattleParamServer.Instance != null
+                    ? BattleParamServer.Instance.CurrentPveParams
+                    : null;
+            }
+        }
 
         public static bool HasActivePve => Current != null;
 
@@ -16,5 +32,15 @@ namespace CarrotFantasy
             Current != null
                 ? Current.GetEffectiveStartGameDelaySeconds()
                 : PveModelBattleParams.DefaultStartGameDelaySeconds;
+
+        public static float GetEffectiveStartGameDelaySeconds(BaseBattle battle)
+        {
+            if (battle?.LaunchParams != null)
+            {
+                return battle.LaunchParams.GetEffectiveStartGameDelaySeconds();
+            }
+
+            return EffectiveStartGameDelaySeconds;
+        }
     }
 }

@@ -3,6 +3,9 @@ using UnityEngine;
 namespace CarrotFantasy
 {
     /// <summary>战斗入口线性流程诊断；Console 过滤关键字 <c>[BattleFlow]</c>。</summary>
+    /// <remarks>
+    /// 典型顺序：BeginSession → 1/4 InitializingModel → 2/4 预加载 → 3/4 BuildingView → 4/4 Running。
+    /// </remarks>
     public static class BattleFlowLog
     {
         public const string Tag = "[BattleFlow]";
@@ -21,30 +24,6 @@ namespace CarrotFantasy
         public static void Abort(string step, string reason)
         {
             Debug.LogError(Tag + " 中止@" + step + " | " + reason);
-        }
-
-        public static void ViewHostSnapshot(string step, BattleViewHost viewHost)
-        {
-            if (viewHost == null)
-            {
-                Abort(step, "ViewHost=null");
-                return;
-            }
-
-            GameObject sceneContainer = viewHost.SceneContainer;
-            int sceneChildCount = viewHost.GetSceneContainerChildCount();
-            int gridChildCount = viewHost.GetContainerChildCount("GridContainer");
-            string sceneContainerId = sceneContainer != null
-                ? sceneContainer.GetInstanceID().ToString()
-                : "null";
-
-            Step(
-                step,
-                "ViewHost#" + viewHost.GetInstanceID() +
-                " BattleRoot#" + viewHost.gameObject.GetInstanceID() +
-                " SceneContainer#" + sceneContainerId +
-                " sceneChildren=" + sceneChildCount +
-                " gridChildren=" + gridChildCount);
         }
     }
 }

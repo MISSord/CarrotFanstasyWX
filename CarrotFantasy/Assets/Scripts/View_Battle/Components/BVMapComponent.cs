@@ -73,7 +73,6 @@ namespace CarrotFantasy
             BattleMapComponent mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
             BattleMapGrid[,] mapGridInfo = mapComponent.gridsList;
 
-            int created = 0;
             for (int x = 0; x < this.xColumn; x++)
             {
                 for (int y = 0; y < this.yRow; y++)
@@ -91,16 +90,8 @@ namespace CarrotFantasy
                     this.gridPointList[x, y] = gridPoint;
                     gridPoint.InitTrans(this.battleView);
                     gridPoint.InitInfo(x, y);
-                    created++;
                 }
             }
-
-            BattleFlowLog.Step(
-                "LoadMapGrid",
-                "columns=" + this.xColumn +
-                " rows=" + this.yRow +
-                " created=" + created +
-                " GridContainer#" + gridList.GetInstanceID());
         }
 
 

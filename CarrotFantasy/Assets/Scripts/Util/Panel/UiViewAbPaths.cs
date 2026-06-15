@@ -14,6 +14,8 @@ namespace CarrotFantasy
         public const string ViewRootPrefab = "ui/view_prefab";
         public const string LoadingViewPrefab = "ui/view/loadingview_prefab";
         public const string NormalMordelPrefab = "ui/view/normalmordel_prefab";
+        public const string TipViewPrefab = "ui/view/tipview_prefab";
+        public const string TipPanelAsset = "TipPanel";
 
         /// <summary>入口 Loading 面板所在 AB（需在编辑器中为对应预制体指定该 bundle）。</summary>
         public const string StartLoadPanelBundle = "ui/view/startload_prefab";

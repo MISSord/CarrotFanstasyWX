@@ -3,6 +3,10 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 战斗逻辑场景壳（流程第 1 步，Unity 场景就绪后执行）。
+    /// InitSceneObject：解析 BattleRoot / ViewHost → Init：读取开战参数并交给 <see cref="BattleSessionHost.BeginSession"/>。
+    /// </summary>
     public class BattleScene : BaseScene
     {
         BattleSceneContext sceneContext;
@@ -13,6 +17,7 @@ namespace CarrotFantasy
             this.prefabUrl = null;
         }
 
+        /// <summary>绑定 BattleScene.unity 中预置的 BattleRoot、ViewHost、SceneContainer。</summary>
         public override void InitSceneObject()
         {
             this.gameObj = BattleScenePresentation.ResolveBattleRootForSceneEntry();
@@ -44,8 +49,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            GameObject sceneContainer =
-                BattleScenePresentation.ResolveSceneContainerUnderBattleRoot(this.gameObj);
+            GameObject sceneContainer = BattleScenePresentation.ResolveSceneContainerUnderBattleRoot(this.gameObj);
             if (sceneContainer == null)
             {
                 BattleFlowLog.Abort("InitSceneObject", "无法解析 SceneContainer");
@@ -53,17 +57,11 @@ namespace CarrotFantasy
             }
 
             viewHost.BindSceneContainer(sceneContainer);
+            // 场景引用只存于 Context，开战参数经 BeginSession 注入 BaseBattle.LaunchParams
             this.sceneContext = anchor.CreateContext();
-
-            BattleFlowLog.Step(
-                "InitSceneObject",
-                "BattleRoot#" + this.gameObj.GetInstanceID() +
-                " SceneContainer#" + sceneContainer.GetInstanceID() +
-                " ViewHost#" + viewHost.GetInstanceID() +
-                " Anchor#" + anchor.GetInstanceID());
-            BattleFlowLog.ViewHostSnapshot("InitSceneObject/就绪", viewHost);
         }
 
+        /// <summary>场景壳就绪后启动单局 Session（Model 初始化 + 视图流水线）。</summary>
         public override void Init()
         {
             base.Init();
@@ -77,6 +75,7 @@ namespace CarrotFantasy
             this.listenerAdded = true;
         }
 
+        /// <summary>校验 Context 与 BattleLauncher 写入的开战参数，创建并 Run Session。</summary>
         bool TryBeginSession()
         {
             if (this.sceneContext == null || !this.sceneContext.IsValid)
@@ -91,26 +90,14 @@ namespace CarrotFantasy
                 return false;
             }
 
-            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            PveModelBattleParams launchParams = BattleParamServer.Instance?.CurrentPveParams;
             if (launchParams == null)
             {
                 BattleFlowLog.Abort("Init", "CurrentPveParams 为空，请从 BattleLauncher 进关");
                 return false;
             }
 
-            BattleSessionConfig config = BattleSessionConfig.Create(launchParams);
-            if (config == null)
-            {
-                BattleFlowLog.Abort("Init", "BattleSessionConfig 创建失败");
-                return false;
-            }
-
-            BattleFlowLog.Step(
-                "Init BeginSession",
-                "BattleRoot#" + this.sceneContext.BattleRoot.GetInstanceID() +
-                " level=" + launchParams.BigLevelId + "-" + launchParams.LevelId);
-
-            ServerProvision.battleSessionHost.BeginSession(config, this.sceneContext);
+            ServerProvision.battleSessionHost.BeginSession(launchParams, this.sceneContext);
             return true;
         }
 

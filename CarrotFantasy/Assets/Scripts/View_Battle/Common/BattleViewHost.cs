@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -50,11 +49,6 @@ namespace CarrotFantasy
 
             this.sceneContainer = container;
             this.containerDic.Clear();
-            BattleFlowLog.Step(
-                "BindSceneContainer",
-                "复用 SceneContainer#" + container.GetInstanceID() +
-                " children=" + container.transform.childCount +
-                " BattleRoot#" + this.gameObject.GetInstanceID());
             this.SyncExistingContainers();
         }
 
@@ -65,19 +59,10 @@ namespace CarrotFantasy
                 return;
             }
 
-            int before = this.GetSceneContainerChildCount();
             for (int i = 0; i < StandardContentContainers.Length; i++)
             {
                 this.RegisterContainer(StandardContentContainers[i]);
             }
-
-            int after = this.GetSceneContainerChildCount();
-            BattleFlowLog.Step(
-                "EnsureStandardContentContainers",
-                "ViewHost#" + this.GetInstanceID() +
-                " SceneContainer#" + this.sceneContainer.GetInstanceID() +
-                " before=" + before +
-                " after=" + after);
         }
 
         public GameObject RegisterContainer(string name)
@@ -173,16 +158,6 @@ namespace CarrotFantasy
         /// <summary>重开时仅清理 Grid/UI 等子容器，永不销毁 SceneContainer 节点。</summary>
         public void ClearRegisteredContainers()
         {
-            int count = this.containerDic.Count;
-            int sceneChildren = this.GetSceneContainerChildCount();
-            BattleFlowLog.Step(
-                "ClearRegisteredContainers",
-                "ViewHost#" + this.GetInstanceID() +
-                " SceneContainer#" + (this.sceneContainer != null ? this.sceneContainer.GetInstanceID().ToString() : "null") +
-                " dicCount=" + count +
-                " sceneChildren=" + sceneChildren +
-                " stack=" + TrimStackTrace(new StackTrace(1, true)));
-
             foreach (KeyValuePair<string, GameObject> pair in this.containerDic)
             {
                 if (pair.Value != null)
@@ -192,22 +167,6 @@ namespace CarrotFantasy
             }
 
             this.containerDic.Clear();
-        }
-
-        static string TrimStackTrace(StackTrace trace)
-        {
-            if (trace == null)
-            {
-                return string.Empty;
-            }
-
-            var lines = trace.ToString();
-            if (lines.Length <= 512)
-            {
-                return lines.Replace('\n', '|');
-            }
-
-            return lines.Substring(0, 512).Replace('\n', '|');
         }
     }
 }

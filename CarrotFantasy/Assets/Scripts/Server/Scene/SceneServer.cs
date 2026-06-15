@@ -147,17 +147,11 @@ namespace CarrotFantasy
             if (!string.IsNullOrEmpty(unitySceneName))
             {
                 Scene active = SceneManager.GetActiveScene();
-                if (sceneType == BaseSceneType.BattleScene)
-                {
-                    BattleFlowLog.Step(
-                        "LoadSceneProgress",
-                        "before load active=" + active.name + " target=" + unitySceneName);
-                }
-
                 bool needUnityLoad = sceneType == BaseSceneType.BattleScene ||
                                      !active.IsValid() ||
                                      active.name != unitySceneName;
 
+                // 战斗场景每次进关强制重载 Unity 场景（见 ShouldSkipSameSceneLoad）
                 if (needUnityLoad)
                 {
                     bool loadDone = false;
@@ -225,6 +219,7 @@ namespace CarrotFantasy
                     targetScene = new MainScene(sceneType, "MainScene", param);
                     break;
                 case BaseSceneType.BattleScene:
+                    // 逻辑场景壳；Unity 场景名 BattleScene 须已加载
                     targetScene = new BattleScene(sceneType, "BattleScene", param);
                     break;
                 case BaseSceneType.RoguelikeMapScene:
@@ -242,10 +237,12 @@ namespace CarrotFantasy
             }
 
             this.currentScene = targetScene;
+            // 战斗进关：先绑 Unity 场景壳，再 Init 里 BeginSession
             this.currentScene.InitSceneObject();
             this.eventDispatcher.DispatchEvent(SceneEventType.LOAD_SCENE_FINISH);
             this.currentScene.Init();
 
+            // Session 未成功则回滚，避免空场景停留在 BattleScene
             if (sceneType == BaseSceneType.BattleScene &&
                 (ServerProvision.battleSessionHost == null ||
                  !ServerProvision.battleSessionHost.HasActiveSession))
@@ -280,9 +277,6 @@ namespace CarrotFantasy
             Scene activeScene = SceneManager.GetActiveScene();
             if (activeScene != targetScene)
             {
-                BattleFlowLog.Step(
-                    "LoadSceneProgress",
-                    "SetActiveScene " + unitySceneName + " (was " + activeScene.name + ")");
                 SceneManager.SetActiveScene(targetScene);
             }
 

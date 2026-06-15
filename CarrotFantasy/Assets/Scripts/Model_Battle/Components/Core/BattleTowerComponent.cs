@@ -17,7 +17,7 @@ namespace CarrotFantasy
         public BattleTowerComponent(BaseBattle bBattle) : base(bBattle)
         {
             this.componentType = BattleComponentType.TowerComponent;
-            PveModelBattleParams launchParams = BattleParamAccess.Current;
+            PveModelBattleParams launchParams = this.baseBattle.LaunchParams;
             if (launchParams?.Stage != null)
             {
                 this.canBuildTowerList = launchParams.Stage.mTowerIDList;

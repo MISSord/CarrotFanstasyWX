@@ -392,7 +392,6 @@
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BuffDef.cs" />
     <Compile Include="Assets\Scripts\Server\UI\UIPresentationPersistence.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSessionConfig.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSession.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewHost.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewAssetPreloader.cs" />
@@ -403,6 +402,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSessionHost.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleSceneAnchor.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSceneContext.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSettlementPresenter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

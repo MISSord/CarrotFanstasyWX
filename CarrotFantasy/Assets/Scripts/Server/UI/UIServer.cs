@@ -15,6 +15,7 @@ namespace CarrotFantasy
         private GameObject nodeObject;
         private GameObject loadingPanelObject;
         private TipView tipPanel;
+        private string pendingTip;
         public Vector2 curSetScreenSize = new Vector2(1920, 1440);
 
         public override void LoadModule()
@@ -34,16 +35,33 @@ namespace CarrotFantasy
 
         public void ShowTip(String tip)
         {
+            if (this.tipPanel == null)
+            {
+                this.pendingTip = tip;
+                return;
+            }
+
             this.tipPanel.RefreshTip(tip);
         }
 
         public void ShowTipLong(String tip)
         {
+            if (this.tipPanel == null)
+            {
+                this.pendingTip = tip;
+                return;
+            }
+
             this.tipPanel.ShowTip(tip);
         }
 
         public void FadeTipLong()
         {
+            if (this.tipPanel == null)
+            {
+                return;
+            }
+
             this.tipPanel.FadeTip();
         }
 
@@ -59,17 +77,48 @@ namespace CarrotFantasy
 
         private void AddTipPanel()
         {
-            //AssetBundleManager.Instance.LoadAsset<GameObject>("ui/view/tipview_prefab", "TipPanel", (GameObject obj) =>
-            //{
-            //    GameObject pan = GameObject.Instantiate(obj);
-            //    pan.transform.SetParent(this.nodeObject.transform, false);
-            //    this.tipPanel = new TipView(pan);
-            //});
+            GameObjectResourceManager.Instance.LoadPrefab(
+                UiViewAbPaths.TipViewPrefab,
+                UiViewAbPaths.TipPanelAsset,
+                this.OnTipPanelLoaded,
+                LoadPriority.High);
+        }
+
+        void OnTipPanelLoaded(GameObject template)
+        {
+            if (template == null)
+            {
+                Debug.LogError("[UIServer] TipPanel 加载失败");
+                return;
+            }
+
+            if (this.nodeObject == null)
+            {
+                this.InitGlobalCanvas();
+            }
+
+            GameObject pan = GameObject.Instantiate(template);
+            pan.transform.SetParent(this.nodeObject.transform, false);
+            pan.transform.SetAsLastSibling();
+            this.tipPanel = new TipView(pan);
+
+            if (!string.IsNullOrEmpty(this.pendingTip))
+            {
+                this.tipPanel.RefreshTip(this.pendingTip);
+                this.pendingTip = null;
+            }
         }
 
         private void InitGlobalCanvas()
         {
+            GameObject uiRoot = ViewManager.Instance != null ? ViewManager.Instance.GetUIRoot() : null;
+            if (uiRoot == null)
+            {
+                uiRoot = UIPresentationPersistence.EnsureGlobalUiLayer();
+            }
 
+            this.nodeObject = new GameObject("GlobalUiNode");
+            this.nodeObject.transform.SetParent(uiRoot.transform, false);
         }
 
         private void AddToGlobalUI(GameObject res)
@@ -88,7 +137,14 @@ namespace CarrotFantasy
         public override void Dispose()
         {
             base.Dispose();
-            GameObject.Destroy(this.nodeObject);
+            if (this.nodeObject != null)
+            {
+                GameObject.Destroy(this.nodeObject);
+                this.nodeObject = null;
+            }
+
+            this.tipPanel = null;
+            this.pendingTip = null;
         }
 
         public void PlayMainBg()
