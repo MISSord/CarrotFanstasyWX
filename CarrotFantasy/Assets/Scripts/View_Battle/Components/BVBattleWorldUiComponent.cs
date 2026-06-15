@@ -11,6 +11,12 @@ namespace CarrotFantasy
     {
         private const int HpCanvasSortOrder = 17;
         private const int DamageCanvasSortOrder = 18;
+        private const float WorldCanvasWidth = 1.1059f;
+        private const float WorldCanvasHeight = 0.1f;
+        private const int DamageTextFontSize = 12;
+        private static readonly Vector2 DamageTextSize = new Vector2(0.42f, 0.14f);
+        private static readonly Vector3 DamageFloatLocalOffset = new Vector3(0f, 0.08f, 0f);
+        private static readonly Vector3 DamageFloatVelocity = new Vector3(0f, 0.45f, 0f);
 
         private GameObject hpCanvasGo;
         private GameObject damageCanvasGo;
@@ -144,7 +150,7 @@ namespace CarrotFantasy
             rect.anchorMin = new Vector2(0.5f, 0.5f);
             rect.anchorMax = new Vector2(0.5f, 0.5f);
             rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.sizeDelta = new Vector2(1f, 1f);
+            rect.sizeDelta = new Vector2(WorldCanvasWidth, WorldCanvasHeight);
             rect.anchoredPosition3D = Vector3.zero;
 
             Canvas canvas = go.AddComponent<Canvas>();
@@ -154,6 +160,8 @@ namespace CarrotFantasy
             CanvasScaler scaler = go.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
             scaler.scaleFactor = 1f;
+            scaler.referencePixelsPerUnit = 100f;
+            scaler.dynamicPixelsPerUnit = 1f;
 
             GraphicRaycaster raycaster = go.AddComponent<GraphicRaycaster>();
             raycaster.enabled = false;
@@ -186,10 +194,10 @@ namespace CarrotFantasy
             Text text = this.RentDamageText();
             RectTransform rect = text.rectTransform;
             rect.SetParent(this.damageCanvasRect, false);
-            rect.localScale = Vector3.one;
+            this.ApplyDamageTextLayout(text);
             text.text = damage.ToString();
             text.enabled = true;
-            rect.position = worldPosition + new Vector3(0f, 0.15f, 0f);
+            rect.localPosition = this.damageCanvasRect.InverseTransformPoint(worldPosition) + DamageFloatLocalOffset;
             text.color = new Color(1f, 0.35f, 0.2f, 1f);
 
             this.activeFloats.Add(new DamageFloatEntry
@@ -197,8 +205,33 @@ namespace CarrotFantasy
                 text = text,
                 rect = rect,
                 remain = 0.75f,
-                velocity = new Vector3(0f, 0.85f, 0f),
+                velocity = DamageFloatVelocity,
             });
+        }
+
+        private void ApplyDamageTextLayout(Text text)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            text.alignment = TextAnchor.MiddleCenter;
+            text.fontSize = DamageTextFontSize;
+            text.horizontalOverflow = HorizontalWrapMode.Overflow;
+            text.verticalOverflow = VerticalWrapMode.Overflow;
+            text.raycastTarget = false;
+            if (text.font == null)
+            {
+                text.font = GetDefaultUIFont();
+            }
+
+            RectTransform rt = text.rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.sizeDelta = DamageTextSize;
+            rt.localScale = Vector3.one;
         }
 
         private Text RentDamageText()
@@ -212,16 +245,7 @@ namespace CarrotFantasy
             {
                 GameObject go = new GameObject("DamageFloatText");
                 text = go.AddComponent<Text>();
-                text.alignment = TextAnchor.MiddleCenter;
-                text.fontSize = 22;
-                text.color = new Color(1f, 0.35f, 0.2f, 1f);
-                text.font = GetDefaultUIFont();
-                text.horizontalOverflow = HorizontalWrapMode.Overflow;
-                text.verticalOverflow = VerticalWrapMode.Overflow;
-                text.raycastTarget = false;
-
-                RectTransform rt = text.rectTransform;
-                rt.sizeDelta = new Vector2(120f, 40f);
+                this.ApplyDamageTextLayout(text);
             }
 
             return text;

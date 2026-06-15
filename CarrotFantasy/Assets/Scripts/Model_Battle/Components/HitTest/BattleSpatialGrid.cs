@@ -4,7 +4,8 @@ using System.Collections.Generic;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 均匀空间网格：每逻辑帧清空后按层插入，查询时只扫包围圆覆盖格（含 1 格邻域扩展）。
+    /// 均匀空间网格：每逻辑帧在 HitTest 内 Clear 后 InsertAll，供子弹碰撞 broad phase 使用。
+    /// 窄相位仍读 Transform 上实时更新的 bodyHitTestShape。
     /// </summary>
     public class BattleSpatialGrid
     {

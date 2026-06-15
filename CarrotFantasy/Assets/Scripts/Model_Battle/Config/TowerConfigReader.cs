@@ -48,6 +48,7 @@ namespace CarrotFantasy
                 { "bodyRadius1", new Fix64(def.BodyRadius2) },
                 { "bodyRadius2", new Fix64(def.BodyRadius3) },
                 { "scale", new Fix64(def.Scale) },
+                { "bulletMoveType", new Fix64((int)BulletMoveComponentFactory.Normalize(def.BulletMoveType)) },
             };
         }
 

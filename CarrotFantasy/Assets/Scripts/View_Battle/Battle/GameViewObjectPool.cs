@@ -115,13 +115,69 @@ namespace CarrotFantasy
 
         public void PushGameObjectToPool(String name, GameObject node)
         {
+            if (node == null)
+            {
+                return;
+            }
+
+            if (!this.curGameObjectDic.ContainsKey(name))
+            {
+                this.RegisterGameObject(name);
+            }
+
             Stack<GameObject> curStack = this.curGameObjectDic[name];
             node.transform.position = BattleView_base.OffscreenPoolPosition;
             curStack.Push(node);
         }
 
+        public void PurgeLegacyNumericPoolKeys()
+        {
+            List<string> legacyKeys = null;
+            foreach (KeyValuePair<string, Stack<GameObject>> kv in this.curGameObjectDic)
+            {
+                if (!FightViewGameObjectPoolKeys.IsLegacyNumericKey(kv.Key))
+                {
+                    continue;
+                }
+
+                if (legacyKeys == null)
+                {
+                    legacyKeys = new List<string>();
+                }
+
+                legacyKeys.Add(kv.Key);
+            }
+
+            if (legacyKeys == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < legacyKeys.Count; i++)
+            {
+                string key = legacyKeys[i];
+                Stack<GameObject> stack;
+                if (!this.curGameObjectDic.TryGetValue(key, out stack))
+                {
+                    continue;
+                }
+
+                while (stack.Count > 0)
+                {
+                    GameObject go = stack.Pop();
+                    if (go != null)
+                    {
+                        GameObject.Destroy(go);
+                    }
+                }
+
+                this.curGameObjectDic.Remove(key);
+            }
+        }
+
         public void ClearGameInfo()
         {
+            this.PurgeLegacyNumericPoolKeys();
             this.DestroyAndClearAllPooledGameObjects();
             BattleViewEffectHelper.ResetTemplates();
         }

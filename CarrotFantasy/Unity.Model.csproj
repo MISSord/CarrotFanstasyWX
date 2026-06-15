@@ -90,6 +90,7 @@
     <Compile Include="Assets\Scripts\Server\Scene\BaseScene.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\HitTest\Shape\HitTestShape_Base.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattleBase.cs" />
+    <Compile Include="Assets\Scripts\Server\UI\UIPresentationPersistence.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Item.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleEventConstants.cs" />
     <Compile Include="Assets\Scripts\Server\AssetBundleManager\AssetBundlePathHelper.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="Assets\Scripts\Business\Roguelike\RoguelikeEvent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFightingState.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\SpawnPlanCompiler.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSceneContext.cs" />
     <Compile Include="Assets\Scripts\LubanLib\SimpleJSON\SimpleJSON.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Battle\Pve\PveBattleView.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BulletDef.cs" />
@@ -171,6 +173,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\HitTest\Shape\Shapes\HitTestShape_Rect.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Enum\BattleIdentifiers.cs" />
     <Compile Include="Assets\Scripts\Util\Fix64\Fix64.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSession.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\IBattleHostBridge.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Benchmark\HitTestBenchmarkStartState.cs" />
     <Compile Include="Assets\Scripts\Hexagon\HexMesh.cs" />
@@ -189,6 +192,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BattleMonsterComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Test\BattleTestTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Business\Map\BigLevelCellView.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleFlowLog.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BuffConfigReader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Buff\BuffApplyContext.cs" />
     <Compile Include="Assets\Scripts\SRPScheduler.cs" />
@@ -200,6 +204,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Tower.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\EffectModifyType.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\DamageType.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Panel\BattleViewOpener.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\UIImageLoaderExtensions.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Monster_Test.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Buff\BattleGlobalBuffSnapshot.cs" />
@@ -276,6 +281,7 @@
     <Compile Include="Assets\Scripts\Config\Luban\TbTower.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\SimpleBinaryOpcodes.cs" />
     <Compile Include="Assets\Scripts\Business\Room\RoomPanel.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSessionHost.cs" />
     <Compile Include="Assets\Scripts\Hexagon\Validation\HexWorldMapValidationTypes.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BattleTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\ActionControlType.cs" />
@@ -284,6 +290,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\States\PveFinishState.cs" />
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexWorldMapController.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Enum\BattleViewComponentType.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Panel\BattleBoundView.cs" />
     <Compile Include="Assets\Scripts\Util\Lang\LanguageUtil.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapInfoType.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\ResourceLoader.cs" />
@@ -294,17 +301,21 @@
     <Compile Include="Assets\Scripts\Util\Sche\Sche.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatSocketBridgeProvider.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\EffectAutoTriggerType.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleSceneAnchor.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\ISelectableCellView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\RoguelikePve\RoguelikePveBattle.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewAssetPreloader.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapConfigReader.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\TbBullet.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\Round.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewPreloadWait.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BattleInputComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\GridPoint.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\UnitBuffComponent.cs" />
     <Compile Include="Assets\Scripts\Business\Map\NormalLevelCellView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Map\BattleMapGrid.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_Monster.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSettlementPresenter.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\BattleTestRandom.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryPayloadReader.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\ActionPointType.cs" />
@@ -340,6 +351,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Test\BattleHitTestBenchmarkStatsComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewSpritePreloader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BattleConfig.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\FightViewGameObjectPoolKeys.cs" />
     <Compile Include="Assets\Scripts\Server\UI\AudioClipPreloader.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\IScrollerBinder.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\AssetLoadManager.cs" />
@@ -352,6 +364,7 @@
     <Compile Include="Assets\Scripts\Business\Room\RoomEventType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\MenuView.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewHost.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\LubanConfigLoader.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Pve\BattleSurvivalPVEMonsterComponent.cs" />
@@ -391,18 +404,8 @@
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexWorldMapRuntime.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BuffDef.cs" />
-    <Compile Include="Assets\Scripts\Server\UI\UIPresentationPersistence.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSession.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewHost.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewAssetPreloader.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Panel\BattleBoundView.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Panel\BattleViewOpener.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewPreloadWait.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleFlowLog.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSessionHost.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Common\BattleSceneAnchor.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSceneContext.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Session\BattleSettlementPresenter.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\BulletMoveComponentFactory.cs" />
+    <Compile Include="Assets\Scripts\Config\Luban\BulletMoveType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

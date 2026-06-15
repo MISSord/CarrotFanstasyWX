@@ -37,6 +37,11 @@ namespace CarrotFantasy
 
         static Dictionary<string, Fix64> ToBirthParam(BulletDef def)
         {
+            TowerDef towerDef = LubanConfigLoader.Tables.TbTower.GetOrDefault(def.TowerId);
+            BulletMoveType moveType = towerDef != null
+                ? BulletMoveComponentFactory.Normalize(towerDef.BulletMoveType)
+                : BulletMoveType.Homing;
+
             Dictionary<string, Fix64> param = new Dictionary<string, Fix64>
             {
                 { "faceDirection", Fix64.Zero },
@@ -46,6 +51,7 @@ namespace CarrotFantasy
                 { "damage", new Fix64(def.Damage) },
                 { "moveSpeed", new Fix64(def.MoveSpeed) },
                 { "isRemove", new Fix64(def.IsRemove) },
+                { "bulletMoveType", new Fix64((int)moveType) },
             };
 
             if (def.OnHitBuffId != 0)

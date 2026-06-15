@@ -122,7 +122,6 @@ namespace CarrotFantasy
             this.tickStopwatch.Restart();
 
             this.ChooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.BULLET);
-            this.ChooseSingleBeHit(BattleUnitType.MONSTER, BattleUnitType.TOWER);
             this.ChooseSingleBeHit(BattleUnitType.ITEM, BattleUnitType.BULLET);
 
             if (this.targetUnit != null)
@@ -147,6 +146,11 @@ namespace CarrotFantasy
                 UnitTransformComponent unit1 = list1[i];
                 List<BattleUnit> callbackList;
                 if (!this.curShouldCallBackDic.TryGetValue(unit1.unit, out callbackList))
+                {
+                    continue;
+                }
+
+                if (!ShouldReceiveHit(unit1.unit))
                 {
                     continue;
                 }
@@ -195,15 +199,57 @@ namespace CarrotFantasy
                     continue;
                 }
 
+                if (!ShouldReceiveHit(info.Key))
+                {
+                    info.Value.Clear();
+                    continue;
+                }
+
                 UnitBeHitComponent tranBeHit = (UnitBeHitComponent)info.Key.GetComponent(UnitComponentType.BEHIT);
+                if (tranBeHit == null || tranBeHit.BeHitCallBack == null)
+                {
+                    info.Value.Clear();
+                    continue;
+                }
+
                 for (int i = 0; i < info.Value.Count; i++)
                 {
+                    if (!ShouldReceiveHit(info.Key))
+                    {
+                        break;
+                    }
+
                     UnitBeHitComponent beHit = (UnitBeHitComponent)info.Value[i].GetComponent(UnitComponentType.BEHIT);
+                    if (beHit == null || beHit.BeHitCallBack == null)
+                    {
+                        continue;
+                    }
+
                     beHit.BeHitCallBack(info.Key);
                     tranBeHit.BeHitCallBack(info.Value[i]);
                 }
                 info.Value.Clear();
             }
+        }
+
+        static bool ShouldReceiveHit(BattleUnit receiver)
+        {
+            if (receiver == null)
+            {
+                return false;
+            }
+
+            if (receiver.unitType.Equals(BattleUnitType.MONSTER))
+            {
+                return !((BattleUnit_Monster)receiver).IsDamageImmune();
+            }
+
+            if (receiver.unitType.Equals(BattleUnitType.ITEM))
+            {
+                return !((BattleUnit_Item)receiver).IsDead();
+            }
+
+            return true;
         }
 
         private void SetTarget(BattleUnit unit)

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -50,6 +52,12 @@ namespace CarrotFantasy
 
         public override void LoadInfo(int uid, Dictionary<string, Fix64> param, Fix64Vector2 birthPosition)
         {
+            if (param == null)
+            {
+                Debug.LogError(String.Format("怪物 LoadInfo 缺少配置: uid={0}", uid));
+                return;
+            }
+
             base.LoadInfo(uid, param, birthPosition);
             this.curLive = (int)this.birthParam["live"];
             this.totalLive = (int)this.birthParam["live"];

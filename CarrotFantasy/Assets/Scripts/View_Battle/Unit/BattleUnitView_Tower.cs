@@ -13,18 +13,33 @@ namespace CarrotFantasy
         public override void InitTransform(Transform node)
         {
             base.InitTransform(node);
-            transform.Find("tower").TryGetComponent<Animator>(out this.animator);
+            if (this.transform == null || this.unit == null)
+            {
+                return;
+            }
+
+            Transform towerNode = this.transform.Find("tower");
+            if (towerNode != null)
+            {
+                towerNode.TryGetComponent<Animator>(out this.animator);
+            }
+
             float scale = (float)((BattleUnit_Tower)this.unit).towerAttackRadius;
             this.towerId = ((BattleUnit_Tower)this.unit).towerID;
-            if (this.towerId == 1)
+            if (this.towerId == 1 && towerNode != null)
             {
-                this.tran_tower = this.transform.Find("tower").GetComponent<Transform>();
+                this.tran_tower = towerNode;
                 this.tran_tower.eulerAngles = Vector3.zero;
                 this.unitTran = (UnitTransformComponent)this.unit.GetComponent(UnitComponentType.TRANSFORM);
             }
-            this.nodeAttackRange = this.transform.Find("attackRange").gameObject;
-            this.nodeAttackRange.transform.localScale = new Vector3(scale - 0.2f, scale - 0.2f, 1);
-            this.nodeAttackRange.SetActive(false);
+
+            Transform rangeNode = this.transform.Find("attackRange");
+            if (rangeNode != null)
+            {
+                this.nodeAttackRange = rangeNode.gameObject;
+                this.nodeAttackRange.transform.localScale = new Vector3(scale - 0.2f, scale - 0.2f, 1);
+                this.nodeAttackRange.SetActive(false);
+            }
         }
 
         public override void InitListener()
@@ -46,6 +61,7 @@ namespace CarrotFantasy
 
         private void ShowRange(GridPoint grid)
         {
+            if (this.nodeAttackRange == null) return;
             if (grid.mapGrid.x == ((BattleUnit_Tower)this.unit).x && grid.mapGrid.y == ((BattleUnit_Tower)this.unit).y)
             {
                 this.nodeAttackRange.SetActive(true);
@@ -54,6 +70,7 @@ namespace CarrotFantasy
 
         private void FadeRange()
         {
+            if (this.nodeAttackRange == null) return;
             if (this.nodeAttackRange.activeSelf == true)
             {
                 this.nodeAttackRange.SetActive(false);

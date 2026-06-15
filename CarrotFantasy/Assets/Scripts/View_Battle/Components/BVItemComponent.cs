@@ -10,6 +10,7 @@ namespace CarrotFantasy
         public BattleItemComponent itemComponent;
         private int _itemBigLevel;
         private GameObject rootGameObject;
+        private GameObject _hpBarCanvasTemplate;
 
         private readonly HashSet<string> _registeredItemPoolKeys = new HashSet<string>();
 
@@ -36,6 +37,15 @@ namespace CarrotFantasy
             }
 
             this.rootGameObject = scene.RegisterGameContainer("ItemContainer");
+
+            if (!BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.MonsterCanvas,
+                out this._hpBarCanvasTemplate))
+            {
+                Debug.LogError("[BVItemComponent] MonsterCanvas 未预加载，物品血条将无法创建。");
+            }
+
             List<BattleUnit_Item> itemList = this.itemComponent.battleItemList;
             for (int i = 0; i <= itemList.Count - 1; i++)
             {
@@ -71,8 +81,8 @@ namespace CarrotFantasy
 
         private GameObject GetItemPrefabTemplate(int bigLevel, int itemId)
         {
-            string bundleName = FightViewPrefabAb.ItemBundleName(bigLevel);
-            string assetName = itemId.ToString();
+            string bundleName = FightViewPrefabAb.FightPartItemBundle;
+            string assetName = FightViewPrefabAb.ItemAssetName(bigLevel, itemId);
             GameObject tpl;
             if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
             {
@@ -134,9 +144,18 @@ namespace CarrotFantasy
             }
 
             itemView.InitTransform(itemGo.transform);
+            itemView.ConfigureHpBarTemplate(this._hpBarCanvasTemplate);
             itemView.LoadInfo(this.battleView, item);
             itemView.Init();
             this.itemDic.Add(item, itemView);
+        }
+
+        public override void OnTick(float time)
+        {
+            foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
+            {
+                info.Value.OnTick(time);
+            }
         }
 
         private void RemoveItemView(String type, BattleUnit obj)
@@ -164,6 +183,7 @@ namespace CarrotFantasy
         public override void ClearGameInfo()
         {
             _registeredItemPoolKeys.Clear();
+            _hpBarCanvasTemplate = null;
 
             foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
             {

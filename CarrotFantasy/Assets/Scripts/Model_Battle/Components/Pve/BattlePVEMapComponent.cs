@@ -61,24 +61,13 @@ namespace CarrotFantasy
 
         public override bool IsCanBuildTower(int x, int y)
         {
-            if (!this.IsGridInBounds(x, y) || this.LevelInfo == null || this.LevelInfo.gridPoints == null)
+            if (!this.IsGridInBounds(x, y))
             {
                 return false;
             }
 
-            int index = this.GetListNumber(x, y);
-            if (index < 0 || index >= this.LevelInfo.gridPoints.Count)
-            {
-                return false;
-            }
-
-            return this.LevelInfo.gridPoints[index].canBuild;
-        }
-
-        /// <summary>与视图层格子编号一致的扁平索引（1-based 坐标换算，保持与原 PVE 逻辑一致）。</summary>
-        private int GetListNumber(int x, int y)
-        {
-            return (x - 1) * this.xColumn + (y - 1) * this.yRow;
+            BattleMapGrid grid = this.gridsList[x, y];
+            return grid.state.canBuild && !grid.hasTower;
         }
 
         public override void ClearInfo()

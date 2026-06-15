@@ -60,8 +60,8 @@ namespace CarrotFantasy
         public override void InitComponent()
         {
             this.GetComponent(BattleComponentType.DataComponent).Init();
-            this.GetComponent(BattleComponentType.HitTestComponent).Init();
             this.GetComponent(BattleComponentType.MapComponent).Init();
+            this.GetComponent(BattleComponentType.HitTestComponent).Init();
             this.GetComponent(BattleComponentType.TowerComponent).Init();
             this.GetComponent(BattleTestUnitSpawnComponent.ComponentTypeId).Init();
             this.GetComponent(BattleComponentType.InputComponent).Init();

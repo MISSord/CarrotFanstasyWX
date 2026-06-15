@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 防御塔建造/升级/拆除与每帧 Tick。Tick 开头调用 HitTest.AssignTowerFocusTargets，再驱动各塔索敌与开火。
+    /// </summary>
     public class BattleTowerComponent : BaseBattleComponent
     {
         public Dictionary<int, BattleUnit_Tower> curTowerDic = new Dictionary<int, BattleUnit_Tower>();
@@ -50,6 +53,19 @@ namespace CarrotFantasy
         {
             if (order.order == InputOrderType.ADD_ORDER)
             {
+                int gridKey = this.GetExChangeInt(order.x, order.y);
+                if (this.curTowerDic.ContainsKey(gridKey))
+                {
+                    Debug.LogWarning(String.Format("该格子已有防御塔，忽略重复建造: {0}", gridKey));
+                    return;
+                }
+
+                if (!this.mapComponent.IsCanBuildTower(order.x, order.y))
+                {
+                    Debug.LogWarning(String.Format("该格子不可建造防御塔: ({0},{1})", order.x, order.y));
+                    return;
+                }
+
                 int price = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(order.towerId)["price0"]);
                 if (price > dataComponent.CoinCount)
                 {
@@ -66,7 +82,7 @@ namespace CarrotFantasy
                 tower.LoadInfo1(order.x, order.y);
                 tower.Init();
                 tower.InitComponents();
-                this.curTowerDic.Add(this.GetExChangeInt(order.x, order.y), tower);
+                this.curTowerDic.Add(gridKey, tower);
                 this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.TOWER, tower);
                 this.eventDispatcher.DispatchEvent<int>(BattleEvent.COIN_CHANGE, -tower.price[tower.curLevel]);
             }
@@ -107,8 +123,16 @@ namespace CarrotFantasy
             }
         }
 
+        /// <summary>集火分配 → 各塔 <see cref="BattleUnit_Tower.OnTick"/>（见 BattleCombatFlow.md）。</summary>
         public override void OnTick(Fix64 time)
         {
+            BattleSimpleHitTestComponent hitTest =
+                (BattleSimpleHitTestComponent)this.baseBattle.GetComponent(BattleComponentType.HitTestComponent);
+            if (hitTest != null)
+            {
+                hitTest.AssignTowerFocusTargets();
+            }
+
             foreach (KeyValuePair<int, BattleUnit_Tower> info in this.curTowerDic)
             {
                 info.Value.OnTick(time);
@@ -119,14 +143,12 @@ namespace CarrotFantasy
         public BattleUnit_Tower GetTowerInfo(int x, int y)
         {
             int id = this.GetExChangeInt(x, y);
-            if (this.curTowerDic.ContainsKey(id))
+            BattleUnit_Tower tower;
+            if (this.curTowerDic.TryGetValue(id, out tower))
             {
-                return this.curTowerDic[id];
+                return tower;
             }
-            else
-            {
-                Debug.Log(String.Format("视图层获取防御塔信息失败，没有{0}塔", id));
-            }
+
             return null;
         }
 

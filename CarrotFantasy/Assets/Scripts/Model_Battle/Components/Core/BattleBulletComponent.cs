@@ -3,6 +3,10 @@ using System.Collections.Generic;
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 子弹列表 Tick：本帧在 Tower 阶段之后移动；同帧新建的弹也会在本段 OnTick 移动一次。
+    /// 销毁在 Tick 末尾统一回收。流程见 BattleCombatFlow.md。
+    /// </summary>
     public class BattleBulletComponent : BaseBattleComponent
     {
         private List<BattleUnit_Bullet> curBulletList = new List<BattleUnit_Bullet>();
@@ -35,22 +39,32 @@ namespace CarrotFantasy
 
         public void BuildNewBullet(BattleUnit_Tower tower, BattleUnit target)
         {
+            if (tower == null || target == null)
+            {
+                return;
+            }
+
             BattleUnit_Bullet bullet = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Bullet>(BattleUnitType.BULLET);
             if (bullet == null)
             {
                 bullet = new BattleUnit_Bullet(this.baseBattle);
             }
-            bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.AddDeadList);
+
             Dictionary<string, Fix64> bulletParam =
                 this.configReader.GetSingleBulletConfig(tower.towerID * 100 + tower.curLevel + 1);
+            if (bulletParam == null)
+            {
+                return;
+            }
+
             ApplyGlobalTowerDamageBonus(bulletParam);
             bullet.LoadInfo(this.baseBattle.GetUid(), bulletParam, tower.birthPosition);
             bullet.LoadInfo2(tower, target);
+            bullet.eventDipatcher.AddListener<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this.AddDeadList);
             bullet.Init();
             bullet.InitComponents();
             this.curBulletList.Add(bullet);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.BULLET, bullet);
-            //Debug.Log("注册新的子弹");
         }
 
         private void ApplyGlobalTowerDamageBonus(Dictionary<string, Fix64> bulletParam)
@@ -84,6 +98,11 @@ namespace CarrotFantasy
 
         private void AddDeadList(BattleUnit_Bullet monster)
         {
+            if (monster == null || this.bulletDeadList.Contains(monster))
+            {
+                return;
+            }
+
             this.bulletDeadList.Add(monster);
         }
 

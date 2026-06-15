@@ -28,6 +28,7 @@ public sealed partial class TowerDef : Luban.BeanBase
         { if(!_buf["BodyRadius3"].IsNumber) { throw new SerializationException(); }  BodyRadius3 = _buf["BodyRadius3"]; }
         { if(!_buf["Scale"].IsNumber) { throw new SerializationException(); }  Scale = _buf["Scale"]; }
         { if(!_buf["MaxLevel"].IsNumber) { throw new SerializationException(); }  MaxLevel = _buf["MaxLevel"]; }
+        { if(!_buf["BulletMoveType"].IsNumber) { throw new SerializationException(); }  BulletMoveType = (BulletMoveType)_buf["BulletMoveType"].AsInt; }
     }
 
     public static TowerDef DeserializeTowerDef(JSONNode _buf)
@@ -79,6 +80,10 @@ public sealed partial class TowerDef : Luban.BeanBase
     /// 最大等级
     /// </summary>
     public readonly int MaxLevel;
+    /// <summary>
+    /// 子弹弹道类型
+    /// </summary>
+    public readonly BulletMoveType BulletMoveType;
    
     public const int __ID__ = -695517092;
     public override int GetTypeId() => __ID__;
@@ -101,6 +106,7 @@ public sealed partial class TowerDef : Luban.BeanBase
         + "BodyRadius3:" + BodyRadius3 + ","
         + "Scale:" + Scale + ","
         + "MaxLevel:" + MaxLevel + ","
+        + "BulletMoveType:" + BulletMoveType + ","
         + "}";
     }
 }

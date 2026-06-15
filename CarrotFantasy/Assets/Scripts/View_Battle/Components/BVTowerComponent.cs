@@ -42,6 +42,7 @@ namespace CarrotFantasy
 
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
             BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+            GameViewObjectPool.Instance.PurgeLegacyNumericPoolKeys();
             this.RemoveListener();
             this.AddListener();
         }
@@ -58,14 +59,8 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveTowerView);
         }
 
-        static string GetTowerPoolKey(int towerId, int towerLevelIndex)
+        void EnsureTowerPoolRegistered(string poolKey)
         {
-            return string.Format("{0}_{1}", towerId, towerLevelIndex);
-        }
-
-        void EnsureTowerPoolRegistered(int towerId, int towerLevelIndex)
-        {
-            string poolKey = GetTowerPoolKey(towerId, towerLevelIndex);
             if (this._registeredTowerPoolKeys.Add(poolKey))
             {
                 GameViewObjectPool.Instance.RegisterGameObject(poolKey);
@@ -74,8 +69,8 @@ namespace CarrotFantasy
 
         private GameObject GetTowerPrefabTemplate(int towerId, int towerLevelIndex)
         {
-            string bundleName = FightViewPrefabAb.TowerSetBundleName(towerId);
-            string assetName = towerLevelIndex.ToString();
+            string bundleName = FightViewPrefabAb.FightPartTowerBundle;
+            string assetName = FightViewPrefabAb.TowerAssetName(towerId, towerLevelIndex);
             GameObject tpl;
             if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
             {
@@ -86,11 +81,35 @@ namespace CarrotFantasy
             return null;
         }
 
+        private GameObject TryPopTowerVisual(string poolKey)
+        {
+            while (true)
+            {
+                GameObject candidate = GameViewObjectPool.Instance.GetNewGameObject(poolKey);
+                if (candidate == null)
+                {
+                    return null;
+                }
+
+                if (FightViewGameObjectPoolKeys.IsTowerVisual(candidate))
+                {
+                    return candidate;
+                }
+
+                Debug.LogWarning(String.Format(
+                    "[BVTowerComponent] 对象池 {0} 弹出非塔预制体，已销毁: {1}",
+                    poolKey,
+                    candidate.name));
+                GameObject.Destroy(candidate);
+            }
+        }
+
         private GameObject RentTowerGameObject(int towerId, int towerLevelIndex)
         {
-            this.EnsureTowerPoolRegistered(towerId, towerLevelIndex);
-            string poolKey = GetTowerPoolKey(towerId, towerLevelIndex);
-            GameObject towerObj = GameViewObjectPool.Instance.GetNewGameObject(poolKey);
+            string poolKey = FightViewGameObjectPoolKeys.Tower(towerId, towerLevelIndex);
+            this.EnsureTowerPoolRegistered(poolKey);
+
+            GameObject towerObj = TryPopTowerVisual(poolKey);
             if (towerObj == null)
             {
                 GameObject towerTpl = GetTowerPrefabTemplate(towerId, towerLevelIndex);
@@ -113,7 +132,13 @@ namespace CarrotFantasy
                 return;
             }
 
-            string poolKey = GetTowerPoolKey(towerId, towerLevelIndex);
+            if (!FightViewGameObjectPoolKeys.IsTowerVisual(towerObj))
+            {
+                GameObject.Destroy(towerObj);
+                return;
+            }
+
+            string poolKey = FightViewGameObjectPoolKeys.Tower(towerId, towerLevelIndex);
             GameViewObjectPool.Instance.PushGameObjectToPool(poolKey, towerObj);
         }
 
@@ -121,6 +146,11 @@ namespace CarrotFantasy
         {
             if (type.Equals(BattleUnitType.TOWER) == false) return;
             BattleUnit_Tower tower = (BattleUnit_Tower)unit;
+            if (this.towerViewDic.ContainsKey(tower))
+            {
+                return;
+            }
+
             BattleUnitView_Tower towerView = GameViewObjectPool.Instance.getNewBattleUnitView<BattleUnitView_Tower>(BattleUnitViewType.Tower);
             if (towerView == null)
             {
@@ -129,8 +159,18 @@ namespace CarrotFantasy
 
             int levelIndex = tower.curLevel + 1;
             GameObject towerObj = RentTowerGameObject(tower.towerID, levelIndex);
-            if (towerObj == null)
+            if (towerObj == null || !FightViewGameObjectPoolKeys.IsTowerVisual(towerObj))
             {
+                if (towerObj != null)
+                {
+                    GameObject.Destroy(towerObj);
+                }
+
+                Debug.LogError(String.Format(
+                    "[BVTowerComponent] 防御塔视图创建失败: towerId={0}, level={1}",
+                    tower.towerID,
+                    levelIndex));
+                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Tower, towerView);
                 return;
             }
 

@@ -98,7 +98,11 @@ namespace CarrotFantasy
 
             for (int i = 0; i < plan.Count; i++)
             {
-                this.curNoRegisterList.Add(this.CreateMonsterFlow(plan.MonsterIds[i]));
+                BattleUnit_MonsterFlow monster = this.CreateMonsterFlow(plan.MonsterIds[i]);
+                if (monster != null)
+                {
+                    this.curNoRegisterList.Add(monster);
+                }
             }
 
             this.SetWaveSpawnSchedule(plan.SpawnOffsets);
@@ -107,18 +111,24 @@ namespace CarrotFantasy
 
         private BattleUnit_MonsterFlow CreateMonsterFlow(int monsterConfigId)
         {
+            Dictionary<string, Fix64> config = this.monsterConfigReader.GetSingleMonsterConfig(monsterConfigId);
+            if (config == null)
+            {
+                return null;
+            }
+
             BattleUnit_MonsterFlow monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_MonsterFlow>(BattleUnitType.MONSTER_FLOW);
             if (monster == null)
             {
                 monster = new BattleUnit_MonsterFlow(this.baseBattle);
             }
 
-            monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
             monster.LoadInfo(
                 this.baseBattle.GetUid(),
-                this.monsterConfigReader.GetSingleMonsterConfig(monsterConfigId),
+                config,
                 this.birthPoint);
             monster.LoadInfo2(this.battleDataComponent.bigLevel, monsterConfigId);
+            monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
             monster.Init();
             monster.LoadFlowMovement(this.flowFieldComponent);
             monster.InitComponents();

@@ -52,6 +52,8 @@ namespace CarrotFantasy
             this.roadPointIndex = 0;
             this.moveCurTime = Fix64.Zero;
             this.moveTotalTime = Fix64.Zero;
+            this.speedX = Fix64.Zero;
+            this.speedY = Fix64.Zero;
         }
 
         void EnsureSpeedInitialized()
@@ -100,25 +102,30 @@ namespace CarrotFantasy
                 return;
             }
 
-            Fix64 dicXSegment = this.monsterPointList[this.roadPointIndex + 1].X - this.monsterPointList[this.roadPointIndex].X;
-            Fix64 dicYSegment = this.monsterPointList[this.roadPointIndex + 1].Y - this.monsterPointList[this.roadPointIndex].Y;
+            // 必须用当前逻辑坐标（非 lastFrame）：拐点同一帧内换段时 lastFrame 仍是段起点，会把上一段剩余距离算进 speed，导致偶发加速。
+            Fix64Vector2 curPos = this.unitTransform.GetLastPosition();
+            Fix64 dicXmove = this.monsterPointList[this.roadPointIndex + 1].X - curPos.X;
+            Fix64 dicYmove = this.monsterPointList[this.roadPointIndex + 1].Y - curPos.Y;
 
-            Fix64 moveXTime = Fix64.Abs(dicXSegment) / this.speed;
-            Fix64 moveYTime = Fix64.Abs(dicYSegment) / this.speed;
+            Fix64 moveXTime = Fix64.Abs(dicXmove) / this.speed;
+            Fix64 moveYTime = Fix64.Abs(dicYmove) / this.speed;
 
             this.moveTotalTime = moveXTime >= moveYTime ? moveXTime : moveYTime;
             if (this.moveTotalTime <= Fix64.Zero)
             {
-                this.moveTotalTime = new Fix64(0.001f);
+                this.roadPointIndex++;
+                if (this.roadPointIndex >= this.monsterPointList.Count - 1)
+                {
+                    this.moveTotalTime = Fix64.Zero;
+                    this.speedX = Fix64.Zero;
+                    this.speedY = Fix64.Zero;
+                    this.moveCurTime = Fix64.Zero;
+                    return;
+                }
+
+                this.SetSpeed();
+                return;
             }
-
-            Fix64 x;
-            Fix64 y;
-            Fix64 z;
-            this.unitTransform.GetLastFramePosition(out x, out y, out z);
-
-            Fix64 dicXmove = this.monsterPointList[this.roadPointIndex + 1].X - x;
-            Fix64 dicYmove = this.monsterPointList[this.roadPointIndex + 1].Y - y;
 
             this.speedX = dicXmove / this.moveTotalTime;
             this.speedY = dicYmove / this.moveTotalTime;

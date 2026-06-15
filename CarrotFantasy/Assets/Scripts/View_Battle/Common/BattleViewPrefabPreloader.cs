@@ -166,13 +166,11 @@ namespace CarrotFantasy
                 for (int i = 0; i < towerComponent.canBuildTowerListLength; i++)
                 {
                     int towerId = towerComponent.canBuildTowerList[i];
-                    string towerBundle = FightViewPrefabAb.TowerSetBundleName(towerId);
-                    string bulletBundle = FightViewPrefabAb.TowerBulletBundleName(towerId);
                     for (int level = 1; level <= 3; level++)
                     {
-                        string levelAsset = level.ToString();
-                        Add(towerBundle, levelAsset);
-                        Add(bulletBundle, levelAsset);
+                        Add(FightViewPrefabAb.FightPartTowerBundle, FightViewPrefabAb.TowerAssetName(towerId, level));
+                        Add(FightViewPrefabAb.FightPartBulletBundle, FightViewPrefabAb.BulletAssetName(towerId, level));
+                        Add(FightViewPrefabAb.FightPartEffectBundle, FightViewPrefabAb.EffectAssetName(towerId, level));
                     }
                 }
             }
@@ -180,10 +178,10 @@ namespace CarrotFantasy
             BattleItemComponent itemComponent = battle.GetComponent(BattleComponentType.ItemComponent) as BattleItemComponent;
             if (itemComponent != null)
             {
-                string itemBundle = FightViewPrefabAb.ItemBundleName(bigLevel);
                 for (int i = 0; i < itemComponent.battleItemList.Count; i++)
                 {
-                    Add(itemBundle, itemComponent.battleItemList[i].itemId.ToString());
+                    int itemId = itemComponent.battleItemList[i].itemId;
+                    Add(FightViewPrefabAb.FightPartItemBundle, FightViewPrefabAb.ItemAssetName(bigLevel, itemId));
                 }
             }
 

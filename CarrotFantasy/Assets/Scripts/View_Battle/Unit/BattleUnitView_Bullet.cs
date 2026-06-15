@@ -9,15 +9,8 @@ namespace CarrotFantasy
         public override void Init()
         {
             base.Init();
-            if (((BattleUnit_Bullet)this.unit).towerId == 4)
-            {
-                this.moveComponent = (UnitMoveComponent_Bullet)this.unit.GetComponent(UnitComponentType.MOVE_BULLET);
-            }
-            else
-            {
-                this.moveComponent = (UnitMoveComponent_Bullet)this.unit.GetComponent(UnitComponentType.MOVE_BULLET_ONE);
-            }
-
+            this.moveComponent = (UnitMoveComponent_Bullet)this.unit.GetComponent(UnitComponentType.MOVE_BULLET)
+                                 ?? (UnitMoveComponent_Bullet)this.unit.GetComponent(UnitComponentType.MOVE_BULLET_ONE);
         }
 
         public override void OnTick(float deltaTime)

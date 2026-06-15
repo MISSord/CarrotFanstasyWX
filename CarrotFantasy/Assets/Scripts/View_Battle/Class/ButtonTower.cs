@@ -20,20 +20,16 @@ namespace CarrotFantasy
         {
             this.transform = transform;
             this.towerID = towerId;
-            if (!FightViewSpriteAb.TryGetTowerButton(this.towerID, true, out this.canClickSprite))
-            {
-                Debug.LogError("[ButtonTower] CanClick1 未预加载: towerId=" + this.towerID);
-            }
-
-            if (!FightViewSpriteAb.TryGetTowerButton(this.towerID, false, out this.cantClickSprite))
-            {
-                Debug.LogError("[ButtonTower] CanClick0 未预加载: towerId=" + this.towerID);
-            }
 
             this.image = this.transform.GetComponent<Image>();
             this.button = this.transform.GetComponent<Button>();
+            this.EnsureSpritesLoaded();
 
-            this.image.sprite = this.canClickSprite;
+            if (this.image != null && this.canClickSprite != null)
+            {
+                this.image.sprite = this.canClickSprite;
+            }
+
             XUI.AddButtonListener(this.button, this.BuildTower);
 
             this.curPrice = (int)(TowerConfigReader.Instance.GetSingleTowerConfig(this.towerID)["price0"]);
@@ -44,15 +40,46 @@ namespace CarrotFantasy
             this.uiComponent = baseView;
         }
 
+        private void EnsureSpritesLoaded()
+        {
+            if (this.canClickSprite == null)
+            {
+                if (!FightViewSpriteAb.TryGetTowerButton(this.towerID, true, out this.canClickSprite))
+                {
+                    Debug.LogError("[ButtonTower] CanClick1 未预加载: towerId=" + this.towerID);
+                }
+            }
+
+            if (this.cantClickSprite == null)
+            {
+                if (!FightViewSpriteAb.TryGetTowerButton(this.towerID, false, out this.cantClickSprite))
+                {
+                    Debug.LogError("[ButtonTower] CanClick0 未预加载: towerId=" + this.towerID);
+                }
+            }
+        }
+
         public void UpdateButtonSprite(int coin)
         {
+            if (this.image == null)
+            {
+                return;
+            }
+
+            this.EnsureSpritesLoaded();
             if (coin >= this.curPrice)
             {
-                this.image.sprite = this.canClickSprite;
+                if (this.canClickSprite != null)
+                {
+                    this.image.sprite = this.canClickSprite;
+                }
             }
             else
             {
-                this.image.sprite = this.cantClickSprite;
+                if (this.cantClickSprite != null)
+                {
+                    this.image.sprite = this.cantClickSprite;
+                }
             }
         }
 

@@ -16,6 +16,7 @@ namespace CarrotFantasy
         public UnitBeHitComponent beHitComponent;
 
         private BattleUnit target;
+        private bool isQueuedForRemove;
 
         public BattleUnit_Bullet(BaseBattle battle) : base(battle)
         {
@@ -35,6 +36,17 @@ namespace CarrotFantasy
             return this.birthParam != null && this.birthParam["isRemove"] == Fix64.Zero;
         }
 
+        public void RequestRemove()
+        {
+            if (this.isQueuedForRemove || this.eventDipatcher == null)
+            {
+                return;
+            }
+
+            this.isQueuedForRemove = true;
+            this.eventDipatcher.DispatchEvent<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this);
+        }
+
         public void LoadInfo2(BattleUnit_Tower tower, BattleUnit target)
         {
             this.towerId = tower.towerID;
@@ -44,22 +56,7 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            if (this.towerId == 4)
-            {
-                this.moveComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Bullet>(UnitComponentType.MOVE_BULLET);
-                if (this.moveComponent == null)
-                {
-                    this.moveComponent = new UnitMoveComponent_Bullet();
-                }
-            }
-            else
-            {
-                this.moveComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitMoveComponent_Bullet_One>(UnitComponentType.MOVE_BULLET_ONE);
-                if (this.moveComponent == null)
-                {
-                    this.moveComponent = new UnitMoveComponent_Bullet_One();
-                }
-            }
+            this.moveComponent = BulletMoveComponentFactory.CreateFromBirthParam(this.birthParam);
 
             this.tranComponent = BattleUnitPool.Instance.GetNewUnitComponent<UnitTransformComponent>(UnitComponentType.TRANSFORM);
             if (this.tranComponent == null)
@@ -83,19 +80,44 @@ namespace CarrotFantasy
         {
             base.InitComponents();
             this.moveComponent.RegisterMoveDirect(this.target);
-            this.tranComponent.SetBodyRadius(new Fix64(0.2f));
+            // 逻辑碰撞半径来自 tbbullet.BodyRadius，与 HitTest / TryResolveTargetHit 一致。
+            Fix64 bodyRadius = this.birthParam != null && this.birthParam.ContainsKey("bodyRadius")
+                ? this.birthParam["bodyRadius"]
+                : new Fix64(0.2f);
+            this.tranComponent.SetBodyRadius(bodyRadius);
         }
 
         private void BeHitCallBack(BattleUnit unit)
         {
-            if (unit.unitType.Equals(BattleUnitType.MONSTER) == true || unit.unitType.Equals(BattleUnitType.ITEM) == true)
+            if (unit.unitType.Equals(BattleUnitType.MONSTER))
             {
+                BattleUnit_Monster monster = (BattleUnit_Monster)unit;
+                if (monster.IsDamageImmune())
+                {
+                    return;
+                }
+
                 if (this.DestroyOnFirstHit())
                 {
-                    this.eventDipatcher.DispatchEvent<BattleUnit_Bullet>(BattleEvent.BULLET_REMOVE, this);
+                    this.RequestRemove();
                 }
+
+                return;
             }
 
+            if (unit.unitType.Equals(BattleUnitType.ITEM))
+            {
+                BattleUnit_Item item = (BattleUnit_Item)unit;
+                if (item.IsDead())
+                {
+                    return;
+                }
+
+                if (this.DestroyOnFirstHit())
+                {
+                    this.RequestRemove();
+                }
+            }
         }
 
         public override void OnTick(Fix64 deltaTime)
@@ -110,6 +132,7 @@ namespace CarrotFantasy
 
         public override void ClearInfo()
         {
+            this.isQueuedForRemove = false;
             this.onHitBuffId = 0;
             this.towerId = 0;
             this.towerLevel = 0;

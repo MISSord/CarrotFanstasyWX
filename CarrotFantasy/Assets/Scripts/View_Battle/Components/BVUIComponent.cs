@@ -171,6 +171,12 @@ namespace CarrotFantasy
             for (int i = 0; i <= this.towerComponent.canBuildTowerListLength - 1; i++)
             {
                 GameObject itemGo = GameObject.Instantiate(tplBtnTower);
+                UIImageLoader loader = itemGo.GetComponent<UIImageLoader>();
+                if (loader != null)
+                {
+                    GameObject.Destroy(loader);
+                }
+
                 this.buttonTowerList[i] = new ButtonTower();
                 this.buttonTowerList[i].LoadInfo(this);
                 this.buttonTowerList[i].InitInfo(itemGo.transform, this.towerComponent.canBuildTowerList[i]);
@@ -282,6 +288,7 @@ namespace CarrotFantasy
             this.LoadInfo();
             this.SetStartPoint();
             this.SetCarrot();
+            this.RefreshButtonInfo(0);
 
             this.AddListener();
         }
@@ -455,6 +462,7 @@ namespace CarrotFantasy
         {
             this.nodeTowerList.transform.position = new Vector3((float)grid.mapGrid.realX, (float)grid.mapGrid.realY, 0);
             this.nodeTowerList.transform.position += this.CorrectTowerListGoPosition(grid);
+            this.RefreshButtonInfo(0);
         }
 
         private Vector3 CorrectTowerListGoPosition(GridPoint grid)
@@ -530,6 +538,12 @@ namespace CarrotFantasy
                 return;
             }
             BattleUnit_Tower tower = towerComponent.GetTowerInfo(this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y);
+            if (tower == null)
+            {
+                Debug.Log("当前格子没有防御塔，无法升级");
+                return;
+            }
+
             if (tower.isMaxLevel == true) return;
             InputOrder order = new InputOrder();
             order.SetOrder(this.battle.curFrameId + 1, this.selectGrid.mapGrid.x, this.selectGrid.mapGrid.y, InputOrderType.UPDATE_ORDER);

@@ -5,37 +5,38 @@ namespace CarrotFantasy
 {
     public class BattleUnitView_Item : BattleUnitView
     {
+        /// <summary>与旧版 ItemCanvas  anchoredPosition 一致。</summary>
+        private static readonly Vector3 DefaultItemHpBarLocalOffset = new Vector3(-0.07f, 0.18f, 0f);
+
         private Slider slider;
-        private RectTransform hpBarCanvasRect;
+        private GameObject hpBarInstance;
+        private RectTransform hpBarRect;
         private Vector3 hpBarLocalOffset;
         private BVBattleWorldUiComponent worldUiCached;
+        private GameObject hpBarCanvasTemplate;
+        private bool hpBarCreated;
         private SpriteRenderer spriteRender;
         private Item item;
+
+        public void ConfigureHpBarTemplate(GameObject canvasTemplate)
+        {
+            this.hpBarCanvasTemplate = canvasTemplate;
+        }
 
         public override void InitTransform(Transform node)
         {
             base.InitTransform(node);
-            Transform itemCanvas = this.transform.Find("ItemCanvas");
-            if (itemCanvas != null)
-            {
-                this.hpBarCanvasRect = itemCanvas.GetComponent<RectTransform>();
-                this.hpBarLocalOffset = this.hpBarCanvasRect.localPosition;
-            }
-
-            this.slider = this.transform.Find("ItemCanvas/HpSlider").GetComponent<Slider>();
             this.spriteRender = this.transform.GetComponent<SpriteRenderer>();
-            this.slider.value = 1;
-
-            this.slider.gameObject.SetActive(false);
-
             this.item = this.transform.GetComponent<Item>();
-            this.item.itemView = this;
+            if (this.item != null)
+            {
+                this.item.itemView = this;
+            }
         }
 
         public override void Init()
         {
             this.CacheWorldUi();
-            this.AttachHpBarToWorldLayer();
             base.Init();
         }
 
@@ -47,28 +48,68 @@ namespace CarrotFantasy
                 return;
             }
 
-            BaseBattleViewComponent c = this.battleView.GetComponent(BattleViewComponentType.WORLD_UI);
+            BaseBattleViewComponent c = this.battleView.TryGetComponent(BattleViewComponentType.WORLD_UI);
             this.worldUiCached = c as BVBattleWorldUiComponent;
         }
 
-        private void AttachHpBarToWorldLayer()
+        /// <summary>首次受击时由共享 Canvas 模板创建血条（与怪物一致）。</summary>
+        public void AttachItemHpBar(GameObject hpBarRoot)
         {
-            if (this.worldUiCached != null && this.hpBarCanvasRect != null)
+            if (hpBarRoot == null)
             {
-                this.worldUiCached.AttachHpBarToSharedCanvas(this.hpBarCanvasRect);
+                Debug.LogError("[BattleUnitView_Item] 物品血条为空，请检查 MonsterCanvas 预加载。");
+                return;
             }
+
+            this.hpBarInstance = hpBarRoot;
+            this.hpBarRect = hpBarRoot.GetComponent<RectTransform>();
+            this.slider = hpBarRoot.GetComponent<Slider>();
+            if (this.slider == null)
+            {
+                Debug.LogError("[BattleUnitView_Item] 血条节点缺少 Slider 组件。");
+                return;
+            }
+
+            this.slider.value = 1f;
+            this.hpBarLocalOffset = DefaultItemHpBarLocalOffset;
+            this.hpBarCreated = true;
+            this.SyncHpBarPosition();
         }
 
-        private void DetachHpBarFromWorldLayer()
+        private void EnsureHpBar()
         {
-            if (this.worldUiCached != null && this.hpBarCanvasRect != null && this.transform != null)
+            if (this.hpBarCreated || this.slider != null)
             {
-                this.worldUiCached.DetachHpBarToUnit(this.hpBarCanvasRect, this.transform);
+                return;
             }
-            else if (this.hpBarCanvasRect != null && this.transform != null)
+
+            if (this.worldUiCached == null)
             {
-                this.hpBarCanvasRect.SetParent(this.transform, worldPositionStays: true);
+                this.CacheWorldUi();
             }
+
+            if (this.worldUiCached == null || this.hpBarCanvasTemplate == null)
+            {
+                Debug.LogError("[BattleUnitView_Item] 无法创建血条: worldUi=" + (this.worldUiCached != null) +
+                               ", template=" + (this.hpBarCanvasTemplate != null));
+                return;
+            }
+
+            GameObject hpBarGo = this.worldUiCached.CreateMonsterHpBar(this.hpBarCanvasTemplate);
+            this.AttachItemHpBar(hpBarGo);
+        }
+
+        private void DestroyHpBar()
+        {
+            if (this.hpBarInstance != null)
+            {
+                Object.Destroy(this.hpBarInstance);
+                this.hpBarInstance = null;
+            }
+
+            this.hpBarRect = null;
+            this.slider = null;
+            this.hpBarCreated = false;
         }
 
         public override void OnTick(float deltaTime)
@@ -79,17 +120,12 @@ namespace CarrotFantasy
 
         private void SyncHpBarPosition()
         {
-            if (this.worldUiCached == null || this.hpBarCanvasRect == null || this.transform == null)
+            if (this.worldUiCached == null || this.hpBarRect == null || this.transform == null)
             {
                 return;
             }
 
-            if (this.hpBarCanvasRect.parent == this.transform)
-            {
-                return;
-            }
-
-            this.worldUiCached.SyncHpBarWorldPosition(this.hpBarCanvasRect, this.transform, this.hpBarLocalOffset);
+            this.worldUiCached.SyncHpBarWorldPosition(this.hpBarRect, this.transform, this.hpBarLocalOffset);
         }
 
         public override void InitListener()
@@ -130,7 +166,12 @@ namespace CarrotFantasy
 
         private void UpdateLiveNumber()
         {
-            if (this.slider.gameObject.activeSelf == false) this.slider.gameObject.SetActive(true);
+            this.EnsureHpBar();
+            if (this.slider == null)
+            {
+                return;
+            }
+
             this.slider.value = ((float)((BattleUnit_Item)this.unit).curLive / (float)((BattleUnit_Item)this.unit).totalLive);
         }
 
@@ -141,12 +182,12 @@ namespace CarrotFantasy
 
         public override void ClearUnitInfo()
         {
-            this.DetachHpBarFromWorldLayer();
+            this.DestroyHpBar();
             this.worldUiCached = null;
+            this.hpBarCanvasTemplate = null;
             base.ClearUnitInfo();
-            this.slider = null;
-            this.hpBarCanvasRect = null;
             this.spriteRender = null;
+            this.item = null;
         }
     }
 }

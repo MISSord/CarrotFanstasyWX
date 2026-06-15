@@ -78,7 +78,10 @@ namespace CarrotFantasy
                 this.componentList[i].Init();
             }
 
-            this.tranComponent.SetBodyRadius(new Fix64(0.2f));
+            Fix64 bodyRadius = this.birthParam != null && this.birthParam.ContainsKey("bodyRadius")
+                ? this.birthParam["bodyRadius"]
+                : new Fix64(0.2f);
+            this.tranComponent.SetBodyRadius(bodyRadius);
         }
 
         public override void OnTick(Fix64 deltaTime)

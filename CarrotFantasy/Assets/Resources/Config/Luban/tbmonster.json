@@ -61,5 +61,50 @@
     "FaceDirection": 0,
     "OffsetX": 0,
     "OffsetY": 0
+  },
+  {
+    "MonsterId": 8,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 9,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 10,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 11,
+    "Name": "",
+    "Hp": 100,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
+  },
+  {
+    "MonsterId": 12,
+    "Name": "",
+    "Hp": 300,
+    "Scale": 1,
+    "FaceDirection": 0,
+    "OffsetX": 0,
+    "OffsetY": 0
   }
 ]

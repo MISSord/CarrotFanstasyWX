@@ -24,6 +24,7 @@ namespace CarrotFantasy
 
         public virtual void LoadInfo(int uid, Dictionary<String, Fix64> param, Fix64Vector2 birthPosition)  //先loadInfo 再initComponent
         {
+            this.EnsureEventDispatcher();
             this.uid = uid;
             this.birthParam = param;
             this.birthPosition = birthPosition;
@@ -98,7 +99,19 @@ namespace CarrotFantasy
             }
             componentList.Clear();
             componentDic.Clear();
-            this.eventDipatcher.Dispose();
+            if (this.eventDipatcher != null)
+            {
+                this.eventDipatcher.Dispose();
+                this.eventDipatcher = null;
+            }
+        }
+
+        protected void EnsureEventDispatcher()
+        {
+            if (this.eventDipatcher == null && this.baseBattle != null)
+            {
+                this.eventDipatcher = new BattleEventDispatcher(this, this.baseBattle);
+            }
         }
 
         public virtual void Dispose()

@@ -85,7 +85,11 @@ namespace CarrotFantasy
 
             for (int i = 0; i < plan.Count; i++)
             {
-                this.curNoRegisterList.Add(this.CreateMonsterPve(plan.MonsterIds[i]));
+                BattleUnit_Monster_Pve monster = this.CreateMonsterPve(plan.MonsterIds[i]);
+                if (monster != null)
+                {
+                    this.curNoRegisterList.Add(monster);
+                }
             }
 
             this.SetWaveSpawnSchedule(plan.SpawnOffsets);
@@ -94,18 +98,24 @@ namespace CarrotFantasy
 
         private BattleUnit_Monster_Pve CreateMonsterPve(int monsterConfigId)
         {
+            Dictionary<string, Fix64> config = this.monsterConfigReader.GetSingleMonsterConfig(monsterConfigId);
+            if (config == null)
+            {
+                return null;
+            }
+
             BattleUnit_Monster_Pve monster = BattleUnitPool.Instance.GetNewBattleUnit<BattleUnit_Monster_Pve>(BattleUnitType.MONSTER);
             if (monster == null)
             {
                 monster = new BattleUnit_Monster_Pve(this.baseBattle);
             }
 
-            monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
             monster.LoadInfo(
                 this.baseBattle.GetUid(),
-                this.monsterConfigReader.GetSingleMonsterConfig(monsterConfigId),
+                config,
                 this.birthPoint);
             monster.LoadInfo2(this.battleDataComponent.bigLevel, monsterConfigId);
+            monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
             monster.Init();
             monster.InitComponents();
             monster.LoadPathMovement(this.monsterPointList, this.distance);

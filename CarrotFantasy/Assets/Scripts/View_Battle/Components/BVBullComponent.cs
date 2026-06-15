@@ -29,9 +29,10 @@ namespace CarrotFantasy
             BattleDataComponent dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
             for (int i = 0; i < dataComponent.towerIDListLength; i++)
             {
-                GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_1", dataComponent.curTowerIDList[i]));
-                GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_2", dataComponent.curTowerIDList[i]));
-                GameViewObjectPool.Instance.RegisterGameObject(string.Format("{0}_3", dataComponent.curTowerIDList[i]));
+                int towerId = dataComponent.curTowerIDList[i];
+                GameViewObjectPool.Instance.RegisterGameObject(FightViewGameObjectPoolKeys.Bullet(towerId, 1));
+                GameViewObjectPool.Instance.RegisterGameObject(FightViewGameObjectPoolKeys.Bullet(towerId, 2));
+                GameViewObjectPool.Instance.RegisterGameObject(FightViewGameObjectPoolKeys.Bullet(towerId, 3));
             }
             this.RemoveListener();
             this.AddListener();
@@ -51,8 +52,8 @@ namespace CarrotFantasy
 
         private GameObject GetBulletPrefabTemplate(int towerId, int bulletLevelIndex)
         {
-            string bundleName = FightViewPrefabAb.TowerBulletBundleName(towerId);
-            string assetName = bulletLevelIndex.ToString();
+            string bundleName = FightViewPrefabAb.FightPartBulletBundle;
+            string assetName = FightViewPrefabAb.BulletAssetName(towerId, bulletLevelIndex);
             GameObject tpl;
             if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
             {
@@ -63,25 +64,74 @@ namespace CarrotFantasy
             return null;
         }
 
+        private GameObject TryPopBulletVisual(string poolKey)
+        {
+            while (true)
+            {
+                GameObject candidate = GameViewObjectPool.Instance.GetNewGameObject(poolKey);
+                if (candidate == null)
+                {
+                    return null;
+                }
+
+                if (FightViewGameObjectPoolKeys.IsBulletVisual(candidate))
+                {
+                    return candidate;
+                }
+
+                Debug.LogWarning(String.Format(
+                    "[BVBulletComponent] 对象池 {0} 弹出非子弹预制体，已销毁: {1}",
+                    poolKey,
+                    candidate.name));
+                GameObject.Destroy(candidate);
+            }
+        }
+
+        private void ReturnBulletGameObject(int towerId, int bulletLevelIndex, GameObject bulletObj)
+        {
+            if (bulletObj == null)
+            {
+                return;
+            }
+
+            if (!FightViewGameObjectPoolKeys.IsBulletVisual(bulletObj))
+            {
+                GameObject.Destroy(bulletObj);
+                return;
+            }
+
+            string poolKey = FightViewGameObjectPoolKeys.Bullet(towerId, bulletLevelIndex);
+            GameViewObjectPool.Instance.PushGameObjectToPool(poolKey, bulletObj);
+        }
+
         private void RegisterNewBulletView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.BULLET))
             {
                 BattleUnit_Bullet bullet = (BattleUnit_Bullet)unit;
+                if (this.bulletDic.ContainsKey(bullet))
+                {
+                    return;
+                }
+
                 BattleUnitView_Bullet bulletView = GameViewObjectPool.Instance.getNewBattleUnitView<BattleUnitView_Bullet>(BattleUnitViewType.Bullet);
                 if (bulletView == null)
                 {
                     bulletView = new BattleUnitView_Bullet();
                 }
-                GameObject bulletNode = GameViewObjectPool.Instance.GetNewGameObject(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1));
+
+                int bulletLevelIndex = bullet.towerLevel + 1;
+                string poolKey = FightViewGameObjectPoolKeys.Bullet(bullet.towerId, bulletLevelIndex);
+                GameObject bulletNode = TryPopBulletVisual(poolKey);
                 if (bulletNode == null)
                 {
-                    GameObject tpl = GetBulletPrefabTemplate(bullet.towerId, bullet.towerLevel + 1);
+                    GameObject tpl = GetBulletPrefabTemplate(bullet.towerId, bulletLevelIndex);
                     bulletNode = tpl != null ? GameObject.Instantiate(tpl) : null;
                 }
 
                 if (bulletNode == null)
                 {
+                    GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, bulletView);
                     return;
                 }
 
@@ -109,10 +159,13 @@ namespace CarrotFantasy
             BattleUnitView_Bullet bulletView;
             if (!this.bulletDic.TryGetValue(bullet, out bulletView))
             {
-                Debug.Log("移除子弹视图出错");
                 return;
             }
-            GameViewObjectPool.Instance.PushGameObjectToPool(String.Format("{0}_{1}", bullet.towerId, bullet.towerLevel + 1), bulletView.transform.gameObject);
+
+            if (bulletView.transform != null)
+            {
+                this.ReturnBulletGameObject(bullet.towerId, bullet.towerLevel + 1, bulletView.transform.gameObject);
+            }
             bulletView.ClearUnitInfo();
             this.bulletDic.Remove(bullet);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, bulletView);
@@ -122,7 +175,10 @@ namespace CarrotFantasy
         {
             foreach (KeyValuePair<BattleUnit_Bullet, BattleUnitView_Bullet> info in this.bulletDic)
             {
-                GameViewObjectPool.Instance.PushGameObjectToPool(String.Format("{0}_{1}", info.Key.towerId, info.Key.towerLevel + 1), info.Value.transform.gameObject);
+                this.ReturnBulletGameObject(
+                    info.Key.towerId,
+                    info.Key.towerLevel + 1,
+                    info.Value.transform != null ? info.Value.transform.gameObject : null);
                 info.Value.ClearUnitInfo();
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, info.Value);
             }

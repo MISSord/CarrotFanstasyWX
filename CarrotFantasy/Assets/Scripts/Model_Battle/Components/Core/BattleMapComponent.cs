@@ -75,16 +75,15 @@ namespace CarrotFantasy
 
         public void ExePlayerOrder(InputOrder order)
         {
-            BattleTowerComponent towerComponet = (BattleTowerComponent)this.baseBattle.GetComponent(BattleComponentType.TowerComponent);
-            BattleUnit_Tower tower = towerComponet.GetTowerInfo(order.x, order.y);
-            if (tower != null)
+            if (!this.IsGridInBounds(order.x, order.y))
             {
-                this.gridsList[order.x, order.y].ChangeTowerState(true);
+                return;
             }
-            else
-            {
-                this.gridsList[order.x, order.y].ChangeTowerState(false);
-            }
+
+            BattleTowerComponent towerComponent =
+                (BattleTowerComponent)this.baseBattle.GetComponent(BattleComponentType.TowerComponent);
+            bool hasTower = towerComponent != null && towerComponent.IsHaveTower(order.x, order.y);
+            this.gridsList[order.x, order.y].ChangeTowerState(hasTower);
         }
 
         public override void ClearInfo()

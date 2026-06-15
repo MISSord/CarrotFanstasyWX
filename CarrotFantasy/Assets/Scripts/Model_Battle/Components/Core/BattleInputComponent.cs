@@ -44,13 +44,9 @@ namespace CarrotFantasy
             for (int i = 0; i < this.curNoProcessDic.Count; i++)
             {
                 InputOrder o = this.curNoProcessDic[i];
-                if (o.frameId == curF)
+                if (o.frameId <= curF)
                 {
                     this.frameBatch.Add(o);
-                    this.shouldRemoveList.Add(i);
-                }
-                else if (o.frameId < curF)
-                {
                     this.shouldRemoveList.Add(i);
                 }
             }

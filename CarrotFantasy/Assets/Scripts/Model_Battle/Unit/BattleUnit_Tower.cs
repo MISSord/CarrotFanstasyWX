@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 单塔逻辑：射程扫描、CD、选目标、派发 BULLET_BUILD。
+    /// 集火 targetUnit 由 HitTest.AssignTowerFocusTargets 写入；无集火时只自动打怪物。
+    /// </summary>
     public class BattleUnit_Tower : BattleUnit
     {
         public Fix64 towerAttackRadius { get; private set; }
@@ -27,6 +31,7 @@ namespace CarrotFantasy
         private UnitTransformComponent unitTrans;
 
         private List<BattleUnit_Monster> monsterList;
+        /// <summary>HitTest 写入的玩家集火目标；在射程内时优先于自动选怪。</summary>
         public BattleUnit targetUnit { get; set; }
 
         public BattleUnit_Tower(BaseBattle battle) : base(battle)
@@ -72,24 +77,12 @@ namespace CarrotFantasy
             }
             this.AddComponent(this.unitBeHit);
             this.AddComponent(this.unitTrans);
-
-            this.unitBeHit.RegisterBeHitCallBack(this.BeHitCallBack);
         }
 
         public override void InitComponents()
         {
             base.InitComponents();
             this.unitTrans.SetBodyRadius(this.towerAttackRadius);
-        }
-
-        private void BeHitCallBack(BattleUnit unit)
-        {
-            if (unit.unitType.Equals(BattleUnitType.MONSTER) == false)
-            {
-                Debug.Log(String.Format("防御塔碰撞过程出错，被碰撞对象为{0}", unit.unitType));
-                return;
-            }
-            this.monsterList.Add((BattleUnit_Monster)unit);
         }
 
         public void UpdateLevel()
@@ -106,38 +99,136 @@ namespace CarrotFantasy
 
         public override void OnTick(Fix64 deltaTime)
         {
+            this.monsterList.Clear();
+            this.CollectMonstersInRange();
+
             this.timeVal += deltaTime;
             if (this.timeVal >= this.attackCD)
             {
                 BattleUnit targetOne = null;
-                if (this.targetUnit != null)
+                if (this.targetUnit != null && this.IsAttackTargetInRange(this.targetUnit))
                 {
                     targetOne = this.targetUnit;
                 }
-                else
+                else if (this.monsterList.Count != 0)
                 {
-                    if (this.monsterList.Count != 0)
+                    BattleUnit_Monster curMonster = this.monsterList[0];
+                    for (int i = 0; i <= this.monsterList.Count - 1; i++)
                     {
-                        BattleUnit_Monster curMonster = this.monsterList[0];
-                        for (int i = 0; i <= monsterList.Count - 1; i++)
+                        if (curMonster.EndPointDistance >= this.monsterList[i].EndPointDistance)
                         {
-                            if (curMonster.EndPointDistance >= this.monsterList[i].EndPointDistance)
-                            {
-                                curMonster = this.monsterList[i];
-                            }
+                            curMonster = this.monsterList[i];
                         }
-                        targetOne = curMonster;
                     }
+
+                    targetOne = curMonster;
                 }
+
                 if (targetOne != null)
                 {
                     this.eventDipatcher.DispatchEvent<BattleUnit>(BattleEvent.TOWER_ATTACK, targetOne);
-                    this.baseBattle.eventDispatcher.DispatchEvent<BattleUnit_Tower, BattleUnit>(BattleEvent.BULLET_BUILD, this, targetOne);
-                    this.timeVal = this.timeVal - this.attackCD;
+                    this.baseBattle.eventDispatcher.DispatchEvent<BattleUnit_Tower, BattleUnit>(
+                        BattleEvent.BULLET_BUILD,
+                        this,
+                        targetOne);
+                    this.timeVal = Fix64.Zero;
+                }
+                else
+                {
+                    // 无目标时不累积超额 CD，避免首次入射程或久未攻击后连发。
+                    this.timeVal = this.attackCD;
                 }
             }
-            this.monsterList.Clear();
-            this.targetUnit = null;
+        }
+
+        /// <summary>主动扫描攻击范围内的怪物，不依赖 HitTest 回调顺序。</summary>
+        void CollectMonstersInRange()
+        {
+            if (this.unitTrans == null || this.baseBattle == null)
+            {
+                return;
+            }
+
+            BattleMonsterComponent monsterComponent =
+                (BattleMonsterComponent)this.baseBattle.GetComponent(BattleComponentType.MonsterComponent);
+            if (monsterComponent == null || monsterComponent.curMonsterDic == null)
+            {
+                return;
+            }
+
+            Fix64 towerX = this.unitTrans.GetLastPosition().X;
+            Fix64 towerY = this.unitTrans.GetLastPosition().Y;
+            Fix64 attackRadius = this.towerAttackRadius;
+
+            foreach (KeyValuePair<int, BattleUnit_Monster> pair in monsterComponent.curMonsterDic)
+            {
+                BattleUnit_Monster monster = pair.Value;
+                if (monster == null || monster.IsDamageImmune())
+                {
+                    continue;
+                }
+
+                UnitTransformComponent monsterTrans =
+                    (UnitTransformComponent)monster.GetComponent(UnitComponentType.TRANSFORM);
+                if (monsterTrans == null)
+                {
+                    continue;
+                }
+
+                Fix64 sumRadius = attackRadius + monsterTrans.GetBodyRadius();
+                Fix64 distSq = Battle_func.PGetDistanceSQ(
+                    towerX,
+                    towerY,
+                    monsterTrans.GetLastPosition().X,
+                    monsterTrans.GetLastPosition().Y);
+                if (distSq <= sumRadius * sumRadius)
+                {
+                    this.monsterList.Add(monster);
+                }
+            }
+        }
+
+        bool IsAttackTargetInRange(BattleUnit unit)
+        {
+            if (unit == null || this.unitTrans == null)
+            {
+                return false;
+            }
+
+            if (unit.unitType.Equals(BattleUnitType.MONSTER))
+            {
+                BattleUnit_Monster monster = (BattleUnit_Monster)unit;
+                if (monster.IsDamageImmune())
+                {
+                    return false;
+                }
+            }
+            else if (unit.unitType.Equals(BattleUnitType.ITEM))
+            {
+                BattleUnit_Item item = (BattleUnit_Item)unit;
+                if (item.IsDead())
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
+            UnitTransformComponent targetTrans = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
+            if (targetTrans == null)
+            {
+                return false;
+            }
+
+            Fix64 sumRadius = this.towerAttackRadius + targetTrans.GetBodyRadius();
+            Fix64 distSq = Battle_func.PGetDistanceSQ(
+                this.unitTrans.GetLastPosition().X,
+                this.unitTrans.GetLastPosition().Y,
+                targetTrans.GetLastPosition().X,
+                targetTrans.GetLastPosition().Y);
+            return distSq <= sumRadius * sumRadius;
         }
 
         public override void ClearInfo()

@@ -10,7 +10,8 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 1
   },
   {
     "TowerId": 2,
@@ -23,7 +24,8 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 1
   },
   {
     "TowerId": 3,
@@ -36,7 +38,8 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 1
   },
   {
     "TowerId": 4,
@@ -49,7 +52,8 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 2
   },
   {
     "TowerId": 5,
@@ -62,7 +66,8 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 1
   },
   {
     "TowerId": 6,
@@ -75,7 +80,8 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 1
   },
   {
     "TowerId": 7,
@@ -88,6 +94,7 @@
     "BodyRadius2": 2.5,
     "BodyRadius3": 3,
     "Scale": 1,
-    "MaxLevel": 3
+    "MaxLevel": 3,
+    "BulletMoveType": 1
   }
 ]

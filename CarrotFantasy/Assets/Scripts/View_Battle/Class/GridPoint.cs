@@ -94,11 +94,11 @@ namespace CarrotFantasy
                 spriteRenderer.sprite = this.cantBuildSprite;
             }
 
-            this.UpdateGrid();
+            spriteRenderer.enabled = false;
         }
 
 
-        //更新格子状态
+        //更新格子状态（默认隐藏，选中时由 ShowGrid 显示）
         public void UpdateGrid()
         {
             if (!this.IsSpriteRendererAlive())
@@ -106,14 +106,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (this.mapGrid.state.canBuild)
-            {
-                spriteRenderer.enabled = true;
-            }
-            else
-            {
-                spriteRenderer.enabled = false;
-            }
+            spriteRenderer.enabled = false;
         }
 
         /// <summary>
@@ -182,6 +175,16 @@ namespace CarrotFantasy
                 this.battleView.bvEventDispatcher.DispatchEvent(BattleViewEventType.Fade_Tower_List);
             }
             spriteRenderer.enabled = false;
+        }
+
+        public void SetLevelUpSignalVisible(bool visible)
+        {
+            if (this.levelUpSignalGo == null)
+            {
+                return;
+            }
+
+            this.levelUpSignalGo.SetActive(visible);
         }
 
         //显示此格子不能够去建塔
