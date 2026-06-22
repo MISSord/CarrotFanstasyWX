@@ -105,11 +105,22 @@ namespace CarrotFantasy
                 info.isAllClear = info.isAllClear <= unSave.isAllClear ? info.isAllClear : unSave.isAllClear;
                 this.allMapInfo[this.GetMapNumber(unSave)] = info;
                 this.RefreshBigLevelMapInfo(unSave.bigLevelId);
+                this.eventDispatcher.DispatchEvent(MapEventType.MAP_INFO_CHANGE);
             }
             else
             {
                 Debug.Log("更新单个地图信息有错误");
             }
+        }
+
+        public string ExportSnapshot()
+        {
+            if (this.allMapInfo == null || this.allMapInfo.Length == 0)
+            {
+                return MapInfoHelper.GetInitMapInfo();
+            }
+
+            return MapInfoHelper.BuildSnapshot(this.allMapInfo);
         }
 
         public void UpdateSingleMapInfoUnLockState(int bigLevel, int level, byte unLock)

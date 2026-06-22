@@ -148,6 +148,12 @@ namespace CarrotFantasy
                         IsAllClear = unSaveMapInfo.isAllClear,
                     };
                     cs.SendProtobuf(SimpleBinaryOpcodes.SetSingleMapRequest, req);
+                    if (this.unSaveMapInfo != null)
+                    {
+                        Debug.LogWarning("SendSetSingleMapInfo(standalone): 本地 mock 未消费结算，回退离线写入。");
+                        this.ApplyVictoryOffline(unSaveMapInfo);
+                        this.unSaveMapInfo = null;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -211,6 +217,7 @@ namespace CarrotFantasy
                 this.mapModel.UpdateSingleMapInfoUnLockState(msg.BigLevelId, msg.LevelId, (byte)msg.Unlocked);
             }
 
+            this.PersistStandaloneSnapshotIfNeeded();
             this.unSaveMapInfo = null;
         }
 
@@ -228,6 +235,24 @@ namespace CarrotFantasy
             {
                 this.mapModel.UpdateSingleMapInfoUnLockState(nb, nl, MapInfoType.UNLOCK_LEVEL);
             }
+
+            this.PersistStandaloneSnapshotIfNeeded();
+        }
+
+        void PersistStandaloneSnapshotIfNeeded()
+        {
+            if (!StandaloneGameConfig.EnableStandaloneMode)
+            {
+                return;
+            }
+
+            long userId = AccountServer.Instance.userId;
+            if (userId <= 0)
+            {
+                userId = StandaloneBackendMock.DefaultUserId;
+            }
+
+            StandaloneMapPersistence.Save(userId, this.mapModel.ExportSnapshot());
         }
 
         private static (int big, int level) NextLevel(int big, int level)

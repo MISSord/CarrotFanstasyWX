@@ -218,6 +218,7 @@ public class DownloadState : BaseGameState
     {
         AssetBundleUpdateChecker.SaveLocalManifest(context.result.customManifest);
         AssetBundleManager.Instance.SetAssetBundleItem(context.result.customManifest);
+        LubanConfigLoader.Reload();
         isSetABMainifest = true;
     }
 

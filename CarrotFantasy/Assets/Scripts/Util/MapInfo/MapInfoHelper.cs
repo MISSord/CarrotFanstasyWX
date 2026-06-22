@@ -50,5 +50,26 @@ namespace CarrotFantasy
             }
             return newAllInfo.ToString();
         }
+
+        public static String BuildSnapshot(SingleMapInfo[] cells)
+        {
+            if (cells == null || cells.Length == 0)
+            {
+                return GetInitMapInfo();
+            }
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i] == null)
+                {
+                    continue;
+                }
+
+                sb.Append(MapInfoConvertString(cells[i]));
+            }
+
+            return sb.Length > 0 ? sb.ToString() : GetInitMapInfo();
+        }
     }
 }

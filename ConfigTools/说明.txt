@@ -9,7 +9,7 @@ Unity 运行时依赖（导表后若报 CS0246 Luban / SimpleJSON）：
 
 导出位置：
   代码 -> CarrotFantasy/Assets/Scripts/Config/Luban/
-  数据 -> CarrotFantasy/Assets/Resources/Config/Luban/
+  数据 -> CarrotFantasy/Assets/Game/Config/Luban/（打进 config/luban AB 包，支持热更）
 
 已接入 Luban 的数据表：
   Tower.xlsx / Monster.xlsx / Bullet.xlsx / Buff.xlsx / Item.xlsx

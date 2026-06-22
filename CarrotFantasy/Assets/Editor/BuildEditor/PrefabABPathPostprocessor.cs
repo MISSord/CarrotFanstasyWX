@@ -65,13 +65,16 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
         bool useGameFolderRule = UseGameFolderRule(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder || useGameFolderRule;
+        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder || IsLubanConfigJson(path) || useGameFolderRule;
     }
 
     private static string BuildAssetBundleName(string path)
     {
         if (!ShouldAssignAssetBundle(path))
             return string.Empty;
+
+        if (IsLubanConfigJson(path))
+            return CarrotFantasy.LubanConfigAbPaths.BundleName;
 
         string bundleName = GenerateBundleNameFromFolder(path);
         if (string.IsNullOrEmpty(bundleName))
@@ -137,9 +140,21 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         return path.Contains("UI/View") || path.Contains("UI/FightPart") || path.Contains("Models");
     }
 
+    private static bool IsLubanConfigJson(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !path.EndsWith(".json", System.StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        string normalizedPath = path.Replace('\\', '/');
+        return normalizedPath.IndexOf("/Config/Luban/", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     private static bool UseGameFolderRule(string path)
     {
         if (string.IsNullOrEmpty(path))
+            return false;
+
+        if (IsLubanConfigJson(path))
             return false;
 
         string normalizedPath = path.ToLower().Replace('\\', '/');

@@ -318,30 +318,35 @@ public abstract class BaseView
 
     public virtual void Close()
     {
-        CloseCallBack();
-
-        isOpen = false;
-        if (isPausedByViewStack)
+        // 场景切换等路径会 CloseAllOpenViews；战斗内按钮也可能已 Close 过，重复关闭应静默忽略
+        if (!this.isOpen)
         {
-            isPausedByViewStack = false;
-            OnResume();
-        }
-        ViewManager.Instance.RemoveViewFromOpenList(this);
-        if (rootView != null)
-        {
-            rootView.transform.localPosition = new Vector2(99999, 99999);
-        }
-
-        // 若已有未执行的延迟释放，避免重复排程
-        if (delayReleaseId != null)
-        {
-            Debug.LogError($"[BaseView] 关闭时仍有一次延迟释放在排队，已忽略本次 Close: {delayReleaseId}");
             return;
         }
 
+        CloseCallBack();
+
+        this.isOpen = false;
+        if (this.isPausedByViewStack)
+        {
+            this.isPausedByViewStack = false;
+            OnResume();
+        }
+        ViewManager.Instance.RemoveViewFromOpenList(this);
+        if (this.rootView != null)
+        {
+            this.rootView.transform.localPosition = new Vector2(99999, 99999);
+        }
+
+        if (this.delayReleaseId != null)
+        {
+            TimeUtility.Instance.RemoveTimeout(this.delayReleaseId);
+            this.delayReleaseId = null;
+        }
+
         string time = Time.unscaledTime.ToString();
-        delayReleaseId = viewName + time;
-        TimeUtility.Instance.SetTimeout(5f, this.Release, false, delayReleaseId);
+        this.delayReleaseId = this.viewName + time;
+        TimeUtility.Instance.SetTimeout(5f, this.Release, false, this.delayReleaseId);
     }
     #endregion
 

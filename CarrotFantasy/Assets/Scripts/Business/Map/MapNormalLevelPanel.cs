@@ -22,15 +22,18 @@ namespace CarrotFantasy
         private GameObject _tplNodeTower;
         private bool _isLoadTower = false;
 
-        public void SetBigLevel(int bigLevelId)
+
+        /// <summary>切换大关并刷新小关列表、背景与详情（已打开时也会刷新）。</summary>
+        public void OpenForBigLevel(int bigLevelId, int levelId = 1)
         {
-            currentBigLevelID = bigLevelId;
+            this.currentBigLevelID = bigLevelId;
+            this.currentLevelID = levelId > 0 ? levelId : 1;
+            this.RefreshForCurrentBigLevel();
         }
 
         public void RestoreSelection(int bigLevelId, int levelId)
         {
-            this.currentBigLevelID = bigLevelId;
-            this.currentLevelID = levelId > 0 ? levelId : 1;
+            this.OpenForBigLevel(bigLevelId, levelId);
         }
 
         public override void InitData()
@@ -81,35 +84,57 @@ namespace CarrotFantasy
 
             EnsureTowerTemplates();
             AddListener();
-
-            string asset = string.Format("Level_{0}_BG_Left", currentBigLevelID);
-            string bundle = ResPath.GetRawImagePath(asset);
-            RawImage img_left = nameTableDic["img_bg_left"].GetComponent<RawImage>();
-            img_left.SetTexture(bundle, asset);
-
-            asset = string.Format("Level_{0}_BG_Right", currentBigLevelID);
-            bundle = ResPath.GetRawImagePath(asset);
-            img_left = nameTableDic["img_bg_right"].GetComponent<RawImage>();
-            img_left.SetTexture(bundle, asset);
-
         }
 
         protected override void ShowIndexCallBack(int viewIndex)
         {
-            if (scrollerList == null)
+            if (this.scrollerList == null)
             {
                 return;
             }
 
-            RefreshPanelData();
+            this.RefreshForCurrentBigLevel();
+        }
 
-            int selectIndex = currentLevelID - 1;
-            if (selectIndex >= 0 && selectIndex < scrollerList.Items.Count)
+        void RefreshForCurrentBigLevel()
+        {
+            if (this.scrollerList == null)
             {
-                scrollerList.SetSelectIndex(selectIndex, invokeCallback: false);
+                return;
             }
 
-            UpdateTowerUI();
+            this.ApplyChapterBackgrounds();
+            this.RefreshPanelData();
+
+            int selectIndex = this.currentLevelID - 1;
+            if (selectIndex >= 0 && selectIndex < this.scrollerList.Items.Count)
+            {
+                this.scrollerList.SetSelectIndex(selectIndex, invokeCallback: false, refreshVisible: true);
+            }
+            else
+            {
+                this.scrollerList.Reload();
+            }
+
+            this.UpdateTowerUI();
+        }
+
+        void ApplyChapterBackgrounds()
+        {
+            if (this.nameTableDic == null)
+            {
+                return;
+            }
+
+            string asset = string.Format("Level_{0}_BG_Left", this.currentBigLevelID);
+            string bundle = ResPath.GetRawImagePath(asset);
+            RawImage imgLeft = this.nameTableDic["img_bg_left"].GetComponent<RawImage>();
+            imgLeft.SetTexture(bundle, asset);
+
+            asset = string.Format("Level_{0}_BG_Right", this.currentBigLevelID);
+            bundle = ResPath.GetRawImagePath(asset);
+            RawImage imgRight = this.nameTableDic["img_bg_right"].GetComponent<RawImage>();
+            imgRight.SetTexture(bundle, asset);
         }
 
         private void RefreshPanelData()
@@ -266,16 +291,22 @@ namespace CarrotFantasy
 
         private void UpdateMapInfo()
         {
-            int selected = scrollerList.SelectedIndex;
-            RefreshPanelData();
-
-            if (selected >= 0 && selected < scrollerList.Items.Count)
+            if (this.scrollerList == null)
             {
-                scrollerList.SetSelectIndex(selected, invokeCallback: false);
-                currentLevelID = scrollerList.Items[selected].mapInfo.levelId;
+                return;
             }
 
-            UpdateTowerUI();
+            int selected = this.scrollerList.SelectedIndex;
+            this.RefreshPanelData();
+            this.scrollerList.Reload();
+
+            if (selected >= 0 && selected < this.scrollerList.Items.Count)
+            {
+                this.scrollerList.SetSelectIndex(selected, invokeCallback: false, refreshVisible: true);
+                this.currentLevelID = this.scrollerList.Items[selected].mapInfo.levelId;
+            }
+
+            this.UpdateTowerUI();
         }
     }
 }

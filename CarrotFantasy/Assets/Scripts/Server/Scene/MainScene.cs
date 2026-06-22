@@ -53,7 +53,7 @@ namespace CarrotFantasy
             }
 
             var levelPanel = (MapNormalLevelPanel)levelView;
-            levelPanel.RestoreSelection(mapServer.LastEnteredBigLevelId, mapServer.LastEnteredLevelId);
+            levelPanel.OpenForBigLevel(mapServer.LastEnteredBigLevelId, mapServer.LastEnteredLevelId);
             ViewManager.Instance.OpenView<MapNormalLevelPanel>();
         }
     }

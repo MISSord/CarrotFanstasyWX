@@ -66,9 +66,8 @@ namespace CarrotFantasy
             }
 
             var panel = (MapNormalLevelPanel)view;
-            panel.SetBigLevel(bigLevelId);
+            panel.OpenForBigLevel(bigLevelId);
             ViewManager.Instance.OpenView<MapNormalLevelPanel>();
-            UIServer.Instance.PlayButtonEffect();
         }
 
         private void AddListener()
@@ -87,16 +86,16 @@ namespace CarrotFantasy
 
         public void UpdateBigLevelInfo()
         {
-            int selected = scrollerList.SelectedIndex;
-            RefreshBigLevelList();
+            int selected = this.scrollerList.SelectedIndex;
+            this.RefreshBigLevelList();
 
-            if (selected >= 0 && selected < scrollerList.Items.Count)
+            if (selected >= 0 && selected < this.scrollerList.Items.Count)
             {
-                scrollerList.SetSelectIndex(selected, invokeCallback: false);
+                this.scrollerList.SetSelectIndex(selected, invokeCallback: false, refreshVisible: true);
             }
             else
             {
-                scrollerList.RefreshVisible();
+                this.scrollerList.Reload();
             }
         }
 

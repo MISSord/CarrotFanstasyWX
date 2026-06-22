@@ -24,6 +24,24 @@ namespace CarrotFantasy
             return MapInfoHelper.GetInitMapInfo();
         }
 
+        /// <summary>GM / 调试：覆盖内存快照并同步 MapServer（Play 模式）。</summary>
+        public static void ApplyMapSnapshotForGm(string snapshot, long userId)
+        {
+            if (!StandaloneGameConfig.EnableStandaloneMode || string.IsNullOrEmpty(snapshot))
+            {
+                return;
+            }
+
+            if (userId > 0)
+            {
+                sessionUserId = userId;
+                hasSession = true;
+            }
+
+            mapSnapshot = snapshot;
+            StandaloneMapPersistence.Save(sessionUserId > 0 ? sessionUserId : DefaultUserId, snapshot);
+        }
+
         /// <summary>业务模块加载完成后调用：写入默认账号、地图并触发与线上一致的登录成功事件。</summary>
         public static void BootstrapDefaultSession()
         {
@@ -87,7 +105,16 @@ namespace CarrotFantasy
         private static void ApplySession(string account, long userId, string snapshot)
         {
             sessionUserId = userId;
-            mapSnapshot = string.IsNullOrEmpty(snapshot) ? GetDefaultMapSnapshot() : snapshot;
+            string persisted = StandaloneMapPersistence.TryLoad(userId);
+            if (!string.IsNullOrEmpty(persisted))
+            {
+                mapSnapshot = persisted;
+            }
+            else
+            {
+                mapSnapshot = string.IsNullOrEmpty(snapshot) ? GetDefaultMapSnapshot() : snapshot;
+            }
+
             hasSession = true;
 
             AccountServer.Instance.ApplyStandaloneSession(account, userId);
@@ -129,7 +156,8 @@ namespace CarrotFantasy
             long userId = DeriveUserId(req.Account ?? string.Empty);
             sessionUserId = userId;
             hasSession = true;
-            mapSnapshot = GetDefaultMapSnapshot();
+            string persisted = StandaloneMapPersistence.TryLoad(userId);
+            mapSnapshot = !string.IsNullOrEmpty(persisted) ? persisted : GetDefaultMapSnapshot();
 
             DispatchLoginSuccess(cs, userId);
             DispatchMapSnapshot(cs);
@@ -215,6 +243,8 @@ namespace CarrotFantasy
                 };
                 mapSnapshot = MapInfoHelper.GetNewMapInfo(mapSnapshot, unlock);
             }
+
+            StandaloneMapPersistence.Save(sessionUserId, mapSnapshot);
 
             return (nb, nl);
         }

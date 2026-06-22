@@ -3,7 +3,7 @@ cd /d "%~dp0Config"
 
 set LUBAN_DLL=..\Luban\Luban.dll
 set OUT_CODE=..\..\CarrotFantasy\Assets\Scripts\Config\Luban
-set OUT_DATA=..\..\CarrotFantasy\Assets\Resources\Config\Luban
+set OUT_DATA=..\..\CarrotFantasy\Assets\Game\Config\Luban
 
 if not exist "%LUBAN_DLL%" (
     echo [ERROR] Luban not found: %LUBAN_DLL%
