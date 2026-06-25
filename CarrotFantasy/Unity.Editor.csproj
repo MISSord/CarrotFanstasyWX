@@ -79,6 +79,9 @@
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
     <Compile Include="Assets\Editor\HexWorld\HexWorldMapEditorInspector.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildSettings.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildPipeline.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AtlasPackager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />

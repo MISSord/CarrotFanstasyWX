@@ -27,6 +27,8 @@ namespace CarrotFantasy
 
             SRPScheduler.Init();
 
+            AssetBundlePathHelper.Initialize();
+
             assetBundleManager = new AssetBundleManager();
             assetBundleManager.Init();
 
@@ -34,6 +36,11 @@ namespace CarrotFantasy
 
             BusinessProvision.Instance.Init();
             BusinessProvision.Instance.LoadBusiness();
+
+            if (this.GetComponent<GameModeSelectGui>() == null)
+            {
+                this.gameObject.AddComponent<GameModeSelectGui>();
+            }
         }
 
         private void Start()
@@ -75,6 +82,7 @@ namespace CarrotFantasy
             Sche.Tick(new Fix64(Time.deltaTime));
             // 战斗 Running 后由 Session 驱动 Model 固定逻辑帧 + View 渲染 Tick
             ServerProvision.battleSessionHost?.Tick(Time.deltaTime);
+            ServerProvision.connectionLifecycle?.Tick(Time.deltaTime);
 
             if (BusinessProvision.Instance.IsGameQuit == true)
             {

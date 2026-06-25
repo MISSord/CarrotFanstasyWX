@@ -7,6 +7,8 @@ namespace CarrotFantasy
     {
         public event Action<byte[]> OnPacket;
         public event Action<string> OnError;
+        public event Action OnConnected;
+        public event Action OnDisconnected;
 
         private string address = string.Empty;
         public bool IsConnected { get; private set; }
@@ -25,11 +27,18 @@ namespace CarrotFantasy
 
             this.IsConnected = true;
             Debug.Log(string.Format("EditorConnectionTransport started. address: {0}", this.address));
+            this.OnConnected?.Invoke();
         }
 
         public void Stop()
         {
+            if (!this.IsConnected)
+            {
+                return;
+            }
+
             this.IsConnected = false;
+            this.OnDisconnected?.Invoke();
         }
 
         public void SendRaw(byte[] packet)
@@ -48,6 +57,11 @@ namespace CarrotFantasy
 
             ushort opcode = BitConverter.ToUInt16(packet, 0);
             Debug.Log(string.Format("EditorConnectionTransport.SendRaw opcode: {0}, packetBytes: {1}", opcode, packet.Length));
+
+            if (opcode == SimpleBinaryOpcodes.Ping)
+            {
+                this.DispatchIncomingPacket(ConnectionBinaryFrame.Encode(SimpleBinaryOpcodes.Pong, Array.Empty<byte>()));
+            }
         }
 
         public void DispatchIncomingPacket(byte[] packet)
@@ -60,6 +74,8 @@ namespace CarrotFantasy
             this.Stop();
             this.OnPacket = null;
             this.OnError = null;
+            this.OnConnected = null;
+            this.OnDisconnected = null;
         }
     }
 }

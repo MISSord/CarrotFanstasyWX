@@ -15,75 +15,162 @@ internal sealed class GameConnectionHandler
     private readonly ILogger<GameConnectionHandler> _logger;
     private readonly string _dataRoot;
     private readonly PostLoginPushPipeline _postLoginPushPipeline;
+    private readonly ConnectionRegistry _connectionRegistry;
+
+    private Guid _connectionId;
+    private string _remoteEndpoint = string.Empty;
+    private WebSocket? _webSocket;
     private long? _sessionUserId;
 
     public GameConnectionHandler(
         ILogger<GameConnectionHandler> logger,
         IWebHostEnvironment env,
-        PostLoginPushPipeline postLoginPushPipeline)
+        PostLoginPushPipeline postLoginPushPipeline,
+        ConnectionRegistry connectionRegistry)
     {
         _logger = logger;
         _dataRoot = Path.Combine(env.ContentRootPath, "userdata");
         _postLoginPushPipeline = postLoginPushPipeline;
+        _connectionRegistry = connectionRegistry;
     }
 
-    public async Task HandleAsync(WebSocket webSocket, CancellationToken cancellationToken)
+    public async Task HandleAsync(
+        WebSocket webSocket,
+        Guid connectionId,
+        string remoteEndpoint,
+        CancellationToken cancellationToken)
     {
-        var buffer = new byte[256 * 1024];
-        while (webSocket.State == WebSocketState.Open)
+        _webSocket = webSocket;
+        _connectionId = connectionId;
+        _remoteEndpoint = remoteEndpoint ?? string.Empty;
+
+        _logger.LogInformation(
+            "WebSocket 已连接 connectionId={ConnectionId} remote={Remote}",
+            _connectionId,
+            _remoteEndpoint);
+
+        try
         {
-            using var ms = new MemoryStream();
-            WebSocketReceiveResult receiveResult;
-            do
+            var buffer = new byte[256 * 1024];
+            while (webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
             {
-                receiveResult = await webSocket
-                    .ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken)
-                    .ConfigureAwait(false);
-
-                if (receiveResult.MessageType == WebSocketMessageType.Close)
+                using var ms = new MemoryStream();
+                WebSocketReceiveResult receiveResult;
+                do
                 {
-                    await webSocket
-                        .CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken)
+                    receiveResult = await webSocket
+                        .ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken)
                         .ConfigureAwait(false);
-                    return;
-                }
 
-                if (receiveResult.MessageType != WebSocketMessageType.Binary)
+                    if (receiveResult.MessageType == WebSocketMessageType.Close)
+                    {
+                        _logger.LogInformation(
+                            "WebSocket 收到 Close connectionId={ConnectionId} userId={UserId} status={Status} desc={Description}",
+                            _connectionId,
+                            _sessionUserId,
+                            webSocket.CloseStatus,
+                            webSocket.CloseStatusDescription);
+                        if (webSocket.State == WebSocketState.CloseReceived
+                            || webSocket.State == WebSocketState.Open)
+                        {
+                            await webSocket
+                                .CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, cancellationToken)
+                                .ConfigureAwait(false);
+                        }
+
+                        return;
+                    }
+
+                    if (receiveResult.MessageType != WebSocketMessageType.Binary)
+                    {
+                        _logger.LogWarning(
+                            "忽略非 Binary 帧 connectionId={ConnectionId} type={Type}",
+                            _connectionId,
+                            receiveResult.MessageType);
+                        continue;
+                    }
+
+                    ms.Write(buffer, 0, receiveResult.Count);
+                }
+                while (!receiveResult.EndOfMessage);
+
+                byte[] packet = ms.ToArray();
+                if (!BinaryFrame.TryDecode(packet, out ushort opcode, out byte[] body))
                 {
-                    _logger.LogWarning("忽略非 Binary 帧: {Type}", receiveResult.MessageType);
+                    _logger.LogWarning("包过短，无法读取 opcode connectionId={ConnectionId}", _connectionId);
                     continue;
                 }
 
-                ms.Write(buffer, 0, receiveResult.Count);
-            }
-            while (!receiveResult.EndOfMessage);
-
-            byte[] packet = ms.ToArray();
-            if (!BinaryFrame.TryDecode(packet, out ushort opcode, out byte[] body))
-            {
-                _logger.LogWarning("包过短，无法读取 opcode");
-                continue;
-            }
-
-            HandlerOutcome outcome = TryHandleMessage(opcode, body);
-            if (!outcome.HasAnything)
-            {
-                continue;
-            }
-
-            if (outcome.Primary != null)
-            {
-                await SendBinaryFrameAsync(webSocket, outcome.Primary, cancellationToken).ConfigureAwait(false);
-            }
-
-            if (outcome.FollowUps is { Count: > 0 })
-            {
-                for (int i = 0; i < outcome.FollowUps.Count; i++)
+                if (!EnsureActiveSessionForMessage())
                 {
-                    await SendBinaryFrameAsync(webSocket, outcome.FollowUps[i], cancellationToken).ConfigureAwait(false);
+                    _logger.LogInformation(
+                        "连接已被新登录替换，忽略后续消息 connectionId={ConnectionId}",
+                        _connectionId);
+                    return;
+                }
+
+                HandlerOutcome outcome = TryHandleMessage(opcode, body);
+                if (!outcome.HasAnything)
+                {
+                    continue;
+                }
+
+                if (outcome.Primary != null)
+                {
+                    await SendBinaryFrameAsync(webSocket, outcome.Primary, cancellationToken).ConfigureAwait(false);
+                }
+
+                if (outcome.FollowUps is { Count: > 0 })
+                {
+                    for (int i = 0; i < outcome.FollowUps.Count; i++)
+                    {
+                        await SendBinaryFrameAsync(webSocket, outcome.FollowUps[i], cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogInformation(
+                "WebSocket 处理取消 connectionId={ConnectionId} userId={UserId}",
+                _connectionId,
+                _sessionUserId);
+        }
+        catch (WebSocketException ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "WebSocket 异常 connectionId={ConnectionId} userId={UserId} state={State}",
+                _connectionId,
+                _sessionUserId,
+                webSocket.State);
+        }
+        finally
+        {
+            _connectionRegistry.Unregister(_connectionId);
+            _logger.LogInformation(
+                "WebSocket 已断开 connectionId={ConnectionId} userId={UserId} finalState={State}",
+                _connectionId,
+                _sessionUserId,
+                webSocket.State);
+            _webSocket = null;
+        }
+    }
+
+    private bool EnsureActiveSessionForMessage()
+    {
+        if (_sessionUserId is null)
+        {
+            return true;
+        }
+
+        if (_connectionRegistry.IsActiveSession(_connectionId, _sessionUserId.Value))
+        {
+            return true;
+        }
+
+        _sessionUserId = null;
+        return false;
     }
 
     private static Task SendBinaryFrameAsync(WebSocket webSocket, byte[] frame, CancellationToken cancellationToken)
@@ -114,7 +201,7 @@ internal sealed class GameConnectionHandler
             switch (opcode)
             {
                 case SimpleOpcodes.Ping:
-                    _logger.LogDebug("Ping");
+                    _logger.LogDebug("Ping connectionId={ConnectionId}", _connectionId);
                     return new HandlerOutcome(BinaryFrame.Encode(SimpleOpcodes.Pong));
 
                 case SimpleOpcodes.EchoUtf8:
@@ -151,13 +238,17 @@ internal sealed class GameConnectionHandler
                     return new HandlerOutcome(HandleSetSingleMapProtobuf(body));
 
                 default:
-                    _logger.LogWarning("未实现 opcode={Opcode}, bodyLen={Len}", opcode, body.Length);
+                    _logger.LogWarning(
+                        "未实现 opcode={Opcode}, bodyLen={Len} connectionId={ConnectionId}",
+                        opcode,
+                        body.Length,
+                        _connectionId);
                     return default;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "处理 opcode {Opcode} 异常", opcode);
+            _logger.LogError(ex, "处理 opcode {Opcode} 异常 connectionId={ConnectionId}", opcode, _connectionId);
             return default;
         }
     }
@@ -213,7 +304,7 @@ internal sealed class GameConnectionHandler
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "LoginRequest Protobuf 解析失败");
+            _logger.LogWarning(ex, "LoginRequest Protobuf 解析失败 connectionId={ConnectionId}", _connectionId);
             return new HandlerOutcome(BuildLoginResponseProto(1, 0, "请求格式错误"));
         }
 
@@ -227,15 +318,31 @@ internal sealed class GameConnectionHandler
 
         if (!string.Equals(account, password, StringComparison.Ordinal))
         {
-            _logger.LogInformation("Login 失败 account={Account}", account);
+            _logger.LogInformation(
+                "Login 失败 account={Account} connectionId={ConnectionId}",
+                account,
+                _connectionId);
             return new HandlerOutcome(BuildLoginResponseProto(2, 0, "账号或密码错误"));
         }
 
         long userId = StableUserIdFromString(account);
-        _sessionUserId = userId;
-        _logger.LogInformation("Login 成功 account={Account} userId={UserId}", account, userId);
+        bool isReconnect = _connectionRegistry.HasActiveConnectionForUser(userId, _connectionId);
 
-        byte[] primary = BuildLoginResponseProto(0, userId, "登录成功");
+        _sessionUserId = userId;
+        if (_webSocket != null)
+        {
+            _connectionRegistry.Register(_connectionId, userId, _webSocket, _logger);
+        }
+
+        _logger.LogInformation(
+            "{LoginKind} account={Account} userId={UserId} connectionId={ConnectionId}",
+            isReconnect ? "重连登录" : "首次登录",
+            account,
+            userId,
+            _connectionId);
+
+        string loginMessage = isReconnect ? "重连成功" : "登录成功";
+        byte[] primary = BuildLoginResponseProto(0, userId, loginMessage);
         IReadOnlyList<byte[]> followUps = _postLoginPushPipeline.BuildFrames(userId, _dataRoot);
         return new HandlerOutcome(primary, followUps);
     }

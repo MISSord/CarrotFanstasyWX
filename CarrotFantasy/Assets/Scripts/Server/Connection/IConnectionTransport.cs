@@ -9,6 +9,10 @@ namespace CarrotFantasy
 
         event Action<string> OnError;
 
+        event Action OnConnected;
+
+        event Action OnDisconnected;
+
         bool IsConnected { get; }
 
         void Init(string address);

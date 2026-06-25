@@ -1,66 +1,60 @@
+using System;
 using System.IO;
 using UnityEngine;
 
 /// <summary>
-/// AssetBundle路径管理工具
-/// 提供统一的路径获取方法，支持多平台
+/// AssetBundle 路径管理：持久化目录、StreamingAssets、热更 CDN 根 URL。
+/// CDN 模板由 Editor 写入 StreamingAssets/ab_runtime_config.json。
 /// </summary>
 public static class AssetBundlePathHelper
 {
-    public static string ServerDownloadURL = "file://D:/Work/MinecraftAB/{0}";
+    private const string DefaultServerDownloadUrlTemplate = "file:///{0}";
+
+    public static string ServerDownloadURL = DefaultServerDownloadUrlTemplate;
     public static string localSavePath = "DownloadedAssetBundles";
+
+    private static bool initialized;
+
+    /// <summary>启动时读取 StreamingAssets 中的 ab_runtime_config.json。</summary>
+    public static void Initialize()
+    {
+        if (initialized)
+        {
+            return;
+        }
+
+        initialized = true;
+        TryLoadRuntimeConfig();
+    }
 
     public static string GetServerLoadUrl()
     {
+        Initialize();
         return string.Format(ServerDownloadURL, GetRuntimePlatformFolder());
     }
 
-    /// <summary>
-    /// 获取本地LZ4格式AB包路径
-    /// </summary>
     public static string GetLocalLZ4Path(string bundleName)
     {
         string normalizedBundleName = GetBundleFileName(bundleName).Replace('\\', '/');
         return Path.Combine(Application.persistentDataPath, localSavePath, normalizedBundleName);
     }
 
-    //    /// <summary>
-    //    /// 获取AssetBundle根目录
-    //    /// </summary>
-    //    public static string GetAssetBundleRootPath()
-    //    {
-    //#if UNITY_EDITOR
-    //        // 在编辑器中，使用项目目录
-    //        return Path.Combine(Application.dataPath, "..", localSavePath);
-    //#elif UNITY_STANDALONE
-    //        return Path.Combine(Application.dataPath, "..", localSavePath);
-    //#elif UNITY_ANDROID || UNITY_IOS
-    //        return Path.Combine(Application.persistentDataPath, localSavePath);
-    //#else
-    //        return Path.Combine(Application.streamingAssetsPath, localSavePath);
-    //#endif
-    //    }
-
-    /// <summary>
-    /// 获取运行时加载路径
-    /// </summary>
     public static string GetRuntimeLoadPath(string bundleName)
     {
+        Initialize();
+
         string fileName = GetBundleFileName(bundleName);
 
-        // 统一运行时本地加载路径：与下载、校验、更新流程保持一致。
         string persistentPath = GetLocalLZ4Path(fileName);
         if (File.Exists(persistentPath))
         {
             return persistentPath;
         }
 
-        // 使用内置资源路径
         string platformFolder = GetRuntimePlatformFolder();
         string streamingPath = Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder, fileName);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        // Android平台下，StreamingAssets中的文件不能直接使用File.Exists检查
         return streamingPath;
 #else
         if (File.Exists(streamingPath))
@@ -72,12 +66,11 @@ public static class AssetBundlePathHelper
         return streamingPath;
     }
 
-    /// <summary>
-    /// 获取当前运行平台的文件夹名称
-    /// </summary>
     public static string GetRuntimePlatformFolder()
     {
-#if UNITY_STANDALONE_WIN
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return "WebGL";
+#elif UNITY_STANDALONE_WIN
         return "StandaloneWindows";
 #elif UNITY_STANDALONE_OSX
         return "StandaloneOSX";
@@ -90,61 +83,102 @@ public static class AssetBundlePathHelper
 #endif
     }
 
-    /// <summary>
-    /// 获取完整的Bundle文件名
-    /// </summary>
     public static string GetBundleFileName(string bundleName)
     {
-        // Unity会自动添加平台后缀，但基础名称保持不变
         return bundleName.ToLower();
     }
 
-    /// <summary>
-    /// 检查文件在持久化路径中是否存在
-    /// </summary>
     public static bool ExistsInPersistentData(string bundleName)
     {
         string path = GetLocalLZ4Path(bundleName);
         return File.Exists(path);
     }
 
-    ///// <summary>
-    ///// 拷贝文件到持久化数据路径（用于热更新）
-    ///// </summary>
-    //public static void CopyToPersistentPath(string sourcePath, string bundleName)
-    //{
-    //    string targetDir = Path.Combine(Application.persistentDataPath, "AssetBundles", GetRuntimePlatformFolder());
-    //    string targetPath = Path.Combine(targetDir, GetBundleFileName(bundleName));
+    /// <summary>持久化目录或 StreamingAssets 中是否存在该 AB 包（Editor 测试模式用）。</summary>
+    public static bool IsBundleAvailableAtRuntime(string bundleName)
+    {
+        Initialize();
 
-    //    if (!Directory.Exists(targetDir))
-    //    {
-    //        Directory.CreateDirectory(targetDir);
-    //    }
+        string fileName = GetBundleFileName(bundleName);
+        if (File.Exists(GetLocalLZ4Path(fileName)))
+        {
+            return true;
+        }
 
-    //    File.Copy(sourcePath, targetPath, true);
-    //    Debug.Log($"已拷贝到持久化路径: {targetPath}");
-    //}
+        string streamingPath = Path.Combine(
+            Application.streamingAssetsPath,
+            "AssetBundles",
+            GetRuntimePlatformFolder(),
+            fileName);
 
-    ///// <summary>
-    ///// 获取所有可用的AssetBundle路径（用于调试）
-    ///// </summary>
-    //public static void PrintAllPaths(string bundleName = "")
-    //{
-    //    Debug.Log("=== AssetBundle路径信息 ===");
-    //    Debug.Log($"数据路径: {Application.dataPath}");
-    //    Debug.Log($"持久化数据路径: {Application.persistentDataPath}");
-    //    Debug.Log($"StreamingAssets路径: {Application.streamingAssetsPath}");
+#if UNITY_ANDROID && !UNITY_EDITOR
+        return true;
+#else
+        return File.Exists(streamingPath);
+#endif
+    }
 
-    //    if (!string.IsNullOrEmpty(bundleName))
-    //    {
-    //        string platformFolder = GetRuntimePlatformFolder();
-    //        string fileName = GetBundleFileName(bundleName);
+    public static string GetStreamingAssetsManifestPath()
+    {
+        return Path.Combine(
+            Application.streamingAssetsPath,
+            "AssetBundles",
+            GetRuntimePlatformFolder(),
+            "custom_manifest.json");
+    }
 
-    //        string persistentPath = Path.Combine(Application.persistentDataPath, "AssetBundles", platformFolder, fileName);
-    //        string streamingPath = Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder, fileName);
+    /// <summary>解析 file:// URL 或普通路径为本地文件路径。</summary>
+    public static string ResolveLocalFilePath(string pathOrUrl)
+    {
+        if (string.IsNullOrEmpty(pathOrUrl))
+        {
+            return string.Empty;
+        }
 
-    //        Debug.Log($"持久化路径: {persistentPath} (存在: {File.Exists(persistentPath)})");
-    //        Debug.Log($"Streaming路径: {streamingPath} (存在: {File.Exists(streamingPath)})");
-    //    }
-    //}
+        string normalized = pathOrUrl.Replace("\\", "/");
+        if (normalized.StartsWith("file://", System.StringComparison.OrdinalIgnoreCase))
+        {
+            return new Uri(normalized).LocalPath;
+        }
+
+        return pathOrUrl;
+    }
+
+    static void TryLoadRuntimeConfig()
+    {
+        string configPath = Path.Combine(Application.streamingAssetsPath, AssetBundleRuntimeConfig.FileName);
+#if UNITY_ANDROID && !UNITY_EDITOR
+        // Android StreamingAssets 不可直接 File.Exists；保留默认 URL，由发布配置或后续扩展 UWR 读取。
+        return;
+#else
+        if (!File.Exists(configPath))
+        {
+            return;
+        }
+
+        try
+        {
+            string json = File.ReadAllText(configPath);
+            AssetBundleRuntimeConfig config = JsonUtility.FromJson<AssetBundleRuntimeConfig>(json);
+            if (config == null)
+            {
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(config.serverDownloadUrlTemplate))
+            {
+                ServerDownloadURL = config.serverDownloadUrlTemplate;
+            }
+
+            if (!string.IsNullOrEmpty(config.localSavePath))
+            {
+                localSavePath = config.localSavePath;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning("[AssetBundlePathHelper] 读取运行时配置失败: " + ex.Message);
+        }
+#endif
+    }
 }

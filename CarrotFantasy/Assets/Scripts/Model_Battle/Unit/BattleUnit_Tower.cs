@@ -156,10 +156,6 @@ namespace CarrotFantasy
                 return;
             }
 
-            Fix64 towerX = this.unitTrans.GetLastPosition().X;
-            Fix64 towerY = this.unitTrans.GetLastPosition().Y;
-            Fix64 attackRadius = this.towerAttackRadius;
-
             foreach (KeyValuePair<int, BattleUnit_Monster> pair in monsterComponent.curMonsterDic)
             {
                 BattleUnit_Monster monster = pair.Value;
@@ -175,13 +171,7 @@ namespace CarrotFantasy
                     continue;
                 }
 
-                Fix64 sumRadius = attackRadius + monsterTrans.GetBodyRadius();
-                Fix64 distSq = Battle_func.PGetDistanceSQ(
-                    towerX,
-                    towerY,
-                    monsterTrans.GetLastPosition().X,
-                    monsterTrans.GetLastPosition().Y);
-                if (distSq <= sumRadius * sumRadius)
+                if (BattleRangeQuery.IsInRange(this.unitTrans, monsterTrans))
                 {
                     this.monsterList.Add(monster);
                 }
@@ -222,13 +212,7 @@ namespace CarrotFantasy
                 return false;
             }
 
-            Fix64 sumRadius = this.towerAttackRadius + targetTrans.GetBodyRadius();
-            Fix64 distSq = Battle_func.PGetDistanceSQ(
-                this.unitTrans.GetLastPosition().X,
-                this.unitTrans.GetLastPosition().Y,
-                targetTrans.GetLastPosition().X,
-                targetTrans.GetLastPosition().Y);
-            return distSq <= sumRadius * sumRadius;
+            return BattleRangeQuery.IsInRange(this.unitTrans, targetTrans);
         }
 
         public override void ClearInfo()

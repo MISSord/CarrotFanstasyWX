@@ -7,10 +7,13 @@ namespace CarrotFantasy
     public class AccountServer : BaseServer<AccountServer>
     {
         private String account;
+        private string cachedPassword = string.Empty;
         public long userId { get; private set; }
         private bool isInit = false;
 
         public static String LOGIN_SUCCESS = "Login_success";
+        public static String LOGIN_FAILED = "Login_failed";
+        public static String SESSION_EXPIRED = "Session_expired";
         public EventDispatcher eventDispatcher;
 
         private MainPanel mainPanel;
@@ -55,17 +58,36 @@ namespace CarrotFantasy
 
         public void SetAccountId(String id)
         {
-            if (isInit == false)
-            {
-                account = id;
-            }
-
-            isInit = true;
+            this.account = id;
+            this.isInit = true;
         }
 
         public string GetAccountId()
         {
             return this.account;
+        }
+
+        public void CacheCredentials(string accout, string password)
+        {
+            this.account = accout ?? string.Empty;
+            this.cachedPassword = password ?? string.Empty;
+            this.isInit = true;
+        }
+
+        public bool TryReloginWithCachedCredentials()
+        {
+            if (StandaloneGameConfig.EnableStandaloneMode)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(this.account) || string.IsNullOrEmpty(this.cachedPassword))
+            {
+                return false;
+            }
+
+            this.LoginAccount(this.account, this.cachedPassword);
+            return true;
         }
 
         public override void Dispose()
@@ -89,7 +111,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            this.SetAccountId(accout);
+            this.CacheCredentials(accout, password);
 
             ConnectionServer cs = ServerProvision.connectionServer;
             if (cs == null)
@@ -111,6 +133,7 @@ namespace CarrotFantasy
             {
                 Debug.LogWarning(string.Format("LoginAccount: 发送失败 {0}", ex.Message));
                 UIServer.Instance.ShowTip("登录请求无效");
+                this.eventDispatcher.DispatchEvent(LOGIN_FAILED);
             }
         }
 
@@ -120,13 +143,39 @@ namespace CarrotFantasy
             {
                 this.userId = response.UserId;
                 this.eventDispatcher.DispatchEvent(LOGIN_SUCCESS);
-                string tip = string.IsNullOrEmpty(response.Message) ? "登录成功,祝你游玩愉快" : response.Message;
-                UIServer.Instance.ShowTip(tip);
+
+                bool isReconnecting = ServerProvision.connectionLifecycle != null
+                    && ServerProvision.connectionLifecycle.IsReconnecting;
+                if (!isReconnecting)
+                {
+                    string tip = string.IsNullOrEmpty(response.Message) ? "登录成功,祝你游玩愉快" : response.Message;
+                    UIServer.Instance.ShowTip(tip);
+                }
+
                 return;
             }
 
             string fail = string.IsNullOrEmpty(response.Message) ? "登录失败" : response.Message;
             UIServer.Instance.ShowTip(fail);
+            this.eventDispatcher.DispatchEvent(LOGIN_FAILED);
+        }
+
+        /// <summary>联机会话失效：清凭证、断连接、回登录界面。</summary>
+        public void ForceLogout(string reason)
+        {
+            ServerProvision.connectionLifecycle?.StopMonitoring();
+
+            ConnectionServer cs = ServerProvision.connectionServer;
+            cs?.StopConnection();
+
+            this.userId = 0;
+            this.account = string.Empty;
+            this.cachedPassword = string.Empty;
+            this.isInit = false;
+
+            this.eventDispatcher.DispatchEvent(SESSION_EXPIRED);
+
+            OnlineSessionRecovery.ReturnToOnlineLogin(reason);
         }
 
         public void LoginGateAccount()

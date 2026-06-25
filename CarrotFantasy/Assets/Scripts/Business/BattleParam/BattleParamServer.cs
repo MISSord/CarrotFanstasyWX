@@ -1,5 +1,4 @@
 using LitJson;
-using System.IO;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -99,16 +98,13 @@ namespace CarrotFantasy
 
         public LevelInfo LoadLevelInfoFile(string fileName)
         {
-            string filePath = Application.streamingAssetsPath + "/Json/Level/" + fileName;
-            if (File.Exists(filePath))
+            string jsonStr = GameJsonLoader.LoadLevelJsonText(fileName);
+            if (!string.IsNullOrEmpty(jsonStr))
             {
-                StreamReader sr = new StreamReader(filePath);
-                string jsonStr = sr.ReadToEnd();
-                sr.Close();
                 return JsonMapper.ToObject<LevelInfo>(jsonStr);
             }
 
-            Debug.Log("文件加载失败，加载路径是" + filePath);
+            Debug.LogError("关卡 JSON 加载失败: " + fileName);
             return null;
         }
     }

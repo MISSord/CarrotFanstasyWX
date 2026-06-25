@@ -19,4 +19,7 @@ public class HexWorldProgress
 
 	/// <summary>leaveHandled：OnLeave 已处理（如易碎已触发离开逻辑）。</summary>
 	public List<int> leaveHandledPointIds = new List<int>();
+
+	/// <summary>战争迷雾已永久揭开的格子索引（row * mapWidth + col），揭开后再也不会隐藏。</summary>
+	public List<int> revealedCellIndices = new List<int>();
 }

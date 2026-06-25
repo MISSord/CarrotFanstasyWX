@@ -184,22 +184,10 @@ namespace CarrotFantasy
             }
         }
 
-        /// <summary>圆–圆：距离平方粗剪枝后仍调用现有窄相位。</summary>
+        /// <summary>圆–圆窄相位（与塔射程、HitTest 共用 <see cref="BattleRangeQuery"/>）。</summary>
         public static bool TryNarrowPhaseCircleCircle(HitTestShape_Circle a, HitTestShape_Circle b)
         {
-            if (a == null || b == null)
-            {
-                return false;
-            }
-
-            Fix64 sumR = a.radius + b.radius;
-            Fix64 distSq = Battle_func.PGetDistanceSQ(a.centerX, a.centerY, b.centerX, b.centerY);
-            if (distSq > sumR * sumR)
-            {
-                return false;
-            }
-
-            return HitTestHandler.HitTest(a, b);
+            return BattleRangeQuery.CirclesOverlap(a, b);
         }
 
         private int LayerIndex(string layer)

@@ -182,7 +182,7 @@ namespace CarrotFantasy
                 UnitTransformComponent towerTransform = towers[i];
                 this.LastBroadPhasePairCount += 1;
                 this.LastNarrowPhaseCount += 1;
-                if (HitTestHandler.HitTest(towerTransform.bodyHitTestShape, targetTransform.bodyHitTestShape))
+                if (BattleRangeQuery.IsInRange(towerTransform, targetTransform))
                 {
                     ((BattleUnit_Tower)towerTransform.unit).targetUnit = this.targetUnit;
                 }

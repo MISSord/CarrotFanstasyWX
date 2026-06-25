@@ -1,301 +1,213 @@
-﻿using Codice.CM.Client.Differences;
-using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public class ABPackagerWindow : EditorWindow
 {
-    // 打包参数
-    private string outputPath = "AssetBundles";
-    private BuildTarget buildTarget = BuildTarget.StandaloneWindows;
+    private string outputPath = AssetBundleBuildSettings.DefaultOutputRoot;
+    private BuildTarget buildTarget = BuildTarget.StandaloneWindows64;
     private CompressionType compressionType = CompressionType.ChunkBasedCompression;
     private bool clearFolders = true;
     private bool copyToStreamingAssets = false;
-    private int LastVersionNumber = 0;
-    private int CurVersionNumber = 0;
+    private bool packAtlasesBeforeBuild = true;
+    private string cdnUrlTemplate = string.Empty;
+    private int lastVersionNumber;
+    private int curVersionNumber;
 
-    // 界面状态
     private Vector2 scrollPosition;
-    private bool showAdvancedSettings = false;
-
+    private bool showAdvancedSettings;
     private CustomManifest generatedManifest;
-
-    private void OnDestroy()
-    {
-        UnityEditor.EditorPrefs.SetString("OutPutPath", outputPath);
-        UnityEditor.EditorPrefs.SetInt("BuildTarget", (int)buildTarget);
-        UnityEditor.EditorPrefs.SetInt("CompressionType", (int)compressionType);
-    }
-
 
     [MenuItem("Tools/打开AssetBundle打包窗口")]
     public static void ShowWindow()
     {
-        // 创建窗口
         ABPackagerWindow window = GetWindow<ABPackagerWindow>("AB Packager");
-        window.minSize = new Vector2(400, 500);
-        window.InitLocalData();
+        window.minSize = new Vector2(420, 520);
+        window.LoadFromSettings();
         window.Show();
     }
 
-    private void InitLocalData()
+    void LoadFromSettings()
     {
-        string localPath = UnityEditor.EditorPrefs.GetString("OutPutPath");
-        if (localPath == "") localPath = "AssetBundles";
-
-        int target = UnityEditor.EditorPrefs.GetInt("BuildTarget", -1);
-        if (target == -1) target = (int)EditorUserBuildSettings.activeBuildTarget;
-
-        int type = UnityEditor.EditorPrefs.GetInt("CompressionType",-1);
-        if (type == -1) type = (int)CompressionType.ChunkBasedCompression;
-
-        //获取之前打包的结果
-        string path = localPath + "/" + AssetBundlePackager.GetPlatformFolder((BuildTarget)target) + "/custom_manifest.json";
-        if (File.Exists(path))
-        {
-            string text = File.ReadAllText(path);
-            CustomManifest old = JsonUtility.FromJson<CustomManifest>(text);
-            LastVersionNumber = old.ManifestVersion;
-        }
-        else
-        {
-            LastVersionNumber = 0;
-        }
-
-        CurVersionNumber = LastVersionNumber;
-
-        outputPath = localPath;
-        buildTarget = (UnityEditor.BuildTarget)target;
-        compressionType = (CompressionType)type;
+        outputPath = AssetBundleBuildSettings.GetOutputRoot();
+        buildTarget = AssetBundleBuildSettings.GetBuildTarget();
+        compressionType = AssetBundleBuildSettings.GetCompressionType();
+        cdnUrlTemplate = AssetBundleBuildSettings.GetCdnUrlTemplate();
+        lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(outputPath, buildTarget);
+        curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(outputPath, buildTarget);
     }
 
-    private void OnGUI()
+    void OnDestroy()
+    {
+        AssetBundleBuildSettings.SetOutputRoot(outputPath);
+        AssetBundleBuildSettings.SetBuildTarget(buildTarget);
+        AssetBundleBuildSettings.SetCompressionType(compressionType);
+        AssetBundleBuildSettings.SetCdnUrlTemplate(cdnUrlTemplate);
+    }
+
+    void OnGUI()
     {
         DrawHeader();
         DrawSettings();
         DrawActions();
-        DrawLog();
     }
 
-    private void DrawHeader()
+    void DrawHeader()
     {
         GUILayout.Space(10);
         EditorGUILayout.LabelField("AssetBundle 打包工具", EditorStyles.boldLabel);
-        EditorGUILayout.LabelField("快速配置和打包AssetBundles", EditorStyles.helpBox);
-        GUILayout.Space(10);
+        EditorGUILayout.HelpBox("统一输出到 Build/AssetBundles/{平台}/，清单为 custom_manifest.json。构建前可自动打包 UI/View、UI/Images 图集。", MessageType.Info);
+        GUILayout.Space(6);
     }
 
-    private void DrawSettings()
+    void DrawSettings()
     {
         scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
-        // 输出路径
         EditorGUILayout.LabelField("输出设置", EditorStyles.boldLabel);
 
         EditorGUI.BeginChangeCheck();
         EditorGUILayout.BeginHorizontal();
-        outputPath = EditorGUILayout.TextField("输出路径", outputPath);
+        outputPath = EditorGUILayout.TextField("输出根目录", outputPath);
         if (GUILayout.Button("浏览", GUILayout.Width(60)))
         {
-            string selectedPath = EditorUtility.SaveFolderPanel("选择输出路径", "", "");
+            string selectedPath = EditorUtility.OpenFolderPanel("选择输出根目录", AssetBundleBuildSettings.GetFullOutputRoot(), "");
             if (!string.IsNullOrEmpty(selectedPath))
             {
-                outputPath = selectedPath;
+                string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+                if (selectedPath.StartsWith(projectRoot))
+                {
+                    outputPath = selectedPath.Substring(projectRoot.Length).TrimStart('\\', '/');
+                }
+                else
+                {
+                    outputPath = selectedPath;
+                }
             }
         }
         EditorGUILayout.EndHorizontal();
 
-        // 平台选择
         int currentIndex = System.Array.IndexOf(AssetBundlePackager.availablePlatforms, buildTarget);
-        if (currentIndex == -1) currentIndex = 0;
+        if (currentIndex == -1)
+        {
+            currentIndex = 0;
+        }
 
         currentIndex = EditorGUILayout.Popup("目标平台", currentIndex, AssetBundlePackager.platformNames);
         buildTarget = AssetBundlePackager.availablePlatforms[currentIndex];
 
         if (EditorGUI.EndChangeCheck())
         {
-            //获取之前打包的结果
-            string path = outputPath + "/" + AssetBundlePackager.GetPlatformFolder(buildTarget) + "/custom_manifest.json";
-            if (File.Exists(path))
-            {
-                string text = File.ReadAllText(path);
-                CustomManifest old = JsonUtility.FromJson<CustomManifest>(text);
-                LastVersionNumber = old.ManifestVersion;
-            }
-            else
-            {
-                LastVersionNumber = 0;
-            }
+            lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(outputPath, buildTarget);
+            curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(outputPath, buildTarget);
+            cdnUrlTemplate = AssetBundleBuildSettings.BuildDefaultCdnUrlTemplate(
+                Path.GetFullPath(Path.Combine(Application.dataPath, "..", outputPath)));
         }
 
-        //压缩格式
         compressionType = (CompressionType)EditorGUILayout.EnumPopup("压缩格式", compressionType);
 
-        // 版本编号
         EditorGUI.BeginDisabledGroup(true);
-        EditorGUILayout.TextField("上一个版本ID", LastVersionNumber.ToString());
+        EditorGUILayout.TextField("上一版本 ID", lastVersionNumber.ToString());
         EditorGUI.EndDisabledGroup();
-        CurVersionNumber = EditorGUILayout.IntField("当前版本ID", CurVersionNumber);
+        curVersionNumber = EditorGUILayout.IntField("当前版本 ID", curVersionNumber);
 
-        // 显示压缩格式说明
-        string compressionInfo = GetCompressionInfo();
-        EditorGUILayout.HelpBox(compressionInfo, MessageType.Info);
+        EditorGUILayout.Space(4);
+        cdnUrlTemplate = EditorGUILayout.TextField("CDN URL 模板", cdnUrlTemplate);
+        EditorGUILayout.HelpBox("模板中 {0} 为平台目录名。打包成功后会写入 StreamingAssets/ab_runtime_config.json。", MessageType.None);
 
-        // 基础选项
-        clearFolders = EditorGUILayout.Toggle("清空输出文件夹", clearFolders);
-        copyToStreamingAssets = EditorGUILayout.Toggle("拷贝到StreamingAssets", copyToStreamingAssets);
+        clearFolders = EditorGUILayout.Toggle("清空平台输出目录", clearFolders);
+        copyToStreamingAssets = EditorGUILayout.Toggle("拷贝到 StreamingAssets", copyToStreamingAssets);
+        packAtlasesBeforeBuild = EditorGUILayout.Toggle("构建前打包 UI 图集", packAtlasesBeforeBuild);
 
-        // 高级设置
         showAdvancedSettings = EditorGUILayout.Foldout(showAdvancedSettings, "高级设置");
         if (showAdvancedSettings)
         {
             EditorGUI.indentLevel++;
-            DrawAdvancedSettings();
+            if (GUILayout.Button("强制完整重建"))
+            {
+                if (EditorUtility.DisplayDialog("强制重建", "将重新打包所有 AssetBundles，是否继续？", "确定", "取消"))
+                {
+                    RunBuild(forceRebuild: true);
+                }
+            }
+
+            if (GUILayout.Button("打开平台输出目录"))
+            {
+                string platformPath = Path.Combine(
+                    Path.GetFullPath(Path.Combine(Application.dataPath, "..", outputPath)),
+                    AssetBundlePackager.GetPlatformFolder(buildTarget));
+                if (!Directory.Exists(platformPath))
+                {
+                    Directory.CreateDirectory(platformPath);
+                }
+                EditorUtility.RevealInFinder(platformPath);
+            }
+
+            if (GUILayout.Button("仅生成/刷新运行时配置"))
+            {
+                AssetBundleBuildSettings.SetCdnUrlTemplate(cdnUrlTemplate);
+                AssetBundleBuildSettings.WriteRuntimeConfig(buildTarget);
+            }
+
             EditorGUI.indentLevel--;
         }
+
         EditorGUILayout.EndScrollView();
     }
 
-    private string GetCompressionInfo()
-    {
-        switch (compressionType)
-        {
-            case CompressionType.StandardCompression:
-                return "LZMA压缩: 高压缩率，但需要整体解压。适合整体加载的资源。";
-            case CompressionType.ChunkBasedCompression:
-                return "LZ4压缩: 较好的压缩率，可以按需解压。推荐使用。";
-            case CompressionType.NoCompression:
-                return "无压缩: 快速加载，但文件体积较大。";
-            default:
-                return "";
-        }
-    }
-
-    private void DrawAdvancedSettings()
-    {
-        EditorGUILayout.LabelField("强制重新打包所有AssetBundles", EditorStyles.miniLabel);
-        if (GUILayout.Button("强制完整重建"))
-        {
-            if (EditorUtility.DisplayDialog("强制重建", "这将重新打包所有AssetBundles，确定要继续吗？", "确定", "取消"))
-            {
-                bool isSuccess = BuildBundles(true);
-                if (isSuccess) 
-                    generatedManifest = AssetBundlePackager.GenerateManifest(outputPath, buildTarget, CurVersionNumber, (int)compressionType);
-            }
-        }
-
-        EditorGUILayout.Space();
-        EditorGUILayout.LabelField("工具", EditorStyles.miniLabel);
-        if (GUILayout.Button("打开输出文件夹"))
-        {
-            OpenOutputFolder();
-        }
-
-        //if (GUILayout.Button("清空所有AssetBundle名称"))
-        //{
-        //    ClearAllAssetBundleNames();
-        //}
-    }
-
-    private void DrawActions()
+    void DrawActions()
     {
         GUILayout.Space(10);
         EditorGUILayout.BeginHorizontal();
 
-        // 构建按钮
         GUI.color = Color.green;
-        if (GUILayout.Button("构建 AssetBundles", GUILayout.Height(30)))
+        if (GUILayout.Button("构建 AssetBundles", GUILayout.Height(32)))
         {
-            bool isSuccess = BuildBundles(false);
-            if (isSuccess)
-            {
-                generatedManifest = AssetBundlePackager.GenerateManifest(outputPath, buildTarget, CurVersionNumber, (int)compressionType);
-                CustomManifestBuilderWindow.ShowWindow(generatedManifest);
-            }
-
+            RunBuild(forceRebuild: false);
         }
         GUI.color = Color.white;
 
-        // 取消按钮
-        if (GUILayout.Button("取消", GUILayout.Height(30)))
+        if (GUILayout.Button("关闭", GUILayout.Height(32), GUILayout.Width(80)))
         {
-            this.Close();
+            Close();
         }
 
         EditorGUILayout.EndHorizontal();
     }
 
-    private void DrawLog()
+    void RunBuild(bool forceRebuild)
     {
-        GUILayout.Space(10);
-        EditorGUILayout.LabelField("操作日志", EditorStyles.boldLabel);
-        EditorGUILayout.HelpBox("构建完成后将显示详细日志信息。", MessageType.Info);
-    }
+        AssetBundleBuildSettings.SetCdnUrlTemplate(cdnUrlTemplate);
 
-    private bool BuildBundles(bool isForce)
-    {
-        try
+        var request = new AssetBundleBuildPipeline.BuildRequest
         {
-            // 获取压缩选项
-            BuildAssetBundleOptions options = BuildAssetBundleOptions.ForceRebuildAssetBundle;
-            if (isForce != true) options = AssetBundlePackager.GetCompressionOption(compressionType);
+            OutputRoot = outputPath,
+            BuildTarget = buildTarget,
+            Compression = compressionType,
+            ManifestVersion = curVersionNumber,
+            ClearOutputFolder = clearFolders,
+            CopyToStreamingAssets = copyToStreamingAssets,
+            ForceRebuild = forceRebuild,
+            ShowManifestDialog = true,
+            PackAtlasesBeforeBuild = packAtlasesBeforeBuild,
+        };
 
-            // 添加平台子路径
-            string platformPath = outputPath + "/" + AssetBundlePackager.GetPlatformFolder(buildTarget);
-
-            // 执行打包
-            bool success = AssetBundlePackager.BuildAssetBundles(
-                platformPath,
-                buildTarget,
-                options,
-                clearFolders,
-                copyToStreamingAssets
-            );
-
-            if (success)
-            {
-                Debug.Log($"✅ AssetBundle打包成功！平台: {buildTarget} 路径: {platformPath}");
-                EditorUtility.DisplayDialog("打包完成", $"AssetBundle打包成功！\n平台: {buildTarget}\n路径: {platformPath}", "确定");
-                return true;
-            }
-            else
-            {
-                Debug.LogError($"❌ AssetBundle打包失败！");
-                EditorUtility.DisplayDialog("打包失败", "AssetBundle打包失败，请查看控制台日志获取详细信息。", "确定");
-                return false;
-            }
-        }
-        catch (System.Exception e)
+        AssetBundleBuildPipeline.BuildResult result = AssetBundleBuildPipeline.BuildAndManifest(request);
+        if (!result.Success)
         {
-            Debug.LogError($"打包过程发生错误: {e.Message}\n{e.StackTrace}");
-            EditorUtility.DisplayDialog("错误", $"打包过程发生错误: {e.Message}", "确定");
-            return false;
+            EditorUtility.DisplayDialog("打包失败", "请查看 Console 日志。", "确定");
+            return;
         }
-    }
 
-    private void OpenOutputFolder()
-    {
-        string fullPath = Path.GetFullPath(outputPath);
-        if (!Directory.Exists(fullPath))
-        {
-            Directory.CreateDirectory(fullPath);
-        }
-        EditorUtility.RevealInFinder(fullPath);
-    }
+        generatedManifest = result.Manifest;
+        lastVersionNumber = curVersionNumber;
+        curVersionNumber = lastVersionNumber + 1;
 
-    //private void ClearAllAssetBundleNames()
-    //{
-    //    if (EditorUtility.DisplayDialog("清空AssetBundle名称", "这将清除项目中所有资源的AssetBundle名称设置，确定要继续吗？", "确定", "取消"))
-    //    {
-    //        string[] allAssetBundleNames = AssetDatabase.GetAllAssetBundleNames();
-    //        foreach (string assetBundleName in allAssetBundleNames)
-    //        {
-    //            AssetDatabase.RemoveAssetBundleName(assetBundleName, true);
-    //        }
-    //        Debug.Log("已清空所有AssetBundle名称");
-    //    }
-    //}
+        EditorUtility.DisplayDialog(
+            "打包完成",
+            "平台: " + buildTarget + "\n路径: " + result.PlatformBundlePath,
+            "确定");
+
+        CustomManifestBuilderWindow.ShowWindow(generatedManifest);
+    }
 }

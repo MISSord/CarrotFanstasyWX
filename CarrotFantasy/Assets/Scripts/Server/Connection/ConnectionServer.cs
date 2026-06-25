@@ -18,6 +18,9 @@ namespace CarrotFantasy
         private string connectAddress = string.Empty;
         private bool isInited = false;
 
+        public event Action TransportConnected;
+        public event Action TransportDisconnected;
+
         private abstract class ProtobufBinding
         {
             public abstract bool TryDispatch(byte[] payload);
@@ -53,6 +56,15 @@ namespace CarrotFantasy
         {
             this.EnsureInit();
             this.transport.Start();
+        }
+
+        /// <summary>断开传输层，保留监听与地址配置。</summary>
+        public void StopConnection()
+        {
+            if (this.transport != null)
+            {
+                this.transport.Stop();
+            }
         }
 
         public void AddListener(ushort opcode, Action<byte[]> callBack)
@@ -197,6 +209,8 @@ namespace CarrotFantasy
             {
                 this.transport.OnPacket -= this.HandleTransportPacket;
                 this.transport.OnError -= this.OnTransportError;
+                this.transport.OnConnected -= this.OnTransportConnected;
+                this.transport.OnDisconnected -= this.OnTransportDisconnected;
                 this.transport.Dispose();
                 this.transport = null;
             }
@@ -218,6 +232,8 @@ namespace CarrotFantasy
             {
                 this.transport.OnPacket -= this.HandleTransportPacket;
                 this.transport.OnError -= this.OnTransportError;
+                this.transport.OnConnected -= this.OnTransportConnected;
+                this.transport.OnDisconnected -= this.OnTransportDisconnected;
                 this.transport.Dispose();
                 this.transport = null;
             }
@@ -226,6 +242,18 @@ namespace CarrotFantasy
             this.transport.Init(this.connectAddress);
             this.transport.OnPacket += this.HandleTransportPacket;
             this.transport.OnError += this.OnTransportError;
+            this.transport.OnConnected += this.OnTransportConnected;
+            this.transport.OnDisconnected += this.OnTransportDisconnected;
+        }
+
+        private void OnTransportConnected()
+        {
+            this.TransportConnected?.Invoke();
+        }
+
+        private void OnTransportDisconnected()
+        {
+            this.TransportDisconnected?.Invoke();
         }
 
         private void OnTransportError(string error)

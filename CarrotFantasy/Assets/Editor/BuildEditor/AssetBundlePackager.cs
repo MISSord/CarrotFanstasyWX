@@ -11,7 +11,8 @@ public static class AssetBundlePackager
         BuildTarget.StandaloneWindows64,
         BuildTarget.StandaloneOSX,
         BuildTarget.Android,
-        BuildTarget.iOS
+        BuildTarget.iOS,
+        BuildTarget.WebGL,
     };
 
     public static readonly string[] platformNames = {
@@ -19,10 +20,11 @@ public static class AssetBundlePackager
         "Windows 64-bit",
         "macOS",
         "Android",
-        "iOS"
+        "iOS",
+        "WebGL",
     };
 
-    /// <summary>Build asset bundles to output path.</summary>
+    /// <summary>Build asset bundles to output path（平台子目录，如 .../StandaloneWindows）。</summary>
     public static bool BuildAssetBundles(string outputPath,
                                         BuildTarget buildTarget,
                                         BuildAssetBundleOptions compression = BuildAssetBundleOptions.None,
@@ -33,7 +35,7 @@ public static class AssetBundlePackager
         {
             if (string.IsNullOrEmpty(outputPath))
             {
-                Debug.LogError("\u8f93\u51fa\u8def\u5f84\u4e0d\u80fd\u4e3a\u7a7a\uff01");
+                Debug.LogError("输出路径不能为空！");
                 return false;
             }
 
@@ -45,13 +47,13 @@ public static class AssetBundlePackager
                     return false;
                 }
                 Directory.Delete(outputPath, true);
-                Debug.Log("\u5df2\u6e05\u7a7a\u8f93\u51fa\u6587\u4ef6\u5939: " + outputPath);
+                Debug.Log("已清空输出文件夹: " + outputPath);
             }
 
             if (!Directory.Exists(outputPath))
             {
                 Directory.CreateDirectory(outputPath);
-                Debug.Log("\u5df2\u521b\u5efa\u8f93\u51fa\u76ee\u5f55: " + outputPath);
+                Debug.Log("已创建输出目录: " + outputPath);
             }
 
             AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(outputPath, compression, buildTarget);
@@ -61,29 +63,47 @@ public static class AssetBundlePackager
                 return false;
             }
 
-            Debug.Log($"AssetBundle \u5df2\u751f\u6210\u3002\u8def\u5f84: {outputPath} \u5e73\u53f0: {buildTarget}");
+            Debug.Log($"AssetBundle 已生成。路径: {outputPath} 平台: {buildTarget}");
 
             if (copyToStreamingAssets)
             {
-                string streamingAssetsPath = Application.streamingAssetsPath + "/AssetBundles";
-                if (Directory.Exists(streamingAssetsPath))
-                {
-                    Directory.Delete(streamingAssetsPath, true);
-                }
-
-                FileUtil.CopyFileOrDirectory(outputPath, streamingAssetsPath);
-                Debug.Log("\u5df2\u590d\u5236\u5230 StreamingAssets: " + streamingAssetsPath);
-
-                AssetDatabase.Refresh();
+                CopyToStreamingAssets(outputPath, buildTarget);
             }
 
             return true;
         }
         catch (System.Exception e)
         {
-            Debug.LogError("AssetBundle \u6253\u5305\u5931\u8d25: " + e.Message);
+            Debug.LogError("AssetBundle 打包失败: " + e.Message);
             return false;
         }
+    }
+
+    /// <summary>拷贝到 StreamingAssets/AssetBundles/{平台}/，与运行时 GetRuntimeLoadPath 一致。</summary>
+    public static void CopyToStreamingAssets(string platformBundlePath, BuildTarget buildTarget)
+    {
+        string platformFolder = GetPlatformFolder(buildTarget);
+        string destPath = Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder);
+
+        if (Directory.Exists(destPath))
+        {
+            if (!IsSafeToDeleteDirectory(destPath))
+            {
+                Debug.LogError("StreamingAssets 目标目录不安全，已拒绝覆盖: " + destPath);
+                return;
+            }
+            Directory.Delete(destPath, true);
+        }
+
+        string parentDir = Path.GetDirectoryName(destPath);
+        if (!string.IsNullOrEmpty(parentDir) && !Directory.Exists(parentDir))
+        {
+            Directory.CreateDirectory(parentDir);
+        }
+
+        FileUtil.CopyFileOrDirectory(platformBundlePath, destPath);
+        Debug.Log("已复制到 StreamingAssets: " + destPath);
+        AssetDatabase.Refresh();
     }
 
     public static string GetPlatformFolder(BuildTarget target)
@@ -99,6 +119,8 @@ public static class AssetBundlePackager
                 return "Android";
             case BuildTarget.iOS:
                 return "iOS";
+            case BuildTarget.WebGL:
+                return "WebGL";
             default:
                 return target.ToString();
         }
@@ -122,26 +144,33 @@ public static class AssetBundlePackager
     public static string GetBundlePath(string outputPath, string path)
     {
         string repath = path.Replace('\\', '/');
-        repath = repath.Replace(outputPath + "/", "");
+        repath = repath.Replace(outputPath.Replace('\\', '/') + "/", "");
         return repath.ToLower();
     }
 
-    public static CustomManifest GenerateManifest(string bundlePath, BuildTarget target, int VersionNumber = 1, int CompressedFormat = 0)
+    public static CustomManifest GenerateManifest(
+        string bundleRootPath,
+        BuildTarget target,
+        int versionNumber = 1,
+        int compressedFormat = 0,
+        bool showSuccessDialog = true)
     {
-        bundlePath = bundlePath + "/" + AssetBundlePackager.GetPlatformFolder(target);
+        string bundlePath = Path.Combine(bundleRootPath, GetPlatformFolder(target));
         if (!Directory.Exists(bundlePath))
         {
-            EditorUtility.DisplayDialog("\u9519\u8bef", "AB \u5305\u76ee\u5f55\u4e0d\u5b58\u5728\uff01", "\u786e\u5b9a");
+            EditorUtility.DisplayDialog("错误", "AB 包目录不存在！", "确定");
             return null;
         }
+
+        HashSet<string> registeredBundles = CollectRegisteredBundleNames();
 
         CustomManifest generatedManifest = new CustomManifest
         {
             AppVersion = Application.version,
             BuildTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             buildTime = System.DateTime.Now.Ticks,
-            ManifestVersion = VersionNumber,
-            CompressedFormat = CompressedFormat,
+            ManifestVersion = versionNumber,
+            CompressedFormat = compressedFormat,
         };
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
@@ -150,23 +179,29 @@ public static class AssetBundlePackager
             for (int i = 0; i < bundleFiles.Length; i++)
             {
                 string file = bundleFiles[i];
-                if (file.EndsWith(".meta") || file.EndsWith(".manifest") || file.EndsWith(".json") || file.EndsWith(".txt"))
+                if (ShouldSkipManifestFile(file))
+                {
                     continue;
+                }
 
                 EditorUtility.DisplayProgressBar("生成AB清单", Path.GetFileName(file), (i + 1f) / bundleFiles.Length);
 
-                string BundleName = AssetBundlePackager.GetBundlePath(bundlePath, file);
+                string bundleName = GetBundlePath(bundlePath, file);
+                if (!registeredBundles.Contains(bundleName))
+                {
+                    continue;
+                }
+
                 CustomAssetBundleInfo info = new CustomAssetBundleInfo
                 {
                     AssetName = Path.GetFileName(file),
-                    BundleName = BundleName,
+                    BundleName = bundleName,
                     Size = new FileInfo(file).Length,
                     Hash = MD5Checker.ComputeFileMD5(file),
                 };
 
-                // 统一通过 AssetDatabase 读取依赖，避免多套来源带来的不一致。
                 HashSet<string> processedBundles = new HashSet<string>();
-                GenerateFlatDependencyList(BundleName, 0, processedBundles);
+                GenerateFlatDependencyList(bundleName, 0, processedBundles);
                 info.Dependencies = processedBundles.ToArray();
 
                 generatedManifest.AssetBundles.Add(info);
@@ -185,9 +220,33 @@ public static class AssetBundlePackager
         File.WriteAllText(versionPath, generatedManifest.BuildTime);
 
         AssetDatabase.Refresh();
-        EditorUtility.DisplayDialog("\u6210\u529f", "\u6e05\u5355\u6587\u4ef6\u5df2\u751f\u6210\uff01", "\u786e\u5b9a");
+        if (showSuccessDialog)
+        {
+            EditorUtility.DisplayDialog("成功", "清单文件已生成！", "确定");
+        }
 
+        Debug.Log($"[AB Build] custom_manifest.json 已生成，共 {generatedManifest.AssetBundles.Count} 个 AB 包。");
         return generatedManifest;
+    }
+
+    private static HashSet<string> CollectRegisteredBundleNames()
+    {
+        string[] names = AssetDatabase.GetAllAssetBundleNames();
+        var set = new HashSet<string>();
+        for (int i = 0; i < names.Length; i++)
+        {
+            set.Add(names[i].ToLower().Replace('\\', '/'));
+        }
+
+        return set;
+    }
+
+    private static bool ShouldSkipManifestFile(string file)
+    {
+        return file.EndsWith(".meta")
+            || file.EndsWith(".manifest")
+            || file.EndsWith(".json")
+            || file.EndsWith(".txt");
     }
 
     private static void GenerateFlatDependencyList(string abName, int depth, HashSet<string> processedBundles)
@@ -197,7 +256,10 @@ public static class AssetBundlePackager
             return;
         }
 
-        if(depth != 0) processedBundles.Add(abName);
+        if (depth != 0)
+        {
+            processedBundles.Add(abName);
+        }
 
         string[] dependencies = AssetDatabase.GetAssetBundleDependencies(abName, true);
 
@@ -212,15 +274,21 @@ public static class AssetBundlePackager
         string fullPath = Path.GetFullPath(outputPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         string rootPath = Path.GetPathRoot(fullPath)?.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         if (string.IsNullOrEmpty(fullPath) || string.IsNullOrEmpty(rootPath))
+        {
             return false;
+        }
 
         if (string.Equals(fullPath, rootPath, System.StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
         string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."))
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         if (string.Equals(fullPath, projectRoot, System.StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
         return true;
     }

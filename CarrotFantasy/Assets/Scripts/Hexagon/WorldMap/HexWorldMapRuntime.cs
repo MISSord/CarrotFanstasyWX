@@ -18,6 +18,8 @@ public class HexWorldMapRuntime
 	/// <summary>战斗/商店/传送 UI 打开时为 true，禁止普通移动。</summary>
 	bool movementLocked;
 
+	public HexFogOfWarState FogOfWar { get; private set; }
+
 	public int CurrentPointId {
 		get { return currentPointId; }
 	}
@@ -68,6 +70,12 @@ public class HexWorldMapRuntime
 		if (!pointById.ContainsKey(currentPointId)) {
 			Debug.LogError("HexWorldMapRuntime: invalid start point id " + currentPointId);
 		}
+
+		FogOfWar = new HexFogOfWarState(mapAsset.width, mapAsset.height);
+		if (progress != null) {
+			FogOfWar.ImportFromProgress(progress);
+		}
+		RevealFogAroundCurrentPoint();
 
 		Context = new HexMapContext(this);
 		movementLocked = false;
@@ -150,6 +158,7 @@ public class HexWorldMapRuntime
 		TryTriggerEnter(toPointId);
 
 		Context.RaisePlayerMoved(fromPointId, toPointId);
+		RevealFogAroundCurrentPoint();
 		RaiseStateChanged();
 		return true;
 	}
@@ -177,6 +186,7 @@ public class HexWorldMapRuntime
 		TryTriggerEnter(targetPointId);
 
 		Context.RaisePlayerMoved(previousCurrent, targetPointId);
+		RevealFogAroundCurrentPoint();
 		movementLocked = false;
 		RaiseStateChanged();
 	}
@@ -228,6 +238,9 @@ public class HexWorldMapRuntime
 				progress.leaveHandledPointIds.Add(point.data.pointId);
 			}
 		}
+		if (FogOfWar != null) {
+			FogOfWar.ExportToProgress(progress);
+		}
 		return progress;
 	}
 
@@ -252,6 +265,18 @@ public class HexWorldMapRuntime
 				point.leaveHandled = true;
 			}
 		}
+	}
+
+	void RevealFogAroundCurrentPoint ()
+	{
+		if (FogOfWar == null) {
+			return;
+		}
+		HexMapPointRuntime current = GetPoint(currentPointId);
+		if (current == null) {
+			return;
+		}
+		FogOfWar.RevealAroundPlayer(this, current.Coordinates);
 	}
 
 	/// <summary>离开格子时触发；成功后置 leaveHandled，并按 postRule 可能 BlockSelf。</summary>

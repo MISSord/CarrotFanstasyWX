@@ -868,8 +868,8 @@ public class AssetBundleManager
             return;
         }
 
-        // 检查本地是否存在
-        if (File.Exists(AssetBundlePathHelper.GetLocalLZ4Path(bundleName)) == false)
+        // 检查本地是否存在（持久化目录或 StreamingAssets）
+        if (!AssetBundlePathHelper.IsBundleAvailableAtRuntime(bundleName))
         {
             DownloadBundle(bundleName, (bool isSucee, string message) =>
             {
@@ -1132,7 +1132,7 @@ public class AssetBundleManager
         _loadingBundles.Add(bundleInfo);
         _loadingBundleNames.Add(bundleInfo.bundleName);
 
-        string path = AssetBundlePathHelper.GetLocalLZ4Path(bundleInfo.bundleName);
+        string path = AssetBundlePathHelper.GetRuntimeLoadPath(bundleInfo.bundleName);
 
         if (bundleInfo.loadPriority == LoadPriority.Sync)
         {

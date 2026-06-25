@@ -96,6 +96,13 @@ namespace CarrotFantasy
             this.mapModel.ParseMapInfo(mapSnapshot);
         }
 
+        /// <summary>联机会话失效：丢弃未同步进度并重置为初始地图。</summary>
+        public void ClearPendingProgressOnSessionExpired()
+        {
+            this.unSaveMapInfo = null;
+            this.ApplyMapSnapshot(MapInfoHelper.GetInitMapInfo());
+        }
+
         /// <summary>
         /// 登录成功后的地图：未连接时用本地初始图；已连接时先铺默认档，再由服务端登录后主动推送的 203 覆盖。
         /// 仍可通过客户端发 202 主动拉图（与推送负载一致）。

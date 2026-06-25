@@ -80,7 +80,7 @@ namespace CarrotFantasy
         {
             base.InitComponents();
             this.moveComponent.RegisterMoveDirect(this.target);
-            // 逻辑碰撞半径来自 tbbullet.BodyRadius，与 HitTest / TryResolveTargetHit 一致。
+            // 逻辑碰撞半径来自 tbbullet.BodyRadius，供 HitTest 使用。
             Fix64 bodyRadius = this.birthParam != null && this.birthParam.ContainsKey("bodyRadius")
                 ? this.birthParam["bodyRadius"]
                 : new Fix64(0.2f);

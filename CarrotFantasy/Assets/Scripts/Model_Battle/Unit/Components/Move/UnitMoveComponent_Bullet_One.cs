@@ -40,11 +40,6 @@ namespace CarrotFantasy
             return false;
         }
 
-        protected override bool UsesMoveResolveTargetHit()
-        {
-            return false;
-        }
-
         public override void Dispose()
         {
             this.headingLocked = false;

@@ -13,7 +13,6 @@ using UnityEngine;
 /// </summary>
 public static class MapConfigWaveSync
 {
-    private const string MapConfigStreaming = "Assets/StreamingAssets/Json/MapConfig.json";
     private const string MapConfigGame = "Assets/Game/Json/MapConfig.json";
     private const string LevelJsonFolder = "Assets/Game/Json/Level";
 
@@ -83,10 +82,7 @@ public static class MapConfigWaveSync
 
     private static int ApplyWaveCounts(Dictionary<string, int> waveCounts)
     {
-        int updated = 0;
-        updated += SyncMapConfigFile(MapConfigStreaming, waveCounts);
-        updated += SyncMapConfigFile(MapConfigGame, waveCounts);
-        return updated;
+        return SyncMapConfigFile(MapConfigGame, waveCounts);
     }
 
     private static int SyncMapConfigFile(string assetRelativePath, Dictionary<string, int> waveCounts)

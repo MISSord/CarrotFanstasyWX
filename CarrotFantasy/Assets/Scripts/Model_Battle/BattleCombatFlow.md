@@ -53,7 +53,7 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 - 视图点击物品 → `BattleEvent.TARGET_CHANGE` → `HitTest.SetTarget` 记录全局 `targetUnit`。
 - 每帧 **TowerComponent.OnTick 开头** 调用 `AssignTowerFocusTargets()`：
   1. 清空所有塔的 `targetUnit`
-  2. 若有集火目标：**遍历全部塔**，用当前 `bodyHitTestShape` 与目标做圆-圆检测，在射程内的塔写入 `targetUnit`
+  2. 若有集火目标：**遍历全部塔**，用 `BattleRangeQuery.IsInRange` 判射程，在范围内的塔写入 `targetUnit`
 
 不使用空间网格，避免「Tower 阶段早于 HitTest Refresh」导致误解或重复重建。
 
@@ -62,7 +62,7 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 优先级：
 
 1. **`targetUnit`（集火）** — 仍在射程内则打它（怪物或物品）
-2. **否则** — `CollectMonstersInRange()` 扫描射程内怪物，选 **距终点最近** 的一只（`EndPointDistance` 最小）
+2. **否则** — `CollectMonstersInRange()` 扫描射程内怪物（`BattleRangeQuery.IsInRange`），选 **距终点最近** 的一只（`EndPointDistance` 最小）
 3. **无目标** — 不开火，且 `timeVal = attackCD`（不堆 excess CD，避免久未攻击连发）
 
 注意：**自动索敌只扫怪物，不扫物品**；打物品需玩家集火。
@@ -83,7 +83,7 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 
 | 枚举 | 组件 | 行为 |
 |------|------|------|
-| `Homing` | `UnitMoveComponent_Bullet` | 追踪弹：对 **怪物** 每帧重算朝向；速度标量不变 |
+| `Homing` | `UnitMoveComponent_Bullet` | 追踪弹：对怪物/物品每帧按 **坐标差** 重算朝向；速度标量不变 |
 | `Straight` | `UnitMoveComponent_Bullet_One` | 直线弹：开火时锁定方向，之后不改向 |
 | `None` | 同 Homing | 工厂层归一化为 Homing |
 
@@ -92,28 +92,22 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 其它配置（与弹道无关）：
 
 - `IsRemove`（`tbbullet.json`）：`0` 命中销毁，`1` 穿透（如 4 号塔）
-- `BodyRadius`：写入 `birthParam["bodyRadius"]`，**逻辑碰撞半径**（勿写死 0.2）
+- `BodyRadius`：写入 `birthParam["bodyRadius"]`，供 **HitTest** 逻辑碰撞半径（勿写死 0.2）
 
-### 4.1 命中职责划分（移动 vs HitTest）
+### 4.1 移动与命中职责
 
-| 弹道 | 目标 | 移动阶段 | HitTest |
-|------|------|----------|---------|
-| **Straight** | 怪物 / 物品 | 只位移，**不**调用 `TryResolveTargetHit` | **唯一**伤害入口 |
-| **Homing** | 怪物 | 改向 + 步长限制，**不**移动内判定 | **唯一**伤害入口 |
-| **Homing** | 物品 | 不改向 + 步长限制 + **`TryResolveTargetHit`** | 同帧可能重叠，靠 `haveBeHit` 去重 |
+**移动**（`UnitMoveComponent_Bullet` / `Bullet_One`）只做运动学：
 
-`TryResolveTargetHit`（仅追踪弹 + 物品）：与绑定目标距离 ≤ 两半径之和时触发双向 `BeHitCallBack`；非穿透弹命中后本帧不再位移。
+- 追踪弹：`目标坐标 − 子弹坐标` 得方向，标量 `moveSpeed` 不变；仅当方向长度过小（防除零）时停速。
+- 直线弹：开火时锁定方向，之后不改向。
+- **不**在移动里做碰撞圆步长压缩、抵达判定或 `BeHitCallBack`。
 
-直线弹 **不做** 步长压缩（`ShouldLimitStepTowardTarget` 仅追踪弹为 true）。
+| 弹道 | 移动 | 伤害 |
+|------|------|------|
+| **Straight** | 匀速直线位移 | **仅 HitTest** |
+| **Homing** | 每帧朝绑定目标中心追踪 | **仅 HitTest** |
 
-实现开关：
-
-- `UsesMoveResolveTargetHit()` — 直线弹 `Bullet_One` 覆写为 `false`
-- `ShouldTryResolveTargetHitNow()` — 追踪弹且目标为 **物品** 时为 `true`
-
-### 4.2 追踪弹步长限制
-
-仅 **Homing** 且目标仍有效时：本帧位移不超过「到碰撞圆边缘剩余距离」，防止穿过静止目标；靠近时可能 **视觉变慢**（标量不变、步长变短）。
+实现开关：`UsesHomingHeading()` — 直线弹 `Bullet_One` 覆写为 `false`。
 
 ---
 
@@ -125,13 +119,12 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 2. `ChooseSingleBeHit(MONSTER, BULLET)` / `ChooseSingleBeHit(ITEM, BULLET)` — 以怪物/物品为 receiver，查附近子弹
 3. `ExeTheCallBack` — 对每个 receiver：`bullet.BeHitCallBack(receiver)` + `receiver.BeHitCallBack(bullet)`
 
-### 5.2 与移动内判定的关系
+### 5.2 与移动的关系
 
-- **HitTest**：所有弹道对路径上怪物/物品的 **主通路**（含穿透多目标）。
-- **TryResolveTargetHit**：仅 **Homing + 物品** 的补充分通路（物品静止、追踪弹不对物品每帧改向，靠抵达判定提高命中率）。
-- 同帧两通路均触发时，靠 `haveBeHit`（`bullet.uid`）防重复扣血。
+- **HitTest** 是唯一伤害入口：圆与圆重叠（`BodyRadius`）触发双向 `BeHitCallBack`。
+- 同帧多子弹命中同一目标时，靠 `haveBeHit`（`bullet.uid`）防重复扣血。
 
-非穿透弹销毁：由 `BattleUnit_Bullet.BeHitCallBack` → `RequestRemove`（两通路任一触发即可）。
+非穿透弹销毁：由 `BattleUnit_Bullet.BeHitCallBack` → `RequestRemove`。
 
 ---
 
@@ -147,6 +140,7 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 |------|------|
 | 组件注册与 Tick 顺序 | `Battle/Pve/PveBattleComponentSetup.cs` |
 | 集火 + 碰撞 | `Components/HitTest/BattleSimpleHitTestComponent.cs` |
+| 圆射程判定 | `Common/function/BattleRangeQuery.cs` |
 | 空间网格 | `Components/HitTest/BattleSpatialGrid.cs` |
 | 塔建造与 Tick | `Components/Core/BattleTowerComponent.cs` |
 | 塔索敌 | `Unit/BattleUnit_Tower.cs` |
@@ -160,6 +154,7 @@ Input → Monster(移动) → Tower(集火+开火) → Bullet(移动) → HitTes
 ## 8. 改顺序或加新碰撞类型时
 
 1. 保持 **子弹移动在 HitTest 之前**（除非改为连续碰撞扫描 CCD）。
-2. 凡用 `BattleSpatialGrid` 做 broad phase，须在当次查询前 **Refresh**；小集合可像集火一样 brute-force。
-3. 新增 receiver 类型时：注册 `registerHitTestShapeDic` + `curShouldCallBackDic`，并实现 `ShouldReceiveHit`。
-4. 新增弹道类型：扩展 `BulletMoveType` 枚举 + `BulletMoveComponentFactory` + 新 `UnitMoveComponent` 子类。
+2. **HitTest.Init 须在 ItemComponent.Init 之前**，否则关卡物品在 `BATTLE_UNIT_ADD` 时无人监听，永远不会进入碰撞网格。
+3. 凡用 `BattleSpatialGrid` 做 broad phase，须在当次查询前 **Refresh**；小集合可像集火一样 brute-force。
+4. 新增 receiver 类型时：注册 `registerHitTestShapeDic` + `curShouldCallBackDic`，并实现 `ShouldReceiveHit`。
+5. 新增弹道类型：扩展 `BulletMoveType` 枚举 + `BulletMoveComponentFactory` + 新 `UnitMoveComponent` 子类。

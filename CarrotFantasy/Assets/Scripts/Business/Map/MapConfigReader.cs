@@ -1,7 +1,5 @@
 using LitJson;
-using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -9,23 +7,20 @@ namespace CarrotFantasy
     public class MapConfigReader
     {
         public static List<Stage> stageList;
-        public static String filePath;
+        public static string filePath;
 
         public static void InitConfig()
         {
-            filePath = Application.streamingAssetsPath + "/Json" + "/MapConfig.json";
-            //正常解析
-            if (File.Exists(filePath))
+            filePath = "Game/Json/MapConfig.json";
+            string jsonStr = GameJsonLoader.LoadMapConfigJsonText();
+            if (!string.IsNullOrEmpty(jsonStr))
             {
-                StreamReader sr = new StreamReader(filePath);
-                string jsonStr = sr.ReadToEnd();
-                sr.Close();
                 PlayerManager playerManager = JsonMapper.ToObject<PlayerManager>(jsonStr);
                 stageList = playerManager.unLockedNormalModelLevelList;
             }
             else
             {
-                Debug.Log("MapConfig读取失败");
+                Debug.LogError("MapConfig 读取失败");
             }
         }
 

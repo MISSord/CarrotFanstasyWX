@@ -14,7 +14,6 @@ public static class LevelSpawnSheetImporter
 {
     private const string SpawnSheetRelativePath = "ConfigTools/LevelSpawn";
     private const string LevelJsonFolder = "Assets/Game/Json/Level";
-    private const string StreamingLevelFolder = "Assets/StreamingAssets/Json/Level";
 
     private static string GetRepositoryRoot()
     {
@@ -121,11 +120,6 @@ public static class LevelSpawnSheetImporter
     private static void WriteRoundInfoToLevel(string fileName, List<Round.RoundInfo> roundInfo)
     {
         WriteRoundInfoToPath(Path.Combine(LevelJsonFolder, fileName), roundInfo);
-        string streamingPath = Path.Combine(StreamingLevelFolder, fileName);
-        if (File.Exists(Path.GetFullPath(streamingPath)))
-        {
-            WriteRoundInfoToPath(streamingPath, roundInfo);
-        }
     }
 
     private static void WriteRoundInfoToPath(string assetRelativePath, List<Round.RoundInfo> roundInfo)

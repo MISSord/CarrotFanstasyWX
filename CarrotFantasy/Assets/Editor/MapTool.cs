@@ -75,7 +75,7 @@ public class MapTool : Editor {
     //具体读取关卡列表
     private List<FileInfo> GetLevelFiles()
     {
-        string[] files = Directory.GetFiles(Application.streamingAssetsPath+"/Json/Level/","*.json");
+        string[] files = Directory.GetFiles(Application.dataPath + "/Game/Json/Level/", "*.json");
         
         List<FileInfo> list = new List<FileInfo>();
         for (int i = 0; i < files.Length; i++)

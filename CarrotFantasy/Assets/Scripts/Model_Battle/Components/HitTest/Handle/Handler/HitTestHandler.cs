@@ -12,8 +12,7 @@ namespace CarrotFantasy
         //圆形碰撞圆形
         public static bool HitTest(HitTestShape_Circle shape1, HitTestShape_Circle shape2)
         {
-            Fix64 distanceSQ = Battle_func.PGetDistanceSQ(shape1.centerX, shape1.centerY, shape2.centerX, shape2.centerY);
-            return distanceSQ <= ((shape1.radius + shape2.radius) * (shape1.radius + shape2.radius));
+            return BattleRangeQuery.CirclesOverlap(shape1, shape2);
         }
 
         //圆形碰矩形（AABB）：圆心到矩形上最近点的距离平方与半径平方比较

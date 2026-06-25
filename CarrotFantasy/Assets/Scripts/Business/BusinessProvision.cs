@@ -48,11 +48,6 @@ namespace CarrotFantasy
                 info.Value.AddSocketListener();
                 this.businessList.Add(info.Value);
             }
-
-            if (StandaloneGameConfig.EnableStandaloneMode)
-            {
-                StandaloneBackendMock.BootstrapDefaultSession();
-            }
         }
 
         public void ReloadBusiness()
@@ -73,6 +68,7 @@ namespace CarrotFantasy
             this.businessDic.Clear();
             this.businessList.Clear();
 
+            ServerProvision.connectionLifecycle?.Dispose();
             ServerProvision.connectionServer.Dispose();
             ServerProvision.sceneServer.Dispose();
 

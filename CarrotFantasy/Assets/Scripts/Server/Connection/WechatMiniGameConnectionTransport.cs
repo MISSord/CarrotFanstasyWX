@@ -8,6 +8,8 @@ namespace CarrotFantasy
     {
         public event Action<byte[]> OnPacket;
         public event Action<string> OnError;
+        public event Action OnConnected;
+        public event Action OnDisconnected;
 
         private string address = string.Empty;
         private IWechatSocketBridge bridge;
@@ -92,6 +94,8 @@ namespace CarrotFantasy
             this.UnbindBridge();
             this.OnPacket = null;
             this.OnError = null;
+            this.OnConnected = null;
+            this.OnDisconnected = null;
         }
 
         private void BindBridge()
@@ -132,6 +136,7 @@ namespace CarrotFantasy
             this.isConnecting = false;
             this.IsConnected = true;
             Debug.Log("WechatMiniGameConnectionTransport connected.");
+            this.OnConnected?.Invoke();
 
             while (this.pendingPackets.Count > 0)
             {
@@ -143,15 +148,25 @@ namespace CarrotFantasy
         private void HandleBridgeClose(int code, string reason)
         {
             this.isConnecting = false;
+            bool wasConnected = this.IsConnected;
             this.IsConnected = false;
             Debug.LogWarning(string.Format("WechatMiniGameConnectionTransport closed. code: {0}, reason: {1}", code, reason));
+            if (wasConnected)
+            {
+                this.OnDisconnected?.Invoke();
+            }
         }
 
         private void HandleBridgeError(string error)
         {
             this.isConnecting = false;
+            bool wasConnected = this.IsConnected;
             this.IsConnected = false;
             this.OnError?.Invoke(error);
+            if (wasConnected)
+            {
+                this.OnDisconnected?.Invoke();
+            }
         }
 
         private void HandleBridgeMessage(byte[] packet)

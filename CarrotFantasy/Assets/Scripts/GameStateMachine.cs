@@ -9,6 +9,7 @@ public enum GameState
     CheckUpdate,    // 检测更新
     Download,       // 下载AB包
     Login,          // 登录
+    SelectGameMode, // 选择单机/联机
     EnterGame,      // 进游戏
     InGame,         // 游戏中
     Restart,        // 重启游戏
@@ -78,13 +79,14 @@ public class GameStateMachine
         // 初始化所有状态
         states.Add(GameState.CheckUpdate, new CheckUpdateState(gameContext));
         states.Add(GameState.Download, new DownloadState(gameContext));
+        states.Add(GameState.SelectGameMode, new SelectGameModeState(gameContext));
         states.Add(GameState.EnterGame, new EnterGameState(gameContext));
 
 #if UNITY_EDITOR
         loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
         if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
         {
-            ChangeState(GameState.EnterGame);
+            ChangeState(GameState.SelectGameMode);
             return;
         }
 #endif
@@ -123,6 +125,7 @@ public class CheckUpdateState : BaseGameState
     private AssetBundleUpdateChecker checker;
     private bool isCanDownLoad = false;
     private bool isFinishCheck = false;
+    private bool useTestingBootstrap;
 
     public CheckUpdateState(GameContext context) : base(context)
     {
@@ -133,7 +136,22 @@ public class CheckUpdateState : BaseGameState
     public override void Enter()
     {
         Debug.Log("进入检测更新流程");
+        useTestingBootstrap = false;
+        isFinishCheck = false;
         ViewManager.Instance.OpenView<StartLoadPanel>();
+
+#if UNITY_EDITOR
+        LoadMode loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
+        if (loadMode == LoadMode.Testing && AssetBundleUpdateChecker.TryBootstrapTestingCheck(out UpdateCheckResult testingResult))
+        {
+            context.result = testingResult;
+            isFinishCheck = true;
+            useTestingBootstrap = true;
+            Debug.Log("[Testing] 使用本地 AB 清单，跳过远程清单下载。");
+            return;
+        }
+#endif
+
         checker?.StartUpdateCheck(AssetBundlePathHelper.GetServerLoadUrl(), CheckResultCallBack);
     }
 
@@ -151,33 +169,63 @@ public class CheckUpdateState : BaseGameState
 
     public override void Update()
     {
+        if (useTestingBootstrap && isFinishCheck)
+        {
+            HandleCheckFinished();
+            return;
+        }
+
         checker?.Update();
 
         if (checker != null && checker.IsRunning == false && checker.CurrentState != CheckerState.Idle)
         {
-            GameMain root = GameObject.FindObjectOfType<GameMain>();
-            if (checker.CurrentState == CheckerState.Error)
+            HandleCheckFinished();
+        }
+    }
+
+    private void HandleCheckFinished()
+    {
+        if (!isFinishCheck)
+        {
+            return;
+        }
+
+        GameMain root = GameObject.FindObjectOfType<GameMain>();
+        if (useTestingBootstrap)
+        {
+            if (context.result.hasChanges)
             {
-                //检测清单失败，进入失败状态
-                root?.ChangeMachineState(GameState.Error);
-                return;
+                root?.ChangeMachineState(GameState.Download);
+            }
+            else
+            {
+                AssetBundleManager.Instance.SetAssetBundleItem(context.result.customManifest);
+                root?.ChangeMachineState(GameState.SelectGameMode);
             }
 
-            //完成检查
-            if (isFinishCheck == true)
-            {
-                //有需要更新，进入下载模式
-                if (context.result.hasChanges == true)
-                {
-                    root?.ChangeMachineState(GameState.Download);
-                }
-                else
-                {
-                    AssetBundleManager.Instance.SetAssetBundleItem(context.result.customManifest);
-                    root?.ChangeMachineState(GameState.EnterGame);
-                }
-            }
+            useTestingBootstrap = false;
+            isFinishCheck = false;
+            return;
         }
+
+        if (checker.CurrentState == CheckerState.Error)
+        {
+            root?.ChangeMachineState(GameState.Error);
+            isFinishCheck = false;
+            return;
+        }
+
+        if (context.result.hasChanges == true)
+        {
+            root?.ChangeMachineState(GameState.Download);
+        }
+        else
+        {
+            AssetBundleManager.Instance.SetAssetBundleItem(context.result.customManifest);
+            root?.ChangeMachineState(GameState.SelectGameMode);
+        }
+
+        isFinishCheck = false;
     }
 
     public override void Exit()
@@ -219,6 +267,7 @@ public class DownloadState : BaseGameState
         AssetBundleUpdateChecker.SaveLocalManifest(context.result.customManifest);
         AssetBundleManager.Instance.SetAssetBundleItem(context.result.customManifest);
         LubanConfigLoader.Reload();
+        GameJsonLoader.Reload();
         isSetABMainifest = true;
     }
 
@@ -230,7 +279,7 @@ public class DownloadState : BaseGameState
         if (downloader != null && downloader.GetLoaderState() == LoaderState.Idle && isSetABMainifest == true)
         {
             GameMain root = GameObject.FindObjectOfType<GameMain>();
-            root?.ChangeMachineState(GameState.EnterGame);
+            root?.ChangeMachineState(GameState.SelectGameMode);
         }
     }
 
@@ -278,6 +327,42 @@ public class LoginState : BaseGameState
     }
 
     public override GameState GetStateType() => GameState.Login;
+}
+
+public class SelectGameModeState : BaseGameState
+{
+    public SelectGameModeState(GameContext context) : base(context)
+    {
+    }
+
+    public override void Enter()
+    {
+        Debug.Log("进入游玩模式选择");
+        GameMain main = GameObject.FindObjectOfType<GameMain>();
+        if (main == null)
+        {
+            return;
+        }
+
+        GameModeSelectGui gui = main.GetComponent<GameModeSelectGui>();
+        if (gui == null)
+        {
+            gui = main.gameObject.AddComponent<GameModeSelectGui>();
+        }
+
+        gui.Show();
+    }
+
+    public override void Update()
+    {
+    }
+
+    public override void Exit()
+    {
+        Debug.Log("退出游玩模式选择");
+    }
+
+    public override GameState GetStateType() => GameState.SelectGameMode;
 }
 
 public class EnterGameState : BaseGameState

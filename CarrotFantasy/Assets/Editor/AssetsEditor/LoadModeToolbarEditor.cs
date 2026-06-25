@@ -83,7 +83,7 @@ public class LoadModeToolbarEditor : EditorWindow
         // 创建模式选择按钮
         DrawModeButton(GameLoadMode.Development, "🛠️ 开发模式", "启用所有调试工具和日志");
         DrawModeButton(GameLoadMode.Production, "🚀 生产模式", "优化性能，适合发布版本");
-        DrawModeButton(GameLoadMode.Testing, "🧪 测试模式", "专门的测试环境配置，测试本地AB包");
+        DrawModeButton(GameLoadMode.Testing, "🧪 测试模式", "Editor 下加载本地 AB 包，不走 AssetDatabase");
         DrawModeButton(GameLoadMode.Demo, "🎯 演示模式", "平衡性能和功能的演示版本");
         DrawModeButton(GameLoadMode.DebugMode, "🐛 调试模式", "详细的调试信息和日志");
 
@@ -143,7 +143,7 @@ public class LoadModeToolbarEditor : EditorWindow
         {
             GameLoadMode.Development => "开发环境，启用所有调试功能",
             GameLoadMode.Production => "生产环境，优化性能禁用调试",
-            GameLoadMode.Testing => "测试环境，专门的测试配置",
+            GameLoadMode.Testing => "Editor 下走 AB 加载流程：优先 StreamingAssets/Build 本地包，不读 AssetDatabase",
             GameLoadMode.Demo => "演示环境，平衡性能功能",
             GameLoadMode.DebugMode => "调试环境，详细日志信息",
             _ => "未知模式"

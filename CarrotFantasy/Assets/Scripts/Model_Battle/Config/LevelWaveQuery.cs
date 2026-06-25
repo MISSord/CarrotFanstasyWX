@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.IO;
 using LitJson;
 using UnityEngine;
 
@@ -49,21 +48,8 @@ namespace CarrotFantasy
         public static LevelInfo LoadLevelInfo(int bigLevel, int level)
         {
             string fileName = LevelSpawnSheetCompiler.LevelFileName(bigLevel, level);
-            string streamingPath = Path.Combine(Application.streamingAssetsPath, "Json", "Level", fileName);
-            if (File.Exists(streamingPath))
-            {
-                return ParseLevelJson(File.ReadAllText(streamingPath));
-            }
-
-#if UNITY_EDITOR
-            string editorPath = Path.GetFullPath(
-                Path.Combine(Application.dataPath, "Game", "Json", "Level", fileName));
-            if (File.Exists(editorPath))
-            {
-                return ParseLevelJson(File.ReadAllText(editorPath));
-            }
-#endif
-            return null;
+            string json = GameJsonLoader.LoadLevelJsonText(fileName);
+            return ParseLevelJson(json);
         }
 
         public static void ClearCache()

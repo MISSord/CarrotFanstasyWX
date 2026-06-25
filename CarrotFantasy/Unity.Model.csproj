@@ -106,6 +106,7 @@
     <Compile Include="Assets\Scripts\Hexagon\Validation\HexWorldMapValidator.cs" />
     <Compile Include="Assets\Scripts\Util\Event\EventDispatcher.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Bullet_One.cs" />
+    <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexWorldMapFogView.cs" />
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageManager.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Map\BattleMapLayoutUtil.cs" />
     <Compile Include="Assets\Scripts\Server\UI\UIServer.cs" />
@@ -120,7 +121,6 @@
     <Compile Include="Assets\Scripts\View_Battle\Battle\Pve\PveBattleView.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BulletDef.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\IConnectionTransport.cs" />
-    <Compile Include="Assets\Scripts\Editor\LevelSpawnSheetImporter.cs" />
     <Compile Include="Assets\Scripts\Util\BaseView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Benchmark\HitTestBenchmarkBattle.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\TbMonster.cs" />
@@ -157,6 +157,7 @@
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryPayloadWriter.cs" />
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexEventTypeCatalog.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\BattlePveMode.cs" />
+    <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexMapCellIndex.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveBattleResult.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatMiniGameConnectionTransport.cs" />
     <Compile Include="Assets\Scripts\Business\BusinessType.cs" />
@@ -182,6 +183,7 @@
     <Compile Include="Assets\Scripts\Util\Panel\UIBlock.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UIButtonScalePress.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneServer.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Common\function\BattleRangeQuery.cs" />
     <Compile Include="Assets\Scripts\Server\AssetBundleManager\AssetBundleUpdateChecker.cs" />
     <Compile Include="Assets\Scripts\Business\Gm\GmCommandDispatcher.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\TowerDef.cs" />
@@ -215,6 +217,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BattleBulletComponent.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_Monster.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BaseBattleComponent.cs" />
+    <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexFogOfWarState.cs" />
     <Compile Include="Assets\Scripts\Util\MD5Checker.cs" />
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexMapPointData.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\IMonsterLocomotion.cs" />
@@ -242,7 +245,6 @@
     <Compile Include="Assets\Scripts\Config\Luban\ModifyType.cs" />
     <Compile Include="Assets\Scripts\Business\Map\SingleMapInfo.cs" />
     <Compile Include="Assets\Scripts\Business\UI\LoadingView.cs" />
-    <Compile Include="Assets\Scripts\Editor\MapConfigWaveSync.cs" />
     <Compile Include="Assets\Scripts\Business\Roguelike\Config\RoguelikeItemConfigReader.cs" />
     <Compile Include="Assets\Scripts\Server\BaseServer.cs" />
     <Compile Include="Assets\Scripts\Util\Random\DeterministicRandomSession.cs" />
@@ -336,11 +338,9 @@
     <Compile Include="Assets\Scripts\Util\Lang\Config\zh_cn.cs" />
     <Compile Include="Assets\Scripts\Hexagon\Validation\HexWorldMapValidationContext.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\ScrollerCellShell.cs" />
-    <Compile Include="Assets\Scripts\Editor\HexCoordinatesDrawer.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\GameSceneType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\SelectableScrollerBinder.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewEffectHelper.cs" />
-    <Compile Include="Assets\Scripts\Editor\UIBlockEditor.cs" />
     <Compile Include="Assets\Scripts\Business\Account\Gamer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Test\BattleTestUnitSpawnComponent.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\RoguelikeMapScene.cs" />
@@ -381,6 +381,7 @@
     <Compile Include="Assets\Scripts\Server\AssetBundleManager\AssetBundleDownloader.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UiViewAbPaths.cs" />
     <Compile Include="Assets\Scripts\Business\Hud\DownLoadFileView.cs" />
+    <Compile Include="Assets\Scripts\Business\Account\GameModeSelectGui.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Config\MapUIConfigReader.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapBigLevelPanel.cs" />
@@ -409,6 +410,12 @@
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexWorldMapRuntime.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BuffDef.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionLifecycle.cs" />
+    <Compile Include="Assets\Scripts\Business\Account\OnlineSessionRecovery.cs" />
+    <Compile Include="Assets\Scripts\Server\Connection\ConnectionReconnectPolicy.cs" />
+    <Compile Include="Assets\Scripts\Server\AssetBundleManager\AssetBundleRuntimeConfig.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Config\GameJsonLoader.cs" />
+    <Compile Include="Assets\Scripts\Model_Battle\Config\GameJsonAbPaths.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

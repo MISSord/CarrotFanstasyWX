@@ -4,144 +4,141 @@ using UnityEngine;
 
 public class CustomManifestBuilderWindow : EditorWindow
 {
-    private const string WndTitle = "AB \u5305\u6e05\u5355";
-    private const string MenuPath = "Tools/\u7ba1\u7406 AB \u5305\u6e05\u5355";
+    private const string WndTitle = "AB 包清单";
+    private const string MenuPath = "Tools/管理 AB 包清单";
 
-    private string bundlePath = "Assets/StreamingAssets/AssetBundles";
+    private string bundleRootPath = AssetBundleBuildSettings.DefaultOutputRoot;
     public CustomManifest generatedManifest;
     private Vector2 scrollPosition;
-    private BuildTarget buildTarget = BuildTarget.StandaloneWindows;
-    private int LastVersionNumber = 0;
-    private int CurVersionNumber = 0;
+    private BuildTarget buildTarget = BuildTarget.StandaloneWindows64;
+    private int lastVersionNumber;
+    private int curVersionNumber;
 
-    public static void ShowWindow(CustomManifest Manifest)
+    public static void ShowWindow(CustomManifest manifest)
     {
-        var window = GetWindow<CustomManifestBuilderWindow>(WndTitle);
+        CustomManifestBuilderWindow window = GetWindow<CustomManifestBuilderWindow>(WndTitle);
         window.minSize = new Vector2(600, 400);
-        window.InitData(Manifest);
+        window.LoadFromSettings(manifest);
     }
 
     [MenuItem(MenuPath)]
     public static void ShowWindow()
     {
-        var window = GetWindow<CustomManifestBuilderWindow>(WndTitle);
+        CustomManifestBuilderWindow window = GetWindow<CustomManifestBuilderWindow>(WndTitle);
         window.minSize = new Vector2(600, 400);
-        window.InitData(null);
+        window.LoadFromSettings(null);
     }
 
-    private void InitData(CustomManifest Manifest)
+    void LoadFromSettings(CustomManifest manifest)
     {
-        string localPath = UnityEditor.EditorPrefs.GetString("OutPutPath");
-        if (localPath != "")
-        {
-            bundlePath = localPath;
-        }
-
-        int target = UnityEditor.EditorPrefs.GetInt("BuildTarget", -1);
-        if (target == -1) target = (int)EditorUserBuildSettings.activeBuildTarget;
-
-        string path = localPath + "/" + AssetBundlePackager.GetPlatformFolder((BuildTarget)target) + "/custom_manifest.json";
-        if (File.Exists(path))
-        {
-            string text = File.ReadAllText(path);
-            CustomManifest old = JsonUtility.FromJson<CustomManifest>(text);
-            LastVersionNumber = old.ManifestVersion;
-        }
-        else
-        {
-            LastVersionNumber = 0;
-        }
-
-        CurVersionNumber = LastVersionNumber;
-        buildTarget = (UnityEditor.BuildTarget)target;
-        generatedManifest = Manifest;
+        bundleRootPath = AssetBundleBuildSettings.GetOutputRoot();
+        buildTarget = AssetBundleBuildSettings.GetBuildTarget();
+        lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(bundleRootPath, buildTarget);
+        curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(bundleRootPath, buildTarget);
+        generatedManifest = manifest;
     }
 
-    private void OnGUI()
+    void OnGUI()
     {
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("AssetBundle \u6e05\u5355\u7ba1\u7406", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("AssetBundle 清单管理", EditorStyles.boldLabel);
+        EditorGUILayout.HelpBox("根目录下需已有平台子目录（如 StandaloneWindows）。", MessageType.Info);
 
         EditorGUILayout.Space();
 
         EditorGUI.BeginChangeCheck();
-        bundlePath = EditorGUILayout.TextField("AB \u5305\u8def\u5f84", bundlePath);
+        bundleRootPath = EditorGUILayout.TextField("输出根目录", bundleRootPath);
 
-        if (GUILayout.Button("\u9009\u62e9 AB \u5305\u76ee\u5f55"))
+        if (GUILayout.Button("选择输出根目录"))
         {
-            bundlePath = EditorUtility.OpenFolderPanel("\u9009\u62e9 AB \u5305\u76ee\u5f55", bundlePath, "");
-            Repaint();
+            string picked = EditorUtility.OpenFolderPanel("选择 AB 输出根目录", AssetBundleBuildSettings.GetFullOutputRoot(), "");
+            if (!string.IsNullOrEmpty(picked))
+            {
+                string projectRoot = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+                bundleRootPath = picked.StartsWith(projectRoot)
+                    ? picked.Substring(projectRoot.Length).TrimStart('\\', '/')
+                    : picked;
+            }
         }
 
-        EditorGUILayout.Space();
-        EditorGUILayout.HelpBox("\u5f53\u524d\u76ee\u5f55: " + bundlePath, MessageType.Info);
-
         int currentIndex = System.Array.IndexOf(AssetBundlePackager.availablePlatforms, buildTarget);
-        if (currentIndex == -1) currentIndex = 0;
+        if (currentIndex == -1)
+        {
+            currentIndex = 0;
+        }
 
-        currentIndex = EditorGUILayout.Popup("\u76ee\u6807\u5e73\u53f0", currentIndex, AssetBundlePackager.platformNames);
+        currentIndex = EditorGUILayout.Popup("目标平台", currentIndex, AssetBundlePackager.platformNames);
         buildTarget = AssetBundlePackager.availablePlatforms[currentIndex];
 
         if (EditorGUI.EndChangeCheck())
         {
-            string path = bundlePath + "/" + AssetBundlePackager.GetPlatformFolder(buildTarget) + "/custom_manifest.json";
-            if (File.Exists(path))
-            {
-                string text = File.ReadAllText(path);
-                CustomManifest old = JsonUtility.FromJson<CustomManifest>(text);
-                LastVersionNumber = old.ManifestVersion;
-            }
-            else
-            {
-                LastVersionNumber = 0;
-            }
+            lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(bundleRootPath, buildTarget);
+            curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(bundleRootPath, buildTarget);
         }
 
         EditorGUI.BeginDisabledGroup(true);
-        EditorGUILayout.TextField("\u4e0a\u4e00\u7248\u672c ID", LastVersionNumber.ToString());
+        EditorGUILayout.TextField("上一版本 ID", lastVersionNumber.ToString());
         EditorGUI.EndDisabledGroup();
 
-        CurVersionNumber = EditorGUILayout.IntField("\u5f53\u524d\u7248\u672c ID", CurVersionNumber);
+        curVersionNumber = EditorGUILayout.IntField("当前版本 ID", curVersionNumber);
 
         EditorGUILayout.Space();
-        if (GUILayout.Button("\u751f\u6210\u6e05\u5355\u6587\u4ef6", GUILayout.Height(30)))
+        if (GUILayout.Button("生成清单文件", GUILayout.Height(30)))
         {
-            generatedManifest = AssetBundlePackager.GenerateManifest(bundlePath, buildTarget, CurVersionNumber);
+            string fullRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", bundleRootPath));
+            generatedManifest = AssetBundlePackager.GenerateManifest(
+                fullRoot,
+                buildTarget,
+                curVersionNumber,
+                (int)AssetBundleBuildSettings.GetCompressionType(),
+                showSuccessDialog: true);
+
+            if (generatedManifest != null)
+            {
+                AssetBundleBuildSettings.SetOutputRoot(bundleRootPath);
+                AssetBundleBuildSettings.WriteRuntimeConfig(buildTarget);
+                lastVersionNumber = curVersionNumber;
+                curVersionNumber = lastVersionNumber + 1;
+            }
         }
 
-        if (GUILayout.Button("\u5728\u8d44\u6e90\u7ba1\u7406\u5668\u4e2d\u6253\u5f00", GUILayout.Height(30)))
+        if (GUILayout.Button("在资源管理器中打开平台目录", GUILayout.Height(28)))
         {
-            if (Directory.Exists(bundlePath))
+            string platformPath = Path.Combine(
+                Path.GetFullPath(Path.Combine(Application.dataPath, "..", bundleRootPath)),
+                AssetBundlePackager.GetPlatformFolder(buildTarget));
+            if (!Directory.Exists(platformPath))
             {
-                EditorUtility.RevealInFinder(bundlePath);
+                Directory.CreateDirectory(platformPath);
             }
+            EditorUtility.RevealInFinder(platformPath);
         }
 
         if (generatedManifest != null)
         {
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("\u5f53\u524d\u6e05\u5355\u4fe1\u606f", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("当前清单信息", EditorStyles.boldLabel);
 
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
-            EditorGUILayout.LabelField("\u5e94\u7528\u7248\u672c: " + generatedManifest.AppVersion);
-            EditorGUILayout.LabelField("\u6e05\u5355\u7248\u672c: " + generatedManifest.ManifestVersion);
-            EditorGUILayout.LabelField("\u6784\u5efa\u65f6\u95f4: " + generatedManifest.BuildTime);
-            EditorGUILayout.LabelField("AB \u5305\u6570\u91cf: " + generatedManifest.AssetBundles.Count);
-            EditorGUILayout.LabelField("\u538b\u7f29\u65b9\u5f0f: " + generatedManifest.CompressedFormat);
+            EditorGUILayout.LabelField("应用版本: " + generatedManifest.AppVersion);
+            EditorGUILayout.LabelField("清单版本: " + generatedManifest.ManifestVersion);
+            EditorGUILayout.LabelField("构建时间: " + generatedManifest.BuildTime);
+            EditorGUILayout.LabelField("AB 包数量: " + generatedManifest.AssetBundles.Count);
+            EditorGUILayout.LabelField("压缩方式: " + generatedManifest.CompressedFormat);
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("AB \u5305\u5217\u8868:");
+            EditorGUILayout.LabelField("AB 包列表:");
 
-            foreach (var bundle in generatedManifest.AssetBundles)
+            foreach (CustomAssetBundleInfo bundle in generatedManifest.AssetBundles)
             {
                 EditorGUILayout.BeginVertical("box");
-                EditorGUILayout.LabelField("\u8d44\u6e90: " + bundle.AssetName);
-                EditorGUILayout.LabelField("\u8def\u5f84: " + bundle.BundleName);
-                EditorGUILayout.LabelField("\u7248\u672c: " + bundle.Version);
-                EditorGUILayout.LabelField("\u5927\u5c0f: " + bundle.Size + " bytes");
-                EditorGUILayout.LabelField("\u54c8\u5e0c: " + bundle.Hash);
+                EditorGUILayout.LabelField("资源: " + bundle.AssetName);
+                EditorGUILayout.LabelField("路径: " + bundle.BundleName);
+                EditorGUILayout.LabelField("大小: " + bundle.Size + " bytes");
+                EditorGUILayout.LabelField("哈希: " + bundle.Hash);
                 EditorGUILayout.EndVertical();
             }
+
             EditorGUILayout.EndScrollView();
         }
     }

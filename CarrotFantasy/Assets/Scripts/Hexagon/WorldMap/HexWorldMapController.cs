@@ -19,6 +19,7 @@ public class HexWorldMapController : MonoBehaviour
 
 	public HexWorldMapAsset mapAsset;
 	public HexWorldMapView mapView;
+	public HexWorldMapFogView fogView;
 	public HexMesh hexMesh;
 
 	[Tooltip("为 true 时由 RoguelikeRunManager 处理战斗/商店/随机事件。")]
@@ -78,6 +79,10 @@ public class HexWorldMapController : MonoBehaviour
 			RebuildMeshGeometry();
 		}
 
+		if (fogView != null) {
+			fogView.Build(mapAsset, runtime.FogOfWar);
+		}
+
 		if (useRoguelikeRunOrchestrator) {
 			CarrotFantasy.RoguelikeRunManager.EnsureOn(this);
 		}
@@ -117,6 +122,9 @@ public class HexWorldMapController : MonoBehaviour
 	{
 		if (mapView != null && mapView.RefreshLayoutAndColors()) {
 			RefreshMeshLayout();
+		}
+		if (fogView != null) {
+			fogView.RefreshLayout();
 		}
 	}
 
@@ -243,6 +251,14 @@ public class HexWorldMapController : MonoBehaviour
 	void HandlePlayerMoved (int fromPointId, int toPointId)
 	{
 		Debug.Log("Player moved " + fromPointId + " -> " + toPointId);
+		RefreshFogVisuals();
+	}
+
+	void RefreshFogVisuals ()
+	{
+		if (fogView != null) {
+			fogView.RefreshColors();
+		}
 	}
 
 	/// <summary>临时调试 UI，模拟战斗/商店/传送的完成回调。</summary>

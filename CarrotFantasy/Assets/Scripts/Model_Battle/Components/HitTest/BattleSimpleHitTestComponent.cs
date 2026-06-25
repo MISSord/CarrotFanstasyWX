@@ -285,7 +285,7 @@ namespace CarrotFantasy
                     continue;
                 }
 
-                if (BattleSpatialGrid.TryNarrowPhaseCircleCircle(towerTransform.bodyHitTestShape, targetTransform.bodyHitTestShape))
+                if (BattleRangeQuery.IsInRange(towerTransform, targetTransform))
                 {
                     ((BattleUnit_Tower)towerTransform.unit).targetUnit = this.targetUnit;
                 }

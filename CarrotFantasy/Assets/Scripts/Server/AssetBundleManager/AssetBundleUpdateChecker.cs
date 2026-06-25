@@ -277,13 +277,6 @@ public class AssetBundleUpdateChecker
         m_TotalBundlesInStage = m_RemainingBundlesToCheck.Count;
         m_CurrentBundleIndex = 0;
         m_Progress = 0.5f;
-
-        if (m_RemoteManifest != null && m_RemoteManifest.ManifestVersion == m_LocalManifest.ManifestVersion)
-        {
-            Debug.Log("清单版本一致，无需对比，直接跳到完成");
-            ChangeState(CheckerState.Complete);
-            return;
-        }
     }
 
     /// <summary>
@@ -319,9 +312,7 @@ public class AssetBundleUpdateChecker
             }
             else
             {
-                // 检查文件是否存在，如果不存在也加入下载列表
-                string localFilePath = AssetBundlePathHelper.GetLocalLZ4Path(remoteBundle.BundleName);
-                if (!File.Exists(localFilePath))
+                if (!AssetBundlePathHelper.IsBundleAvailableAtRuntime(remoteBundle.BundleName))
                 {
                     m_CurrentResult.bundlesToDownload.Add(remoteBundle);
                     m_CurrentResult.totalDownloadSize += remoteBundle.Size;
@@ -390,7 +381,16 @@ public class AssetBundleUpdateChecker
             var remoteBundle = m_RemainingBundlesToCheck[m_RemainingCursor];
             m_RemainingCursor++;
 
-            string localFilePath = AssetBundlePathHelper.GetLocalLZ4Path(remoteBundle.BundleName);
+            string localFilePath = AssetBundlePathHelper.GetRuntimeLoadPath(remoteBundle.BundleName);
+            if (!File.Exists(localFilePath))
+            {
+                m_CurrentResult.bundlesToUpdate.Add(remoteBundle);
+                m_CurrentResult.totalDownloadSize += remoteBundle.Size;
+                processedCount++;
+                m_CurrentBundleIndex++;
+                continue;
+            }
+
             bool needsUpdate = CheckBundleIntegrity(localFilePath, remoteBundle);
 
             if (needsUpdate)
@@ -612,4 +612,83 @@ public class AssetBundleUpdateChecker
     {
         this.ResetState();
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Editor 测试模式：从 StreamingAssets / Build 输出 / 持久化目录加载清单，并检查 AB 是否可本地读取。
+    /// </summary>
+    public static bool TryBootstrapTestingCheck(out UpdateCheckResult result)
+    {
+        result = null;
+        CustomManifest manifest = TryLoadTestingManifest();
+        if (manifest?.AssetBundles == null || manifest.AssetBundles.Count == 0)
+        {
+            Debug.LogWarning("[Testing] 未找到本地 custom_manifest.json，将回退到远程清单检查。");
+            return false;
+        }
+
+        result = new UpdateCheckResult
+        {
+            customManifest = manifest,
+            isSuccess = true,
+            VersionNumber = manifest.ManifestVersion.ToString(),
+        };
+
+        foreach (CustomAssetBundleInfo bundle in manifest.AssetBundles)
+        {
+            if (!AssetBundlePathHelper.IsBundleAvailableAtRuntime(bundle.BundleName))
+            {
+                result.bundlesToDownload.Add(bundle);
+                result.totalDownloadSize += bundle.Size;
+            }
+            else
+            {
+                result.upToDateBundles.Add(bundle);
+            }
+        }
+
+        result.hasChanges = result.bundlesToDownload.Count > 0;
+        Debug.Log(string.Format(
+            "[Testing] 本地清单加载成功：共 {0} 个包，可用 {1} 个，缺失 {2} 个。",
+            manifest.AssetBundles.Count,
+            result.upToDateBundles.Count,
+            result.bundlesToDownload.Count));
+        return true;
+    }
+
+    static CustomManifest TryLoadTestingManifest()
+    {
+        string[] candidates =
+        {
+            AssetBundlePathHelper.GetStreamingAssetsManifestPath(),
+            Path.Combine(Application.persistentDataPath, "custom_manifest.json"),
+            AssetBundlePathHelper.ResolveLocalFilePath(
+                AssetBundlePathHelper.GetServerLoadUrl().Replace("\\", "/") + "/custom_manifest.json"),
+        };
+
+        foreach (string candidate in candidates)
+        {
+            if (string.IsNullOrEmpty(candidate) || !File.Exists(candidate))
+            {
+                continue;
+            }
+
+            try
+            {
+                CustomManifest manifest = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(candidate));
+                if (manifest?.AssetBundles != null && manifest.AssetBundles.Count > 0)
+                {
+                    Debug.Log("[Testing] 使用清单: " + candidate);
+                    return manifest;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning("[Testing] 读取清单失败: " + candidate + " -> " + ex.Message);
+            }
+        }
+
+        return null;
+    }
+#endif
 }

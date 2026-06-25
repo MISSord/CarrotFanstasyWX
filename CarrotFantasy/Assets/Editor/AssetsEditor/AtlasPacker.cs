@@ -1,18 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using UnityEditor;
-using UnityEditor.U2D;
+﻿using UnityEditor;
 using UnityEngine;
-using UnityEngine.U2D;
 
 public class AtlasPacker : EditorWindow
 {
     private string targetFolderPath = "Assets";
     private bool includeSubdirectories = true;
-    private string atlasNameSuffix = "_atlas";
-    private int maxAtlasSize = 2048;
-    private bool generateForEachSubfolder = false;
 
     [MenuItem("Tools/图集打包工具")]
     public static void ShowWindow()
@@ -23,10 +15,19 @@ public class AtlasPacker : EditorWindow
     private void OnGUI()
     {
         GUILayout.Label("图集打包设置", EditorStyles.boldLabel);
-
         EditorGUILayout.Space();
 
-        // 目标文件夹选择
+        GUI.color = new Color(0.7f, 1f, 0.7f);
+        if (GUILayout.Button("默认打包（UI/View + UI/Images）", GUILayout.Height(36)))
+        {
+            RunDefaultPack();
+        }
+        GUI.color = Color.white;
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("自定义打包", EditorStyles.boldLabel);
+        EditorGUILayout.Space();
+
         EditorGUILayout.BeginHorizontal();
         targetFolderPath = EditorGUILayout.TextField("目标文件夹", targetFolderPath);
         if (GUILayout.Button("选择", GUILayout.Width(60)))
@@ -40,237 +41,75 @@ public class AtlasPacker : EditorWindow
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space();
-
-        // 打包选项
         includeSubdirectories = EditorGUILayout.Toggle("包含子文件夹", includeSubdirectories);
-        generateForEachSubfolder = EditorGUILayout.Toggle("为每个子文件夹生成图集", generateForEachSubfolder);
-        atlasNameSuffix = EditorGUILayout.TextField("图集名称后缀", atlasNameSuffix);
-        maxAtlasSize = EditorGUILayout.IntField("最大图集尺寸", maxAtlasSize);
 
         EditorGUILayout.Space();
 
-        // 功能按钮
         if (GUILayout.Button("打包指定文件夹图集", GUILayout.Height(30)))
         {
-            PackAtlasForTargetFolder();
+            RunTargetFolderPack();
         }
 
         if (GUILayout.Button("为每个子文件夹生成独立图集", GUILayout.Height(30)))
         {
-            PackAtlasForEachSubfolder();
+            RunEachSubfolderPack();
         }
 
         EditorGUILayout.Space();
-        EditorGUILayout.HelpBox("功能1：在目标文件夹中查找所有包含Image文件夹的子文件夹并打包图集\n功能2：为每个子文件夹生成独立的图集", MessageType.Info);
+        EditorGUILayout.HelpBox(
+            "默认打包：\n" +
+            "  • " + AtlasPackager.UiViewRoot + " → 查找含 Images 子文件夹并打包\n" +
+            "  • " + AtlasPackager.UiImagesRoot + " → 每个第一层子文件夹独立图集\n\n" +
+            "AB 打包前也会自动执行上述默认打包。",
+            MessageType.Info);
     }
 
-    /// <summary>
-    /// 功能1：遍历目标文件夹，为包含Image文件夹的子文件夹打包图集
-    /// </summary>
-    private void PackAtlasForTargetFolder()
+    private void RunDefaultPack()
     {
-        if (!Directory.Exists(targetFolderPath))
-        {
-            EditorUtility.DisplayDialog("错误", "目标文件夹不存在！", "确定");
-            return;
-        }
+        AtlasPackager.DefaultPackResult result = AtlasPackager.PackDefaultUiAtlases();
+        EditorUtility.DisplayDialog(
+            "默认打包完成",
+            string.Format(
+                "UI/View：检查 {0} 个，创建/更新 {1} 个，跳过 {2} 个\n\n" +
+                "UI/Images：检查 {3} 个，创建/更新 {4} 个，跳过 {5} 个",
+                result.ViewResult.ProcessedCount,
+                result.ViewResult.CreatedCount,
+                result.ViewResult.SkippedCount,
+                result.ImagesResult.ProcessedCount,
+                result.ImagesResult.CreatedCount,
+                result.ImagesResult.SkippedCount),
+            "确定");
+    }
 
-        if (IsUiImagesRoot(targetFolderPath))
-        {
-            PackAtlasForUiImagesSubfolders();
-            return;
-        }
-
-        int processedCount = 0;
-        int atlasCreatedCount = 0;
-
-        // 获取所有子文件夹
-        string[] allSubfolders = Directory.GetDirectories(targetFolderPath, "*", includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-
-        foreach (string folderPath in allSubfolders)
-        {
-            if (IsUiImagesChildFolder(folderPath) && HasImagesInFolder(folderPath, SearchOption.TopDirectoryOnly))
-            {
-                processedCount++;
-                if (PackImagesInFolder(folderPath, GetAtlasNameFromPath(folderPath), SearchOption.TopDirectoryOnly))
-                {
-                    atlasCreatedCount++;
-                }
-                continue;
-            }
-
-            // 检查是否包含Image文件夹
-            string imageFolderPath = Path.Combine(folderPath, "Images").Replace("\\", "/");
-            if (Directory.Exists(imageFolderPath))
-            {
-                if (IsUiImagesRoot(imageFolderPath))
-                {
-                    // UI/Images 已按子文件夹生成图集，这里跳过根目录图集。
-                    continue;
-                }
-
-                processedCount++;
-                if (PackImagesInFolder(imageFolderPath, GetAtlasNameFromPath(folderPath)))
-                {
-                    atlasCreatedCount++;
-                }
-            }
-        }
-
+    private void RunTargetFolderPack()
+    {
+        AtlasPackager.PackResult result = AtlasPackager.PackAtlasForTargetFolder(
+            targetFolderPath,
+            includeSubdirectories);
+        AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        EditorUtility.DisplayDialog("完成", $"处理完成！\n检查了 {processedCount} 个文件夹\n创建了 {atlasCreatedCount} 个图集", "确定");
+        EditorUtility.DisplayDialog(
+            "完成",
+            string.Format(
+                "处理完成！\n检查了 {0} 个文件夹\n创建/更新了 {1} 个图集\n跳过 {2} 个",
+                result.ProcessedCount,
+                result.CreatedCount,
+                result.SkippedCount),
+            "确定");
     }
 
-    private void PackAtlasForUiImagesSubfolders()
+    private void RunEachSubfolderPack()
     {
-        int processedCount = 0;
-        int atlasCreatedCount = 0;
-
-        string[] imageSubfolders = Directory.GetDirectories(targetFolderPath, "*", SearchOption.TopDirectoryOnly);
-        foreach (string folderPath in imageSubfolders)
-        {
-            processedCount++;
-            if (PackImagesInFolder(folderPath, GetAtlasNameFromPath(folderPath), SearchOption.TopDirectoryOnly))
-            {
-                atlasCreatedCount++;
-            }
-        }
-
+        AtlasPackager.PackResult result = AtlasPackager.PackAtlasForEachSubfolder(targetFolderPath);
+        AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        EditorUtility.DisplayDialog("完成", $"处理完成！\n处理了 {processedCount} 个UI/Images子文件夹\n创建了 {atlasCreatedCount} 个图集", "确定");
-    }
-
-    /// <summary>
-    /// 功能2：为每个子文件夹生成独立图集
-    /// </summary>
-    private void PackAtlasForEachSubfolder()
-    {
-        if (!Directory.Exists(targetFolderPath))
-        {
-            EditorUtility.DisplayDialog("错误", "目标文件夹不存在！", "确定");
-            return;
-        }
-
-        int processedCount = 0;
-        int atlasCreatedCount = 0;
-
-        // 只获取第一层子文件夹
-        string[] firstLevelSubfolders = Directory.GetDirectories(targetFolderPath, "*", SearchOption.TopDirectoryOnly);
-
-        foreach (string folderPath in firstLevelSubfolders)
-        {
-            processedCount++;
-            if (PackImagesInFolder(folderPath, GetAtlasNameFromPath(folderPath)))
-            {
-                atlasCreatedCount++;
-            }
-        }
-
-        AssetDatabase.Refresh();
-        EditorUtility.DisplayDialog("完成", $"处理完成！\n处理了 {processedCount} 个子文件夹\n创建了 {atlasCreatedCount} 个图集", "确定");
-    }
-
-    /// <summary>
-    /// 打包指定文件夹中的所有图片为图集
-    /// </summary>
-    private bool PackImagesInFolder(string folderPath, string atlasName, SearchOption searchOption = SearchOption.AllDirectories)
-    {
-        string relativeFolderPath = folderPath.Replace("\\", "/");
-        if (!relativeFolderPath.StartsWith("Assets/"))
-        {
-            relativeFolderPath = "Assets" + relativeFolderPath.Substring(Application.dataPath.Length);
-        }
-
-        // 获取文件夹中的所有图片
-        string[] imagePaths = Directory.GetFiles(relativeFolderPath, "*.*", searchOption)
-            .Where(path => IsImageFile(path))
-            .ToArray();
-
-        if (imagePaths.Length == 0)
-        {
-            Debug.LogWarning($"文件夹 {relativeFolderPath} 中没有找到图片文件");
-            return false;
-        }
-
-        Debug.Log($"在文件夹 {relativeFolderPath} 中找到 {imagePaths.Length} 张图片");
-
-        // 创建SpriteAtlas资产
-        string atlasPath = Path.Combine(relativeFolderPath, atlasName + ".spriteatlas").Replace("\\", "/");
-        SpriteAtlas atlas = new SpriteAtlas();
-
-        // 设置图集参数
-        SpriteAtlasPackingSettings packingSettings = new SpriteAtlasPackingSettings
-        {
-            padding = 4,
-            enableRotation = false,
-            enableTightPacking = true
-        };
-        atlas.SetPackingSettings(packingSettings);
-
-        SpriteAtlasTextureSettings textureSettings = new SpriteAtlasTextureSettings
-        {
-            readable = false,
-            generateMipMaps = false,
-            filterMode = FilterMode.Bilinear
-        };
-        atlas.SetTextureSettings(textureSettings);
-
-        // 收集图片主资源，避免同一路径被Sprite和Texture重复加入
-        List<Texture2D> textures = new List<Texture2D>();
-
-        foreach (string imagePath in imagePaths)
-        {
-            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(imagePath);
-            if (texture != null)
-            {
-                textures.Add(texture);
-            }
-        }
-
-        // 添加对象到图集
-        if (textures.Count > 0)
-        {
-            atlas.Add(textures.ToArray());
-        }
-
-        // 保存图集
-        AssetDatabase.CreateAsset(atlas, atlasPath);
-        Debug.Log($"创建图集: {atlasPath}");
-
-        return true;
-    }
-
-    /// <summary>
-    /// 从文件夹路径生成图集名称
-    /// </summary>
-    private string GetAtlasNameFromPath(string folderPath)
-    {
-        return "images_atlas";
-    }
-
-    /// <summary>
-    /// 检查文件是否为图片文件
-    /// </summary>
-    private bool IsImageFile(string path)
-    {
-        string extension = Path.GetExtension(path).ToLower();
-        return extension == ".png" || extension == ".jpg" ;
-    }
-
-    private bool IsUiImagesRoot(string folderPath)
-    {
-        string normalizedPath = folderPath.ToLower().Replace("\\", "/");
-        return normalizedPath.EndsWith("/ui/images");
-    }
-
-    private bool IsUiImagesChildFolder(string folderPath)
-    {
-        string normalizedPath = folderPath.ToLower().Replace("\\", "/");
-        return normalizedPath.Contains("/ui/images/") && !normalizedPath.EndsWith("/ui/images");
-    }
-
-    private bool HasImagesInFolder(string folderPath, SearchOption searchOption)
-    {
-        return Directory.GetFiles(folderPath, "*.*", searchOption).Any(IsImageFile);
+        EditorUtility.DisplayDialog(
+            "完成",
+            string.Format(
+                "处理完成！\n处理了 {0} 个子文件夹\n创建/更新了 {1} 个图集\n跳过 {2} 个",
+                result.ProcessedCount,
+                result.CreatedCount,
+                result.SkippedCount),
+            "确定");
     }
 }

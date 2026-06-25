@@ -41,13 +41,12 @@ namespace CarrotFantasy
             battle.AddComponent(new BattleSchedulerComponent(battle));
         }
 
-        /// <summary>Map 须在 HitTest 之前 Init，以便空间网格使用正确的地图世界边界。</summary>
+        /// <summary>Map 先于 HitTest Init（空间网格边界）；HitTest 先于 ItemComponent Init（物品 BATTLE_UNIT_ADD 须有人监听）。</summary>
         public static void InitAll(BaseBattle battle, Layout layout)
         {
             battle.GetComponent(BattleComponentType.DataComponent).Init();
             battle.GetComponent(BattleComponentType.GlobalBuffComponent).Init();
             battle.GetComponent(BattleComponentType.MapComponent).Init();
-            battle.GetComponent(BattleComponentType.ItemComponent).Init();
             battle.GetComponent(BattleComponentType.InputComponent).Init();
 
             if (layout == Layout.FlowFieldSurvival)
@@ -59,6 +58,7 @@ namespace CarrotFantasy
             battle.GetComponent(BattleComponentType.TowerComponent).Init();
             battle.GetComponent(BattleComponentType.BulletComponent).Init();
             battle.GetComponent(BattleComponentType.HitTestComponent).Init();
+            battle.GetComponent(BattleComponentType.ItemComponent).Init();
             battle.GetComponent(BattleComponentType.SchedulerComponent).Init();
         }
     }
