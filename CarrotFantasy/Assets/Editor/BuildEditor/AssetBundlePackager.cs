@@ -162,7 +162,8 @@ public static class AssetBundlePackager
             return null;
         }
 
-        HashSet<string> registeredBundles = CollectRegisteredBundleNames();
+        // 清理 AssetDatabase 里已无资源引用的历史包名，避免 GetAllAssetBundleNames 虚高。
+        AssetDatabase.RemoveUnusedAssetBundleNames();
 
         CustomManifest generatedManifest = new CustomManifest
         {
@@ -174,6 +175,8 @@ public static class AssetBundlePackager
         };
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
+        var missingOnDisk = CollectRegisteredButMissingOnDisk(bundlePath);
+
         try
         {
             for (int i = 0; i < bundleFiles.Length; i++)
@@ -184,25 +187,31 @@ public static class AssetBundlePackager
                     continue;
                 }
 
-                EditorUtility.DisplayProgressBar("生成AB清单", Path.GetFileName(file), (i + 1f) / bundleFiles.Length);
-
-                string bundleName = GetBundlePath(bundlePath, file);
-                if (!registeredBundles.Contains(bundleName))
+                string bundleKey = GetBundlePath(bundlePath, file);
+                if (IsPlatformManifestBundleFile(bundleKey, target))
                 {
                     continue;
                 }
 
+                EditorUtility.DisplayProgressBar(
+                    "生成AB清单",
+                    bundleKey,
+                    (i + 1f) / bundleFiles.Length);
+
+                string registeredName = FindRegisteredBundleName(bundleKey);
                 CustomAssetBundleInfo info = new CustomAssetBundleInfo
                 {
                     AssetName = Path.GetFileName(file),
-                    BundleName = bundleName,
+                    BundleName = bundleKey,
                     Size = new FileInfo(file).Length,
                     Hash = MD5Checker.ComputeFileMD5(file),
                 };
 
                 HashSet<string> processedBundles = new HashSet<string>();
-                GenerateFlatDependencyList(bundleName, 0, processedBundles);
-                info.Dependencies = processedBundles.ToArray();
+                GenerateFlatDependencyList(registeredName, 0, processedBundles);
+                info.Dependencies = processedBundles
+                    .Select(NormalizeBundleName)
+                    .ToArray();
 
                 generatedManifest.AssetBundles.Add(info);
             }
@@ -211,6 +220,8 @@ public static class AssetBundlePackager
         {
             EditorUtility.ClearProgressBar();
         }
+
+        LogMissingOnDiskSummary(missingOnDisk);
 
         string manifestJson = JsonUtility.ToJson(generatedManifest, true);
         string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");
@@ -222,23 +233,111 @@ public static class AssetBundlePackager
         AssetDatabase.Refresh();
         if (showSuccessDialog)
         {
-            EditorUtility.DisplayDialog("成功", "清单文件已生成！", "确定");
+            EditorUtility.DisplayDialog(
+                "成功",
+                string.Format(
+                    "清单已生成：{0} 个 AB 包（以输出目录实际文件为准）。\n" +
+                    "有资源登记但未构建出文件：{1} 个（详见 Console，多为空文件夹包名或需重新打 AB）。",
+                    generatedManifest.AssetBundles.Count,
+                    missingOnDisk.Count),
+                "确定");
         }
 
-        Debug.Log($"[AB Build] custom_manifest.json 已生成，共 {generatedManifest.AssetBundles.Count} 个 AB 包。");
+        Debug.Log(string.Format(
+            "[AB Build] custom_manifest.json 已生成：输出目录 {0} 个包，登记但未落盘 {1} 个。",
+            generatedManifest.AssetBundles.Count,
+            missingOnDisk.Count));
         return generatedManifest;
     }
 
-    private static HashSet<string> CollectRegisteredBundleNames()
+    /// <summary>
+    /// 已在 AssetDatabase 登记且仍有关联资源，但输出目录找不到对应 AB 文件。
+    /// 不含「无资源引用的历史包名」（已由 RemoveUnusedAssetBundleNames 清理）。
+    /// </summary>
+    private static List<string> CollectRegisteredButMissingOnDisk(string bundlePath)
     {
-        string[] names = AssetDatabase.GetAllAssetBundleNames();
-        var set = new HashSet<string>();
-        for (int i = 0; i < names.Length; i++)
+        var missing = new List<string>();
+        string[] registeredNames = AssetDatabase.GetAllAssetBundleNames();
+        for (int i = 0; i < registeredNames.Length; i++)
         {
-            set.Add(names[i].ToLower().Replace('\\', '/'));
+            string registeredName = registeredNames[i];
+            string bundleKey = NormalizeBundleName(registeredName);
+            if (AssetDatabase.GetAssetPathsFromAssetBundle(registeredName).Length == 0)
+            {
+                continue;
+            }
+
+            if (File.Exists(ResolveBuiltBundleFilePath(bundlePath, bundleKey)))
+            {
+                continue;
+            }
+
+            missing.Add(bundleKey);
         }
 
-        return set;
+        missing.Sort();
+        return missing;
+    }
+
+    private static void LogMissingOnDiskSummary(List<string> missingOnDisk)
+    {
+        if (missingOnDisk.Count == 0)
+        {
+            return;
+        }
+
+        const int maxLines = 30;
+        string preview = missingOnDisk.Count <= maxLines
+            ? string.Join("\n", missingOnDisk)
+            : string.Join("\n", missingOnDisk.GetRange(0, maxLines))
+              + string.Format("\n... 还有 {0} 个未列出", missingOnDisk.Count - maxLines);
+
+        Debug.LogWarning(string.Format(
+            "[AB Build] {0} 个「有资源登记但未构建出文件」的 AB 未写入清单（missingOnDisk 诊断）：\n{1}",
+            missingOnDisk.Count,
+            preview));
+    }
+
+    private static string FindRegisteredBundleName(string bundleKey)
+    {
+        string[] registeredNames = AssetDatabase.GetAllAssetBundleNames();
+        for (int i = 0; i < registeredNames.Length; i++)
+        {
+            if (NormalizeBundleName(registeredNames[i]) == bundleKey)
+            {
+                return registeredNames[i];
+            }
+        }
+
+        return bundleKey;
+    }
+
+    private static bool IsPlatformManifestBundleFile(string bundleKey, BuildTarget target)
+    {
+        return bundleKey == GetPlatformFolder(target).ToLowerInvariant();
+    }
+
+    private static string NormalizeBundleName(string bundleName)
+    {
+        return (bundleName ?? string.Empty).ToLower().Replace('\\', '/');
+    }
+
+    private static string ResolveBuiltBundleFilePath(string platformOutputPath, string bundleName)
+    {
+        string normalized = NormalizeBundleName(bundleName);
+        string[] parts = normalized.Split('/');
+        string fullPath = platformOutputPath;
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (string.IsNullOrEmpty(parts[i]))
+            {
+                continue;
+            }
+
+            fullPath = Path.Combine(fullPath, parts[i]);
+        }
+
+        return fullPath;
     }
 
     private static bool ShouldSkipManifestFile(string file)

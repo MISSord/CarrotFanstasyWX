@@ -234,10 +234,31 @@ public class ViewManager
         }
     }
 
-    // 兼容旧面板接口
     public void CloseAllPanel(int closeReason, BaseSceneType nextSceneType)
     {
-        CloseAllOpenViews();
+        if (viewList == null)
+        {
+            return;
+        }
+
+        var ordered = new List<BaseView>(32);
+        for (int i = (int)UILayer.Normal; i <= (int)UILayer.Max; ++i)
+        {
+            List<BaseView> list = viewList[(UILayer)i];
+            for (int j = 0; j < list.Count; ++j)
+            {
+                BaseView v = list[j];
+                if (v != null && v.GetIsOpen())
+                {
+                    ordered.Add(v);
+                }
+            }
+        }
+
+        for (int k = ordered.Count - 1; k >= 0; k--)
+        {
+            ordered[k].Close();
+        }
     }
 
     // 兼容旧 BasePanel 接口，BaseView 体系下该 uid 关闭逻辑已废弃

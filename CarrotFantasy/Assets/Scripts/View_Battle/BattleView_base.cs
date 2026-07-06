@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 战斗视图根：BuildOnce → ResetForReplay → Dispose。
+    /// </summary>
     public class BattleView_base
     {
         public GameObject rootGameObject;
@@ -19,17 +22,34 @@ namespace CarrotFantasy
         public bool isStart;
         public bool isGameObjectLoaded;
 
+        /// <summary>静态战斗视图（格子 / UI 壳等）是否已 BuildOnce。</summary>
+        public bool IsContentBuilt { get; private set; }
+
         /// <summary>对象池回收时移出屏幕的默认位置。</summary>
         public static readonly Vector3 OffscreenPoolPosition = new Vector3(1000f, 1000f, 0f);
 
+        /// <summary>从池取出后挂到容器并清零 local 变换，便于 InitViewPosition 写入正确坐标。</summary>
+        public static void AttachPooledVisualToContainer(Transform visual, Transform container)
+        {
+            if (visual == null || container == null)
+            {
+                return;
+            }
+
+            visual.SetParent(container, false);
+            visual.localPosition = Vector3.zero;
+            visual.localRotation = Quaternion.identity;
+            visual.localScale = Vector3.one;
+        }
+
         public Vector3 initTran = OffscreenPoolPosition;
 
-        public BattleView_base(BaseBattle battle, GameObject viewRoot, BattleViewHost viewHost)
+        public BattleView_base(BaseBattle battle, BattleViewHost viewHost)
         {
             battle.isIgnoreViewListener = false;
             this.battle = battle;
-            this.rootGameObject = viewRoot;
             this.ViewHost = viewHost;
+            this.rootGameObject = viewHost != null ? viewHost.gameObject : null;
 
             this.eventDispatcher = this.battle.eventDispatcher;
             this.bvEventDispatcher = new EventDispatcher();
@@ -50,13 +70,13 @@ namespace CarrotFantasy
             return this.rootGameObject;
         }
 
-        /// <summary>离开战斗场景或重开前，显式拆除 Grid/UI 等子容器。</summary>
-        public void TearDownSceneContainers()
+        /// <summary>离场景 Dispose 时销毁 Grid/UI 等内容容器；同关重开勿调用。</summary>
+        public void DestroySceneContentContainers()
         {
             BVSceneComponent scene = this.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
             if (scene != null)
             {
-                scene.TearDownRegisteredContainers();
+                scene.DestroyContentContainers();
             }
         }
 
@@ -65,8 +85,24 @@ namespace CarrotFantasy
             this.AddListener();
         }
 
-        /// <summary>预加载完成后初始化 World UI 壳、标准容器及依赖资源的视图组件。</summary>
-        public bool InitContentComponents()
+        /// <summary>预加载完成后 BuildOnce：标准容器 + 依赖 Prefab 的静态视图。</summary>
+        public bool BuildContentComponents()
+        {
+            if (this.IsContentBuilt)
+            {
+                return true;
+            }
+
+            if (!this.InitContentComponentsInternal())
+            {
+                return false;
+            }
+
+            this.IsContentBuilt = true;
+            return true;
+        }
+
+        bool InitContentComponentsInternal()
         {
             if (this.ViewHost == null)
             {
@@ -91,6 +127,11 @@ namespace CarrotFantasy
                     continue;
                 }
 
+                if (component.IsBuilt)
+                {
+                    continue;
+                }
+
                 try
                 {
                     component.Init();
@@ -103,6 +144,48 @@ namespace CarrotFantasy
             }
 
             return true;
+        }
+
+        /// <summary>校验 SceneContainer 与 Grid 是否就绪（Build 或 Reset 后）。</summary>
+        public bool ValidateSceneContent()
+        {
+            if (this.ViewHost == null)
+            {
+                return false;
+            }
+
+            if (this.ViewHost.GetSceneContainerChildCount() < 6)
+            {
+                return false;
+            }
+
+            return this.ViewHost.GetContainerChildCount("GridContainer") > 0;
+        }
+
+        /// <summary>
+        /// 同关重开唯一入口：回池 → resetModel → 各组件 ApplyModelForReplay。
+        /// </summary>
+        public void ResetForReplay(Action resetModel)
+        {
+            for (int i = 0; i < this.componentList.Count; i++)
+            {
+                this.componentList[i].ReturnUnitsToPoolForReplay();
+            }
+
+            BVBattleWorldUiComponent worldUi = this.TryGetComponent(BattleViewComponentType.WORLD_UI) as BVBattleWorldUiComponent;
+            if (worldUi != null)
+            {
+                worldUi.ClearTransientEffectsForReplay();
+            }
+
+            resetModel();
+
+            for (int i = 0; i < this.componentList.Count; i++)
+            {
+                this.componentList[i].ApplyModelForReplay();
+            }
+
+            this.isStart = false;
         }
 
         public BaseBattleViewComponent TryGetComponent(String type)
@@ -184,7 +267,9 @@ namespace CarrotFantasy
             {
                 this.componentList[i].ClearGameInfo();
             }
+
             this.isStart = false;
+            this.IsContentBuilt = false;
         }
 
         public virtual void Dispose()
@@ -195,7 +280,7 @@ namespace CarrotFantasy
                 this.componentList[i].ClearGameInfo();
             }
 
-            this.TearDownSceneContainers();
+            this.DestroySceneContentContainers();
 
             for (int i = this.componentList.Count - 1; i >= 0; i--)
             {
@@ -203,6 +288,7 @@ namespace CarrotFantasy
             }
             this.componentList.Clear();
             this.componentDic.Clear();
+            this.IsContentBuilt = false;
             GameViewObjectPool.Instance.Dispose();
             this.bvEventDispatcher.Dispose();
         }

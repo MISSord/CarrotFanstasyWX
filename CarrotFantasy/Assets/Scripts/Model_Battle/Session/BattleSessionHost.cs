@@ -29,7 +29,7 @@ namespace CarrotFantasy
         /// 由 <see cref="BattleScene.TryBeginSession"/> 调用。
         /// 若已有 Session 先 TearDown，再创建新 Session 并同步执行 Run。
         /// </summary>
-        public void BeginSession(PveModelBattleParams launchParams, BattleSceneContext context)
+        public void BeginSession(PveModelBattleParams launchParams, BattleViewHost viewHost)
         {
             if (launchParams == null)
             {
@@ -37,9 +37,9 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (context == null || !context.IsValid)
+            if (viewHost == null || !viewHost.IsReady)
             {
-                BattleFlowLog.Abort("BeginSession", "BattleSceneContext 无效");
+                BattleFlowLog.Abort("BeginSession", "BattleViewHost 无效");
                 return;
             }
 
@@ -53,7 +53,7 @@ namespace CarrotFantasy
                 "BeginSession",
                 "level=" + launchParams.BigLevelId + "-" + launchParams.LevelId);
 
-            this.session = new BattleSession(launchParams, context);
+            this.session = new BattleSession(launchParams, viewHost);
             this.session.Run();
         }
 

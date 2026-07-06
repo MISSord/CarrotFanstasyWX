@@ -47,6 +47,7 @@ namespace CarrotFantasy
         private Carrot carrot;
 
         private GameObject rootGameObject;
+        private bool uiContentBuilt;
 
         public BVUIComponent(BattleView_base battleView) : base(battleView)
         {
@@ -132,7 +133,7 @@ namespace CarrotFantasy
 
         public override void Init()
         {
-            if (this.nodeMap != null && this.rootGameObject != null)
+            if (this.uiContentBuilt)
             {
                 return;
             }
@@ -291,77 +292,146 @@ namespace CarrotFantasy
             this.RefreshButtonInfo(0);
 
             this.AddListener();
+            this.uiContentBuilt = true;
+            this.IsBuilt = true;
         }
 
-        private void SetStartPoint()
+        public override void ApplyModelForReplay()
         {
-            GameObject tplStart = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.StartPoint);
-            if (tplStart == null)
+            this.RefreshBattleBindings();
+            this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
+            this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            this.pveDataComponent = BattlePVEDataComponent.GetFrom(this.battle);
+            this.mapComponent = (BattleMapComponent)this.battle.GetComponent(BattleComponentType.MapComponent);
+            this.pveMapComponent = BattlePVEMapComponent.GetFrom(this.battle);
+
+            if (!this.uiContentBuilt)
             {
+                this.Init();
                 return;
             }
 
-            this.nodeMonsterPoint = GameObject.Instantiate(tplStart);
-            this.nodeMonsterPoint.transform.SetParent(this.rootGameObject.transform);
-            if (this.pveMapComponent == null || this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count < 2)
+            this.RemoveListener();
+            this.selectGrid = null;
+            this.tranTarget = null;
+
+            if (this.nodeHandleTowerCanvas != null)
+            {
+                this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
+            }
+
+            if (this.nodeTowerList != null)
+            {
+                this.nodeTowerList.transform.position = this.battleView.initTran;
+            }
+
+            if (this.nodeTargetSignal != null)
+            {
+                this.nodeTargetSignal.transform.position = this.battleView.initTran;
+            }
+
+            this.battleView.bvEventDispatcher.DispatchEvent(BattleEvent.TOWER_RANGE_FADE);
+            this.RefreshStartPointPosition();
+
+            if (this.carrot != null)
+            {
+                this.carrot.Init(this.battleView.battle);
+                this.RefreshCarrotPosition();
+            }
+
+            if (this.buttonTowerList != null && this.dataComponent != null)
+            {
+                for (int i = 0; i < this.buttonTowerList.Length; i++)
+                {
+                    ButtonTower buttonTower = this.buttonTowerList[i];
+                    if (buttonTower != null)
+                    {
+                        buttonTower.UpdateButtonSprite(this.dataComponent.CoinCount);
+                    }
+                }
+            }
+
+            this.RefreshButtonInfo(0);
+            this.AddListener();
+        }
+
+        void RefreshStartPointPosition()
+        {
+            if (this.nodeMonsterPoint == null || this.pveMapComponent == null ||
+                this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count < 2)
             {
                 return;
             }
 
             Fix64Vector2 startPosition = this.pveMapComponent.monsterPathList[0];
+            bool isRight = this.pveMapComponent.monsterPathList[1].X - this.pveMapComponent.monsterPathList[0].X > Fix64.Zero;
+            bool isUp = this.pveMapComponent.monsterPathList[1].Y - this.pveMapComponent.monsterPathList[0].Y > Fix64.Zero;
 
-            bool isRight = this.pveMapComponent.monsterPathList[1].X - this.pveMapComponent.monsterPathList[0].X > Fix64.Zero ? true : false;
-            bool isUP = this.pveMapComponent.monsterPathList[1].Y - this.pveMapComponent.monsterPathList[0].Y > Fix64.Zero ? true : false;
-
-            if (this.pveMapComponent.monsterPathList[1].X - this.pveMapComponent.monsterPathList[0].X != Fix64.Zero) //左或者右
+            if (this.pveMapComponent.monsterPathList[1].X - this.pveMapComponent.monsterPathList[0].X != Fix64.Zero)
             {
-                if (isRight == true)
-                {
-                    this.nodeMonsterPoint.transform.position = new Vector3((float)startPosition.X, (float)startPosition.Y + 0.5f, 0);
-                }
-                else
-                {
-                    this.nodeMonsterPoint.transform.position = new Vector3((float)startPosition.X, (float)startPosition.Y + 0.3f, 0);
-                }
+                this.nodeMonsterPoint.transform.position = isRight
+                    ? new Vector3((float)startPosition.X, (float)startPosition.Y + 0.5f, 0)
+                    : new Vector3((float)startPosition.X, (float)startPosition.Y + 0.3f, 0);
             }
-            else //上或下
+            else
             {
-                if (isUP == true)
-                {
-                    this.nodeMonsterPoint.transform.position = new Vector3((float)startPosition.X - 0.1f, (float)startPosition.Y - 0.5f, 0);
-                }
-                else
-                {
-                    this.nodeMonsterPoint.transform.position = new Vector3((float)startPosition.X - 0.1f, (float)startPosition.Y + 0.5f, 0);
-                }
+                this.nodeMonsterPoint.transform.position = isUp
+                    ? new Vector3((float)startPosition.X - 0.1f, (float)startPosition.Y - 0.5f, 0)
+                    : new Vector3((float)startPosition.X - 0.1f, (float)startPosition.Y + 0.5f, 0);
             }
         }
 
-        private void SetCarrot()
+        void RefreshCarrotPosition()
         {
-            GameObject tplCarrot = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
-            if (tplCarrot == null)
-            {
-                return;
-            }
-
-            this.nodeCarrot = GameObject.Instantiate(tplCarrot);
-            this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
-            this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
-            if (this.carrot == null)
-            {
-                Debug.LogError("[BVUIComponent] 萝卜预制体缺少 Carrot 组件。");
-                return;
-            }
-
-            this.carrot.Init(this.battleView.battle);
-            if (this.pveMapComponent == null || this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count == 0)
+            if (this.carrot == null || this.pveMapComponent == null ||
+                this.pveMapComponent.monsterPathList == null || this.pveMapComponent.monsterPathList.Count == 0)
             {
                 return;
             }
 
             Fix64Vector2 endPosition = this.pveMapComponent.monsterPathList[this.pveMapComponent.monsterPathList.Count - 1];
             this.carrot.transform.position = new Vector3((float)endPosition.X + 0.1f, (float)endPosition.Y + 0.5f, 0);
+        }
+
+        private void SetStartPoint()
+        {
+            if (this.nodeMonsterPoint == null)
+            {
+                GameObject tplStart = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.StartPoint);
+                if (tplStart == null)
+                {
+                    return;
+                }
+
+                this.nodeMonsterPoint = GameObject.Instantiate(tplStart);
+                this.nodeMonsterPoint.transform.SetParent(this.rootGameObject.transform);
+            }
+
+            this.RefreshStartPointPosition();
+        }
+
+        private void SetCarrot()
+        {
+            if (this.nodeCarrot == null)
+            {
+                GameObject tplCarrot = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
+                if (tplCarrot == null)
+                {
+                    return;
+                }
+
+                this.nodeCarrot = GameObject.Instantiate(tplCarrot);
+                this.nodeCarrot.transform.SetParent(this.rootGameObject.transform);
+                this.carrot = this.nodeCarrot.transform.GetComponent<Carrot>();
+                if (this.carrot == null)
+                {
+                    Debug.LogError("[BVUIComponent] 萝卜预制体缺少 Carrot 组件。");
+                    return;
+                }
+            }
+
+            this.carrot.Init(this.battleView.battle);
+            this.RefreshCarrotPosition();
         }
 
         private void LoadInfo()
@@ -612,9 +682,13 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
+            this.uiContentBuilt = false;
+            this.IsBuilt = false;
+
             if (this.carrot != null)
             {
                 this.carrot.Dispose();
+                this.carrot = null;
             }
 
             if (this.buttonTowerList != null)
@@ -625,6 +699,7 @@ namespace CarrotFantasy
                     if (buttonTower != null)
                     {
                         buttonTower.Dispose();
+                        this.buttonTowerList[i] = null;
                     }
                 }
             }
@@ -634,32 +709,46 @@ namespace CarrotFantasy
             if (this.nodeHandleTowerCanvas != null)
             {
                 GameObject.Destroy(this.nodeHandleTowerCanvas);
+                this.nodeHandleTowerCanvas = null;
             }
 
             if (this.nodeTowerList != null)
             {
                 GameObject.Destroy(this.nodeTowerList);
+                this.nodeTowerList = null;
             }
 
             if (this.nodeCarrot != null)
             {
                 GameObject.Destroy(this.nodeCarrot);
+                this.nodeCarrot = null;
             }
 
             if (this.nodeMap != null)
             {
                 GameObject.Destroy(this.nodeMap);
+                this.nodeMap = null;
             }
 
             if (this.nodeMonsterPoint != null)
             {
                 GameObject.Destroy(this.nodeMonsterPoint);
+                this.nodeMonsterPoint = null;
             }
 
             if (this.nodeTargetSignal != null)
             {
                 GameObject.Destroy(this.nodeTargetSignal);
+                this.nodeTargetSignal = null;
             }
+
+            this.rootGameObject = null;
+            this.tranButtonUp = null;
+            this.tranButtonSell = null;
+            this.imgButtonUp = null;
+            this.txtButtonUp = null;
+            this.txtButtonSell = null;
+            this.tranTarget = null;
         }
 
         private void ShowTargetSignal()

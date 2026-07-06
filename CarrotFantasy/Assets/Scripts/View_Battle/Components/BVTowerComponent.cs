@@ -14,7 +14,7 @@ namespace CarrotFantasy
 
         private readonly HashSet<string> _registeredTowerPoolKeys = new HashSet<string>();
 
-        private BattleSchedulerComponent scheComponent;
+        private readonly List<GameObject> activeBuildEffects = new List<GameObject>();
 
         public BVTowerComponent(BattleView_base battleView) : base(battleView)
         {
@@ -40,11 +40,11 @@ namespace CarrotFantasy
                 Debug.LogError("[BVTowerComponent] BuildEffect 未预加载");
             }
 
-            this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
             BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
             GameViewObjectPool.Instance.PurgeLegacyNumericPoolKeys();
             this.RemoveListener();
             this.AddListener();
+            this.IsBuilt = true;
         }
 
         private void AddListener()
@@ -61,7 +61,13 @@ namespace CarrotFantasy
 
         void EnsureTowerPoolRegistered(string poolKey)
         {
-            if (this._registeredTowerPoolKeys.Add(poolKey))
+            this._registeredTowerPoolKeys.Add(poolKey);
+            GameViewObjectPool.Instance.RegisterGameObject(poolKey);
+        }
+
+        void EnsureAllTowerPoolKeysRegistered()
+        {
+            foreach (string poolKey in this._registeredTowerPoolKeys)
             {
                 GameViewObjectPool.Instance.RegisterGameObject(poolKey);
             }
@@ -121,7 +127,7 @@ namespace CarrotFantasy
                 towerObj = GameObject.Instantiate(towerTpl);
             }
 
-            towerObj.transform.SetParent(this.rootGameObject.transform);
+            BattleView_base.AttachPooledVisualToContainer(towerObj.transform, this.rootGameObject.transform);
             return towerObj;
         }
 
@@ -178,6 +184,7 @@ namespace CarrotFantasy
             towerView.InitTransform(towerObj.transform);
             tower.eventDipatcher.AddListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
             towerView.Init();
+            towerView.ReloadInfo();
             this.towerViewDic.Add(tower, towerView);
             AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerBulid");
             this.PlayBuildEffect(unit);
@@ -228,7 +235,7 @@ namespace CarrotFantasy
 
         private void PlayBuildEffect(BattleUnit unit)
         {
-            if (this.buildGameObject == null || this.scheComponent == null)
+            if (this.buildGameObject == null)
             {
                 return;
             }
@@ -236,26 +243,75 @@ namespace CarrotFantasy
             GameObject build = GameObject.Instantiate(this.buildGameObject);
             UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
             build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-            this.scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
+            this.activeBuildEffects.Add(build);
+            GameObject captured = build;
+            Sche.DelayExeOnceTimes(() =>
+            {
+                this.activeBuildEffects.Remove(captured);
+                if (captured != null)
+                {
+                    GameObject.Destroy(captured);
+                }
+            }, 0.5f);
         }
 
-        public override void ClearGameInfo()
+        void ClearActiveBuildEffects()
         {
-            buildGameObject = null;
-            _registeredTowerPoolKeys.Clear();
+            for (int i = 0; i < this.activeBuildEffects.Count; ++i)
+            {
+                GameObject build = this.activeBuildEffects[i];
+                if (build != null)
+                {
+                    GameObject.Destroy(build);
+                }
+            }
 
+            this.activeBuildEffects.Clear();
+        }
+
+        public override void ReturnUnitsToPoolForReplay()
+        {
+            this.RemoveListener();
+            this.ClearActiveBuildEffects();
+            this.ReturnAllTowersToPool();
+            this.EnsureAllTowerPoolKeysRegistered();
+            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Tower);
+            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+        }
+
+        public override void ApplyModelForReplay()
+        {
+            this.RebindBattleListeners(this.RemoveListener, this.AddListener);
+        }
+
+        void ReturnAllTowersToPool()
+        {
             foreach (KeyValuePair<BattleUnit_Tower, BattleUnitView_Tower> info in this.towerViewDic)
             {
                 BattleUnit_Tower tower = info.Key;
                 int levelIndex = tower.curLevel + 1;
                 GameObject towerObj = info.Value.transform != null ? info.Value.transform.gameObject : null;
                 info.Value.ClearUnitInfo();
-                info.Key.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
+                if (tower.eventDipatcher != null)
+                {
+                    tower.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
+                }
+
                 this.ReturnTowerGameObject(tower.towerID, levelIndex, towerObj);
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Tower, info.Value);
             }
+
             this.towerViewDic.Clear();
+        }
+
+        public override void ClearGameInfo()
+        {
+            this.ClearActiveBuildEffects();
+            this.buildGameObject = null;
+            this._registeredTowerPoolKeys.Clear();
+            this.ReturnAllTowersToPool();
             this.RemoveListener();
+            this.IsBuilt = false;
         }
 
         public override void Dispose()

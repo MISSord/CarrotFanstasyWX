@@ -9,6 +9,37 @@ namespace CarrotFantasy
     /// </summary>
     public static class BattleViewAssetPreloader
     {
+        /// <summary>同关重开：关键 Prefab/Sprite 已在缓存中，可跳过完整预加载流水线。</summary>
+        public static bool IsWarm(BaseBattle battle)
+        {
+            if (battle == null)
+            {
+                return false;
+            }
+
+            GameObject gridTemplate;
+            if (!BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.Grid,
+                out gridTemplate))
+            {
+                return false;
+            }
+
+            Sprite gridSprite;
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridNormal, out gridSprite))
+            {
+                return false;
+            }
+
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridStart, out gridSprite))
+            {
+                return false;
+            }
+
+            return FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridCantBuild, out gridSprite);
+        }
+
         public static void Run(BaseBattle battle, Action onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
             if (battle == null)

@@ -5,6 +5,9 @@ using System.IO;
 using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Networking;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 /// <summary>
 /// 记录单个AB包信息
@@ -614,8 +617,27 @@ public class AssetBundleUpdateChecker
     }
 
 #if UNITY_EDITOR
+    /// <summary>Editor 测试模式：启动时预加载本地清单，供 UIServer / StartLoadPanel 使用。</summary>
+    public static bool TryApplyLocalManifestForStartup()
+    {
+        LoadMode loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
+        if (loadMode != LoadMode.Testing)
+        {
+            return false;
+        }
+
+        if (!TryBootstrapTestingCheck(out UpdateCheckResult result))
+        {
+            return false;
+        }
+
+        AssetBundleManager.Instance.SetAssetBundleItem(result.customManifest);
+        Debug.Log("[Testing] 启动时已注入本地 AB 清单，共 " + result.customManifest.AssetBundles.Count + " 个包。");
+        return true;
+    }
+
     /// <summary>
-    /// Editor 测试模式：从 StreamingAssets / Build 输出 / 持久化目录加载清单，并检查 AB 是否可本地读取。
+    /// Editor 测试模式：从 Build 输出 / StreamingAssets / 持久化目录加载清单，并检查 AB 是否可本地读取。
     /// </summary>
     public static bool TryBootstrapTestingCheck(out UpdateCheckResult result)
     {
@@ -658,34 +680,71 @@ public class AssetBundleUpdateChecker
 
     static CustomManifest TryLoadTestingManifest()
     {
-        string[] candidates =
+        string buildManifestPath = AssetBundlePathHelper.ResolveLocalFilePath(
+            AssetBundlePathHelper.GetServerLoadUrl().Replace("\\", "/") + "/custom_manifest.json");
+
+        // Build 输出与 ab_runtime_config 一致，Editor 测试模式优先使用
+        CustomManifest buildManifest = TryReadManifestFile(buildManifestPath);
+        if (buildManifest != null)
+        {
+            Debug.Log(string.Format(
+                "[Testing] 选用 Build 清单 ManifestVersion={0}，共 {1} 个包。",
+                buildManifest.ManifestVersion,
+                buildManifest.AssetBundles.Count));
+            return buildManifest;
+        }
+
+        string[] fallbackCandidates =
         {
             AssetBundlePathHelper.GetStreamingAssetsManifestPath(),
             Path.Combine(Application.persistentDataPath, "custom_manifest.json"),
-            AssetBundlePathHelper.ResolveLocalFilePath(
-                AssetBundlePathHelper.GetServerLoadUrl().Replace("\\", "/") + "/custom_manifest.json"),
         };
 
-        foreach (string candidate in candidates)
+        CustomManifest best = null;
+        foreach (string candidate in fallbackCandidates)
         {
-            if (string.IsNullOrEmpty(candidate) || !File.Exists(candidate))
+            CustomManifest manifest = TryReadManifestFile(candidate);
+            if (manifest == null)
             {
                 continue;
             }
 
-            try
+            if (best == null || manifest.ManifestVersion > best.ManifestVersion)
             {
-                CustomManifest manifest = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(candidate));
-                if (manifest?.AssetBundles != null && manifest.AssetBundles.Count > 0)
-                {
-                    Debug.Log("[Testing] 使用清单: " + candidate);
-                    return manifest;
-                }
+                best = manifest;
             }
-            catch (Exception ex)
+        }
+
+        if (best != null)
+        {
+            Debug.Log(string.Format(
+                "[Testing] 选用备用清单 ManifestVersion={0}，共 {1} 个包。",
+                best.ManifestVersion,
+                best.AssetBundles.Count));
+        }
+
+        return best;
+    }
+
+    static CustomManifest TryReadManifestFile(string candidate)
+    {
+        if (string.IsNullOrEmpty(candidate) || !File.Exists(candidate))
+        {
+            return null;
+        }
+
+        try
+        {
+            CustomManifest manifest = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(candidate));
+            if (manifest?.AssetBundles != null && manifest.AssetBundles.Count > 0)
             {
-                Debug.LogWarning("[Testing] 读取清单失败: " + candidate + " -> " + ex.Message);
+                Debug.Log("[Testing] 读取清单: " + candidate);
+                return manifest;
             }
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning("[Testing] 读取清单失败: " + candidate + " -> " + ex.Message);
         }
 
         return null;

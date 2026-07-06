@@ -23,9 +23,13 @@ namespace CarrotFantasy
             return bundleName + "|" + assetName;
         }
 
+        static bool IsSpriteAlive(Sprite sprite)
+        {
+            return sprite != null;
+        }
+
         public static void Run(BaseBattle battle, Action onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
-            Clear();
             List<SpriteRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
@@ -48,9 +52,15 @@ namespace CarrotFantasy
             {
                 SpriteRequest req = requests[i];
                 string key = MakeKey(req.Bundle, req.Asset);
-                if (Sprites.ContainsKey(key))
+                Sprite cached;
+                if (Sprites.TryGetValue(key, out cached))
                 {
-                    continue;
+                    if (IsSpriteAlive(cached))
+                    {
+                        continue;
+                    }
+
+                    Sprites.Remove(key);
                 }
 
                 wait.Track(req.Bundle, req.Asset);
@@ -171,22 +181,27 @@ namespace CarrotFantasy
             {
                 var reader = new MapUIConfigReader();
                 reader.Init();
-                int mapKey = pveData.bigLevel * 100 + pveData.level;
-                if (reader.mapUIParam.TryGetValue(mapKey, out Dictionary<string, int> map))
+                Dictionary<string, int> map;
+                reader.TryGetMapUIConfig(pveData.bigLevel, pveData.level, out map);
+                if (map != null)
                 {
                     int bgIndex;
                     int roadIndex;
-                    if (map.TryGetValue("mapBg", out bgIndex))
+                    if (!map.TryGetValue("mapBg", out bgIndex))
                     {
-                        string bgAsset = FightViewSpriteAb.MapBgAssetName(bgIndex);
-                        Add(FightViewSpriteAb.RawImageBundle(bgAsset), bgAsset);
+                        bgIndex = 0;
                     }
 
-                    if (map.TryGetValue("mapRoad", out roadIndex))
+                    if (!map.TryGetValue("mapRoad", out roadIndex))
                     {
-                        string roadAsset = FightViewSpriteAb.MapRoadAssetName(roadIndex);
-                        Add(FightViewSpriteAb.RawImageBundle(roadAsset), roadAsset);
+                        roadIndex = 1;
                     }
+
+                    string bgAsset = FightViewSpriteAb.MapBgAssetName(bgIndex);
+                    Add(FightViewSpriteAb.RawImageBundle(bgAsset), bgAsset);
+
+                    string roadAsset = FightViewSpriteAb.MapRoadAssetName(roadIndex);
+                    Add(FightViewSpriteAb.RawImageBundle(roadAsset), roadAsset);
                 }
             }
 

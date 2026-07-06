@@ -31,11 +31,12 @@ namespace CarrotFantasy
             base.ClearGameInfo();
         }
 
-        public void TearDownRegisteredContainers()
+        /// <summary>离场景时销毁内容容器；同关重开勿调用。</summary>
+        public void DestroyContentContainers()
         {
             if (this.battleView != null && this.battleView.ViewHost != null)
             {
-                this.battleView.ViewHost.ClearRegisteredContainers();
+                this.battleView.ViewHost.DestroyContentContainers();
             }
         }
 

@@ -34,6 +34,11 @@ namespace CarrotFantasy
 
         public override void Init()
         {
+            if (this.IsBuilt)
+            {
+                return;
+            }
+
             if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridNormal, out this.sprGirdNoramlState))
             {
                 Debug.LogError("[BVMapComponent] Grid Sprite 未预加载");
@@ -50,6 +55,60 @@ namespace CarrotFantasy
             }
 
             this.LoadMapGrid();
+            this.AddListener();
+            this.IsBuilt = this.gridPointList != null && this.HasAnyGridPoint();
+        }
+
+        bool HasAnyGridPoint()
+        {
+            if (this.gridPointList == null)
+            {
+                return false;
+            }
+
+            for (int x = 0; x < this.xColumn; x++)
+            {
+                for (int y = 0; y < this.yRow; y++)
+                {
+                    if (this.gridPointList[x, y] != null)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public override void ApplyModelForReplay()
+        {
+            this.RefreshBattleBindings();
+            this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
+            this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+
+            this.pendingRemoveGridX = -1;
+            this.pendingRemoveGridY = -1;
+            this.UnregisterAllTowerLevelUpListeners();
+            this.RemoveListener();
+
+            if (this.gridPointList != null)
+            {
+                for (int x = 0; x < this.xColumn; x++)
+                {
+                    for (int y = 0; y < this.yRow; y++)
+                    {
+                        GridPoint gridPoint = this.gridPointList[x, y];
+                        if (gridPoint == null)
+                        {
+                            continue;
+                        }
+
+                        gridPoint.InitInfo(x, y);
+                        gridPoint.ResetForReplay();
+                    }
+                }
+            }
+
             this.AddListener();
         }
 
@@ -264,7 +323,6 @@ namespace CarrotFantasy
             }
         }
 
-
         public override void Start()
         {
             if (this.gridPointList == null)
@@ -290,6 +348,10 @@ namespace CarrotFantasy
         public override void ClearGameInfo()
         {
             this.RemoveListener();
+            this.UnregisterAllTowerLevelUpListeners();
+            this.pendingRemoveGridX = -1;
+            this.pendingRemoveGridY = -1;
+            this.IsBuilt = false;
 
             if (this.gridPointList != null)
             {

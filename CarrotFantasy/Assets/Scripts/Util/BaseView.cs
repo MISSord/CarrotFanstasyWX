@@ -2,23 +2,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-class UIDownInfo
-{
-    public string bundleName;
-    public string assetName;
-    public UnityEngine.GameObject gameObject;
-    public LoadState isLoaded;
-    public int order;
-    public int loadIndex;
-}
-
-enum LoadState
-{
-    None,
-    Loading,
-    Loaded
-}
-
 public abstract class BaseView
 {
     protected string viewName = "viewName";
@@ -42,7 +25,6 @@ public abstract class BaseView
     private GameObject rootObject; // 根 GameObject
     private Transform rootView; // 子页面挂点（如 Root）
     private Canvas rootCanvas; // 根节点上的 Canvas
-    private int layerOrder = 0;
     private bool isInitData = false;
     private bool isLoadRoot = false;
     private string delayReleaseId;
@@ -50,10 +32,8 @@ public abstract class BaseView
     /// <summary>index=0 的 UI 加载完成后，首个子物体的 transform，供与 BasePanel 等对接使用</summary>
     protected Transform transform;
 
-    private Dictionary<int, List<UIDownInfo>> uiLoadInfoDic = new Dictionary<int, List<UIDownInfo>>();
-    private Dictionary<int, LoadState> isLoadedDic = new Dictionary<int, LoadState>(); // 各 index 下子界面的整体加载状态
+    private ViewLoader viewLoader;
     private Dictionary<int, bool> isFirstOpenDic = new Dictionary<int, bool>(); // 各 index 是否已首次打开
-    private Queue<int> needToLoadIndexQueue = new Queue<int>();
     private Dictionary<int, Dictionary<string, string>> flushInfo = new Dictionary<int, Dictionary<string, string>>();
 
     private bool isPausedByViewStack;
@@ -65,6 +45,7 @@ public abstract class BaseView
     {
         if (isInitData) return;
         nameTableDic = new UINameTableDic();
+        viewLoader = CreateViewLoader();
         this.InitData();
         ViewManager.Instance.RegisterView(this);
         isInitData = true;
@@ -73,7 +54,7 @@ public abstract class BaseView
     public void DeleteMe()
     {
         nameTableDic.ClearAllInfo();
-        needToLoadIndexQueue.Clear();
+        viewLoader?.ClearQueue();
     }
 
     public void Release()
@@ -81,115 +62,64 @@ public abstract class BaseView
         ReleaseCallBack();
         transform = null;
 
-        // 先断开对实例的引用，再 Destroy
-        foreach (var list in uiLoadInfoDic)
-        {
-            for (int i = 0; i < list.Value.Count; ++i)
-            {
-                UIDownInfo info = list.Value[i];
-                info.gameObject = null;
-            }
-        }
+        viewLoader?.DetachInstances();
 
         GameObject.Destroy(rootObject);
         rootObject = null;
         rootCanvas = null;
         rootView = null;
 
-        // 卸载或取消已加载/加载中的 AB 子资源
-        foreach (var info in uiLoadInfoDic)
-        {
-            List<UIDownInfo> list = info.Value;
-            for (int i = 0; i < list.Count; ++i)
-            {
-                UIDownInfo downInfo = list[i];
-                if (downInfo.isLoaded == LoadState.Loaded)
-                {
-                    AssetBundleManager.Instance.UnloadAsset(downInfo.bundleName, downInfo.assetName);
-                }
-                else if (downInfo.isLoaded == LoadState.Loading)
-                {
-                    AssetBundleManager.Instance.CancelAssetLoad(downInfo.bundleName, downInfo.assetName, downInfo.loadIndex);
-                }
-            }
-        }
+        viewLoader?.ReleaseAssets();
 
         // 清延迟释放标记
         delayReleaseId = null;
         CurShowIndex = -1;
-        isLoadedDic.Clear();
         isFirstOpenDic.Clear();
-        needToLoadIndexQueue.Clear();
         nameTableDic.ClearAllInfo();
         isLoadRoot = false;
     }
 
     protected void SetUILoadInfo(int index, string bundle, string asset)
     {
-        layerOrder++;
-        List<UIDownInfo> info;
-        if (uiLoadInfoDic.TryGetValue(index, out info) == false)
-        {
-            info = new List<UIDownInfo>();
-            uiLoadInfoDic.Add(index, info);
-        }
-        info.Add(new UIDownInfo()
-        {
-            assetName = asset,
-            bundleName = bundle,
-            order = layerOrder,
-            isLoaded = LoadState.None,
-        });
+        viewLoader.RegisterAsset(index, bundle, asset);
     }
 
     protected void ChangeIndex(int targetIndex)
     {
         // 已处于目标且已加载完成，则只 Flush
-        if (CurShowIndex == targetIndex && isLoadedDic[CurShowIndex] == LoadState.Loaded)
+        if (CurShowIndex == targetIndex
+            && viewLoader.TryGetIndexState(CurShowIndex, out ViewLoadState sameIndexState)
+            && sameIndexState == ViewLoadState.Loaded)
         {
             Flush();
             return;
         }
 
         // 从当前子页切走时，先处理当前页显示/刷新
-        if (CurShowIndex != 0 && CurShowIndex != -1 && isLoadedDic[CurShowIndex] == LoadState.Loaded)
+        if (CurShowIndex != 0 && CurShowIndex != -1
+            && viewLoader.TryGetIndexState(CurShowIndex, out ViewLoadState hideState)
+            && hideState == ViewLoadState.Loaded)
         {
-            TryFlushViewShow(CurShowIndex, false);
+            viewLoader.SetIndexVisible(CurShowIndex, false);
         }
 
         CurShowIndex = targetIndex;
 
-        // 目标 index 的加载情况
-        LoadState state = isLoadedDic.GetValueOrDefault(CurShowIndex, LoadState.None);
-        if (state == LoadState.Loaded)
+        viewLoader.FixStaleLoadingState(CurShowIndex);
+
+        if (viewLoader.IsFullyInstantiated(CurShowIndex))
         {
+            viewLoader.MarkIndexLoaded(CurShowIndex);
+            TryRunFirstOpenCallBack(targetIndex);
             FlushShowView(targetIndex);
             return;
         }
 
-        state = isLoadedDic.GetValueOrDefault(0, LoadState.None);
-        // 根（index 0）未排过队则先入队拉取
-        if (state == LoadState.None)
-        {
-            needToLoadIndexQueue.Enqueue(0);
-            isLoadedDic[0] = LoadState.Loading;
-        }
+        viewLoader.RequestLoadRootIfNeeded();
+        viewLoader.RequestLoadIndexIfNeeded(targetIndex);
 
-        state = isLoadedDic.GetValueOrDefault(targetIndex, LoadState.None);
-        if (state == LoadState.None)
-        {
-            needToLoadIndexQueue.Enqueue(targetIndex);
-            isLoadedDic[targetIndex] = LoadState.Loading;
-        }
-
-        bool isFirstLoad = isFirstOpenDic.GetValueOrDefault(targetIndex, false);
-        if (isFirstLoad != true)
-        {
-            isFirstOpenDic[targetIndex] = true;
-            OpenCallBack(targetIndex);
-        }
-
-        CheckIsNeedLoad();
+        TryRunFirstOpenCallBack(targetIndex);
+        viewLoader.ProcessQueue();
     }
 
     #region 可重写回调
@@ -246,8 +176,7 @@ public abstract class BaseView
 
     public bool GetIsLoadedIndex(int index)
     {
-        LoadState state = isLoadedDic.GetValueOrDefault(index, LoadState.None);
-        return state == LoadState.Loaded;
+        return viewLoader.IsIndexLoaded(index);
     }
 
     public void Flush()
@@ -290,7 +219,7 @@ public abstract class BaseView
         if (rootObject == null || rootView == null)
         {
             isLoadRoot = false;
-            isLoadedDic.Clear();
+            viewLoader.ClearIndexStates();
         }
 
         if (isLoadRoot == false)
@@ -312,8 +241,10 @@ public abstract class BaseView
         }
 
         ViewManager.Instance.AddOpenViewToOpenList(this);
+        // 须在 ChangeIndex 之前置 true：Testing 模式 CACHE_HIT 会同步 ExecuteCallbacks，
+        // 否则加载回调见 isOpen=false 会丢弃已加载资源。
+        this.isOpen = true;
         ChangeIndex(index);
-        isOpen = true;
     }
 
     public virtual void Close()
@@ -338,6 +269,8 @@ public abstract class BaseView
             this.rootView.transform.localPosition = new Vector2(99999, 99999);
         }
 
+        viewLoader?.CancelInFlightLoads();
+
         if (this.delayReleaseId != null)
         {
             TimeUtility.Instance.RemoveTimeout(this.delayReleaseId);
@@ -351,6 +284,64 @@ public abstract class BaseView
     #endregion
 
     #region 私有方法
+    private ViewLoader CreateViewLoader()
+    {
+        return new ViewLoader(
+            () => isOpen,
+            () => rootView,
+            OnViewLoaderIndexLoadComplete);
+    }
+
+    private void OnViewLoaderIndexLoadComplete(int index, IReadOnlyList<GameObject> instances)
+    {
+        CollectNameTables(index, instances);
+
+        if (index == 0)
+        {
+            for (int i = 0; i < instances.Count; ++i)
+            {
+                instances[i].SetActive(true);
+            }
+
+            if (instances.Count > 0)
+            {
+                transform = instances[0].transform;
+            }
+
+            LoadCallBack();
+            TrySetViewDefaultFunction();
+        }
+
+        LoadIndexCallBack(index);
+        FlushShowView(index);
+    }
+
+    private void CollectNameTables(int index, IReadOnlyList<GameObject> instances)
+    {
+        if (index == 0)
+        {
+            nameTableDic.ClearAllInfo();
+        }
+
+        for (int i = 0; i < instances.Count; ++i)
+        {
+            GameObject instance = instances[i];
+            if (instance == null)
+            {
+                continue;
+            }
+
+            UINameTable nameTable = instance.GetComponent<UINameTable>();
+            if (nameTable == null)
+            {
+                Debug.LogWarning("[BaseView] 未挂 UINameTable（可忽略）: " + instance.name);
+                continue;
+            }
+
+            nameTableDic.AddUINameTable(nameTable.GetNameTableList());
+        }
+    }
+
     // 从 BaseView 预制体克隆出根节点
     private void CreateViewRoot()
     {
@@ -378,122 +369,12 @@ public abstract class BaseView
         return this.defaultIndex;
     }
 
-    private void TryFlushViewShow(int index, bool state)
+    private void TryRunFirstOpenCallBack(int targetIndex)
     {
-        List<UIDownInfo> infos = uiLoadInfoDic.GetValueOrDefault(index, null);
-        if (infos != null)
+        if (!isFirstOpenDic.GetValueOrDefault(targetIndex, false))
         {
-            for (int i = 0; i < infos.Count; ++i)
-            {
-                if (infos[i].gameObject != null)
-                {
-                    infos[i].gameObject.SetActive(state);
-                }
-            }
-        }
-    }
-
-    private void CheckIsNeedLoad()
-    {
-        if (needToLoadIndexQueue.Count == 0) return;
-        int index = needToLoadIndexQueue.Dequeue();
-        NeedToLoadIndex(index);
-    }
-
-    private void NeedToLoadIndex(int index)
-    {
-        List<UIDownInfo> infos = uiLoadInfoDic.GetValueOrDefault(index, null);
-        if (infos != null)
-        {
-            for (int i = 0; i < infos.Count; ++i)
-            {
-                UIDownInfo info = infos[i];
-                info.isLoaded = LoadState.Loading;
-                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(
-                    info.bundleName,
-                    info.assetName,
-                    (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });
-            }
-        }
-    }
-
-    private void AssetBundleLoadCallBack(GameObject obj, UIDownInfo info, int targetIndex)
-    {
-        // 已关闭则忽略异步回调
-        if (this.isOpen == false)
-        {
-            return;
-        }
-
-        GameObject instanceObj = GameObject.Instantiate(obj, rootView.transform);
-        instanceObj.SetActive(false);
-        info.gameObject = instanceObj;
-        info.isLoaded = LoadState.Loaded;
-        info.loadIndex = -1;
-
-        // 若需可在此显式设 RectTransform、兄弟顺序等
-        // instanceObj.transform.SetParent(rootView.transform);
-        // instanceObj.transform.SetSiblingIndex(info.order);
-        // RectTransform trans = instanceObj.gameObject.GetComponent<RectTransform>();
-        // trans.localPosition = Vector3.zero;
-        // trans.localScale = Vector3.one;
-
-        // 收集 UINameTable
-        UINameTable nameTable = instanceObj.transform.GetComponent<UINameTable>();
-        if (nameTable == null)
-        {
-            Debug.LogWarning("[BaseView] 未挂 UINameTable（可忽略）: " + instanceObj.name);
-        }
-        else
-        {
-            if (targetIndex == 0)
-            {
-                nameTableDic.ClearAllInfo();
-            }
-
-            nameTableDic.AddUINameTable(nameTable.GetNameTableList());
-        }
-
-        ChechIndexIsLoadFinish(targetIndex);
-    }
-
-    private void ChechIndexIsLoadFinish(int targetIndex)
-    {
-        bool isAllLoaded = false;
-        List<UIDownInfo> infos = uiLoadInfoDic.GetValueOrDefault(targetIndex, null);
-        if (infos != null)
-        {
-            isAllLoaded = true;
-            for (int i = 0; i < infos.Count; ++i)
-            {
-                UIDownInfo info = infos[i];
-                if (info.isLoaded != LoadState.Loaded) isAllLoaded = false;
-            }
-        }
-
-        // 该 index 下所有子资源已加载完
-        if (isAllLoaded == true)
-        {
-            // index 0 时设置 transform 并调 LoadCallBack
-            if (targetIndex == 0)
-            {
-                for (int i = 0; i < infos.Count; ++i)
-                {
-                    UIDownInfo info = infos[i];
-                    info.gameObject.SetActive(true);
-                }
-                if (infos.Count > 0)
-                {
-                    transform = infos[0].gameObject.transform;
-                }
-                this.LoadCallBack();
-                this.TrySetViewDefaultFunction();
-            }
-            this.LoadIndexCallBack(targetIndex);
-            this.FlushShowView(targetIndex);
-
-            this.isLoadedDic[targetIndex] = LoadState.Loaded;
-            this.CheckIsNeedLoad();
+            isFirstOpenDic[targetIndex] = true;
+            OpenCallBack(targetIndex);
         }
     }
 
@@ -515,7 +396,7 @@ public abstract class BaseView
     {
         if (CurShowIndex == index)
         {
-            TryFlushViewShow(index, true);
+            viewLoader.SetIndexVisible(index, true);
             this.ShowIndexCallBack(index);
         }
         this.Flush();

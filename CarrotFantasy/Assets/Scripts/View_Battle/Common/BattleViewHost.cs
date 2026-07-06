@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 挂在 BattleRoot 上，持久持有 SceneContainer。
-    /// SceneContainer 由 <see cref="BattleScene.InitSceneObject"/> 显式绑定，不在 Awake 里猜测/新建/销毁。
+    /// 战斗场景唯一入口：挂在 BattleRoot 上，Awake 绑定 SceneContainer，管理 6 个内容容器。
     /// </summary>
     public class BattleViewHost : MonoBehaviour
     {
+        public const string BattleUnitySceneName = "BattleScene";
         public const string SceneContainerName = "SceneContainer";
 
         static readonly string[] StandardContentContainers =
@@ -21,6 +22,8 @@ namespace CarrotFantasy
             "UIContainer",
         };
 
+        [SerializeField] GameObject sceneContainerRef;
+
         GameObject sceneContainer;
         readonly Dictionary<string, GameObject> containerDic = new Dictionary<string, GameObject>();
 
@@ -29,27 +32,93 @@ namespace CarrotFantasy
             get { return this.sceneContainer; }
         }
 
-        /// <summary>由 BattleScene 在进关时调用，绑定 .unity 里已有的 SceneContainer。</summary>
-        public void BindSceneContainer(GameObject container)
+        public bool IsReady
         {
-            if (container == null)
+            get { return this.sceneContainer != null; }
+        }
+
+        void Awake()
+        {
+            this.EnsureSceneContainerBound();
+        }
+
+        /// <summary>进关时解析并绑定 SceneContainer（序列化引用或 direct child fallback）。</summary>
+        public bool EnsureReady()
+        {
+            this.EnsureSceneContainerBound();
+            if (this.IsReady)
             {
-                BattleFlowLog.Abort("BindSceneContainer", "container=null");
-                return;
+                return true;
             }
 
-            if (container.transform.parent != this.transform)
+            BattleFlowLog.Abort(
+                "BattleViewHost.EnsureReady",
+                "BattleRoot#" + this.gameObject.GetInstanceID() + " 未绑定 SceneContainer");
+            return false;
+        }
+
+        /// <summary>BattleScene 加载完成后查找场景内唯一的 BattleViewHost。</summary>
+        public static BattleViewHost FindInLoadedBattleScene()
+        {
+            Scene targetScene = SceneLoader.FindLoadedSceneByName(BattleUnitySceneName);
+            if (!targetScene.IsValid())
+            {
+                Scene activeScene = SceneManager.GetActiveScene();
+                if (activeScene.IsValid() && activeScene.name == BattleUnitySceneName)
+                {
+                    targetScene = activeScene;
+                }
+            }
+
+            if (!targetScene.IsValid())
             {
                 BattleFlowLog.Abort(
-                    "BindSceneContainer",
-                    "SceneContainer#" + container.GetInstanceID() +
-                    " 不是 BattleRoot#" + this.gameObject.GetInstanceID() + " 的直接子节点");
-                return;
+                    "FindInLoadedBattleScene",
+                    "scene=" + BattleUnitySceneName +
+                    " 未加载; active=" + SceneManager.GetActiveScene().name);
+                return null;
             }
 
-            this.sceneContainer = container;
-            this.containerDic.Clear();
-            this.SyncExistingContainers();
+            GameObject[] roots = targetScene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                GameObject root = roots[i];
+                if (root == null)
+                {
+                    continue;
+                }
+
+                BattleViewHost host = root.GetComponent<BattleViewHost>();
+                if (host != null)
+                {
+                    return host;
+                }
+
+                host = root.GetComponentInChildren<BattleViewHost>(true);
+                if (host != null)
+                {
+                    return host;
+                }
+            }
+
+            BattleFlowLog.Abort(
+                "FindInLoadedBattleScene",
+                "scene=" + targetScene.name + " 中未找到 BattleViewHost");
+            return null;
+        }
+
+        /// <summary>异步预加载回调前确认 BattleRoot 仍归属已加载的 BattleScene。</summary>
+        public bool IsSceneAlive()
+        {
+            if (!this.IsReady)
+            {
+                return false;
+            }
+
+            Scene scene = this.gameObject.scene;
+            return scene.IsValid() &&
+                   scene.isLoaded &&
+                   scene.name == BattleUnitySceneName;
         }
 
         public void EnsureStandardContentContainers()
@@ -91,41 +160,18 @@ namespace CarrotFantasy
             return container;
         }
 
-        bool RequireSceneContainerBound(string step)
+        /// <summary>离场景 Dispose：销毁 6 个内容容器。同关重开勿调用，应 Reset 容器内物体。</summary>
+        public void DestroyContentContainers()
         {
-            if (this.sceneContainer != null)
+            foreach (KeyValuePair<string, GameObject> pair in this.containerDic)
             {
-                return true;
-            }
-
-            BattleFlowLog.Abort(
-                step,
-                "SceneContainer 未绑定，请检查 BattleScene.InitSceneObject 是否先于 Session 执行");
-            return false;
-        }
-
-        void SyncExistingContainers()
-        {
-            if (this.sceneContainer == null)
-            {
-                return;
-            }
-
-            Transform root = this.sceneContainer.transform;
-            for (int i = 0; i < root.childCount; i++)
-            {
-                Transform child = root.GetChild(i);
-                if (child == null)
+                if (pair.Value != null)
                 {
-                    continue;
-                }
-
-                GameObject cached;
-                if (!this.containerDic.TryGetValue(child.name, out cached) || cached == null)
-                {
-                    this.containerDic[child.name] = child.gameObject;
+                    GameObject.Destroy(pair.Value);
                 }
             }
+
+            this.containerDic.Clear();
         }
 
         public int GetSceneContainerChildCount()
@@ -155,18 +201,84 @@ namespace CarrotFantasy
             return child != null ? child.childCount : 0;
         }
 
-        /// <summary>重开时仅清理 Grid/UI 等子容器，永不销毁 SceneContainer 节点。</summary>
-        public void ClearRegisteredContainers()
+        void EnsureSceneContainerBound()
         {
-            foreach (KeyValuePair<string, GameObject> pair in this.containerDic)
+            if (this.sceneContainer != null)
             {
-                if (pair.Value != null)
-                {
-                    GameObject.Destroy(pair.Value);
-                }
+                return;
             }
 
+            if (this.sceneContainerRef != null)
+            {
+                this.ApplySceneContainer(this.sceneContainerRef);
+                return;
+            }
+
+            Transform child = this.transform.Find(SceneContainerName);
+            if (child != null)
+            {
+                this.ApplySceneContainer(child.gameObject);
+            }
+        }
+
+        void ApplySceneContainer(GameObject container)
+        {
+            if (container == null)
+            {
+                return;
+            }
+
+            if (container.transform.parent != this.transform)
+            {
+                BattleFlowLog.Abort(
+                    "ApplySceneContainer",
+                    "SceneContainer#" + container.GetInstanceID() +
+                    " 不是 BattleRoot#" + this.gameObject.GetInstanceID() + " 的直接子节点");
+                return;
+            }
+
+            this.sceneContainer = container;
+            this.sceneContainerRef = container;
             this.containerDic.Clear();
+            this.SyncExistingContainers();
+        }
+
+        bool RequireSceneContainerBound(string step)
+        {
+            this.EnsureSceneContainerBound();
+            if (this.sceneContainer != null)
+            {
+                return true;
+            }
+
+            BattleFlowLog.Abort(
+                step,
+                "SceneContainer 未绑定，请检查 BattleScene.unity 中 BattleViewHost 配置");
+            return false;
+        }
+
+        void SyncExistingContainers()
+        {
+            if (this.sceneContainer == null)
+            {
+                return;
+            }
+
+            Transform root = this.sceneContainer.transform;
+            for (int i = 0; i < root.childCount; i++)
+            {
+                Transform child = root.GetChild(i);
+                if (child == null)
+                {
+                    continue;
+                }
+
+                GameObject cached;
+                if (!this.containerDic.TryGetValue(child.name, out cached) || cached == null)
+                {
+                    this.containerDic[child.name] = child.gameObject;
+                }
+            }
         }
     }
 }

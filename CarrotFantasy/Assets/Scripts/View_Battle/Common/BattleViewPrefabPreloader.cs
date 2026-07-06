@@ -23,9 +23,13 @@ namespace CarrotFantasy
             return bundleName + "|" + assetName;
         }
 
+        static bool IsTemplateAlive(GameObject template)
+        {
+            return template != null;
+        }
+
         public static void Run(BaseBattle battle, Action onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
-            Clear();
             List<PrefabRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
@@ -48,9 +52,15 @@ namespace CarrotFantasy
             {
                 PrefabRequest req = requests[i];
                 string key = MakeKey(req.Bundle, req.Asset);
-                if (Templates.ContainsKey(key))
+                GameObject cached;
+                if (Templates.TryGetValue(key, out cached))
                 {
-                    continue;
+                    if (IsTemplateAlive(cached))
+                    {
+                        continue;
+                    }
+
+                    Templates.Remove(key);
                 }
 
                 wait.Track(req.Bundle, req.Asset);

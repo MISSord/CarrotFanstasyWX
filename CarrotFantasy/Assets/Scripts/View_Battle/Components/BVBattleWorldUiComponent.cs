@@ -42,6 +42,24 @@ namespace CarrotFantasy
         public override void Init()
         {
             this.EnsureCanvasesReady();
+            this.IsBuilt = true;
+        }
+
+        public void ClearTransientEffectsForReplay()
+        {
+            for (int i = this.activeFloats.Count - 1; i >= 0; i--)
+            {
+                this.ReturnDamageText(this.activeFloats[i].text);
+            }
+
+            this.activeFloats.Clear();
+        }
+
+        public override void ClearGameInfo()
+        {
+            this.ClearTransientEffectsForReplay();
+            base.ClearGameInfo();
+            this.IsBuilt = false;
         }
 
         /// <summary>保证血条/飘字 Canvas 挂在 BattleRoot 下。</summary>
@@ -305,17 +323,6 @@ namespace CarrotFantasy
                     this.activeFloats[i] = e;
                 }
             }
-        }
-
-        public override void ClearGameInfo()
-        {
-            for (int i = this.activeFloats.Count - 1; i >= 0; i--)
-            {
-                this.ReturnDamageText(this.activeFloats[i].text);
-            }
-
-            this.activeFloats.Clear();
-            base.ClearGameInfo();
         }
 
         public override void Dispose()

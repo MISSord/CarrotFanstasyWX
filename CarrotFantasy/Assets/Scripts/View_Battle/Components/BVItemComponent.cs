@@ -16,14 +16,20 @@ namespace CarrotFantasy
 
         public BVItemComponent(BattleView_base battleView) : base(battleView)
         {
-            this.itemComponent = (BattleItemComponent)this.battleView.battle.GetComponent(BattleComponentType.ItemComponent);
-            BattlePVEDataComponent pveData = BattlePVEDataComponent.GetFrom(this.battleView.battle);
+            this.componentType = BattleViewComponentType.ITEM;
+        }
+
+        void RefreshItemBindings()
+        {
+            this.RefreshBattleBindings();
+            this.itemComponent = (BattleItemComponent)this.battle.GetComponent(BattleComponentType.ItemComponent);
+            BattlePVEDataComponent pveData = BattlePVEDataComponent.GetFrom(this.battle);
             this._itemBigLevel = pveData != null ? pveData.bigLevel : 1;
-            this.componentType = BattleViewComponentType.Item;
         }
 
         public override void Init()
         {
+            this.RefreshItemBindings();
             this.RemoveListener();
             this.itemDic.Clear();
 
@@ -51,8 +57,85 @@ namespace CarrotFantasy
             {
                 this.CreateItemView(itemList[i]);
             }
+
             this.RemoveListener();
             this.AddListener();
+            this.IsBuilt = true;
+        }
+
+        public override void ReturnUnitsToPoolForReplay()
+        {
+            this.RemoveListener();
+            this.ReturnAllItemsToPool();
+            this.itemDic.Clear();
+            this.EnsureAllItemPoolKeysRegistered();
+            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Item);
+            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+        }
+
+        public override void ApplyModelForReplay()
+        {
+            this.RefreshItemBindings();
+
+            if (!this.IsBuilt)
+            {
+                this.Init();
+                return;
+            }
+
+            if (this.rootGameObject == null)
+            {
+                BVSceneComponent scene = this.battleView.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
+                if (scene != null)
+                {
+                    this.rootGameObject = scene.RegisterGameContainer("ItemContainer");
+                }
+            }
+
+            this.EnsureAllItemPoolKeysRegistered();
+            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Item);
+            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+
+            if (this.itemComponent != null && this.itemComponent.battleItemList != null)
+            {
+                List<BattleUnit_Item> itemList = this.itemComponent.battleItemList;
+                for (int i = 0; i <= itemList.Count - 1; i++)
+                {
+                    this.CreateItemView(itemList[i]);
+                }
+            }
+
+            this.AddListener();
+        }
+
+        void EnsureAllItemPoolKeysRegistered()
+        {
+            foreach (string poolKey in this._registeredItemPoolKeys)
+            {
+                GameViewObjectPool.Instance.RegisterGameObject(poolKey);
+            }
+        }
+
+        void ReturnAllItemsToPool()
+        {
+            foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
+            {
+                int itemId = info.Key.itemId;
+                GameObject itemGo = info.Value.transform != null ? info.Value.transform.gameObject : null;
+                info.Value.ClearUnitInfo();
+                this.ReturnItemGameObject(itemId, itemGo);
+                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, info.Value);
+            }
+        }
+
+        public override void ClearGameInfo()
+        {
+            this._registeredItemPoolKeys.Clear();
+            this._hpBarCanvasTemplate = null;
+            this.ReturnAllItemsToPool();
+            this.itemDic.Clear();
+            this.RemoveListener();
+            this.IsBuilt = false;
         }
 
         private void AddListener()
@@ -73,10 +156,8 @@ namespace CarrotFantasy
         void EnsureItemPoolRegistered(int itemId)
         {
             string poolKey = GetItemPoolKey(this._itemBigLevel, itemId);
-            if (this._registeredItemPoolKeys.Add(poolKey))
-            {
-                GameViewObjectPool.Instance.RegisterGameObject(poolKey);
-            }
+            this._registeredItemPoolKeys.Add(poolKey);
+            GameViewObjectPool.Instance.RegisterGameObject(poolKey);
         }
 
         private GameObject GetItemPrefabTemplate(int bigLevel, int itemId)
@@ -109,7 +190,7 @@ namespace CarrotFantasy
                 itemGo = GameObject.Instantiate(tpl);
             }
 
-            itemGo.transform.SetParent(this.rootGameObject.transform);
+            BattleView_base.AttachPooledVisualToContainer(itemGo.transform, this.rootGameObject.transform);
             return itemGo;
         }
 
@@ -147,6 +228,7 @@ namespace CarrotFantasy
             itemView.ConfigureHpBarTemplate(this._hpBarCanvasTemplate);
             itemView.LoadInfo(this.battleView, item);
             itemView.Init();
+            itemView.ReloadInfo();
             this.itemDic.Add(item, itemView);
         }
 
@@ -178,23 +260,6 @@ namespace CarrotFantasy
             this.itemDic.Remove(item);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, itemView);
             BattleViewEffectHelper.PlayDestroyAt(obj);
-        }
-
-        public override void ClearGameInfo()
-        {
-            _registeredItemPoolKeys.Clear();
-            _hpBarCanvasTemplate = null;
-
-            foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
-            {
-                int itemId = info.Key.itemId;
-                GameObject itemGo = info.Value.transform != null ? info.Value.transform.gameObject : null;
-                info.Value.ClearUnitInfo();
-                this.ReturnItemGameObject(itemId, itemGo);
-                GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Item, info.Value);
-            }
-            this.itemDic.Clear();
-            this.RemoveListener();
         }
 
         public override void Dispose()

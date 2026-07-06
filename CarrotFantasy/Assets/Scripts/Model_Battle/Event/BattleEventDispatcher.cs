@@ -29,23 +29,32 @@ namespace CarrotFantasy
                 throw new Exception(string.Format("尝试为事件{0}添加不同类型的委托，当前事件所对应的委托是{1}，要添加的委托类型为{2}", eventType, d.GetType(), callBack.GetType()));
             }
         }
+        private bool TryOnListenerRemoving(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
+        {
+            if (!eventList.ContainsKey(eventType))
+            {
+                return false;
+            }
+
+            Delegate d = eventList[eventType];
+            if (d == null)
+            {
+                return false;
+            }
+
+            if (d.GetType() != callBack.GetType())
+            {
+                throw new Exception(string.Format("移除监听错误：尝试为事件{0}移除不同类型的委托，当前委托类型为{1}，要移除的委托类型为{2}", eventType, d.GetType(), callBack.GetType()));
+            }
+
+            return true;
+        }
+
         private void OnListenerRemoving(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
         {
-            if (eventList.ContainsKey(eventType))
+            if (!this.TryOnListenerRemoving(eventType, callBack, eventList))
             {
-                Delegate d = eventList[eventType];
-                if (d == null)
-                {
-                    throw new Exception(string.Format("移除监听错误：事件{0}没有对应的委托", eventType));
-                }
-                else if (d.GetType() != callBack.GetType())
-                {
-                    throw new Exception(string.Format("移除监听错误：尝试为事件{0}移除不同类型的委托，当前委托类型为{1}，要移除的委托类型为{2}", eventType, d.GetType(), callBack.GetType()));
-                }
-            }
-            else
-            {
-                throw new Exception(string.Format("移除监听错误：没有事件码{0}", eventType));
+                return;
             }
         }
         private void OnListenerremoved(String eventType, Dictionary<String, Delegate> eventList)

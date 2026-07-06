@@ -4,8 +4,8 @@ namespace CarrotFantasy
 {
     public class PveBattleView : BattleView_base
     {
-        public PveBattleView(BaseBattle battle, GameObject viewRoot, BattleViewHost viewHost)
-            : base(battle, viewRoot, viewHost)
+        public PveBattleView(BaseBattle battle, BattleViewHost viewHost)
+            : base(battle, viewHost)
         {
         }
 
@@ -35,8 +35,6 @@ namespace CarrotFantasy
         public override void ClearGameInfo()
         {
             base.ClearGameInfo();
-            BattleViewPrefabPreloader.Clear();
-            BattleViewSpritePreloader.Clear();
             GameViewObjectPool.Instance.ClearGameInfo();
         }
 

@@ -39,6 +39,23 @@ public static class AssetBundlePathHelper
         return Path.Combine(Application.persistentDataPath, localSavePath, normalizedBundleName);
     }
 
+    /// <summary>
+    /// Editor / file:// 配置下的 Build 输出 AB 路径（与 ab_runtime_config 的 serverDownloadUrlTemplate 一致）。
+    /// </summary>
+    public static string GetBuildOutputBundlePath(string bundleName)
+    {
+        Initialize();
+
+        string buildRoot = ResolveLocalFilePath(GetServerLoadUrl());
+        if (string.IsNullOrEmpty(buildRoot))
+        {
+            return string.Empty;
+        }
+
+        string relativePath = GetBundleFileName(bundleName).Replace('\\', '/');
+        return Path.Combine(buildRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+    }
+
     public static string GetRuntimeLoadPath(string bundleName)
     {
         Initialize();
@@ -50,6 +67,14 @@ public static class AssetBundlePathHelper
         {
             return persistentPath;
         }
+
+#if UNITY_EDITOR
+        string buildPath = GetBuildOutputBundlePath(bundleName);
+        if (!string.IsNullOrEmpty(buildPath) && File.Exists(buildPath))
+        {
+            return buildPath;
+        }
+#endif
 
         string platformFolder = GetRuntimePlatformFolder();
         string streamingPath = Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder, fileName);
@@ -94,7 +119,7 @@ public static class AssetBundlePathHelper
         return File.Exists(path);
     }
 
-    /// <summary>持久化目录或 StreamingAssets 中是否存在该 AB 包（Editor 测试模式用）。</summary>
+    /// <summary>持久化目录、Build 输出或 StreamingAssets 中是否存在该 AB 包。</summary>
     public static bool IsBundleAvailableAtRuntime(string bundleName)
     {
         Initialize();
@@ -104,6 +129,14 @@ public static class AssetBundlePathHelper
         {
             return true;
         }
+
+#if UNITY_EDITOR
+        string buildPath = GetBuildOutputBundlePath(bundleName);
+        if (!string.IsNullOrEmpty(buildPath) && File.Exists(buildPath))
+        {
+            return true;
+        }
+#endif
 
         string streamingPath = Path.Combine(
             Application.streamingAssetsPath,

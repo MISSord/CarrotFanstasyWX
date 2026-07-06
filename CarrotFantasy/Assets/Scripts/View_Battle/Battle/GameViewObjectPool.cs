@@ -126,7 +126,7 @@ namespace CarrotFantasy
             }
 
             Stack<GameObject> curStack = this.curGameObjectDic[name];
-            node.transform.position = BattleView_base.OffscreenPoolPosition;
+            node.transform.localPosition = BattleView_base.OffscreenPoolPosition;
             curStack.Push(node);
         }
 
@@ -175,11 +175,47 @@ namespace CarrotFantasy
             }
         }
 
+        /// <summary>同关重开：仅清理 legacy 池 key，保留注册与已回池实例供复用。</summary>
+        public void PrepareForReplay()
+        {
+            this.PurgeLegacyNumericPoolKeys();
+        }
+
         public void ClearGameInfo()
         {
             this.PurgeLegacyNumericPoolKeys();
             this.DestroyAndClearAllPooledGameObjects();
+            this.DisposeAndClearAllPooledUnitViews();
             BattleViewEffectHelper.ResetTemplates();
+        }
+
+        void DisposeAndClearAllPooledUnitViews()
+        {
+            foreach (KeyValuePair<string, Stack<BattleUnitView>> info in this.curObjectDic)
+            {
+                Stack<BattleUnitView> stack = info.Value;
+                while (stack.Count > 0)
+                {
+                    BattleUnitView view = stack.Pop();
+                    if (view != null)
+                    {
+                        view.Dispose();
+                    }
+                }
+            }
+
+            foreach (KeyValuePair<string, Stack<BaseUnitViewComponent>> info in this.curUnitObjectDic)
+            {
+                Stack<BaseUnitViewComponent> stack = info.Value;
+                while (stack.Count > 0)
+                {
+                    BaseUnitViewComponent component = stack.Pop();
+                    if (component != null)
+                    {
+                        component.Dispose();
+                    }
+                }
+            }
         }
 
         private void DestroyAndClearAllPooledGameObjects()

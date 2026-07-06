@@ -61,6 +61,24 @@ namespace CarrotFantasy
             this.UpdateGrid();
         }
 
+        /// <summary>同关重开：停止 tween、隐藏格子与升级提示，不销毁节点。</summary>
+        public void ResetForReplay()
+        {
+            if (this.spriteRenderer != null)
+            {
+                this.spriteRenderer.DOKill();
+                this.spriteRenderer.enabled = false;
+                this.spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
+            }
+
+            this.transform.DOKill();
+
+            if (this.levelUpSignalGo != null)
+            {
+                this.levelUpSignalGo.SetActive(false);
+            }
+        }
+
         public void StartGame()
         {
             if (!this.IsSpriteRendererAlive())

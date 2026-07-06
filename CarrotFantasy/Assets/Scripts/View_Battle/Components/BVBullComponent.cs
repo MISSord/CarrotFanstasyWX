@@ -26,7 +26,20 @@ namespace CarrotFantasy
 
             this.rootGameObject = scene.RegisterGameContainer("BulletContainer");
 
+            this.EnsureBulletPoolRegistrations();
+            this.RemoveListener();
+            this.AddListener();
+            this.IsBuilt = true;
+        }
+
+        void EnsureBulletPoolRegistrations()
+        {
             BattleDataComponent dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
+            if (dataComponent == null)
+            {
+                return;
+            }
+
             for (int i = 0; i < dataComponent.towerIDListLength; i++)
             {
                 int towerId = dataComponent.curTowerIDList[i];
@@ -34,8 +47,6 @@ namespace CarrotFantasy
                 GameViewObjectPool.Instance.RegisterGameObject(FightViewGameObjectPoolKeys.Bullet(towerId, 2));
                 GameViewObjectPool.Instance.RegisterGameObject(FightViewGameObjectPoolKeys.Bullet(towerId, 3));
             }
-            this.RemoveListener();
-            this.AddListener();
         }
 
         private void AddListener()
@@ -135,10 +146,11 @@ namespace CarrotFantasy
                     return;
                 }
 
-                bulletNode.transform.SetParent(this.rootGameObject.transform);
+                BattleView_base.AttachPooledVisualToContainer(bulletNode.transform, this.rootGameObject.transform);
                 bulletView.InitTransform(bulletNode.transform);
                 bulletView.LoadInfo(this.battleView, bullet);
                 bulletView.Init();
+                bulletView.ReloadInfo();
 
                 this.bulletDic.Add(bullet, bulletView);
             }
@@ -171,7 +183,20 @@ namespace CarrotFantasy
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, bulletView);
         }
 
-        public override void ClearGameInfo()
+        public override void ReturnUnitsToPoolForReplay()
+        {
+            this.RemoveListener();
+            this.ReturnAllBulletsToPool();
+            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Bullet);
+            this.EnsureBulletPoolRegistrations();
+        }
+
+        public override void ApplyModelForReplay()
+        {
+            this.RebindBattleListeners(this.RemoveListener, this.AddListener);
+        }
+
+        void ReturnAllBulletsToPool()
         {
             foreach (KeyValuePair<BattleUnit_Bullet, BattleUnitView_Bullet> info in this.bulletDic)
             {
@@ -182,8 +207,15 @@ namespace CarrotFantasy
                 info.Value.ClearUnitInfo();
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, info.Value);
             }
+
             this.bulletDic.Clear();
+        }
+
+        public override void ClearGameInfo()
+        {
+            this.ReturnAllBulletsToPool();
             this.RemoveListener();
+            this.IsBuilt = false;
         }
 
         public override void Dispose()

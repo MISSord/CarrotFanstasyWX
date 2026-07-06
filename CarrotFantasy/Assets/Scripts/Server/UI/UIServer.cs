@@ -1,5 +1,8 @@
 using System;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace CarrotFantasy
 {
@@ -15,6 +18,7 @@ namespace CarrotFantasy
         private GameObject nodeObject;
         private GameObject loadingPanelObject;
         private TipView tipPanel;
+        private bool tipPanelLoadRequested;
         private string pendingTip;
         public Vector2 curSetScreenSize = new Vector2(1920, 1440);
 
@@ -23,9 +27,23 @@ namespace CarrotFantasy
             base.LoadModule();
             this.InitGlobalCanvas();
             this.InitAudioManager();
+        }
 
+        /// <summary>清单就绪后再加载 Tip 等全局 AB UI（避免早于 SetAssetBundleItem）。</summary>
+        public void TryLoadDeferredAbUi()
+        {
+            if (this.tipPanel != null || this.tipPanelLoadRequested)
+            {
+                return;
+            }
+
+            if (AssetBundleManager.Instance == null || !AssetBundleManager.Instance.HasManifest)
+            {
+                return;
+            }
+
+            this.tipPanelLoadRequested = true;
             this.AddTipPanel();
-            this.AddLoadingPanel();
         }
 
         private void AddLoadingPanel()
@@ -145,6 +163,7 @@ namespace CarrotFantasy
 
             this.tipPanel = null;
             this.pendingTip = null;
+            this.tipPanelLoadRequested = false;
         }
 
         public void PlayMainBg()

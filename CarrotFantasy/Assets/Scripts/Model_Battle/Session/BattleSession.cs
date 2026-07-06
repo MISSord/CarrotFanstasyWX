@@ -17,12 +17,12 @@ namespace CarrotFantasy
     }
 
     /// <summary>
-    /// 单局战斗会话，严格线性：模型初始化 → 资源预加载 → 视图构建 → 开战。
+    /// 单局战斗会话。同关重开：视图回池 → Model 重置 → 视图同步 → FinishRunningAfterViewReady。
     /// </summary>
     public sealed class BattleSession
     {
         readonly PveModelBattleParams launchParams;
-        readonly BattleSceneContext sceneContext;
+        readonly BattleViewHost viewHost;
 
         BaseBattle battle;
         BattleView_base view;
@@ -48,10 +48,10 @@ namespace CarrotFantasy
             get { return this.phase; }
         }
 
-        public BattleSession(PveModelBattleParams launchParams, BattleSceneContext context)
+        public BattleSession(PveModelBattleParams launchParams, BattleViewHost viewHost)
         {
             this.launchParams = launchParams;
-            this.sceneContext = context;
+            this.viewHost = viewHost;
         }
 
         /// <summary>进关入口：先同步初始化 Model，再启动异步视图流水线。</summary>
@@ -82,10 +82,35 @@ namespace CarrotFantasy
                 return;
             }
 
-            this.runToken++;
+            int token = ++this.runToken;
             ViewManager.Instance?.CloseAllOpenViews();
-            this.ResetForReplay();
-            this.BeginViewPipeline(this.runToken);
+
+            this.view.ResetForReplay(this.ResetModelForReplay);
+
+            GameViewObjectPool.Instance.PrepareForReplay();
+
+            if (!this.TryIsActiveRun(token, "Restart"))
+            {
+                return;
+            }
+
+            if (!this.CanReplayWithExistingView())
+            {
+                BattleFlowLog.Step("Restart", "视图未就绪，回退完整 Build 流水线");
+                this.phase = BattleSessionPhase.LoadingAssets;
+                this.BeginViewPipeline(token);
+                return;
+            }
+
+            this.FinishRunningAfterViewReady(token, "Replay");
+        }
+
+        /// <summary>同关重开：内容已 Build、场景校验通过、关键 AB 仍 Warm。</summary>
+        bool CanReplayWithExistingView()
+        {
+            return this.view.IsContentBuilt &&
+                   this.view.ValidateSceneContent() &&
+                   BattleViewAssetPreloader.IsWarm(this.battle);
         }
 
         public void Tick(float deltaSeconds)
@@ -106,6 +131,11 @@ namespace CarrotFantasy
 
         public void TearDown(bool destroyViewHierarchy)
         {
+            if (this.disposed)
+            {
+                return;
+            }
+
             this.disposed = true;
             this.runToken++;
             this.RemoveListeners();
@@ -151,10 +181,8 @@ namespace CarrotFantasy
             this.InitBattleModel(resetExisting: false);
         }
 
-        void ResetForReplay()
+        void ResetModelForReplay()
         {
-            this.view.TearDownSceneContainers();
-            this.view.ClearGameInfo();
             this.battle.ClearGameInfo();
             this.InitBattleModel(resetExisting: true);
         }
@@ -193,7 +221,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (this.sceneContext == null || !this.sceneContext.IsSceneAlive())
+            if (this.viewHost == null || !this.viewHost.IsSceneAlive())
             {
                 BattleFlowLog.Abort("BuildViewAndStart", "BattleScene 场景壳已失效");
                 return;
@@ -219,39 +247,46 @@ namespace CarrotFantasy
             bool createdView = this.view == null;
             if (createdView)
             {
-                this.view = new PveBattleView(this.battle, this.sceneContext.BattleRoot, viewHost);
+                this.view = new PveBattleView(this.battle, viewHost);
             }
 
             this.view.Init();
 
-            if (!this.view.InitContentComponents())
+            if (!this.view.IsContentBuilt)
             {
-                BattleFlowLog.Abort("BuildViewAndStart", "InitContentComponents 返回 false");
+                if (!this.view.BuildContentComponents())
+                {
+                    BattleFlowLog.Abort("BuildViewAndStart", "BuildContentComponents 返回 false");
+                    return;
+                }
+            }
+
+            if (!this.view.ValidateSceneContent())
+            {
+                BattleFlowLog.Abort("BuildViewAndStart", "战斗场景内容校验失败");
                 return;
             }
 
-            int containerCount = viewHost.GetSceneContainerChildCount();
-            int gridCount = viewHost.GetContainerChildCount("GridContainer");
-            if (containerCount < 6)
+            this.FinishRunningAfterViewReady(token, createdView ? "Build" : "Build");
+        }
+
+        bool FinishRunningAfterViewReady(int token, string pathTag)
+        {
+            if (!this.TryIsActiveRun(token, "FinishRunningAfterViewReady"))
             {
-                BattleFlowLog.Abort(
-                    "BuildViewAndStart",
-                    "SceneContainer 子容器=" + containerCount + "，期望 >=6");
-                return;
+                return false;
             }
 
-            if (gridCount <= 0)
+            BattleViewHost viewHost = this.RequireViewHost();
+            if (viewHost == null)
             {
-                BattleFlowLog.Abort(
-                    "BuildViewAndStart",
-                    "GridContainer 格子数=" + gridCount + "，期望 >0");
-                return;
+                return false;
             }
 
             if (!BattleViewOpener.Open<NormalModelPanel>(this.battle))
             {
-                BattleFlowLog.Abort("BuildViewAndStart", "Open NormalModelPanel 失败");
-                return;
+                BattleFlowLog.Abort("FinishRunningAfterViewReady", "Open NormalModelPanel 失败");
+                return false;
             }
 
             this.phase = BattleSessionPhase.Running;
@@ -260,9 +295,10 @@ namespace CarrotFantasy
             this.view.StartGame();
 
             BattleFlowLog.Step(
-                "4/4 Running",
-                "containers=" + containerCount +
-                " grids=" + gridCount);
+                "4/4 Running (" + pathTag + ")",
+                "containers=" + viewHost.GetSceneContainerChildCount() +
+                " grids=" + viewHost.GetContainerChildCount("GridContainer"));
+            return true;
         }
 
         /// <summary>按开战 Mode 选择战斗实现，并将本局参数注入 BaseBattle。</summary>
@@ -275,13 +311,13 @@ namespace CarrotFantasy
 
         BattleViewHost RequireViewHost()
         {
-            if (this.sceneContext == null || !this.sceneContext.IsValid)
+            if (this.viewHost == null || !this.viewHost.IsReady)
             {
-                BattleFlowLog.Abort("RequireViewHost", "BattleSceneContext 无效");
+                BattleFlowLog.Abort("RequireViewHost", "BattleViewHost 无效");
                 return null;
             }
 
-            return this.sceneContext.ViewHost;
+            return this.viewHost;
         }
 
         bool TryIsActiveRun(int token, string step)

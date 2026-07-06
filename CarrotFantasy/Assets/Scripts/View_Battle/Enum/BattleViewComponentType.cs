@@ -15,7 +15,7 @@ namespace CarrotFantasy
         public const String MONSTER = "monster";
         public const String BULLET = "bullet";
         public const String TOWER = "tower";
-        public const String Item = "Item";
+        public const String ITEM = "Item";
 
     }
 }

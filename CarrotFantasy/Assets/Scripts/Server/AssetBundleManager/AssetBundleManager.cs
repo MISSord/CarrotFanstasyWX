@@ -54,6 +54,7 @@ public class AssetItem
     public string bundleName;
     public string assetName;
     public UnityEngine.Object assetObject;
+    public Type expectedType;
     public int referenceCount;
     public AssetBundleRequest loadRequest;
     public DateTime lastUseTime;
@@ -416,6 +417,7 @@ public class AssetBundleManager
 #if UNITY_EDITOR
         UpdateAssetBaseLoad();
 #endif
+        AssetBundleDownloader.Instance?.Update();
     }
 
     #region 公共接口
@@ -423,6 +425,12 @@ public class AssetBundleManager
     // 设置AB包清单
     public void SetAssetBundleItem(CustomManifest manifests)
     {
+        if (manifests?.AssetBundles == null)
+        {
+            GameLogController.Warning("SetAssetBundleItem: manifest 为空", "AssetBundleManager");
+            return;
+        }
+
         _bundleManifests.Clear();
         foreach (var abInfo in manifests.AssetBundles)
         {
@@ -430,6 +438,8 @@ public class AssetBundleManager
         }
         GameLogController.Log($"AB包清单设置完成，共 {manifests.AssetBundles.Count} 个AB包信息", "AssetBundleManager");
     }
+
+    public bool HasManifest => _bundleManifests.Count > 0;
 
     /// <summary>
     /// 泛型版本
@@ -471,7 +481,7 @@ public class AssetBundleManager
         }
 #endif
 
-        return LoadAsset(bundleName, assetName, genericCallback, priority);
+        return LoadAsset(bundleName, assetName, genericCallback, priority, typeof(T));
     }
 
     /// <summary>
@@ -594,7 +604,7 @@ public class AssetBundleManager
     }
 #endif
 
-    private int LoadAsset(string bundleName, string assetName, AssetLoadCallback callback = null, LoadPriority priority = LoadPriority.Medium)
+    private int LoadAsset(string bundleName, string assetName, AssetLoadCallback callback = null, LoadPriority priority = LoadPriority.Medium, Type expectedType = null)
     {
         if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetName))
         {
@@ -611,6 +621,10 @@ public class AssetBundleManager
 
         // 查找或创建AssetItem
         AssetItem assetItem = bundleInfo.GetOrCreateAssetItem(assetName);
+        if (expectedType != null)
+        {
+            assetItem.expectedType = expectedType;
+        }
         assetItem.AddReference();
 
         int callbackId = -1;
@@ -619,18 +633,30 @@ public class AssetBundleManager
             callbackId = assetItem.AddCallback(callback);
         }
 
+        string assetKey = GetAssetLoadKey(bundleName, assetName);
+        _cancelledAssetKeys.Remove(assetKey);
+
         // 如果资源已经加载，直接返回
         if (assetItem.assetObject != null)
         {
-            assetItem.ExecuteCallbacks();
-            return callbackId;
+            if (expectedType == null || expectedType.IsInstanceOfType(assetItem.assetObject))
+            {
+                assetItem.ExecuteCallbacks();
+                return callbackId;
+            }
+
+            assetItem.assetObject = null;
         }
 
         // 如果资源正在加载，等待完成
-        if (assetItem.loadRequest != null && !assetItem.loadRequest.isDone)
+        if (assetItem.loadRequest != null)
         {
-            // 已经在加载队列中，等待即可
-            return callbackId;
+            if (!assetItem.loadRequest.isDone)
+            {
+                return callbackId;
+            }
+
+            assetItem.loadRequest = null;
         }
 
         // 如果AB包已加载，将资源加入加载队列
@@ -679,10 +705,9 @@ public class AssetBundleManager
             var bundleInfo = GetBundleInfo(bundleName);
             bundleInfo?.RemoveReference();
 
-            // 如果没有回调且资源未加载，直接取消加载
-            if (assetItem.GetCallbackCount() == 0 && assetItem.assetObject == null && assetItem.loadRequest == null)
+            // 无剩余回调且资源未落地：标记取消（含 loadRequest 进行中的异步加载）
+            if (assetItem.GetCallbackCount() == 0 && assetItem.assetObject == null)
             {
-                // 从加载队列中移除
                 RemoveAssetFromLoadingQueue(assetItem);
             }
         }
@@ -1032,7 +1057,14 @@ public class AssetBundleManager
         }
 
         // 开始异步加载资源
-        assetItem.loadRequest = bundleInfo.bundle.LoadAssetAsync(assetItem.assetName);
+        if (assetItem.expectedType != null)
+        {
+            assetItem.loadRequest = bundleInfo.bundle.LoadAssetAsync(assetItem.assetName, assetItem.expectedType);
+        }
+        else
+        {
+            assetItem.loadRequest = bundleInfo.bundle.LoadAssetAsync(assetItem.assetName);
+        }
         _loadingAssets.Add(assetItem);
         _loadingAssetKeys.Add(GetAssetLoadKey(assetItem.bundleName, assetItem.assetName));
 
@@ -1213,24 +1245,59 @@ public class AssetBundleManager
         {
             _cancelledAssetKeys.Remove(assetKey);
             assetItem.loadRequest = null;
-            assetItem.RemoveAllCallbacks();
+
+            if (assetItem.GetCallbackCount() > 0)
+            {
+                //RetryAssetLoadAfterCancel(assetItem);
+            }
+
             return;
         }
 
         if (assetItem.loadRequest.asset != null)
         {
-            assetItem.assetObject = assetItem.loadRequest.asset;
+            UnityEngine.Object loadedAsset = assetItem.loadRequest.asset;
+            if (assetItem.expectedType != null && !assetItem.expectedType.IsInstanceOfType(loadedAsset))
+            {
+                var bundleInfo = GetBundleInfo(assetItem.bundleName);
+                UnityEngine.Object resolvedAsset = bundleInfo?.bundle != null
+                    ? TryResolveTypedAsset(bundleInfo.bundle, assetItem.assetName, assetItem.expectedType)
+                    : null;
+                if (resolvedAsset != null)
+                {
+                    loadedAsset = resolvedAsset;
+                }
+            }
+
+            assetItem.assetObject = loadedAsset;
             GameLogController.Log($"资源加载完成: {assetItem.assetName}", "AssetBundleManager");
         }
         else
         {
+            var bundleInfo = GetBundleInfo(assetItem.bundleName);
+            if (bundleInfo?.bundle != null && assetItem.expectedType != null)
+            {
+                UnityEngine.Object resolvedAsset = TryResolveTypedAsset(
+                    bundleInfo.bundle,
+                    assetItem.assetName,
+                    assetItem.expectedType);
+                if (resolvedAsset != null)
+                {
+                    assetItem.assetObject = resolvedAsset;
+                    GameLogController.Log($"资源加载完成: {assetItem.assetName}", "AssetBundleManager");
+                    assetItem.loadRequest = null;
+                    assetItem.ExecuteCallbacks();
+                    return;
+                }
+            }
+
             GameLogController.Error($"资源加载失败: {assetItem.assetName}", "AssetBundleManager");
 
             // 资源加载失败，减少引用计数
             assetItem.RemoveReference();
 
-            var bundleInfo = GetBundleInfo(assetItem.bundleName);
-            bundleInfo?.RemoveReference();
+            var bundleInfos = GetBundleInfo(assetItem.bundleName);
+            bundleInfos?.RemoveReference();
         }
 
         assetItem.loadRequest = null;
@@ -1268,6 +1335,63 @@ public class AssetBundleManager
     #endregion
 
     #region 工具方法
+
+    void RetryAssetLoadAfterCancel(AssetItem assetItem)
+    {
+        BundleInfo bundleInfo = GetOrCreateBundleInfo(assetItem.bundleName);
+        if (bundleInfo.isLoaded)
+        {
+            StartAssetLoading(assetItem);
+            return;
+        }
+
+        if (bundleInfo.isLoading)
+        {
+            bundleInfo.AddPendingAsset(assetItem.assetName);
+            return;
+        }
+
+        bundleInfo.AddPendingAsset(assetItem.assetName);
+        LoadBundleWithDependencies(assetItem.bundleName, LoadPriority.Medium);
+    }
+
+    static UnityEngine.Object TryResolveTypedAsset(AssetBundle bundle, string assetName, Type expectedType)
+    {
+        if (bundle == null || expectedType == null)
+        {
+            return null;
+        }
+
+        UnityEngine.Object[] allAssets = bundle.LoadAllAssets<UnityEngine.Object>();
+        for (int i = 0; i < allAssets.Length; i++)
+        {
+            UnityEngine.Object obj = allAssets[i];
+            if (obj != null && obj.name == assetName && expectedType.IsInstanceOfType(obj))
+            {
+                return obj;
+            }
+        }
+
+        for (int i = 0; i < allAssets.Length; i++)
+        {
+            UnityEngine.Object obj = allAssets[i];
+            if (obj != null && expectedType.IsInstanceOfType(obj))
+            {
+                return obj;
+            }
+        }
+
+        for (int i = 0; i < allAssets.Length; i++)
+        {
+            UnityEngine.Object obj = allAssets[i];
+            if (obj != null && obj.name == assetName)
+            {
+                return obj;
+            }
+        }
+
+        return null;
+    }
 
     // 将AB包加入加载队列
     private void AddBundleToQueue(BundleInfo bundleInfo, LoadPriority priority)

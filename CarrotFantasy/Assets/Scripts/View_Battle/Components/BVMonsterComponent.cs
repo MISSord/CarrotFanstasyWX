@@ -51,6 +51,7 @@ namespace CarrotFantasy
             BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
             this.RemoveListener();
             this.AddListener();
+            this.IsBuilt = true;
         }
 
         private void AddListener()
@@ -87,8 +88,9 @@ namespace CarrotFantasy
                 if (node == null)
                 {
                     node = GameObject.Instantiate(this.noInstanGameObject);
-                    node.transform.SetParent(this.rootGameObject.transform);
                 }
+
+                BattleView_base.AttachPooledVisualToContainer(node.transform, this.rootGameObject.transform);
 
                 GameObject monsterCanvasTemplate = this._monsterCanvasTemplate;
                 if (monsterCanvasTemplate == null)
@@ -120,6 +122,7 @@ namespace CarrotFantasy
                 monsterView.AttachMonsterHpBar(hpBarGo);
                 monsterView.LoadInfo(this.battleView, monster);
                 monsterView.Init();
+                monsterView.ReloadInfo();
 
                 this.monsterDic.Add(monster, monsterView);
                 AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Monster/Create");
@@ -160,11 +163,22 @@ namespace CarrotFantasy
             BattleViewEffectHelper.PlayDestroyAt(unit);
         }
 
-        public override void ClearGameInfo()
+        public override void ReturnUnitsToPoolForReplay()
         {
-            _monsterCanvasTemplate = null;
-            noInstanGameObject = null;
+            this.RemoveListener();
+            this.ReturnAllMonstersToPool();
+            GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.Monster);
+            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Monster);
+            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+        }
 
+        public override void ApplyModelForReplay()
+        {
+            this.RebindBattleListeners(this.RemoveListener, this.AddListener);
+        }
+
+        void ReturnAllMonstersToPool()
+        {
             foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
                 BattleUnitView_Monster monsterView = info.Value;
@@ -184,8 +198,17 @@ namespace CarrotFantasy
 
                 GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Monster, monsterView);
             }
+
             this.monsterDic.Clear();
+        }
+
+        public override void ClearGameInfo()
+        {
+            this._monsterCanvasTemplate = null;
+            this.noInstanGameObject = null;
+            this.ReturnAllMonstersToPool();
             this.RemoveListener();
+            this.IsBuilt = false;
         }
 
         public override void Dispose()
