@@ -4,6 +4,6 @@ namespace CarrotFantasy
     public class RoguelikePveBattle : PveBattleBase
     {
         protected override PveBattleComponentSetup.Layout ComponentLayout =>
-            PveBattleComponentSetup.Layout.FlowFieldSurvival;
+            PveBattleComponentSetup.Layout.Classic;
     }
 }

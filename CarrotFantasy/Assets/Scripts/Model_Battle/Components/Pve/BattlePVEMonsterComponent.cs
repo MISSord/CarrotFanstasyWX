@@ -20,16 +20,6 @@ namespace CarrotFantasy
         {
         }
 
-        public static BattlePVEMonsterComponent GetFrom(BaseBattle battle)
-        {
-            if (battle == null)
-            {
-                return null;
-            }
-
-            return battle.GetComponent(BattleComponentType.MonsterComponent) as BattlePVEMonsterComponent;
-        }
-
         public override void Init()
         {
             PveModelBattleParams launchParams = this.baseBattle.LaunchParams;

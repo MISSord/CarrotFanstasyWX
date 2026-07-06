@@ -74,14 +74,12 @@
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewPrefabPreloader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\PveModelBattleParams.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BulletMoveType.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Unit\BattleUnit_MonsterFlow.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BattleUnitPool.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Buff\BuffDef.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BuffCategory.cs" />
     <Compile Include="Assets\Scripts\Hexagon\HexMapCameraPan.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\SlideCanCoverScrollView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BulletConfigReader.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_MonsterFlowField.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Event\BattleEventDispatcher.cs" />
     <Compile Include="Assets\Scripts\Util\XUI.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\BaseBattle.cs" />
@@ -155,7 +153,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Common\BattleLogicTiming.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\ResPath.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\function\BattleMonsterDamage.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Components\Pve\BattleFlowFieldComponent.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryPayloadWriter.cs" />
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexEventTypeCatalog.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Battle\Pve\BattlePveMode.cs" />
@@ -375,7 +372,6 @@
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewHost.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\LubanConfigLoader.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionTransportFactory.cs" />
-    <Compile Include="Assets\Scripts\Model_Battle\Components\Pve\BattleSurvivalPVEMonsterComponent.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Class\Carrot.cs" />
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexMapPointId.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Core\BattleMapComponent.cs" />

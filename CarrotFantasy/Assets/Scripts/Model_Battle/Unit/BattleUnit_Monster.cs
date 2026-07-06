@@ -6,8 +6,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 怪物单位基类：生命、受击、位移组件挂载与各玩法共用的 Tick。
-    /// 经典 PVE 折线路径见 <see cref="BattleUnit_Monster_Pve"/>；
-    /// 流场 / 测试等玩法在各自子类中安装移动组件。
+    /// 经典 PVE 折线路径见 <see cref="BattleUnit_Monster_Pve"/>。
     /// </summary>
     public abstract class BattleUnit_Monster : BattleUnit
     {
@@ -42,11 +41,6 @@ namespace CarrotFantasy
         /// <summary>回收到对象池时使用的池键。</summary>
         public static string GetMonsterPoolKey(BattleUnit_Monster monster)
         {
-            if (monster is BattleUnit_MonsterFlow)
-            {
-                return BattleUnitType.MONSTER_FLOW;
-            }
-
             return BattleUnitType.MONSTER;
         }
 

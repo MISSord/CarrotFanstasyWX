@@ -6,7 +6,6 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 怪物组件基类：在场怪物字典、死亡回收、Tick 与调度注册。
-    /// PVE 波次刷怪见 <see cref="BattlePVEMonsterComponent"/>、<see cref="BattleSurvivalPVEMonsterComponent"/>。
     /// </summary>
     public class BattleMonsterComponent : BaseBattleComponent
     {

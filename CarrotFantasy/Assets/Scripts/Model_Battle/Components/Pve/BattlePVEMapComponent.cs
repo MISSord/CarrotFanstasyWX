@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 经典 / 流场 PVE 地图：从 <see cref="PveModelBattleParams.LevelInfo"/> 加载关卡格子、怪物路径与建造规则。
+    /// 经典 PVE 地图：从 <see cref="PveModelBattleParams.LevelInfo"/> 加载关卡格子、怪物路径与建造规则。
     /// </summary>
     public class BattlePVEMapComponent : BattleMapComponent, IBattleMapLevelData
     {

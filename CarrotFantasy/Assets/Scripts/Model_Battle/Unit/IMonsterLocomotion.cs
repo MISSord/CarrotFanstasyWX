@@ -1,6 +1,6 @@
 namespace CarrotFantasy
 {
-    /// <summary>怪物位移能力（折线 / 流场等），与具体 <see cref="BaseUnitComponent"/> 实现解耦。</summary>
+    /// <summary>怪物位移能力，与具体 <see cref="BaseUnitComponent"/> 实现解耦。</summary>
     public interface IMonsterLocomotion
     {
         bool isReachCarrot { get; }

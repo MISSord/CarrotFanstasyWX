@@ -11,7 +11,6 @@ namespace CarrotFantasy
 
         private BattleTowerComponent towerComponent;
         private BattleMapComponent mapComponent;
-        private BattleFlowFieldComponent flowFieldComponent;
 
         public BattleInputComponent(BaseBattle bBattle) : base(bBattle)
         {
@@ -22,15 +21,6 @@ namespace CarrotFantasy
         {
             this.towerComponent = (BattleTowerComponent)this.baseBattle.GetComponent(BattleComponentType.TowerComponent);
             this.mapComponent = (BattleMapComponent)this.baseBattle.GetComponent(BattleComponentType.MapComponent);
-            BaseBattleComponent flowComp;
-            if (this.baseBattle.componentDic.TryGetValue(BattleComponentType.FlowFieldComponent, out flowComp))
-            {
-                this.flowFieldComponent = flowComp as BattleFlowFieldComponent;
-            }
-            else
-            {
-                this.flowFieldComponent = null;
-            }
         }
 
         public override void OnTick(Fix64 time)
@@ -56,21 +46,11 @@ namespace CarrotFantasy
                 this.frameBatch.Sort(CompareSameFrameOrder);
             }
 
-            bool flowDirty = false;
             for (int i = 0; i < this.frameBatch.Count; i++)
             {
                 InputOrder o = this.frameBatch[i];
                 this.towerComponent.ExePlayerOrder(o);
                 this.mapComponent.ExePlayerOrder(o);
-                if (o.order == InputOrderType.ADD_ORDER || o.order == InputOrderType.REMOVE_ORDER)
-                {
-                    flowDirty = true;
-                }
-            }
-
-            if (flowDirty && this.flowFieldComponent != null)
-            {
-                this.flowFieldComponent.Rebuild();
             }
 
             RemoveByIndicesDescending(this.curNoProcessDic, this.shouldRemoveList);

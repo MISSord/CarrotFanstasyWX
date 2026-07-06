@@ -1,7 +1,7 @@
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 经典 / 流场 PVE 专用数据：章节关卡、波次、萝卜、胜负结算。
+    /// 经典 PVE 专用数据：章节关卡、波次、萝卜、胜负结算。
     /// </summary>
     public class BattlePVEDataComponent : BattleDataComponent
     {

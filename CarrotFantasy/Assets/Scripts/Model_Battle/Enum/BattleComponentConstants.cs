@@ -19,7 +19,6 @@ namespace CarrotFantasy
         public const String MonsterComponent = "MonsterComponent";
         public const String BulletComponent = "BulletComponent";
         public const String ItemComponent = "ItemComponent";
-        public const String FlowFieldComponent = "FlowFieldComponent";
         public const String RoguelikeRunBridgeComponent = "RoguelikeRunBridgeComponent";
         public const String GlobalBuffComponent = "GlobalBuffComponent";
     }
@@ -38,7 +37,6 @@ namespace CarrotFantasy
         public const String BUFF = "Buff";
 
         public const String MOVE_MONSTER = "Move_Monster";
-        public const String MOVE_MONSTER_FLOW_FIELD = "Move_Monster_FlowField";
         public const String MOVE_GRID_STRAIGHT = "Move_GridStraight";
         public const String MOVE_BULLET = "Move_Bullet";
         public const String MOVE_BULLET_ONE = "Move_Bullet_One";
