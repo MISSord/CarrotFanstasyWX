@@ -13,15 +13,9 @@ namespace CarrotFantasy
         private RectTransform hpBarRect;
         private Vector3 hpBarLocalOffset;
         private BVBattleWorldUiComponent worldUiCached;
-        private GameObject hpBarCanvasTemplate;
         private bool hpBarCreated;
         private SpriteRenderer spriteRender;
         private Item item;
-
-        public void ConfigureHpBarTemplate(GameObject canvasTemplate)
-        {
-            this.hpBarCanvasTemplate = canvasTemplate;
-        }
 
         public override void InitTransform(Transform node)
         {
@@ -57,7 +51,7 @@ namespace CarrotFantasy
         {
             if (hpBarRoot == null)
             {
-                Debug.LogError("[BattleUnitView_Item] 物品血条为空，请检查 MonsterCanvas 预加载。");
+                Debug.LogError("[BattleUnitView_Item] 物品血条为空，请检查 HPSlider 预加载。");
                 return;
             }
 
@@ -88,25 +82,36 @@ namespace CarrotFantasy
                 this.CacheWorldUi();
             }
 
-            if (this.worldUiCached == null || this.hpBarCanvasTemplate == null)
+            if (this.worldUiCached == null)
             {
-                Debug.LogError("[BattleUnitView_Item] 无法创建血条: worldUi=" + (this.worldUiCached != null) +
-                               ", template=" + (this.hpBarCanvasTemplate != null));
+                Debug.LogError("[BattleUnitView_Item] 无法创建血条: WORLD_UI 未就绪。");
                 return;
             }
 
-            GameObject hpBarGo = this.worldUiCached.CreateMonsterHpBar(this.hpBarCanvasTemplate);
+            GameObject hpBarGo = this.worldUiCached.CreateHpBar();
             this.AttachItemHpBar(hpBarGo);
         }
 
         private void DestroyHpBar()
         {
-            if (this.hpBarInstance != null)
+            if (this.hpBarInstance == null)
             {
-                Object.Destroy(this.hpBarInstance);
-                this.hpBarInstance = null;
+                this.hpBarRect = null;
+                this.slider = null;
+                this.hpBarCreated = false;
+                return;
             }
 
+            if (this.worldUiCached != null)
+            {
+                this.worldUiCached.ReturnHpBar(this.hpBarInstance);
+            }
+            else
+            {
+                Object.Destroy(this.hpBarInstance);
+            }
+
+            this.hpBarInstance = null;
             this.hpBarRect = null;
             this.slider = null;
             this.hpBarCreated = false;
@@ -184,7 +189,6 @@ namespace CarrotFantasy
         {
             this.DestroyHpBar();
             this.worldUiCached = null;
-            this.hpBarCanvasTemplate = null;
             base.ClearUnitInfo();
             this.spriteRender = null;
             this.item = null;

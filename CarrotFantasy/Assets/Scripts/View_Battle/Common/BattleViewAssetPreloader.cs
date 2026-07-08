@@ -4,19 +4,58 @@ using UnityEngine;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 战斗视图资源预加载（Session 流程 2/4）。
-    /// Prefab 与 Sprite 两路并行，均完成或超时后回调 <see cref="BattleSession.BuildViewAndStart"/>。
+    /// 战斗视图资源预加载（由 <see cref="BattleAssetScope"/> 驱动）。
+    /// Prefab 与 Sprite 两路并行，均成功且关键资源就绪后回调 onSuccess；否则 onFailure。
     /// </summary>
     public static class BattleViewAssetPreloader
     {
-        /// <summary>同关重开：关键 Prefab/Sprite 已在缓存中，可跳过完整预加载流水线。</summary>
-        public static bool IsWarm(BaseBattle battle)
+        public static void Run(
+            BaseBattle battle,
+            Action onSuccess,
+            Action onFailure,
+            float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
             if (battle == null)
             {
-                return false;
+                BattleFlowLog.Abort("BattleViewAssetPreloader.Run", "battle=null");
+                onFailure?.Invoke();
+                return;
             }
 
+            int pending = 2;
+            bool anyFailed = false;
+
+            void OnOneBatchFinished(bool success)
+            {
+                if (!success)
+                {
+                    anyFailed = true;
+                }
+
+                pending--;
+                if (pending > 0)
+                {
+                    return;
+                }
+
+                if (anyFailed || !HasCriticalAssets())
+                {
+                    ReportCriticalMissing();
+                    BattleFlowLog.Abort("2/4 预加载", "资源未全部就绪");
+                    onFailure?.Invoke();
+                    return;
+                }
+
+                BattleFlowLog.Step("2/4 预加载全部完成");
+                onSuccess?.Invoke();
+            }
+
+            BattleViewPrefabPreloader.Run(battle, OnOneBatchFinished, timeoutSeconds);
+            BattleViewSpritePreloader.Run(battle, OnOneBatchFinished, timeoutSeconds);
+        }
+
+        public static bool HasCriticalAssets()
+        {
             GameObject gridTemplate;
             if (!BattleViewPrefabPreloader.TryGetTemplate(
                 FightViewPrefabAb.FightPartBundle,
@@ -37,38 +76,25 @@ namespace CarrotFantasy
                 return false;
             }
 
-            return FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridCantBuild, out gridSprite);
-        }
-
-        public static void Run(BaseBattle battle, Action onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
-        {
-            if (battle == null)
+            if (!FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridCantBuild, out gridSprite))
             {
-                BattleFlowLog.Abort("BattleViewAssetPreloader.Run", "battle=null，仍触发 onComplete");
-                onComplete?.Invoke();
-                return;
+                return false;
             }
 
-            // 两批 AB 均结束才进入 BuildViewAndStart
-            int pending = 2;
-            void OnOneBatchFinished()
+            GameObject hpSliderTemplate;
+            if (!BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.HpSlider,
+                out hpSliderTemplate))
             {
-                if (pending <= 0)
-                {
-                    return;
-                }
-
-                pending--;
-                if (pending <= 0)
-                {
-                    ReportCriticalMissing();
-                    BattleFlowLog.Step("2/4 预加载全部完成");
-                    onComplete?.Invoke();
-                }
+                return false;
             }
 
-            BattleViewPrefabPreloader.Run(battle, OnOneBatchFinished, timeoutSeconds);
-            BattleViewSpritePreloader.Run(battle, OnOneBatchFinished, timeoutSeconds);
+            GameObject damageFloatTemplate;
+            return BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.DamageFloatText,
+                out damageFloatTemplate);
         }
 
         static void ReportCriticalMissing()
@@ -82,7 +108,19 @@ namespace CarrotFantasy
             Sprite gridSprite;
             bool hasGridSprite = FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridNormal, out gridSprite);
 
-            if (hasGridPrefab && hasGridSprite)
+            GameObject hpSliderTemplate;
+            bool hasHpSlider = BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.HpSlider,
+                out hpSliderTemplate);
+
+            GameObject damageFloatTemplate;
+            bool hasDamageFloat = BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.DamageFloatText,
+                out damageFloatTemplate);
+
+            if (hasGridPrefab && hasGridSprite && hasHpSlider && hasDamageFloat)
             {
                 return;
             }
@@ -90,7 +128,9 @@ namespace CarrotFantasy
             BattleFlowLog.Abort(
                 "预加载关键资源检查",
                 (hasGridPrefab ? string.Empty : "GridPrefab=缺失 ") +
-                (hasGridSprite ? string.Empty : "GridSprite=缺失") +
+                (hasGridSprite ? string.Empty : "GridSprite=缺失 ") +
+                (hasHpSlider ? string.Empty : "HPSlider=缺失 ") +
+                (hasDamageFloat ? string.Empty : "DamageFloatText=缺失") +
                 "（详见 Prefab/Sprite Preloader 失败列表）");
         }
     }

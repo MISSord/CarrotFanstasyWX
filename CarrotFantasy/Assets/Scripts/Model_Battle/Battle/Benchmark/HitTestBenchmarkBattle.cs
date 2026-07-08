@@ -2,18 +2,24 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 碰撞性能对比用 PVE：与 <see cref="PveBattle"/> 相同玩法组件，仅碰撞实现可在网格版 / 暴力版间切换。
-    /// 由 <see cref="PveModelBattleParams.Mode"/> = <see cref="BattlePveMode.HitTestBenchmark"/> 与 <see cref="BattleParamServer.hitTestBenchmarkUseSpatialGrid"/> 控制。
     /// </summary>
     public class HitTestBenchmarkBattle : BaseBattle
     {
+        bool componentsRegistered;
+
         public bool UseSpatialGridHitTest { get; private set; }
 
         public HitTestBenchmarkBattle() : base()
         {
         }
 
-        public override void Init()
+        public override void RegisterComponents()
         {
+            if (this.componentsRegistered)
+            {
+                return;
+            }
+
             this.UseSpatialGridHitTest = BattleParamServer.Instance != null
                 && BattleParamServer.Instance.hitTestBenchmarkUseSpatialGrid;
 
@@ -32,10 +38,13 @@ namespace CarrotFantasy
             this.AddComponent(new BattleTestMapComponent(this));
             this.AddComponent(new BattleTestTowerComponent(this));
             this.AddComponent(new BattleTestUnitSpawnComponent(this));
-            //this.AddComponent(new BattleInputComponent(this));
             this.AddComponent(new BattleSchedulerComponent(this));
             this.AddComponent(new BattleHitTestBenchmarkStatsComponent(this));
+            this.componentsRegistered = true;
+        }
 
+        public override void Init()
+        {
             this.AddListener();
         }
 
@@ -51,10 +60,10 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener(BattleEvent.GO_ON_GAME, this.GoOnTheGame);
         }
 
-        public override void ClearGameInfo()
+        public override void ResetForNewRound()
         {
-            base.ClearGameInfo();
             this.RemoveListener();
+            base.ResetForNewRound();
         }
 
         public override void InitComponent()
@@ -64,7 +73,6 @@ namespace CarrotFantasy
             this.GetComponent(BattleComponentType.HitTestComponent).Init();
             this.GetComponent(BattleComponentType.TowerComponent).Init();
             this.GetComponent(BattleTestUnitSpawnComponent.ComponentTypeId).Init();
-            this.GetComponent(BattleComponentType.InputComponent).Init();
             this.GetComponent(BattleComponentType.SchedulerComponent).Init();
             this.GetComponent(BattleHitTestBenchmarkStatsComponent.ComponentTypeId).Init();
         }

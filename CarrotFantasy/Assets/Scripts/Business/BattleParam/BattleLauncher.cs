@@ -4,7 +4,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 统一 PVE 开战入口（流程第 0 步）。
-    /// 调用链：组装参数 → ApplyPveParams → LoadScene(BattleScene) → BeginSession → BaseBattle.LaunchParams。
+    /// 调用链：组装参数 → LoadScene(BattleScene, params) → BeginSession → BaseBattle.LaunchParams。
     /// </summary>
     public static class BattleLauncher
     {
@@ -32,7 +32,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// 所有 PVE 模式的最终入口。参数经 ApplyPveParams 落盘，Session 创建时注入 BaseBattle.LaunchParams。
+        /// 所有 PVE 模式的最终入口。参数随场景传递，Session 创建时注入 BaseBattle.LaunchParams。
         /// </summary>
         private static void StartPve(PveModelBattleParams launchParams)
         {
@@ -41,9 +41,9 @@ namespace CarrotFantasy
                 return;
             }
 
+            launchParams.EnsureLevelDataLoaded();
             MapServer.Instance?.RememberLastBattleLevel(launchParams.BigLevelId, launchParams.LevelId);
 
-            BattleParamServer.Instance.ApplyPveParams(launchParams);
             BattleParamServer.Instance.EnsureBattleViewsLoaded();
 
             if (ServerProvision.sceneServer.IsLoading)
@@ -52,10 +52,14 @@ namespace CarrotFantasy
                 return;
             }
 
-            // 异步切 Unity 场景 → SceneServer 创建 BattleScene → BeginSession（见 BattleSessionHost）
+            var sceneParam = new Dictionary<string, dynamic>
+            {
+                { BattleSceneParamKeys.PveLaunchParams, launchParams },
+            };
+
             ServerProvision.sceneServer.LoadScene(
                 BaseSceneType.BattleScene,
-                null,
+                sceneParam,
                 success =>
                 {
                     if (!success)

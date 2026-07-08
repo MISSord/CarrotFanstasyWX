@@ -27,7 +27,7 @@ namespace CarrotFantasy
 
         /// <summary>
         /// 由 <see cref="BattleScene.TryBeginSession"/> 调用。
-        /// 若已有 Session 先 TearDown，再创建新 Session 并同步执行 Run。
+        /// 若已有 Session 先 <see cref="DestroySession"/>，再创建新 Session 并同步执行 Run。
         /// </summary>
         public void BeginSession(PveModelBattleParams launchParams, BattleViewHost viewHost)
         {
@@ -45,7 +45,7 @@ namespace CarrotFantasy
 
             if (this.session != null)
             {
-                this.session.TearDown(destroyViewHierarchy: true);
+                this.session.DestroySession();
                 this.session = null;
             }
 
@@ -57,18 +57,28 @@ namespace CarrotFantasy
             this.session.Run();
         }
 
-        public void EndSession(bool clearLaunchParams = true, bool destroyViewHierarchy = true)
+        /// <summary>离战斗场景：保留 ViewHost 壳，释放 AB 与 Model。</summary>
+        public void EndRound()
         {
-            if (this.session != null)
+            if (this.session == null)
             {
-                this.session.TearDown(destroyViewHierarchy);
-                this.session = null;
+                return;
             }
 
-            if (clearLaunchParams && BattleParamServer.Instance != null)
+            this.session.EndRound();
+            this.session = null;
+        }
+
+        /// <summary>完全销毁 Session（换关、联机回收等）。</summary>
+        public void DestroySession()
+        {
+            if (this.session == null)
             {
-                BattleParamServer.Instance.ClearPveParams();
+                return;
             }
+
+            this.session.DestroySession();
+            this.session = null;
         }
 
         /// <summary>由 <see cref="GameMain.Update"/> 每帧驱动；仅 Running 阶段推进逻辑帧与视图 Tick。</summary>

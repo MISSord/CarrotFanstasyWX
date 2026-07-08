@@ -243,8 +243,21 @@ public abstract class BaseView
         ViewManager.Instance.AddOpenViewToOpenList(this);
         // 须在 ChangeIndex 之前置 true：Testing 模式 CACHE_HIT 会同步 ExecuteCallbacks，
         // 否则加载回调见 isOpen=false 会丢弃已加载资源。
+        bool wasClosed = !this.isOpen;
         this.isOpen = true;
         ChangeIndex(index);
+
+        // 缓存复开时 CurShowIndex 未变，ChangeIndex 会提前 return，需补一次 ShowIndexCallBack。
+        if (wasClosed && viewLoader.IsIndexLoaded(index))
+        {
+            this.OnReopenIndex(index);
+        }
+    }
+
+    /// <summary>关闭后再次 Open 且 index 已加载时调用（ChangeIndex 同 index 短路不会触发 ShowIndexCallBack）。</summary>
+    protected virtual void OnReopenIndex(int index)
+    {
+        ShowIndexCallBack(index);
     }
 
     public virtual void Close()
@@ -280,6 +293,34 @@ public abstract class BaseView
         string time = Time.unscaledTime.ToString();
         this.delayReleaseId = this.viewName + time;
         TimeUtility.Instance.SetTimeout(5f, this.Release, false, this.delayReleaseId);
+    }
+
+    /// <summary>取消延迟释放并立即销毁 UI 根节点（离战斗场景时用）。</summary>
+    public void CloseAndReleaseNow()
+    {
+        if (this.delayReleaseId != null)
+        {
+            TimeUtility.Instance.RemoveTimeout(this.delayReleaseId);
+            this.delayReleaseId = null;
+        }
+
+        if (this.isOpen)
+        {
+            CloseCallBack();
+            this.isOpen = false;
+            if (this.isPausedByViewStack)
+            {
+                this.isPausedByViewStack = false;
+                OnResume();
+            }
+
+            ViewManager.Instance?.RemoveViewFromOpenList(this);
+        }
+
+        if (this.isLoadRoot)
+        {
+            this.Release();
+        }
     }
     #endregion
 

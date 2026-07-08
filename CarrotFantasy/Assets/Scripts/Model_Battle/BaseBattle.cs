@@ -71,6 +71,44 @@ namespace CarrotFantasy
 
         public abstract void InitComponent(); //子类实现
 
+        /// <summary>进关一次：注册战斗组件与状态机。</summary>
+        public virtual void RegisterComponents() { }
+
+        /// <summary>同关重开：重置运行时状态，不销毁 componentList。</summary>
+        public virtual void ResetForNewRound()
+        {
+            if (this.stateMachine != null)
+            {
+                this.stateMachine.ClearGameInfo();
+            }
+
+            for (int i = 0; i < this.componentList.Count; i++)
+            {
+                this.componentList[i].ResetForNewRound();
+            }
+
+            this.isStart = false;
+            this.isDoulbSpeed = false;
+            this.isPause = false;
+            this.curFrameId = 0;
+            this.logicAccumulator = Fix64.Zero;
+            this.curClock = Fix64.Zero;
+            this.uid = 0;
+            this.inputSeqCounter = 0;
+            this.eventDispatcher.DispatchEvent<bool>(BattleEvent.GAME_STATE_CHANGE, this.isPause);
+        }
+
+        bool IsSettlementState()
+        {
+            if (this.stateMachine == null)
+            {
+                return false;
+            }
+
+            BaseBattleState currentState = this.stateMachine.GetCurrentState();
+            return currentState != null && currentState.GetStateType() == BattleStateType.END_GAME;
+        }
+
         public BaseBattleComponent GetComponent(String type)
         {
             if (type != null)
@@ -108,6 +146,7 @@ namespace CarrotFantasy
         public virtual void Tick(Fix64 deltaTime)
         {
             if (this.isPause == true) return;
+            if (this.IsSettlementState()) return;
 
             this.logicAccumulator += deltaTime;
             Fix64 logicDt = BattleLogicTiming.LogicDeltaTime;

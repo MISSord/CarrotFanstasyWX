@@ -17,18 +17,38 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            if (!this.IsBattleBound || this.pveDataComponent == null)
+            this.RefreshSettlementContent();
+            this.NotifyBattleUiReady();
+        }
+
+        protected override void RefreshBattleBinding()
+        {
+            this.RefreshSettlementContent();
+        }
+
+        protected override void OnBeforeClearBattleBinding()
+        {
+            this.RemoveSettlementButtonListeners();
+        }
+
+        void RefreshSettlementContent()
+        {
+            if (!this.IsBattleBound || !this.GetIsLoadedIndex(0) || this.pveDataComponent == null)
             {
-                Debug.LogError("[GameWinView] LoadCallBack 失败：未 BindBattle 或缺少 PVEDataComponent。");
                 return;
             }
 
-            carrotSprites = new Sprite[3];
-            for (int i = 0; i < 3; i++)
+            if (this.carrotSprites == null)
             {
-                carrotSprites[i] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/GameOption/Normal/Level/Carrot_" + (i + 1));
+                this.carrotSprites = new Sprite[3];
+                for (int i = 0; i < 3; i++)
+                {
+                    this.carrotSprites[i] = ResourceLoader.Instance.loadRes<Sprite>(
+                        "Pictures/GameOption/Normal/Level/Carrot_" + (i + 1));
+                }
             }
 
+            this.RemoveSettlementButtonListeners();
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
 
@@ -45,14 +65,24 @@ namespace CarrotFantasy
                 this.pveDataComponent.level.ToString());
 
             int trophy = Mathf.Clamp(this.pveDataComponent.CarrotTropyLevel(), 1, 3);
-            nameTableDic["Img_Carrot"].GetComponent<Image>().sprite = carrotSprites[trophy - 1];
+            nameTableDic["Img_Carrot"].GetComponent<Image>().sprite = this.carrotSprites[trophy - 1];
+        }
+
+        void RemoveSettlementButtonListeners()
+        {
+            if (!this.GetIsLoadedIndex(0))
+            {
+                return;
+            }
+
+            nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
+            nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
         }
 
         protected override void ReleaseCallBack()
         {
-            nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
-            nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
-            carrotSprites = null;
+            this.RemoveSettlementButtonListeners();
+            this.carrotSprites = null;
             this.ClearBattleBinding();
         }
 

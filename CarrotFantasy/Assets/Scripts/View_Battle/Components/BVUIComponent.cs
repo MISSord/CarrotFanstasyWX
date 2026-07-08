@@ -5,12 +5,18 @@ using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 战斗 HUD 组件：格子选中、建塔/升级/出售面板、小地图、萝卜、出怪点与道具目标指示。
+    /// 生命周期与 <see cref="BaseBattleViewComponent"/> 一致；UI 节点在 <see cref="Init"/> 中一次性创建，
+    /// 同关重开走 <see cref="ResetRound"/> 复位位置与绑定，不销毁预制体。
+    /// </summary>
     public class BVUIComponent : BaseBattleViewComponent
     {
-        public GridPoint selectGrid { get; private set; }//上一个选择的格子
+        /// <summary>当前选中的可建造格子；为 null 表示无展开状态。</summary>
+        public GridPoint selectGrid { get; private set; }
 
+        /// <summary>升级/出售面板；隐藏时移回 <see cref="BattleView_base.initTran"/>。</summary>
         private GameObject nodeHandleTowerCanvas;
-        private int towerLength;
 
         private BattleTowerComponent towerComponent;
         private BattleDataComponent dataComponent;
@@ -22,12 +28,12 @@ namespace CarrotFantasy
 
         private ButtonTower[] buttonTowerList;
 
-        private Vector3 upLevelButtonInitPos;//两个按钮的初始位置
+        private Vector3 upLevelButtonInitPos;
         private Vector3 sellTowerButtonInitPos;
 
         private Sprite[] spriteButtonUpList;
 
-        private Transform tranButtonUp;//两个按钮的trans引用
+        private Transform tranButtonUp;
         private Transform tranButtonSell;
 
         private Image imgButtonUp;
@@ -36,6 +42,7 @@ namespace CarrotFantasy
         private GameObject nodeMap;
         private GameObject nodeTargetSignal;
 
+        /// <summary>当前道具攻击目标；与 <see cref="nodeTargetSignal"/> 联动。</summary>
         private BattleUnit tranTarget;
 
         private Text txtButtonSell;
@@ -47,6 +54,8 @@ namespace CarrotFantasy
         private Carrot carrot;
 
         private GameObject rootGameObject;
+
+        /// <summary>UI 预制体是否已在本次 Session 中实例化；重开时不重置，仅 <see cref="ClearGameInfo"/> 清零。</summary>
         private bool uiContentBuilt;
 
         public BVUIComponent(BattleView_base battleView) : base(battleView)
@@ -66,6 +75,7 @@ namespace CarrotFantasy
 
         private void AddListener()
         {
+            // View 层格子交互走 bvEventDispatcher；Model 层金币/单位/目标走 battle.eventDispatcher。
             this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Select_Grid, this.HandleGrid);
 
             this.battleView.bvEventDispatcher.AddListener<GridPoint>(BattleViewEventType.Show_Handle_Tower, this.ShowHandleTowerCanvas);
@@ -138,6 +148,7 @@ namespace CarrotFantasy
                 return;
             }
 
+            // 以下节点挂到 Scene 的 UIContainer，sortingOrder=20 的 Canvas 需盖住地图层。
             BVSceneComponent scene = this.battleView.TryGetComponent(BattleViewComponentType.SCENE) as BVSceneComponent;
             if (scene == null)
             {
@@ -296,8 +307,14 @@ namespace CarrotFantasy
             this.IsBuilt = true;
         }
 
-        public override void ApplyModelForReplay()
+        /// <summary>同关重开：Model 重置完成后刷新绑定与 UI 状态，保留已实例化的预制体。</summary>
+        public override void ResetRound(BattleViewResetPass pass)
         {
+            if (pass != BattleViewResetPass.AfterModel)
+            {
+                return;
+            }
+
             this.RefreshBattleBindings();
             this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
             this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
@@ -315,6 +332,7 @@ namespace CarrotFantasy
             this.selectGrid = null;
             this.tranTarget = null;
 
+            // 将浮动 UI 移回屏幕外锚点，等价于「收起」而非 Destroy。
             if (this.nodeHandleTowerCanvas != null)
             {
                 this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
@@ -335,6 +353,7 @@ namespace CarrotFantasy
 
             if (this.carrot != null)
             {
+                this.carrot.Dispose();
                 this.carrot.Init(this.battleView.battle);
                 this.RefreshCarrotPosition();
             }
@@ -355,6 +374,7 @@ namespace CarrotFantasy
             this.AddListener();
         }
 
+        /// <summary>根据路径首尾两点微调出怪点偏移，避免箭头与路径重叠。</summary>
         void RefreshStartPointPosition()
         {
             if (this.nodeMonsterPoint == null || this.pveMapComponent == null ||
@@ -448,6 +468,7 @@ namespace CarrotFantasy
             this.sellTowerButtonInitPos = tranButtonSell.localPosition;
         }
 
+        /// <summary>选中已有塔的格子：弹出升级/出售面板并显示攻击范围。</summary>
         private void ShowHandleTowerCanvas(GridPoint grid)
         {
             this.selectGrid = grid;
@@ -457,6 +478,7 @@ namespace CarrotFantasy
             this.RefreshButtonInfo(0);
         }
 
+        /// <summary>同步建塔按钮与当前选中塔的升级/出售按钮状态（金币、等级上限）。</summary>
         private void RefreshButtonInfo(int coin)
         {
             for (int i = 0; i < this.buttonTowerList.Length; i++)
@@ -486,7 +508,7 @@ namespace CarrotFantasy
             this.txtButtonSell.text = (tower.price[tower.curLevel] - 20).ToString();
         }
 
-        //纠正操作塔UI画布的方法(纠正按钮位置的方法)
+        /// <summary>地图边缘格子的升级/出售按钮需偏移，防止 UI 超出可视区域。</summary>
         private void CorrectHandleTowerCanvasGoPosition(GridPoint grid)
         {
             tranButtonUp.localPosition = Vector3.zero;
@@ -522,12 +544,14 @@ namespace CarrotFantasy
             }
         }
 
+        /// <summary>收起升级/出售面板并隐藏塔攻击范围。</summary>
         private void FadeHandleTowerCanvas()
         {
             this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
             this.battleView.bvEventDispatcher.DispatchEvent(BattleEvent.TOWER_RANGE_FADE);
         }
 
+        /// <summary>在空格子处弹出建塔列表。</summary>
         private void ShowTowerList(GridPoint grid)
         {
             this.nodeTowerList.transform.position = new Vector3((float)grid.mapGrid.realX, (float)grid.mapGrid.realY, 0);
@@ -535,6 +559,7 @@ namespace CarrotFantasy
             this.RefreshButtonInfo(0);
         }
 
+        /// <summary>地图边缘格子的建塔列表需偏移，防止列表超出可视区域。</summary>
         private Vector3 CorrectTowerListGoPosition(GridPoint grid)
         {
             Vector3 correctPosition = Vector3.zero;
@@ -557,29 +582,50 @@ namespace CarrotFantasy
             return correctPosition;
         }
 
+        /// <summary>收起建塔列表（移回 initTran）。</summary>
         private void FadeTowerList()
         {
             this.nodeTowerList.transform.position = this.battleView.initTran;
         }
 
-        public void HandleGrid(GridPoint grid)//当前选择的格子
+        /// <summary>
+        /// 统一收起格子展开态：隐藏高亮、建塔列表与升级/出售面板。
+        /// 建塔完成、切换道具目标等场景均需调用，避免 UI 叠层残留。
+        /// </summary>
+        void CollapseGridSelection()
+        {
+            if (this.selectGrid != null)
+            {
+                this.selectGrid.HideGrid();
+                this.selectGrid = null;
+            }
+
+            this.FadeHandleTowerCanvas();
+            this.FadeTowerList();
+        }
+
+        /// <summary>
+        /// 格子点击入口（由 <see cref="GridPoint"/> 经 bvEventDispatcher 派发）。
+        /// 可建造格：展开/切换/收起；不可建造格：播放错误反馈并清除旧选中。
+        /// </summary>
+        public void HandleGrid(GridPoint grid)
         {
             if (grid.mapGrid.state.canBuild)
             {
-                if (selectGrid == null)//没有上一个格子
+                if (selectGrid == null)
                 {
                     selectGrid = grid;
                     selectGrid.ShowGrid();
                     AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Grid/GridSelect");
                 }
-                else if (grid == selectGrid)//选中同一个格子
+                else if (grid == selectGrid)
                 {
                     grid.HideGrid();
                     selectGrid = null;
                     this.nodeHandleTowerCanvas.transform.position = this.battleView.initTran;
                     AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Grid/GridDeselect");
                 }
-                else if (grid != selectGrid)//选中不同格子
+                else
                 {
                     selectGrid.HideGrid();
                     selectGrid = grid;
@@ -634,20 +680,16 @@ namespace CarrotFantasy
             this.selectGrid.HideGrid();
         }
 
+        /// <summary>Model 侧塔单位落地后收起格子 UI。</summary>
         private void UpdateNodeState(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER))
             {
-                this.FadeHandleTowerCanvas();
-                this.FadeTowerList();
-                if (this.selectGrid != null)
-                {
-                    this.selectGrid.HideGrid();
-                    this.selectGrid = null;
-                }
+                this.CollapseGridSelection();
             }
         }
 
+        /// <summary>道具被移除时，若其为当前目标则隐藏指示器。</summary>
         private void UpdateTargetSignal(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.ITEM))
@@ -659,27 +701,32 @@ namespace CarrotFantasy
             }
         }
 
+        /// <summary>
+        /// 道具目标切换（BattleEvent.TARGET_CHANGE）：先收起格子 UI，再切换/取消目标指示器。
+        /// 三次点击同一目标视为取消选中。
+        /// </summary>
         private void SetTargetSignal(BattleUnit unit)
         {
+            this.CollapseGridSelection();
+
             if (this.tranTarget == null)
             {
                 this.tranTarget = unit;
                 this.ShowTargetSignal();
             }
-            //转换新目标
             else if (this.tranTarget != unit)
             {
                 this.tranTarget = unit;
                 this.ShowTargetSignal();
             }
-            //两次点击的是同一个目标
-            else if (this.tranTarget == unit)
+            else
             {
                 this.tranTarget = null;
                 this.FadeTargetSignal();
             }
         }
 
+        /// <summary>离战斗场景：销毁全部 UI 节点并重置 uiContentBuilt。</summary>
         public override void ClearGameInfo()
         {
             this.uiContentBuilt = false;
@@ -758,7 +805,6 @@ namespace CarrotFantasy
             Fix64Vector2 pos = tranComponent.GetLastPosition();
             Vector3 position = new Vector3((float)pos.X, (float)pos.Y, 0);
             this.nodeTargetSignal.transform.position = position + new Vector3(0, BattleConfig.MAP_RATIO / 2, 0);
-            //nodeTargetSignal.transform.SetParent(targetTrans);
         }
 
         private void FadeTargetSignal()

@@ -50,12 +50,9 @@ namespace CarrotFantasy
             return true;
         }
 
-        private void OnListenerRemoving(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
+        private bool OnListenerRemoving(String eventType, Delegate callBack, Dictionary<String, Delegate> eventList)
         {
-            if (!this.TryOnListenerRemoving(eventType, callBack, eventList))
-            {
-                return;
-            }
+            return this.TryOnListenerRemoving(eventType, callBack, eventList);
         }
         private void OnListenerremoved(String eventType, Dictionary<String, Delegate> eventList)
         {
@@ -141,42 +138,66 @@ namespace CarrotFantasy
         //no parameters
         public void RemoveListener(String eventType, CallBack callBack)
         {
-            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
+            if (!OnListenerRemoving(eventType, callBack, this.event2ListenerList))
+            {
+                return;
+            }
+
             this.event2ListenerList[eventType] = (CallBack)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //single parameters
         public void RemoveListener<T>(String eventType, CallBack<T> callBack)
         {
-            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
+            if (!OnListenerRemoving(eventType, callBack, this.event2ListenerList))
+            {
+                return;
+            }
+
             this.event2ListenerList[eventType] = (CallBack<T>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //two parameters
         public void RemoveListener<T, X>(String eventType, CallBack<T, X> callBack)
         {
-            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
+            if (!OnListenerRemoving(eventType, callBack, this.event2ListenerList))
+            {
+                return;
+            }
+
             this.event2ListenerList[eventType] = (CallBack<T, X>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //three parameters
         public void RemoveListener<T, X, Y>(String eventType, CallBack<T, X, Y> callBack)
         {
-            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
+            if (!OnListenerRemoving(eventType, callBack, this.event2ListenerList))
+            {
+                return;
+            }
+
             this.event2ListenerList[eventType] = (CallBack<T, X, Y>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //four parameters
         public void RemoveListener<T, X, Y, Z>(String eventType, CallBack<T, X, Y, Z> callBack)
         {
-            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
+            if (!OnListenerRemoving(eventType, callBack, this.event2ListenerList))
+            {
+                return;
+            }
+
             this.event2ListenerList[eventType] = (CallBack<T, X, Y, Z>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }
         //five parameters
         public void RemoveListener<T, X, Y, Z, W>(String eventType, CallBack<T, X, Y, Z, W> callBack)
         {
-            OnListenerRemoving(eventType, callBack, this.event2ListenerList);
+            if (!OnListenerRemoving(eventType, callBack, this.event2ListenerList))
+            {
+                return;
+            }
+
             this.event2ListenerList[eventType] = (CallBack<T, X, Y, Z, W>)this.event2ListenerList[eventType] - callBack;
             OnListenerremoved(eventType, this.event2ListenerList);
         }

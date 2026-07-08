@@ -6,7 +6,7 @@ namespace CarrotFantasy
 {
     public class BattleUnitView_Monster : BattleUnitView
     {
-        /// <summary>与旧版嵌套 MonsterCanvas 时一致的头顶偏移（怪物本地空间）。</summary>
+        /// <summary>与 HPSlider 预制体 anchoredPosition 一致。</summary>
         private static readonly Vector3 DefaultMonsterHpBarLocalOffset = new Vector3(0f, 0.434f, 0f);
 
         private Slider slider;
@@ -29,12 +29,12 @@ namespace CarrotFantasy
             this.animator = this.transform.GetComponent<Animator>();
         }
 
-        /// <summary>由 <see cref="BVMonsterComponent"/> 挂载共享 Canvas 下的 HPSlider 实例。</summary>
+        /// <summary>由 <see cref="BVMonsterComponent"/> 在共享 BattleHpBarCanvas 下实例化 HPSlider。</summary>
         public void AttachMonsterHpBar(GameObject hpBarRoot)
         {
             if (hpBarRoot == null)
             {
-                Debug.LogError("[BattleUnitView_Monster] 怪物血条为空，请检查 MonsterCanvas 预加载与 BattleHpBarCanvas。");
+                Debug.LogError("[BattleUnitView_Monster] 怪物血条为空，请检查 HPSlider 预加载与 BattleHpBarCanvas。");
                 return;
             }
 
@@ -90,12 +90,21 @@ namespace CarrotFantasy
 
         private void DetachHpBarFromWorldLayer()
         {
-            if (this.hpBarCanvasInstance != null)
+            if (this.hpBarCanvasInstance == null)
             {
-                UnityEngine.Object.Destroy(this.hpBarCanvasInstance);
-                this.hpBarCanvasInstance = null;
+                return;
             }
 
+            if (this.worldUiCached != null)
+            {
+                this.worldUiCached.ReturnHpBar(this.hpBarCanvasInstance);
+            }
+            else
+            {
+                UnityEngine.Object.Destroy(this.hpBarCanvasInstance);
+            }
+
+            this.hpBarCanvasInstance = null;
             this.hpBarCanvasRect = null;
             this.slider = null;
         }

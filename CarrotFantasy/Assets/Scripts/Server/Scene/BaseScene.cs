@@ -10,10 +10,12 @@ namespace CarrotFantasy
         public GameObject gameObj;
         private Dictionary<PanelLayerType, GameObject> layerDic = new Dictionary<PanelLayerType, GameObject>();
         protected String prefabUrl = "";
+        protected readonly Dictionary<string, dynamic> sceneParam;
 
         public BaseScene(BaseSceneType type, String name, Dictionary<String, dynamic> param)
         {
             sceneType = type;
+            this.sceneParam = param;
         }
 
         public virtual void InitSceneObject()

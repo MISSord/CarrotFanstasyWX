@@ -4,7 +4,7 @@ namespace CarrotFantasy
 {
     /// <summary>战斗入口线性流程诊断；Console 过滤关键字 <c>[BattleFlow]</c>。</summary>
     /// <remarks>
-    /// 典型顺序：BeginSession → 1/4 InitializingModel → 2/4 预加载 → 3/4 BuildingView → 4/4 Running。
+    /// 典型顺序：BeginSession → ExecutePipeline → 1/4 InitializingModel → 2/4 预加载 → 3/4 BuildingView → 4/4 Running。
     /// </remarks>
     public static class BattleFlowLog
     {

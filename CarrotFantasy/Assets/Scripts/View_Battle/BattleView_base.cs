@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 战斗视图根：BuildOnce → ResetForReplay → Dispose。
+    /// 战斗视图根：Build → ResetRound → Dispose。
     /// </summary>
     public class BattleView_base
     {
@@ -86,7 +86,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>预加载完成后 BuildOnce：标准容器 + 依赖 Prefab 的静态视图。</summary>
-        public bool BuildContentComponents()
+        public bool Build()
         {
             if (this.IsContentBuilt)
             {
@@ -100,6 +100,24 @@ namespace CarrotFantasy
 
             this.IsContentBuilt = true;
             return true;
+        }
+
+        /// <summary>同关重开：回池 → resetModel → 同步静态视图。</summary>
+        public void ResetRound(Action resetModel)
+        {
+            for (int i = 0; i < this.componentList.Count; i++)
+            {
+                this.componentList[i].ResetRound(BattleViewResetPass.BeforeModel);
+            }
+
+            resetModel();
+
+            for (int i = 0; i < this.componentList.Count; i++)
+            {
+                this.componentList[i].ResetRound(BattleViewResetPass.AfterModel);
+            }
+
+            this.isStart = false;
         }
 
         bool InitContentComponentsInternal()
@@ -160,32 +178,6 @@ namespace CarrotFantasy
             }
 
             return this.ViewHost.GetContainerChildCount("GridContainer") > 0;
-        }
-
-        /// <summary>
-        /// 同关重开唯一入口：回池 → resetModel → 各组件 ApplyModelForReplay。
-        /// </summary>
-        public void ResetForReplay(Action resetModel)
-        {
-            for (int i = 0; i < this.componentList.Count; i++)
-            {
-                this.componentList[i].ReturnUnitsToPoolForReplay();
-            }
-
-            BVBattleWorldUiComponent worldUi = this.TryGetComponent(BattleViewComponentType.WORLD_UI) as BVBattleWorldUiComponent;
-            if (worldUi != null)
-            {
-                worldUi.ClearTransientEffectsForReplay();
-            }
-
-            resetModel();
-
-            for (int i = 0; i < this.componentList.Count; i++)
-            {
-                this.componentList[i].ApplyModelForReplay();
-            }
-
-            this.isStart = false;
         }
 
         public BaseBattleViewComponent TryGetComponent(String type)
@@ -260,7 +252,7 @@ namespace CarrotFantasy
             this.isStart = false;
         }
 
-        /// <summary>结束单局逻辑并清理组件状态，但不销毁 BattleViewHost 上的 SceneContainer。</summary>
+        /// <summary>由 <see cref="BattleSession.EndRound"/> 调用：清组件状态，保留 BattleRoot 壳。</summary>
         public virtual void ShutdownContentOnly()
         {
             for (int i = this.componentList.Count - 1; i >= 0; i--)
@@ -268,6 +260,7 @@ namespace CarrotFantasy
                 this.componentList[i].ClearGameInfo();
             }
 
+            this.DestroySceneContentContainers();
             this.isStart = false;
             this.IsContentBuilt = false;
         }

@@ -183,16 +183,17 @@ namespace CarrotFantasy
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Bullet, bulletView);
         }
 
-        public override void ReturnUnitsToPoolForReplay()
+        public override void ResetRound(BattleViewResetPass pass)
         {
-            this.RemoveListener();
-            this.ReturnAllBulletsToPool();
-            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Bullet);
-            this.EnsureBulletPoolRegistrations();
-        }
+            if (pass == BattleViewResetPass.BeforeModel)
+            {
+                this.RemoveListener();
+                this.ReturnAllBulletsToPool();
+                GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Bullet);
+                this.EnsureBulletPoolRegistrations();
+                return;
+            }
 
-        public override void ApplyModelForReplay()
-        {
             this.RebindBattleListeners(this.RemoveListener, this.AddListener);
         }
 

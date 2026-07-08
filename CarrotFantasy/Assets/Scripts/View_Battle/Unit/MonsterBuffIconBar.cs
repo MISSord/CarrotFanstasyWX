@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace CarrotFantasy
 {
-    /// <summary>怪物头顶 Buff 图标条（挂在 MonsterCanvas / 共享血条 Canvas 下）。</summary>
+    /// <summary>怪物头顶 Buff 图标条（挂在 HPSlider / 共享血条 Canvas 下）。</summary>
     public class MonsterBuffIconBar
     {
         private const float IconSize = 22f;

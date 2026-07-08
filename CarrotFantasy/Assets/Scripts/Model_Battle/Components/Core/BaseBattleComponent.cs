@@ -23,7 +23,13 @@ namespace CarrotFantasy
 
         public virtual void LateTick(Fix64 time) { }
 
-        public virtual void ClearInfo() { } //用于重新开始游戏
+        /// <summary>同关重开：清空本局运行时状态，组件实例保留。</summary>
+        public virtual void ResetForNewRound()
+        {
+            this.ClearInfo();
+        }
+
+        public virtual void ClearInfo() { }
 
         public virtual void Dispose() { }
     }

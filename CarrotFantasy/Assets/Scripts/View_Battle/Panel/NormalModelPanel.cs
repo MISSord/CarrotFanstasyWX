@@ -35,22 +35,32 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (!this.TryBindUiReferences())
+            if (!this.TryBindUiReferences(logError: true))
             {
                 return;
             }
 
-            this.LoadTopResources();
-            this.AddListener();
-
-            if (this.battle.isStart)
-            {
-                this.ShowStartUI();
-            }
+            this.EnsureUiBoundToBattle();
+            this.NotifyBattleUiReady();
         }
 
-        bool TryBindUiReferences()
+        protected override void OnBeforeClearBattleBinding()
         {
+            this.RemoveListener();
+        }
+
+        protected override void RefreshBattleBinding()
+        {
+            this.EnsureUiBoundToBattle();
+        }
+
+        bool TryBindUiReferences(bool logError)
+        {
+            if (!this.GetIsLoadedIndex(0))
+            {
+                return false;
+            }
+
             this.nodeTopPage = this.nameTableDic.GetGameObjectSafely("node_TopPage");
             this.nodeStartUI = this.nameTableDic.GetGameObjectSafely("StartUI");
             this.nodePause = this.nameTableDic.GetGameObjectSafely("node_pause");
@@ -60,29 +70,73 @@ namespace CarrotFantasy
 
             if (this.nodeTopPage == null || this.nodeStartUI == null || this.txtCoin == null || this.txtWaveInfo == null)
             {
-                Debug.LogError("[NormalModelPanel] UI 绑定失败，请检查 NormalModelPanel 预制体与 UINameTable。");
+                if (logError)
+                {
+                    Debug.LogError("[NormalModelPanel] UI 绑定失败，请检查 NormalModelPanel 预制体与 UINameTable。");
+                }
+
                 return false;
             }
 
             return true;
         }
 
+        protected override void ShowIndexCallBack(int viewIndex)
+        {
+            if (viewIndex == 0 && this.IsBattleBound)
+            {
+                this.EnsureUiBoundToBattle();
+            }
+        }
+
+        /// <summary>首载与缓存复开均需重新绑定当前 battle 的事件与 UI 状态。</summary>
+        void EnsureUiBoundToBattle()
+        {
+            if (!this.IsBattleBound || !this.GetIsLoadedIndex(0))
+            {
+                return;
+            }
+
+            if (this.nodeTopPage == null && !this.TryBindUiReferences(logError: true))
+            {
+                return;
+            }
+
+            if (this.btnPauseSprites == null || this.btnPauseSprites.Length < 2)
+            {
+                this.LoadTopResources();
+            }
+
+            this.RemoveListener();
+            this.AddListener();
+            this.SyncPauseStateFromBattle();
+
+            if (this.battle.isStart)
+            {
+                this.ShowStartUI();
+            }
+        }
+
+        protected override void CloseCallBack()
+        {
+            this.isPause = false;
+        }
+
+        void SyncPauseStateFromBattle()
+        {
+            if (this.battle == null)
+            {
+                return;
+            }
+
+            this.PauseGame(this.battle.isPause);
+        }
+
         private void InitPages()
         {
-            this.isPause = this.battle.isPause;
+            this.SyncPauseStateFromBattle();
             this.UpdateCoinText(0);
             this.UpdateRoundText(0);
-            this.UpdateBtnPause();
-
-            if (this.nodePause != null)
-            {
-                this.nodePause.SetActive(this.isPause);
-            }
-
-            if (this.nodePlayingText != null)
-            {
-                this.nodePlayingText.SetActive(!this.isPause);
-            }
 
             if (this.nodeTopPage != null)
             {
@@ -249,8 +303,16 @@ namespace CarrotFantasy
         {
             this.isPause = pauseState;
             this.UpdateBtnPause();
-            this.nodePause.SetActive(pauseState);
-            this.nodePlayingText.SetActive(!pauseState);
+
+            if (this.nodePause != null)
+            {
+                this.nodePause.SetActive(pauseState);
+            }
+
+            if (this.nodePlayingText != null)
+            {
+                this.nodePlayingText.SetActive(!pauseState);
+            }
         }
     }
 }

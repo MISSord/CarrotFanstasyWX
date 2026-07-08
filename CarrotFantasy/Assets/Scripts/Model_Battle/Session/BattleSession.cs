@@ -16,19 +16,26 @@ namespace CarrotFantasy
         Disposed,
     }
 
+    enum BattleRunIntent
+    {
+        Enter,
+        Replay,
+    }
+
     /// <summary>
-    /// 单局战斗会话。同关重开：视图回池 → Model 重置 → 视图同步 → FinishRunningAfterViewReady。
+    /// 单局战斗会话。进关与同关重开均走 <see cref="ExecutePipeline"/> 单一流水线。
     /// </summary>
     public sealed class BattleSession
     {
         readonly PveModelBattleParams launchParams;
         readonly BattleViewHost viewHost;
+        readonly BattleAssetScope assetScope = new BattleAssetScope();
 
         BaseBattle battle;
         BattleView_base view;
         BattleSessionPhase phase = BattleSessionPhase.None;
 
-        /// <summary>Restart/TearDown 时递增，异步预加载回调携带 token 校验，防止过期回调误建 View。</summary>
+        /// <summary>Restart/EndRound/DestroySession 时递增，异步预加载回调携带 token 校验。</summary>
         int runToken;
         int battleRandomSeed;
         bool disposed;
@@ -54,7 +61,7 @@ namespace CarrotFantasy
             this.viewHost = viewHost;
         }
 
-        /// <summary>进关入口：先同步初始化 Model，再启动异步视图流水线。</summary>
+        /// <summary>进关入口。</summary>
         public void Run()
         {
             if (this.disposed || this.launchParams == null)
@@ -66,8 +73,7 @@ namespace CarrotFantasy
             AudioClipPreloader.RunBattleDefaults(null);
             AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
 
-            this.SetupModel(); // 1/4 InitializingModel
-            this.BeginViewPipeline(this.runToken); // 2/4 → 3/4 → 4/4
+            this.ExecutePipeline(BattleRunIntent.Enter, this.runToken);
         }
 
         public void Restart()
@@ -82,35 +88,173 @@ namespace CarrotFantasy
                 return;
             }
 
-            int token = ++this.runToken;
-            ViewManager.Instance?.CloseAllOpenViews();
-
-            this.view.ResetForReplay(this.ResetModelForReplay);
-
-            GameViewObjectPool.Instance.PrepareForReplay();
-
-            if (!this.TryIsActiveRun(token, "Restart"))
-            {
-                return;
-            }
-
-            if (!this.CanReplayWithExistingView())
-            {
-                BattleFlowLog.Step("Restart", "视图未就绪，回退完整 Build 流水线");
-                this.phase = BattleSessionPhase.LoadingAssets;
-                this.BeginViewPipeline(token);
-                return;
-            }
-
-            this.FinishRunningAfterViewReady(token, "Replay");
+            this.ExecutePipeline(BattleRunIntent.Replay, ++this.runToken);
         }
 
-        /// <summary>同关重开：内容已 Build、场景校验通过、关键 AB 仍 Warm。</summary>
-        bool CanReplayWithExistingView()
+        /// <summary>进关 / 重开统一流水线：Prepare → EnsureAssets → EnsureView → EnterRunning。</summary>
+        void ExecutePipeline(BattleRunIntent intent, int token)
         {
-            return this.view.IsContentBuilt &&
-                   this.view.ValidateSceneContent() &&
-                   BattleViewAssetPreloader.IsWarm(this.battle);
+            if (!this.TryIsActiveRun(token, "ExecutePipeline"))
+            {
+                return;
+            }
+
+            if (intent == BattleRunIntent.Replay)
+            {
+                ViewManager.Instance?.CloseAllOpenViews();
+                this.view.ResetRound(this.ResetModelForReplay);
+                GameViewObjectPool.Instance.PrepareForReplay();
+
+                if (!this.TryIsActiveRun(token, "ExecutePipeline/ReplayPrepare"))
+                {
+                    return;
+                }
+            }
+            else
+            {
+                this.SetupModel();
+
+                if (!this.TryIsActiveRun(token, "ExecutePipeline/SetupModel"))
+                {
+                    return;
+                }
+            }
+
+            this.EnsureAssetsAndView(token, intent);
+        }
+
+        void EnsureAssetsAndView(int token, BattleRunIntent intent)
+        {
+            if (!this.TryIsActiveRun(token, "EnsureAssetsAndView"))
+            {
+                return;
+            }
+
+            this.phase = BattleSessionPhase.LoadingAssets;
+
+            this.assetScope.EnsureLoaded(
+                this.battle,
+                onSuccess: () => this.BuildViewAndEnterRunning(token, intent),
+                onFailure: () => this.HandlePipelineFailure(token, "预加载失败"));
+        }
+
+        void HandlePipelineFailure(int token, string reason)
+        {
+            if (!this.TryIsActiveRun(token, "HandlePipelineFailure"))
+            {
+                return;
+            }
+
+            BattleFlowLog.Abort("Pipeline", reason);
+            UIServer.Instance?.ShowTip("战斗资源加载失败，请重试");
+        }
+
+        void BuildViewAndEnterRunning(int token, BattleRunIntent intent)
+        {
+            if (!this.TryIsActiveRun(token, "BuildViewAndEnterRunning"))
+            {
+                return;
+            }
+
+            if (this.battle == null)
+            {
+                BattleFlowLog.Abort("BuildViewAndEnterRunning", "battle=null");
+                return;
+            }
+
+            if (this.viewHost == null || !this.viewHost.IsSceneAlive())
+            {
+                BattleFlowLog.Abort("BuildViewAndEnterRunning", "BattleScene 场景壳已失效");
+                return;
+            }
+
+            BattleViewHost viewHost = this.RequireViewHost();
+            if (viewHost == null)
+            {
+                return;
+            }
+
+            this.phase = BattleSessionPhase.BuildingView;
+
+            if (!BattleViewPrefabPreloader.TryGetTemplate(
+                FightViewPrefabAb.FightPartBundle,
+                FightViewPrefabAb.Grid,
+                out _))
+            {
+                this.HandlePipelineFailure(token, "Grid 预制体未预加载");
+                return;
+            }
+
+            if (this.view == null)
+            {
+                this.view = new PveBattleView(this.battle, viewHost);
+            }
+
+            this.view.Init();
+
+            if (!this.view.IsContentBuilt)
+            {
+                if (!this.view.Build())
+                {
+                    this.HandlePipelineFailure(token, "Build 返回 false");
+                    return;
+                }
+            }
+
+            if (!this.view.ValidateSceneContent())
+            {
+                this.HandlePipelineFailure(token, "战斗场景内容校验失败");
+                return;
+            }
+
+            string pathTag = intent == BattleRunIntent.Replay ? "Replay" : "Build";
+            this.EnterRunning(token, pathTag);
+        }
+
+        bool EnterRunning(int token, string pathTag)
+        {
+            if (!this.TryIsActiveRun(token, "EnterRunning"))
+            {
+                return false;
+            }
+
+            BattleViewHost viewHost = this.RequireViewHost();
+            if (viewHost == null)
+            {
+                return false;
+            }
+
+            if (!BattleViewOpener.Open<NormalModelPanel>(this.battle, () => this.OnBattleMainPanelReady(token, pathTag)))
+            {
+                this.HandlePipelineFailure(token, "Open NormalModelPanel 失败");
+                return false;
+            }
+
+            return true;
+        }
+
+        void OnBattleMainPanelReady(int token, string pathTag)
+        {
+            if (!this.TryIsActiveRun(token, "OnBattleMainPanelReady"))
+            {
+                return;
+            }
+
+            BattleViewHost viewHost = this.RequireViewHost();
+            if (viewHost == null)
+            {
+                return;
+            }
+
+            this.phase = BattleSessionPhase.Running;
+            BattleScenePresentation.ConfigureMainCameraForBattle();
+            this.battle.StartGame();
+            this.view.StartGame();
+
+            BattleFlowLog.Step(
+                "4/4 Running (" + pathTag + ")",
+                "containers=" + viewHost.GetSceneContainerChildCount() +
+                " grids=" + viewHost.GetContainerChildCount("GridContainer"));
         }
 
         public void Tick(float deltaSeconds)
@@ -129,27 +273,42 @@ namespace CarrotFantasy
             }
         }
 
-        public void TearDown(bool destroyViewHierarchy)
+        /// <summary>离战斗场景：保留 ViewHost 壳，释放 AB 与 Model。</summary>
+        public void EndRound()
+        {
+            this.ShutdownSession(destroyViewHierarchy: false);
+        }
+
+        /// <summary>完全销毁 Session（换关、联机回收等）。</summary>
+        public void DestroySession()
+        {
+            this.ShutdownSession(destroyViewHierarchy: true);
+        }
+
+        void ShutdownSession(bool destroyViewHierarchy)
         {
             if (this.disposed)
             {
                 return;
             }
 
+            ViewManager.Instance?.CloseAllOpenViews();
+            BattleViewOpener.ForceReleaseAllBattleViews();
             this.disposed = true;
             this.runToken++;
             this.RemoveListeners();
+            this.assetScope.Release();
 
-            BattleViewPrefabPreloader.Clear();
-            BattleViewSpritePreloader.Clear();
-
-            if (destroyViewHierarchy && this.view != null)
+            if (this.view != null)
             {
-                this.view.Dispose();
-            }
-            else if (this.view != null)
-            {
-                this.view.ShutdownContentOnly();
+                if (destroyViewHierarchy)
+                {
+                    this.view.Dispose();
+                }
+                else
+                {
+                    this.view.ShutdownContentOnly();
+                }
             }
 
             if (this.battle != null)
@@ -162,28 +321,19 @@ namespace CarrotFantasy
             this.phase = BattleSessionPhase.Disposed;
         }
 
-        public void Dispose()
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            this.TearDown(true);
-        }
-
         /// <summary>流程 1/4：按 Mode 创建战斗实例并 Init 全部 Model 组件。</summary>
         void SetupModel()
         {
             this.phase = BattleSessionPhase.InitializingModel;
             this.CreateBattle();
+            this.battle.RegisterComponents();
             this.AddListeners();
             this.InitBattleModel(resetExisting: false);
         }
 
         void ResetModelForReplay()
         {
-            this.battle.ClearGameInfo();
+            this.battle.ResetForNewRound();
             this.InitBattleModel(resetExisting: true);
         }
 
@@ -192,113 +342,6 @@ namespace CarrotFantasy
             this.ApplyRandomSession(resetExisting);
             this.battle.Init();
             this.battle.InitComponent();
-        }
-
-        /// <summary>流程 2/4：AB 预加载完成后回调 <see cref="BuildViewAndStart"/>。</summary>
-        void BeginViewPipeline(int token)
-        {
-            if (!this.TryIsActiveRun(token, "BeginViewPipeline"))
-            {
-                return;
-            }
-
-            this.phase = BattleSessionPhase.LoadingAssets;
-
-            BattleViewAssetPreloader.Run(this.battle, () => this.BuildViewAndStart(token));
-        }
-
-        /// <summary>流程 3/4 → 4/4：建 View、校验容器、开 NormalModelPanel，最后 StartGame。</summary>
-        void BuildViewAndStart(int token)
-        {
-            if (!this.TryIsActiveRun(token, "BuildViewAndStart"))
-            {
-                return;
-            }
-
-            if (this.battle == null)
-            {
-                BattleFlowLog.Abort("BuildViewAndStart", "battle=null");
-                return;
-            }
-
-            if (this.viewHost == null || !this.viewHost.IsSceneAlive())
-            {
-                BattleFlowLog.Abort("BuildViewAndStart", "BattleScene 场景壳已失效");
-                return;
-            }
-
-            BattleViewHost viewHost = this.RequireViewHost();
-            if (viewHost == null)
-            {
-                return;
-            }
-
-            this.phase = BattleSessionPhase.BuildingView;
-
-            if (!BattleViewPrefabPreloader.TryGetTemplate(
-                FightViewPrefabAb.FightPartBundle,
-                FightViewPrefabAb.Grid,
-                out _))
-            {
-                BattleFlowLog.Abort("BuildViewAndStart", "Grid 预制体未预加载");
-                return;
-            }
-
-            bool createdView = this.view == null;
-            if (createdView)
-            {
-                this.view = new PveBattleView(this.battle, viewHost);
-            }
-
-            this.view.Init();
-
-            if (!this.view.IsContentBuilt)
-            {
-                if (!this.view.BuildContentComponents())
-                {
-                    BattleFlowLog.Abort("BuildViewAndStart", "BuildContentComponents 返回 false");
-                    return;
-                }
-            }
-
-            if (!this.view.ValidateSceneContent())
-            {
-                BattleFlowLog.Abort("BuildViewAndStart", "战斗场景内容校验失败");
-                return;
-            }
-
-            this.FinishRunningAfterViewReady(token, createdView ? "Build" : "Build");
-        }
-
-        bool FinishRunningAfterViewReady(int token, string pathTag)
-        {
-            if (!this.TryIsActiveRun(token, "FinishRunningAfterViewReady"))
-            {
-                return false;
-            }
-
-            BattleViewHost viewHost = this.RequireViewHost();
-            if (viewHost == null)
-            {
-                return false;
-            }
-
-            if (!BattleViewOpener.Open<NormalModelPanel>(this.battle))
-            {
-                BattleFlowLog.Abort("FinishRunningAfterViewReady", "Open NormalModelPanel 失败");
-                return false;
-            }
-
-            this.phase = BattleSessionPhase.Running;
-            BattleScenePresentation.ConfigureMainCameraForBattle();
-            this.battle.StartGame();
-            this.view.StartGame();
-
-            BattleFlowLog.Step(
-                "4/4 Running (" + pathTag + ")",
-                "containers=" + viewHost.GetSceneContainerChildCount() +
-                " grids=" + viewHost.GetContainerChildCount("GridContainer"));
-            return true;
         }
 
         /// <summary>按开战 Mode 选择战斗实现，并将本局参数注入 BaseBattle。</summary>

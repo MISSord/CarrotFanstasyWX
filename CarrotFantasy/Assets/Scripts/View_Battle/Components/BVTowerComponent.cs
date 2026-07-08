@@ -10,11 +10,7 @@ namespace CarrotFantasy
 
         public Dictionary<BattleUnit_Tower, BattleUnitView_Tower> towerViewDic = new Dictionary<BattleUnit_Tower, BattleUnitView_Tower>();
 
-        private GameObject buildGameObject;
-
         private readonly HashSet<string> _registeredTowerPoolKeys = new HashSet<string>();
-
-        private readonly List<GameObject> activeBuildEffects = new List<GameObject>();
 
         public BVTowerComponent(BattleView_base battleView) : base(battleView)
         {
@@ -32,15 +28,8 @@ namespace CarrotFantasy
 
             this.rootGameObject = scene.RegisterGameContainer("TowerContainer");
 
-            if (!BattleViewPrefabPreloader.TryGetTemplate(
-                FightViewPrefabAb.FightPartBundle,
-                FightViewPrefabAb.BuildEffect,
-                out this.buildGameObject))
-            {
-                Debug.LogError("[BVTowerComponent] BuildEffect 未预加载");
-            }
-
             BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+            BattleViewEffectHelper.EnsureBuildEffectPoolRegistered();
             GameViewObjectPool.Instance.PurgeLegacyNumericPoolKeys();
             this.RemoveListener();
             this.AddListener();
@@ -235,52 +224,23 @@ namespace CarrotFantasy
 
         private void PlayBuildEffect(BattleUnit unit)
         {
-            if (this.buildGameObject == null)
+            BattleViewEffectHelper.PlayBuildAt(unit);
+        }
+
+        public override void ResetRound(BattleViewResetPass pass)
+        {
+            if (pass == BattleViewResetPass.BeforeModel)
             {
+                this.RemoveListener();
+                BattleViewEffectHelper.ClearActiveBuildEffects();
+                this.ReturnAllTowersToPool();
+                this.EnsureAllTowerPoolKeysRegistered();
+                GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Tower);
+                BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+                BattleViewEffectHelper.EnsureBuildEffectPoolRegistered();
                 return;
             }
 
-            GameObject build = GameObject.Instantiate(this.buildGameObject);
-            UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
-            build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-            this.activeBuildEffects.Add(build);
-            GameObject captured = build;
-            Sche.DelayExeOnceTimes(() =>
-            {
-                this.activeBuildEffects.Remove(captured);
-                if (captured != null)
-                {
-                    GameObject.Destroy(captured);
-                }
-            }, 0.5f);
-        }
-
-        void ClearActiveBuildEffects()
-        {
-            for (int i = 0; i < this.activeBuildEffects.Count; ++i)
-            {
-                GameObject build = this.activeBuildEffects[i];
-                if (build != null)
-                {
-                    GameObject.Destroy(build);
-                }
-            }
-
-            this.activeBuildEffects.Clear();
-        }
-
-        public override void ReturnUnitsToPoolForReplay()
-        {
-            this.RemoveListener();
-            this.ClearActiveBuildEffects();
-            this.ReturnAllTowersToPool();
-            this.EnsureAllTowerPoolKeysRegistered();
-            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Tower);
-            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
-        }
-
-        public override void ApplyModelForReplay()
-        {
             this.RebindBattleListeners(this.RemoveListener, this.AddListener);
         }
 
@@ -306,8 +266,7 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
-            this.ClearActiveBuildEffects();
-            this.buildGameObject = null;
+            BattleViewEffectHelper.ClearActiveBuildEffects();
             this._registeredTowerPoolKeys.Clear();
             this.ReturnAllTowersToPool();
             this.RemoveListener();

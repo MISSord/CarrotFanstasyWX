@@ -41,8 +41,6 @@ namespace CarrotFantasy
         public override void ShutdownContentOnly()
         {
             base.ShutdownContentOnly();
-            BattleViewPrefabPreloader.Clear();
-            BattleViewSpritePreloader.Clear();
             GameViewObjectPool.Instance.ClearGameInfo();
         }
     }

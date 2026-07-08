@@ -7,7 +7,7 @@ namespace CarrotFantasy
     {
         public static void ReturnToOnlineLogin(string message)
         {
-            ServerProvision.battleSessionHost?.EndSession(clearLaunchParams: true, destroyViewHierarchy: true);
+            ServerProvision.battleSessionHost?.DestroySession();
 
             MapServer mapServer = MapServer.Instance;
             if (mapServer != null)

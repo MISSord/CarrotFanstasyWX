@@ -63,10 +63,10 @@ namespace CarrotFantasy
                 return false;
             }
 
-            PveModelBattleParams launchParams = BattleParamServer.Instance?.CurrentPveParams;
+            PveModelBattleParams launchParams = BattleSceneParamKeys.TryGetPveLaunchParams(this.sceneParam);
             if (launchParams == null)
             {
-                BattleFlowLog.Abort("Init", "CurrentPveParams 为空，请从 BattleLauncher 进关");
+                BattleFlowLog.Abort("Init", "sceneParam 缺少 pveLaunchParams，请从 BattleLauncher 进关");
                 return false;
             }
 
@@ -98,9 +98,7 @@ namespace CarrotFantasy
             int rootId = this.gameObj != null ? this.gameObj.GetInstanceID() : 0;
             Debug.LogWarning("[BattleScene] Dispose: BattleRoot#" + rootId);
 
-            ServerProvision.battleSessionHost?.EndSession(
-                clearLaunchParams: true,
-                destroyViewHierarchy: false);
+            ServerProvision.battleSessionHost?.EndRound();
 
             if (this.listenerAdded)
             {

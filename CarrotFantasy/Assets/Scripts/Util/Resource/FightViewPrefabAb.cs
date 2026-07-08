@@ -31,6 +31,7 @@ namespace CarrotFantasy
         public const string StartPoint = "StartPoint";
         public const string Carrot = "Carrot";
         public const string MonsterPrefab = "MonsterPrefab";
-        public const string MonsterCanvas = "MonsterCanvas";
+        public const string HpSlider = "HPSlider";
+        public const string DamageFloatText = "DamageFloatText";
     }
 }

@@ -4,7 +4,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 战斗视图组件生命周期：
-    /// BuildOnce(<see cref="Init"/>) → 重开(<see cref="ReturnUnitsToPoolForReplay"/> + <see cref="ApplyModelForReplay"/>) → 离场景(<see cref="ClearGameInfo"/>)。
+    /// Build(<see cref="Init"/>) → 重开 <see cref="ResetRound"/> → 离场景 <see cref="ClearGameInfo"/>。
     /// </summary>
     public abstract class BaseBattleViewComponent
     {
@@ -24,11 +24,9 @@ namespace CarrotFantasy
 
         public abstract void Init();
 
-        /// <summary>重开：Model Clear 前，动态单位回池。</summary>
-        public virtual void ReturnUnitsToPoolForReplay() { }
+        /// <summary>同关重开；由 <see cref="BattleView_base.ResetRound"/> 分两阶段调用。</summary>
+        public virtual void ResetRound(BattleViewResetPass pass) { }
 
-        /// <summary>重开：Model Init 后，按新 Model 数据恢复视图状态。</summary>
-        public virtual void ApplyModelForReplay() { }
         public virtual void Start() { }
         public virtual void OnTick(float time) { }
         public virtual void ClearGameInfo() { }

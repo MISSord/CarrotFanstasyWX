@@ -62,7 +62,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>同关重开：停止 tween、隐藏格子与升级提示，不销毁节点。</summary>
-        public void ResetForReplay()
+        public void ResetRound()
         {
             if (this.spriteRenderer != null)
             {

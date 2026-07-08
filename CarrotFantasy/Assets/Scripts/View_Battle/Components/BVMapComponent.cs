@@ -80,8 +80,13 @@ namespace CarrotFantasy
             return false;
         }
 
-        public override void ApplyModelForReplay()
+        public override void ResetRound(BattleViewResetPass pass)
         {
+            if (pass != BattleViewResetPass.AfterModel)
+            {
+                return;
+            }
+
             this.RefreshBattleBindings();
             this.towerComponent = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
             this.dataComponent = (BattleDataComponent)this.battle.GetComponent(BattleComponentType.DataComponent);
@@ -104,7 +109,7 @@ namespace CarrotFantasy
                         }
 
                         gridPoint.InitInfo(x, y);
-                        gridPoint.ResetForReplay();
+                        gridPoint.ResetRound();
                     }
                 }
             }

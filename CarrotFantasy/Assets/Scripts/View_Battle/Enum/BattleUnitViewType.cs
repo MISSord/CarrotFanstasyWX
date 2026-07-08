@@ -11,5 +11,7 @@ namespace CarrotFantasy
 
         public const String DestroyEffect = "DestroyEffect";
         public const String BuildEffect = "BuildEffect";
+        public const String DamageFloatText = "DamageFloatText";
+        public const String HpSlider = "HpSlider";
     }
 }

@@ -49,8 +49,9 @@ namespace CarrotFantasy
                 return;
             }
 
+            this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
             this.dataComponent.eventDispatcher.AddListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
-            this.UpdateCarrotUI();
+            this.ResetVisualToCurrentHp();
         }
 
         // Update is called once per frame
@@ -85,26 +86,36 @@ namespace CarrotFantasy
 
         public void UpdateCarrotUI()
         {
-            if (this.dataComponent == null || this.hpText == null || this.sr == null)
+            this.ResetVisualToCurrentHp();
+        }
+
+        void ResetVisualToCurrentHp()
+        {
+            if (this.dataComponent == null || this.hpText == null || this.sr == null || this.animator == null)
             {
                 return;
             }
 
-            int hp = dataComponent.carrotLive;
+            int hp = this.dataComponent.carrotLive;
             this.hpText.text = hp.ToString();
 
-            if (dataComponent.carrotLive < 10)
+            if (hp >= 10)
             {
-                animator.enabled = false;
+                this.animator.enabled = true;
+                this.animator.Play("Idle", 0, 0f);
+                this.sr.sprite = null;
+                this.timeVal = 0f;
+                return;
             }
 
-            if (hp >= 7 && hp < 10)
+            this.animator.enabled = false;
+            if (hp >= 7)
             {
-                sr.sprite = sprites[6];
+                this.sr.sprite = this.sprites[6];
             }
-            else if (hp < 7 && hp > 0)
+            else if (hp > 0)
             {
-                sr.sprite = sprites[hp - 1];
+                this.sr.sprite = this.sprites[hp - 1];
             }
         }
 

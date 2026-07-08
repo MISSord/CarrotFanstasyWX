@@ -14,7 +14,7 @@ namespace CarrotFantasy
 
         readonly string tag;
         readonly float timeoutSeconds;
-        readonly Action onComplete;
+        readonly Action<bool> onComplete;
         readonly HashSet<string> pendingKeys = new HashSet<string>(StringComparer.Ordinal);
         readonly List<string> failedKeys = new List<string>();
         string timeoutTaskId;
@@ -25,7 +25,7 @@ namespace CarrotFantasy
             get { return this.failedKeys; }
         }
 
-        public BattleViewPreloadWait(string batchTag, float waitTimeoutSeconds, Action completeCallback)
+        public BattleViewPreloadWait(string batchTag, float waitTimeoutSeconds, Action<bool> completeCallback)
         {
             this.tag = batchTag;
             this.timeoutSeconds = waitTimeoutSeconds > 0f ? waitTimeoutSeconds : DefaultTimeoutSeconds;
@@ -129,7 +129,7 @@ namespace CarrotFantasy
                 this.LogFailures(false);
             }
 
-            this.onComplete?.Invoke();
+            this.onComplete?.Invoke(this.failedKeys.Count <= 0);
         }
 
         void LogFailures(bool fromTimeout)

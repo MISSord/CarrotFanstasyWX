@@ -28,23 +28,23 @@ namespace CarrotFantasy
             return sprite != null;
         }
 
-        public static void Run(BaseBattle battle, Action onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
+        public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
             List<SpriteRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
                 IsReady = true;
-                onComplete?.Invoke();
+                onComplete?.Invoke(true);
                 return;
             }
 
             BattleViewPreloadWait wait = new BattleViewPreloadWait(
                 "BattleViewSpritePreloader",
                 timeoutSeconds,
-                () =>
+                success =>
                 {
-                    IsReady = true;
-                    onComplete?.Invoke();
+                    IsReady = success;
+                    onComplete?.Invoke(success);
                 });
 
             int trackedCount = 0;
@@ -92,7 +92,7 @@ namespace CarrotFantasy
             if (trackedCount <= 0)
             {
                 IsReady = true;
-                onComplete?.Invoke();
+                onComplete?.Invoke(true);
                 return;
             }
 

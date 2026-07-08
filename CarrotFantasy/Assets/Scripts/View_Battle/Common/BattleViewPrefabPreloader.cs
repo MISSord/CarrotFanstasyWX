@@ -28,23 +28,23 @@ namespace CarrotFantasy
             return template != null;
         }
 
-        public static void Run(BaseBattle battle, Action onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
+        public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
             List<PrefabRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
                 IsReady = true;
-                onComplete?.Invoke();
+                onComplete?.Invoke(true);
                 return;
             }
 
             BattleViewPreloadWait wait = new BattleViewPreloadWait(
                 "BattleViewPrefabPreloader",
                 timeoutSeconds,
-                () =>
+                success =>
                 {
-                    IsReady = true;
-                    onComplete?.Invoke();
+                    IsReady = success;
+                    onComplete?.Invoke(success);
                 });
 
             int trackedCount = 0;
@@ -92,7 +92,7 @@ namespace CarrotFantasy
             if (trackedCount <= 0)
             {
                 IsReady = true;
-                onComplete?.Invoke();
+                onComplete?.Invoke(true);
                 return;
             }
 
@@ -151,7 +151,8 @@ namespace CarrotFantasy
 
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Grid);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab);
-            Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterCanvas);
+            Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.HpSlider);
+            Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DamageFloatText);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.BuildEffect);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeMap);
@@ -180,7 +181,6 @@ namespace CarrotFantasy
                     {
                         Add(FightViewPrefabAb.FightPartTowerBundle, FightViewPrefabAb.TowerAssetName(towerId, level));
                         Add(FightViewPrefabAb.FightPartBulletBundle, FightViewPrefabAb.BulletAssetName(towerId, level));
-                        Add(FightViewPrefabAb.FightPartEffectBundle, FightViewPrefabAb.EffectAssetName(towerId, level));
                     }
                 }
             }

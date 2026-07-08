@@ -14,21 +14,48 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            if (!this.IsBattleBound)
+            this.BindMenuButtons();
+            this.NotifyBattleUiReady();
+        }
+
+        protected override void RefreshBattleBinding()
+        {
+            this.BindMenuButtons();
+        }
+
+        protected override void OnBeforeClearBattleBinding()
+        {
+            this.RemoveMenuButtonListeners();
+        }
+
+        void BindMenuButtons()
+        {
+            if (!this.IsBattleBound || !this.GetIsLoadedIndex(0))
             {
                 return;
             }
 
+            this.RemoveMenuButtonListeners();
             XUI.AddButtonListener(nameTableDic["btn_go_on"].GetComponent<Button>(), OnGoOn);
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
         }
 
-        protected override void ReleaseCallBack()
+        void RemoveMenuButtonListeners()
         {
+            if (!this.GetIsLoadedIndex(0))
+            {
+                return;
+            }
+
             nameTableDic["btn_go_on"].GetComponent<Button>().onClick.RemoveAllListeners();
             nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
             nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
+        }
+
+        protected override void ReleaseCallBack()
+        {
+            this.RemoveMenuButtonListeners();
             this.ClearBattleBinding();
         }
 

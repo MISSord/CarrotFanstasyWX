@@ -411,6 +411,9 @@
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BuffDef.cs" />
     <Compile Include="Assets\Scripts\Util\ViewLoader.cs" />
+    <Compile Include="Assets\Scripts\Server\Scene\BattleSceneParamKeys.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewResetPass.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleAssetScope.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

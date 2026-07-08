@@ -11,9 +11,6 @@ namespace CarrotFantasy
         private GameWinView gameWinView;
         private GameOverView gameOverView;
 
-        /// <summary>最近一次开战参数；BattleScene.Init 读取，Session 创建后注入 <see cref="BaseBattle.LaunchParams"/>。</summary>
-        public PveModelBattleParams CurrentPveParams { get; private set; }
-
         /// <summary>基准战斗碰撞实现：true=网格版，false=暴力版。</summary>
         public bool hitTestBenchmarkUseSpatialGrid = true;
 
@@ -61,26 +58,6 @@ namespace CarrotFantasy
             }
         }
 
-        /// <summary>
-        /// 将开战参数写入本服务（含 EnsureLevelDataLoaded），供 BattleScene.Init 读取；
-        /// Session 创建后 Model 从 <see cref="BaseBattle.LaunchParams"/> 读取。
-        /// </summary>
-        public void ApplyPveParams(PveModelBattleParams launchParams)
-        {
-            if (launchParams == null)
-            {
-                return;
-            }
-
-            launchParams.EnsureLevelDataLoaded();
-            this.CurrentPveParams = launchParams;
-        }
-
-        public void ClearPveParams()
-        {
-            this.CurrentPveParams = null;
-        }
-
         /// <summary>若未走 <see cref="LoadModule"/>，战斗 UI 注册可延迟到此。</summary>
         public void EnsureBattleViewsLoaded()
         {
@@ -92,7 +69,6 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            this.ClearPveParams();
             base.Dispose();
         }
 

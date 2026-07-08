@@ -14,11 +14,28 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            if (!this.IsBattleBound || this.pveDataComponent == null)
+            this.RefreshSettlementContent();
+            this.NotifyBattleUiReady();
+        }
+
+        protected override void RefreshBattleBinding()
+        {
+            this.RefreshSettlementContent();
+        }
+
+        protected override void OnBeforeClearBattleBinding()
+        {
+            this.RemoveSettlementButtonListeners();
+        }
+
+        void RefreshSettlementContent()
+        {
+            if (!this.IsBattleBound || !this.GetIsLoadedIndex(0) || this.pveDataComponent == null)
             {
                 return;
             }
 
+            this.RemoveSettlementButtonListeners();
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
 
@@ -35,10 +52,20 @@ namespace CarrotFantasy
                 this.pveDataComponent.level.ToString());
         }
 
-        protected override void ReleaseCallBack()
+        void RemoveSettlementButtonListeners()
         {
+            if (!this.GetIsLoadedIndex(0))
+            {
+                return;
+            }
+
             nameTableDic["btn_replay"].GetComponent<Button>().onClick.RemoveAllListeners();
             nameTableDic["btn_choose_level"].GetComponent<Button>().onClick.RemoveAllListeners();
+        }
+
+        protected override void ReleaseCallBack()
+        {
+            this.RemoveSettlementButtonListeners();
             this.ClearBattleBinding();
         }
 

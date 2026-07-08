@@ -7,7 +7,6 @@ namespace CarrotFantasy
     public class BVMonsterComponent : BaseBattleViewComponent
     {
         private GameObject noInstanGameObject;
-        private GameObject _monsterCanvasTemplate;
         private GameObject rootGameObject;
 
         private BattleSchedulerComponent scheComponent;
@@ -35,14 +34,6 @@ namespace CarrotFantasy
                 out this.noInstanGameObject))
             {
                 Debug.LogError("[BVMonsterComponent] MonsterPrefab 未预加载");
-            }
-
-            if (!BattleViewPrefabPreloader.TryGetTemplate(
-                FightViewPrefabAb.FightPartBundle,
-                FightViewPrefabAb.MonsterCanvas,
-                out this._monsterCanvasTemplate))
-            {
-                Debug.LogError("[BVMonsterComponent] MonsterCanvas 未预加载");
             }
 
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
@@ -92,16 +83,6 @@ namespace CarrotFantasy
 
                 BattleView_base.AttachPooledVisualToContainer(node.transform, this.rootGameObject.transform);
 
-                GameObject monsterCanvasTemplate = this._monsterCanvasTemplate;
-                if (monsterCanvasTemplate == null)
-                {
-                    BattleViewPrefabPreloader.TryGetTemplate(
-                        FightViewPrefabAb.FightPartBundle,
-                        FightViewPrefabAb.MonsterCanvas,
-                        out monsterCanvasTemplate);
-                    this._monsterCanvasTemplate = monsterCanvasTemplate;
-                }
-
                 BVBattleWorldUiComponent worldUi =
                     this.battleView.TryGetComponent(BattleViewComponentType.WORLD_UI) as BVBattleWorldUiComponent;
                 if (worldUi == null)
@@ -109,14 +90,11 @@ namespace CarrotFantasy
                     Debug.LogError("[BVMonsterComponent] WORLD_UI 组件未注册，无法创建怪物血条。");
                 }
 
-                GameObject hpBarGo = worldUi != null
-                    ? worldUi.CreateMonsterHpBar(monsterCanvasTemplate)
-                    : null;
+                GameObject hpBarGo = worldUi != null ? worldUi.CreateHpBar() : null;
                 if (hpBarGo == null)
                 {
                     Debug.LogError(
-                        "[BVMonsterComponent] 创建怪物血条失败: templateReady=" + (monsterCanvasTemplate != null) +
-                        ", worldUiReady=" + (worldUi != null));
+                        "[BVMonsterComponent] 创建怪物血条失败: worldUiReady=" + (worldUi != null));
                 }
                 monsterView.InitTransform(node.transform);
                 monsterView.AttachMonsterHpBar(hpBarGo);
@@ -163,17 +141,18 @@ namespace CarrotFantasy
             BattleViewEffectHelper.PlayDestroyAt(unit);
         }
 
-        public override void ReturnUnitsToPoolForReplay()
+        public override void ResetRound(BattleViewResetPass pass)
         {
-            this.RemoveListener();
-            this.ReturnAllMonstersToPool();
-            GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.Monster);
-            GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Monster);
-            BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
-        }
+            if (pass == BattleViewResetPass.BeforeModel)
+            {
+                this.RemoveListener();
+                this.ReturnAllMonstersToPool();
+                GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.Monster);
+                GameViewObjectPool.Instance.RegisterBattleUnitView(BattleUnitViewType.Monster);
+                BattleViewEffectHelper.EnsureDestroyEffectPoolRegistered();
+                return;
+            }
 
-        public override void ApplyModelForReplay()
-        {
             this.RebindBattleListeners(this.RemoveListener, this.AddListener);
         }
 
@@ -204,7 +183,6 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
-            this._monsterCanvasTemplate = null;
             this.noInstanGameObject = null;
             this.ReturnAllMonstersToPool();
             this.RemoveListener();

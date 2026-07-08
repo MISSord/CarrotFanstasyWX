@@ -82,7 +82,6 @@ namespace CarrotFantasy
 
         public void GameOverByCarrotDead()
         {
-            this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
             PveMatchSettlement settlement = new PveMatchSettlement();
             settlement.IsVictory = false;
             settlement.VictoryProgress = null;
@@ -108,7 +107,6 @@ namespace CarrotFantasy
             unSaveMapInfo.carrotState = (byte)this.CarrotTropyLevel();
             unSaveMapInfo.unLocked = MapInfoType.UNLOCK_LEVEL;
 
-            this.baseBattle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
             PveMatchSettlement settlement = new PveMatchSettlement();
             settlement.IsVictory = true;
             settlement.VictoryProgress = unSaveMapInfo;
