@@ -98,7 +98,7 @@ namespace CarrotFantasy
             int rootId = this.gameObj != null ? this.gameObj.GetInstanceID() : 0;
             Debug.LogWarning("[BattleScene] Dispose: BattleRoot#" + rootId);
 
-            ServerProvision.battleSessionHost?.EndRound();
+            ServerProvision.battleSessionHost?.Shutdown();
 
             if (this.listenerAdded)
             {

@@ -4,7 +4,11 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    /// <summary>战斗视图 Sprite 异步预加载，替代各 BV 组件内 <see cref="ResourceLoader.loadRes"/>。</summary>
+    /// <summary>
+    /// 战斗视图 Sprite 异步预加载。
+    /// Atlas 资源走 <see cref="ImageResourceManager.LoadSprite"/>；
+    /// RawImages 目录资源按 Texture 加载后运行时转 Sprite（与关卡 UI 的 RawImage 约定一致）。
+    /// </summary>
     public static class BattleViewSpritePreloader
     {
         struct SpriteRequest
@@ -13,7 +17,13 @@ namespace CarrotFantasy
             public string Asset;
         }
 
-        static readonly Dictionary<string, Sprite> Sprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
+        struct CachedSprite
+        {
+            public Sprite Sprite;
+            public bool RuntimeCreated;
+        }
+
+        static readonly Dictionary<string, CachedSprite> Sprites = new Dictionary<string, CachedSprite>(StringComparer.Ordinal);
         static readonly List<AssetLoadHandle> Handles = new List<AssetLoadHandle>();
 
         public static bool IsReady { get; private set; }
@@ -23,9 +33,25 @@ namespace CarrotFantasy
             return bundleName + "|" + assetName;
         }
 
-        static bool IsSpriteAlive(Sprite sprite)
+        static bool IsRawImageBundle(string bundleName)
         {
-            return sprite != null;
+            return !string.IsNullOrEmpty(bundleName) &&
+                   bundleName.StartsWith("ui/rawimages/", StringComparison.OrdinalIgnoreCase);
+        }
+
+        static Sprite CreateSpriteFromTexture(Texture texture)
+        {
+            Texture2D texture2D = texture as Texture2D;
+            if (texture2D == null)
+            {
+                return null;
+            }
+
+            return Sprite.Create(
+                texture2D,
+                new Rect(0f, 0f, texture2D.width, texture2D.height),
+                new Vector2(0.5f, 0.5f),
+                100f);
         }
 
         public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
@@ -52,10 +78,10 @@ namespace CarrotFantasy
             {
                 SpriteRequest req = requests[i];
                 string key = MakeKey(req.Bundle, req.Asset);
-                Sprite cached;
+                CachedSprite cached;
                 if (Sprites.TryGetValue(key, out cached))
                 {
-                    if (IsSpriteAlive(cached))
+                    if (cached.Sprite != null)
                     {
                         continue;
                     }
@@ -65,19 +91,49 @@ namespace CarrotFantasy
 
                 wait.Track(req.Bundle, req.Asset);
                 trackedCount++;
-                AssetLoadHandle handle = ImageResourceManager.Instance.LoadSprite(
-                    req.Bundle,
-                    req.Asset,
-                    sprite =>
-                    {
-                        if (sprite != null)
-                        {
-                            Sprites[key] = sprite;
-                        }
 
-                        wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
-                    },
-                    LoadPriority.Medium);
+                AssetLoadHandle handle;
+                if (IsRawImageBundle(req.Bundle))
+                {
+                    handle = ImageResourceManager.Instance.LoadTexture(
+                        req.Bundle,
+                        req.Asset,
+                        texture =>
+                        {
+                            Sprite sprite = CreateSpriteFromTexture(texture);
+                            if (sprite != null)
+                            {
+                                Sprites[key] = new CachedSprite
+                                {
+                                    Sprite = sprite,
+                                    RuntimeCreated = true,
+                                };
+                            }
+
+                            wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
+                        },
+                        LoadPriority.Medium);
+                }
+                else
+                {
+                    handle = ImageResourceManager.Instance.LoadSprite(
+                        req.Bundle,
+                        req.Asset,
+                        sprite =>
+                        {
+                            if (sprite != null)
+                            {
+                                Sprites[key] = new CachedSprite
+                                {
+                                    Sprite = sprite,
+                                    RuntimeCreated = false,
+                                };
+                            }
+
+                            wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
+                        },
+                        LoadPriority.Medium);
+                }
 
                 if (handle.IsValid)
                 {
@@ -107,13 +163,13 @@ namespace CarrotFantasy
                 return false;
             }
 
-            Sprite loaded;
-            if (!Sprites.TryGetValue(MakeKey(bundleName, assetName), out loaded) || loaded == null)
+            CachedSprite loaded;
+            if (!Sprites.TryGetValue(MakeKey(bundleName, assetName), out loaded) || loaded.Sprite == null)
             {
                 return false;
             }
 
-            sprite = loaded;
+            sprite = loaded.Sprite;
             return true;
         }
 
@@ -125,6 +181,16 @@ namespace CarrotFantasy
                 Handles[i].Dispose();
             }
             Handles.Clear();
+
+            foreach (KeyValuePair<string, CachedSprite> pair in Sprites)
+            {
+                CachedSprite entry = pair.Value;
+                if (entry.RuntimeCreated && entry.Sprite != null)
+                {
+                    UnityEngine.Object.Destroy(entry.Sprite);
+                }
+            }
+
             Sprites.Clear();
         }
 
@@ -179,30 +245,11 @@ namespace CarrotFantasy
             BattlePVEDataComponent pveData = BattlePVEDataComponent.GetFrom(battle);
             if (pveData != null)
             {
-                var reader = new MapUIConfigReader();
-                reader.Init();
-                Dictionary<string, int> map;
-                reader.TryGetMapUIConfig(pveData.bigLevel, pveData.level, out map);
-                if (map != null)
-                {
-                    int bgIndex;
-                    int roadIndex;
-                    if (!map.TryGetValue("mapBg", out bgIndex))
-                    {
-                        bgIndex = 0;
-                    }
+                string bgAsset = FightViewSpriteAb.MapBgAssetName(pveData.bigLevel, pveData.level);
+                Add(FightViewSpriteAb.RawImageBundle(bgAsset), bgAsset);
 
-                    if (!map.TryGetValue("mapRoad", out roadIndex))
-                    {
-                        roadIndex = 1;
-                    }
-
-                    string bgAsset = FightViewSpriteAb.MapBgAssetName(bgIndex);
-                    Add(FightViewSpriteAb.RawImageBundle(bgAsset), bgAsset);
-
-                    string roadAsset = FightViewSpriteAb.MapRoadAssetName(roadIndex);
-                    Add(FightViewSpriteAb.RawImageBundle(roadAsset), roadAsset);
-                }
+                string roadAsset = FightViewSpriteAb.MapRoadAssetName(pveData.bigLevel, pveData.level);
+                Add(FightViewSpriteAb.RawImageBundle(roadAsset), roadAsset);
             }
 
             CollectLevelMonsterPortraits(battle, Add);

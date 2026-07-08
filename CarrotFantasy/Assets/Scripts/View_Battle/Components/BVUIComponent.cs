@@ -47,8 +47,6 @@ namespace CarrotFantasy
 
         private Text txtButtonSell;
 
-        private MapUIConfigReader reader;
-
         private GameObject nodeCarrot;
         private GameObject nodeMonsterPoint;
         private Carrot carrot;
@@ -68,9 +66,6 @@ namespace CarrotFantasy
             this.buttonTowerList = new ButtonTower[this.towerComponent.canBuildTowerListLength];
             this.spriteButtonUpList = new Sprite[3];
             this.componentType = BattleViewComponentType.UI;
-
-            this.reader = new MapUIConfigReader();
-            this.reader.Init();
         }
 
         private void AddListener()
@@ -239,53 +234,31 @@ namespace CarrotFantasy
                 return;
             }
 
-            Dictionary<String, int> map;
-            if (!this.reader.TryGetMapUIConfig(this.pveDataComponent.bigLevel, this.pveDataComponent.level, out map) ||
-                map == null)
-            {
-                Debug.LogWarning(
-                    "[BVUIComponent] 未找到小地图 UI 配置，使用默认: bigLevel=" + this.pveDataComponent.bigLevel +
-                    ", level=" + this.pveDataComponent.level);
-                map = new Dictionary<string, int>
-                {
-                    { "mapBg", 0 },
-                    { "mapRoad", 1 },
-                };
-            }
-
-            int mapBgIndex;
-            int mapRoadIndex;
-            if (!map.TryGetValue("mapBg", out mapBgIndex))
-            {
-                mapBgIndex = 0;
-            }
-
-            if (!map.TryGetValue("mapRoad", out mapRoadIndex))
-            {
-                mapRoadIndex = 1;
-            }
+            int bigLevel = this.pveDataComponent.bigLevel;
+            int level = this.pveDataComponent.level;
 
             Sprite mapBgSprite;
-            if (FightViewSpriteAb.TryGetMapBg(mapBgIndex, out mapBgSprite))
+            if (FightViewSpriteAb.TryGetMapBg(bigLevel, level, out mapBgSprite))
             {
                 this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sprite = mapBgSprite;
             }
             else
             {
-                Debug.LogError("[BVUIComponent] 小地图 BG 未预加载: index=" + mapBgIndex);
+                Debug.LogError(
+                    "[BVUIComponent] 小地图 BG 未预加载: Level_" + bigLevel + "_" + level + "_BG");
             }
 
             Sprite mapRoadSprite;
-            if (FightViewSpriteAb.TryGetMapRoad(mapRoadIndex, out mapRoadSprite))
+            if (FightViewSpriteAb.TryGetMapRoad(bigLevel, level, out mapRoadSprite))
             {
                 this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sprite = mapRoadSprite;
             }
             else
             {
-                Debug.LogError("[BVUIComponent] 小地图 Road 未预加载: index=" + mapRoadIndex);
+                Debug.LogError("[BVUIComponent] 小地图 Road 未预加载: Level_" + bigLevel + "_" + level + "_Road");
             }
             this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sortingOrder = 0;
-            this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 4;
+            this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 1;
 
             GameObject tplTargetSignal = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);
             if (tplTargetSignal == null)

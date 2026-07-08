@@ -63,6 +63,14 @@ namespace CarrotFantasy
 
             BattleUnit_Monster monster = this.curNoRegisterList[0];
             this.curNoRegisterList.RemoveAt(0);
+            if (this.curMonsterDic.ContainsKey(monster.uid))
+            {
+                Debug.LogError(
+                    "[BattleMonsterComponent] 重复注册怪物 uid=" + monster.uid +
+                    "，请检查离关是否未 ClearInfo 或对象池复用未重置。");
+                return;
+            }
+
             this.curMonsterDic.Add(monster.uid, monster);
             this.eventDispatcher.DispatchEvent<String, BattleUnit>(BattleEvent.BATTLE_UNIT_ADD, BattleUnitType.MONSTER, monster);
             if (this.curNoRegisterList.Count == 0)
@@ -207,6 +215,7 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
+            this.ClearInfo();
             base.Dispose();
         }
     }

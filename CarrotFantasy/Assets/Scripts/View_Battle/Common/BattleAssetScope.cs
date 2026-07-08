@@ -3,7 +3,7 @@ using System;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// Session 级战斗视图 AB 作用域：首次 EnsureLoaded 加载，同 Session 重开复用，DestroySession/EndRound 时 Release。
+    /// Session 级战斗视图 AB 作用域：首次 EnsureLoaded 加载，同 Session 重开复用，Shutdown 时 Release。
     /// </summary>
     public sealed class BattleAssetScope
     {

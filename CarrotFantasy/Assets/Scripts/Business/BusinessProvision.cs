@@ -35,8 +35,6 @@ namespace CarrotFantasy
             this.businessDic.Add(BusinessType.RoguelikeRunServer, RoguelikeRunServer.Instance);
             this.businessDic.Add(BusinessType.BattleParamServer, BattleParamServer.Instance);
 
-            //this.businessDic.Add(BusinessType.RoomServer, RoomServer.Instance);
-
             this.eventDispatcher.AddListener(CommonEventType.GAME_QUIT, this.Dispose);
         }
 
@@ -68,8 +66,9 @@ namespace CarrotFantasy
             this.businessDic.Clear();
             this.businessList.Clear();
 
-            ServerProvision.connectionLifecycle?.Dispose();
-            ServerProvision.connectionServer.Dispose();
+            ServerProvision.battleSessionHost?.Shutdown();
+            ServerProvision.connectionServer?.Dispose();
+
             ServerProvision.sceneServer.Dispose();
 
             AudioManager.Shutdown();

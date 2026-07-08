@@ -35,7 +35,7 @@ namespace CarrotFantasy
         BattleView_base view;
         BattleSessionPhase phase = BattleSessionPhase.None;
 
-        /// <summary>Restart/EndRound/DestroySession 时递增，异步预加载回调携带 token 校验。</summary>
+        /// <summary>Restart/Shutdown 时递增，异步预加载回调携带 token 校验。</summary>
         int runToken;
         int battleRandomSeed;
         bool disposed;
@@ -273,19 +273,8 @@ namespace CarrotFantasy
             }
         }
 
-        /// <summary>离战斗场景：保留 ViewHost 壳，释放 AB 与 Model。</summary>
-        public void EndRound()
-        {
-            this.ShutdownSession(destroyViewHierarchy: false);
-        }
-
-        /// <summary>完全销毁 Session（换关、联机回收等）。</summary>
-        public void DestroySession()
-        {
-            this.ShutdownSession(destroyViewHierarchy: true);
-        }
-
-        void ShutdownSession(bool destroyViewHierarchy)
+        /// <summary>离关统一 teardown：UI、AB、视图组件、Model 与对象池全量清理。</summary>
+        public void Shutdown()
         {
             if (this.disposed)
             {
@@ -297,18 +286,16 @@ namespace CarrotFantasy
             this.disposed = true;
             this.runToken++;
             this.RemoveListeners();
+
+            AudioManager.Instance?.StopMusic();
+            BattleViewEffectHelper.ClearActiveBuildEffects();
+            BattleViewEffectHelper.ResetTemplates();
+
             this.assetScope.Release();
 
             if (this.view != null)
             {
-                if (destroyViewHierarchy)
-                {
-                    this.view.Dispose();
-                }
-                else
-                {
-                    this.view.ShutdownContentOnly();
-                }
+                this.view.Dispose();
             }
 
             if (this.battle != null)

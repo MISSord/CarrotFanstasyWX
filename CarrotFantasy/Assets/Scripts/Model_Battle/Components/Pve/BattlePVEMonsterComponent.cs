@@ -99,12 +99,17 @@ namespace CarrotFantasy
             {
                 monster = new BattleUnit_Monster_Pve(this.baseBattle);
             }
+            else
+            {
+                monster.baseBattle = this.baseBattle;
+            }
 
             monster.LoadInfo(
                 this.baseBattle.GetUid(),
                 config,
                 this.birthPoint);
             monster.LoadInfo2(this.battleDataComponent.bigLevel, monsterConfigId);
+            monster.eventDipatcher.RemoveListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
             monster.eventDipatcher.AddListener<BattleUnit_Monster>(BattleEvent.MONSTER_DIED, this.AddDeadList);
             monster.Init();
             monster.InitComponents();

@@ -61,6 +61,7 @@ namespace CarrotFantasy
             }
 
             this.nodeObject = new GameObject("audio_manager_node");
+            UnityEngine.Object.DontDestroyOnLoad(this.nodeObject);
 
             GameObject audio_music = new GameObject("audio_music");
             audio_music.transform.SetParent(nodeObject.transform, false);
@@ -185,29 +186,66 @@ namespace CarrotFantasy
             onLoaded?.Invoke(clip);
         }
 
+        void EnsureReady()
+        {
+            if (this.nodeObject == null || this.audioSourceMusic == null)
+            {
+                this.nodeObject = null;
+                this.audioSourceMusic = null;
+                this.audioSourceEffect = null;
+                this.Init();
+            }
+        }
+
+        static bool IsSourceAlive(AudioSource source)
+        {
+            return source != null;
+        }
+
         public void RefreshMusicActiveState()
         {
+            if (!IsSourceAlive(this.audioSourceMusic))
+            {
+                return;
+            }
+
             this.audioSourceMusic.enabled = this.musicEnable;
         }
 
         public void RefreshMusicVolume()
         {
+            if (!IsSourceAlive(this.audioSourceMusic))
+            {
+                return;
+            }
+
             this.audioSourceMusic.volume = this.musicVolume;
         }
 
         public void RefreshEffectActiveState()
         {
+            if (!IsSourceAlive(this.audioSourceEffect))
+            {
+                return;
+            }
+
             this.audioSourceEffect.enabled = this.effectEnable;
         }
 
         public void RefreshEffectVolume()
         {
+            if (!IsSourceAlive(this.audioSourceEffect))
+            {
+                return;
+            }
+
             this.audioSourceEffect.volume = this.effectVolume;
         }
 
         /// <summary>播放背景音乐（Resources）。</summary>
         public int PlayMusicByResources(String resPath, int priority = 1, Action<int> onPlaybackStarted = null)
         {
+            this.EnsureReady();
             string normalizedPath = NormalizeResPath(resPath);
             if (string.IsNullOrEmpty(normalizedPath))
             {
@@ -218,6 +256,11 @@ namespace CarrotFantasy
             int uid = ++this.musicUidSeed;
             this.LoadAudioClipByResourcesAsync(normalizedPath, clip =>
             {
+                if (!IsSourceAlive(this.audioSourceMusic))
+                {
+                    return;
+                }
+
                 if (clip == null)
                 {
                     GameLogController.Warning("音乐资源不存在: " + normalizedPath, LogTag);
@@ -236,6 +279,7 @@ namespace CarrotFantasy
         /// <summary>播放背景音乐（AssetBundle）。</summary>
         public int PlayMusicByAb(string bundleName, string assetName, int priority = 1, Action<int> onPlaybackStarted = null)
         {
+            this.EnsureReady();
             if (!IsValidAbAddress(bundleName, assetName))
             {
                 GameLogController.Warning("PlayMusicByAb 参数为空，已忽略", LogTag);
@@ -246,6 +290,11 @@ namespace CarrotFantasy
             string key = BuildAbCacheKey(bundleName, assetName);
             this.LoadAudioClipByAbAsync(bundleName, assetName, clip =>
             {
+                if (!IsSourceAlive(this.audioSourceMusic))
+                {
+                    return;
+                }
+
                 if (clip == null)
                 {
                     GameLogController.Warning("音乐资源不存在: " + key, LogTag);
@@ -263,6 +312,14 @@ namespace CarrotFantasy
 
         public void StopMusic()
         {
+            if (!IsSourceAlive(this.audioSourceMusic))
+            {
+                this.audioSourceMusic = null;
+                this.currentMusicUid = 0;
+                this.currentMusicKey = null;
+                return;
+            }
+
             this.audioSourceMusic.Stop();
             this.currentMusicUid = 0;
             this.currentMusicKey = null;
@@ -300,7 +357,7 @@ namespace CarrotFantasy
 
             this.LoadAudioClipByAbAsync(bundleName, assetName, clip =>
             {
-                if (!this.effectEnable || clip == null)
+                if (!this.effectEnable || !IsSourceAlive(this.audioSourceEffect) || clip == null)
                 {
                     onComplete?.Invoke(false);
                     return;
@@ -335,7 +392,7 @@ namespace CarrotFantasy
 
             this.LoadAudioClipByResourcesAsync(key, clip =>
             {
-                if (!this.effectEnable || clip == null)
+                if (!this.effectEnable || !IsSourceAlive(this.audioSourceEffect) || clip == null)
                 {
                     onComplete?.Invoke(false);
                     return;
@@ -364,6 +421,12 @@ namespace CarrotFantasy
 
         public void StopEffectClip()
         {
+            if (!IsSourceAlive(this.audioSourceEffect))
+            {
+                this.audioSourceEffect = null;
+                return;
+            }
+
             this.audioSourceEffect.Stop();
         }
 

@@ -42,15 +42,12 @@ namespace CarrotFantasy
         {
             Button btnNormal = this.nameTableDic["btn_normal"].GetComponent<Button>();
             Button btnBoss = this.nameTableDic["btn_boss"].GetComponent<Button>();
-            //Button btnNetwork = this.nameTableDic["btn_network"].GetComponent<Button>();
-
             Button btnExitGame = this.nameTableDic["btn_exit_game"].GetComponent<Button>();
             Button btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
             Button btnSet = this.nameTableDic["btn_set"].GetComponent<Button>();
 
             XUI.AddButtonListener(btnBoss, this.ToBossModel);
             XUI.AddButtonListener(btnNormal, this.ToNormalModel);
-            //XUI.AddButtonListener(btnNetwork, this.StartMatch);
             XUI.AddButtonListener(btnExitGame, this.ExitGame);
             XUI.AddButtonListener(btnHelp, this.ShowHelpPanel);
             XUI.AddButtonListener(btnSet, this.ShowSetPanel);
@@ -79,15 +76,7 @@ namespace CarrotFantasy
 
         public void ToBossModel()
         {
-
         }
-
-        //private void StartMatch()
-        //{
-        //    UIViewService.OpenRoomPanel();
-        //    RoomServer.Instance.SendStartMatch();
-        //    UIServer.Instance.PlayButtonEffect();
-        //}
 
         public void ExitGame()
         {

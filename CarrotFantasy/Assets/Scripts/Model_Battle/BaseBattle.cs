@@ -236,17 +236,19 @@ namespace CarrotFantasy
 
         public virtual void Dispose()
         {
-            this.stateMachine.Dispose();
-            for (int i = componentList.Count - 1; i >= 0; i--) //倒着去除
+            this.ClearGameInfo();
+            if (this.stateMachine != null)
             {
-                this.componentList[i].Dispose();
+                this.stateMachine.Dispose();
             }
-            this.componentList.Clear();
-            this.componentDic.Clear();
+
             this.RemoveListener();
             this.LaunchParams = null;
             BattleUnitPool.Instance.Dispose();
-            this.eventDispatcher.Dispose();
+            if (this.eventDispatcher != null)
+            {
+                this.eventDispatcher.Dispose();
+            }
         }
     }
 }

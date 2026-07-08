@@ -44,6 +44,7 @@ namespace CarrotFantasy
                 return;
             }
 
+            ViewManager.Instance.OpenView<MainPanel>();
             ViewManager.Instance.OpenView<MapBigLevelPanel>();
 
             if (!ViewManager.Instance.viewTypeDic.TryGetValue(typeof(MapNormalLevelPanel), out BaseView levelView))

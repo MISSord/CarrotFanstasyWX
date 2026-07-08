@@ -197,6 +197,7 @@
     <Compile Include="Assets\Scripts\Model_Battle\Components\Test\BattleTestTowerComponent.cs" />
     <Compile Include="Assets\Scripts\Business\Map\BigLevelCellView.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Session\BattleFlowLog.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleAssetScope.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\BuffConfigReader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Buff\BuffApplyContext.cs" />
     <Compile Include="Assets\Scripts\SRPScheduler.cs" />
@@ -341,7 +342,6 @@
     <Compile Include="Assets\Scripts\Server\Scene\GameSceneType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\SelectableScrollerBinder.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewEffectHelper.cs" />
-    <Compile Include="Assets\Scripts\Business\Account\Gamer.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Components\Test\BattleTestUnitSpawnComponent.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\RoguelikeMapScene.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\WechatJsBridgeSocket.cs" />
@@ -360,13 +360,13 @@
     <Compile Include="Assets\Scripts\Server\UI\AudioClipPreloader.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\IScrollerBinder.cs" />
     <Compile Include="Assets\Scripts\Util\Resource\AssetLoadManager.cs" />
+    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewResetPass.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\Vec3.cs" />
     <Compile Include="Assets\Scripts\Business\BattleParam\BattleLauncher.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Unit\Components\Move\UnitMoveComponent_GridStraight.cs" />
-    <Compile Include="Assets\Scripts\Business\Room\RoomServer.cs" />
+    <Compile Include="Assets\Scripts\Server\Scene\BattleSceneParamKeys.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\Tables.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\ConnectionBinaryFrame.cs" />
-    <Compile Include="Assets\Scripts\Business\Room\RoomEventType.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\SlideScrollView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Panel\MenuView.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewHost.cs" />
@@ -381,7 +381,6 @@
     <Compile Include="Assets\Scripts\Util\Panel\UiViewAbPaths.cs" />
     <Compile Include="Assets\Scripts\Business\Hud\DownLoadFileView.cs" />
     <Compile Include="Assets\Scripts\Business\Account\GameModeSelectGui.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Config\MapUIConfigReader.cs" />
     <Compile Include="Assets\Scripts\View_Battle\Unit\BattleUnitView.cs" />
     <Compile Include="Assets\Scripts\Business\Map\MapBigLevelPanel.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\SceneEventType.cs" />
@@ -392,6 +391,7 @@
     <Compile Include="Assets\Scripts\LubanLib\BeanBase.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\EnhancedScroller\ScrollerBinderBase.cs" />
     <Compile Include="Assets\Scripts\Util\LocalStorage\LocalStorageType.cs" />
+    <Compile Include="Assets\Scripts\Util\ViewLoader.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Common\Class\LevelInfo.cs" />
     <Compile Include="Assets\Scripts\Server\Connection\SimpleBinaryProtocolDemo.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Buff\BuffCategory.cs" />
@@ -410,10 +410,6 @@
     <Compile Include="Assets\Scripts\Hexagon\WorldMap\HexWorldMapRuntime.cs" />
     <Compile Include="Assets\Scripts\Util\Panel\UINameTable.cs" />
     <Compile Include="Assets\Scripts\Config\Luban\BuffDef.cs" />
-    <Compile Include="Assets\Scripts\Util\ViewLoader.cs" />
-    <Compile Include="Assets\Scripts\Server\Scene\BattleSceneParamKeys.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Common\BattleViewResetPass.cs" />
-    <Compile Include="Assets\Scripts\View_Battle\Common\BattleAssetScope.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Scripts\Unity.Model.asmdef" />

@@ -27,7 +27,7 @@ namespace CarrotFantasy
 
         /// <summary>
         /// 由 <see cref="BattleScene.TryBeginSession"/> 调用。
-        /// 若已有 Session 先 <see cref="DestroySession"/>，再创建新 Session 并同步执行 Run。
+        /// 若已有 Session 先 <see cref="Shutdown"/>，再创建新 Session 并同步执行 Run。
         /// </summary>
         public void BeginSession(PveModelBattleParams launchParams, BattleViewHost viewHost)
         {
@@ -45,8 +45,7 @@ namespace CarrotFantasy
 
             if (this.session != null)
             {
-                this.session.DestroySession();
-                this.session = null;
+                this.Shutdown();
             }
 
             BattleFlowLog.Step(
@@ -57,27 +56,15 @@ namespace CarrotFantasy
             this.session.Run();
         }
 
-        /// <summary>离战斗场景：保留 ViewHost 壳，释放 AB 与 Model。</summary>
-        public void EndRound()
+        /// <summary>离关统一 teardown，与场景切换 / 换关 / 联机回收共用。</summary>
+        public void Shutdown()
         {
             if (this.session == null)
             {
                 return;
             }
 
-            this.session.EndRound();
-            this.session = null;
-        }
-
-        /// <summary>完全销毁 Session（换关、联机回收等）。</summary>
-        public void DestroySession()
-        {
-            if (this.session == null)
-            {
-                return;
-            }
-
-            this.session.DestroySession();
+            this.session.Shutdown();
             this.session = null;
         }
 

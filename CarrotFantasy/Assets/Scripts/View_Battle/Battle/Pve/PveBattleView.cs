@@ -37,11 +37,5 @@ namespace CarrotFantasy
             base.ClearGameInfo();
             GameViewObjectPool.Instance.ClearGameInfo();
         }
-
-        public override void ShutdownContentOnly()
-        {
-            base.ShutdownContentOnly();
-            GameViewObjectPool.Instance.ClearGameInfo();
-        }
     }
 }

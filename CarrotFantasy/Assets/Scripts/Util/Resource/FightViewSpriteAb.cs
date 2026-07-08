@@ -32,14 +32,16 @@ namespace CarrotFantasy
             return stateIndex.ToString();
         }
 
-        public static string MapBgAssetName(int bgIndex)
+        /// <summary>关卡小地图底图：Level_{bigLevel}_{level}_BG（全局唯一，避免跨章节同名冲突）。</summary>
+        public static string MapBgAssetName(int bigLevel, int level)
         {
-            return string.Format("BG{0}", bgIndex);
+            return string.Format("Level_{0}_{1}_BG", bigLevel, level);
         }
 
-        public static string MapRoadAssetName(int roadIndex)
+        /// <summary>关卡小地图路径图：Level_{bigLevel}_{level}_Road。</summary>
+        public static string MapRoadAssetName(int bigLevel, int level)
         {
-            return string.Format("Road{0}", roadIndex);
+            return string.Format("Level_{0}_{1}_Road", bigLevel, level);
         }
 
         public static string RawImageBundle(string assetName)
@@ -70,15 +72,15 @@ namespace CarrotFantasy
                 out sprite);
         }
 
-        public static bool TryGetMapBg(int bgIndex, out UnityEngine.Sprite sprite)
+        public static bool TryGetMapBg(int bigLevel, int level, out UnityEngine.Sprite sprite)
         {
-            string assetName = MapBgAssetName(bgIndex);
+            string assetName = MapBgAssetName(bigLevel, level);
             return BattleViewSpritePreloader.TryGetSprite(RawImageBundle(assetName), assetName, out sprite);
         }
 
-        public static bool TryGetMapRoad(int roadIndex, out UnityEngine.Sprite sprite)
+        public static bool TryGetMapRoad(int bigLevel, int level, out UnityEngine.Sprite sprite)
         {
-            string assetName = MapRoadAssetName(roadIndex);
+            string assetName = MapRoadAssetName(bigLevel, level);
             return BattleViewSpritePreloader.TryGetSprite(RawImageBundle(assetName), assetName, out sprite);
         }
 

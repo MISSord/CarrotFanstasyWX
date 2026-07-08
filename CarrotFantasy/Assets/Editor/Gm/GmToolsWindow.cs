@@ -124,7 +124,6 @@ namespace CarrotFantasy.EditorTools
             EditorGUILayout.LabelField("运行状态", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Play", Application.isPlaying ? "运行中" : "未运行", GUILayout.Width(160f));
-            EditorGUILayout.LabelField("单机", StandaloneGameConfig.EnableStandaloneMode ? "开" : "关");
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();

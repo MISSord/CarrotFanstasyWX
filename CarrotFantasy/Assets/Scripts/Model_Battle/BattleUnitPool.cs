@@ -126,6 +126,8 @@ namespace CarrotFantasy
                 }
                 info.Value.Clear();
             }
+
+            battleUnitPool = null;
         }
     }
 }

@@ -252,19 +252,6 @@ namespace CarrotFantasy
             this.isStart = false;
         }
 
-        /// <summary>由 <see cref="BattleSession.EndRound"/> 调用：清组件状态，保留 BattleRoot 壳。</summary>
-        public virtual void ShutdownContentOnly()
-        {
-            for (int i = this.componentList.Count - 1; i >= 0; i--)
-            {
-                this.componentList[i].ClearGameInfo();
-            }
-
-            this.DestroySceneContentContainers();
-            this.isStart = false;
-            this.IsContentBuilt = false;
-        }
-
         public virtual void Dispose()
         {
             this.RemoveListener();
