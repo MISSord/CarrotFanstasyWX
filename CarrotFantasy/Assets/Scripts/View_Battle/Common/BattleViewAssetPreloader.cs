@@ -38,12 +38,18 @@ namespace CarrotFantasy
                     return;
                 }
 
-                if (anyFailed || !HasCriticalAssets())
+                if (!HasCriticalAssets())
                 {
                     ReportCriticalMissing();
                     BattleFlowLog.Abort("2/4 预加载", "资源未全部就绪");
                     onFailure?.Invoke();
                     return;
+                }
+
+                if (anyFailed)
+                {
+                    Debug.LogWarning(
+                        "[BattleViewAssetPreloader] 部分非关键战斗资源未加载成功，已满足进关条件，详见 Prefab/Sprite Preloader 失败列表。");
                 }
 
                 BattleFlowLog.Step("2/4 预加载全部完成");
@@ -107,6 +113,8 @@ namespace CarrotFantasy
 
             Sprite gridSprite;
             bool hasGridSprite = FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridNormal, out gridSprite);
+            bool hasGridStart = FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridStart, out gridSprite);
+            bool hasGridCantBuild = FightViewSpriteAb.TryGetNormalMordel(FightViewSpriteAb.GridCantBuild, out gridSprite);
 
             GameObject hpSliderTemplate;
             bool hasHpSlider = BattleViewPrefabPreloader.TryGetTemplate(
@@ -120,7 +128,7 @@ namespace CarrotFantasy
                 FightViewPrefabAb.DamageFloatText,
                 out damageFloatTemplate);
 
-            if (hasGridPrefab && hasGridSprite && hasHpSlider && hasDamageFloat)
+            if (hasGridPrefab && hasGridSprite && hasGridStart && hasGridCantBuild && hasHpSlider && hasDamageFloat)
             {
                 return;
             }
@@ -129,6 +137,8 @@ namespace CarrotFantasy
                 "预加载关键资源检查",
                 (hasGridPrefab ? string.Empty : "GridPrefab=缺失 ") +
                 (hasGridSprite ? string.Empty : "GridSprite=缺失 ") +
+                (hasGridStart ? string.Empty : "GridStart=缺失 ") +
+                (hasGridCantBuild ? string.Empty : "GridCantBuild=缺失 ") +
                 (hasHpSlider ? string.Empty : "HPSlider=缺失 ") +
                 (hasDamageFloat ? string.Empty : "DamageFloatText=缺失") +
                 "（详见 Prefab/Sprite Preloader 失败列表）");

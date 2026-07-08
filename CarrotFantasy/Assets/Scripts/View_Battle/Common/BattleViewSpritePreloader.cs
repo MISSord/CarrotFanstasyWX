@@ -23,8 +23,15 @@ namespace CarrotFantasy
             public bool RuntimeCreated;
         }
 
+        struct TrackedHandle
+        {
+            public string Bundle;
+            public AssetLoadHandle Handle;
+        }
+
         static readonly Dictionary<string, CachedSprite> Sprites = new Dictionary<string, CachedSprite>(StringComparer.Ordinal);
-        static readonly List<AssetLoadHandle> Handles = new List<AssetLoadHandle>();
+        static readonly List<TrackedHandle> Handles = new List<TrackedHandle>();
+        static int preloadGeneration;
 
         public static bool IsReady { get; private set; }
 
@@ -54,8 +61,31 @@ namespace CarrotFantasy
                 100f);
         }
 
+        static bool IsSpriteAlive(Sprite sprite)
+        {
+            return sprite != null;
+        }
+
+        /// <summary>通用图集跨局保留，避免离关 Unload 后下一关并发重载失败。</summary>
+        static bool IsPersistentSpriteBundle(string bundleName)
+        {
+            if (string.IsNullOrEmpty(bundleName))
+            {
+                return false;
+            }
+
+            if (string.Equals(bundleName, FightViewSpriteAb.NormalMordelAtlas, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(bundleName, FightViewSpriteAb.CarrotAtlas, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return bundleName.StartsWith("ui/images/tower/", StringComparison.OrdinalIgnoreCase);
+        }
+
         public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
+            int generation = ++preloadGeneration;
             List<SpriteRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
@@ -79,13 +109,13 @@ namespace CarrotFantasy
                 SpriteRequest req = requests[i];
                 string key = MakeKey(req.Bundle, req.Asset);
                 CachedSprite cached;
-                if (Sprites.TryGetValue(key, out cached))
+                if (Sprites.TryGetValue(key, out cached) && IsSpriteAlive(cached.Sprite))
                 {
-                    if (cached.Sprite != null)
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
+                if (cached.Sprite != null)
+                {
                     Sprites.Remove(key);
                 }
 
@@ -100,6 +130,11 @@ namespace CarrotFantasy
                         req.Asset,
                         texture =>
                         {
+                            if (generation != preloadGeneration)
+                            {
+                                return;
+                            }
+
                             Sprite sprite = CreateSpriteFromTexture(texture);
                             if (sprite != null)
                             {
@@ -121,6 +156,11 @@ namespace CarrotFantasy
                         req.Asset,
                         sprite =>
                         {
+                            if (generation != preloadGeneration)
+                            {
+                                return;
+                            }
+
                             if (sprite != null)
                             {
                                 Sprites[key] = new CachedSprite
@@ -137,7 +177,11 @@ namespace CarrotFantasy
 
                 if (handle.IsValid)
                 {
-                    Handles.Add(handle);
+                    Handles.Add(new TrackedHandle
+                    {
+                        Bundle = req.Bundle,
+                        Handle = handle,
+                    });
                 }
                 else
                 {
@@ -176,22 +220,56 @@ namespace CarrotFantasy
         public static void Clear()
         {
             IsReady = false;
-            for (int i = 0; i < Handles.Count; i++)
-            {
-                Handles[i].Dispose();
-            }
-            Handles.Clear();
+            preloadGeneration++;
 
+            for (int i = Handles.Count - 1; i >= 0; i--)
+            {
+                TrackedHandle tracked = Handles[i];
+                if (IsPersistentSpriteBundle(tracked.Bundle))
+                {
+                    continue;
+                }
+
+                tracked.Handle.Dispose();
+                Handles.RemoveAt(i);
+            }
+
+            List<string> removeKeys = null;
             foreach (KeyValuePair<string, CachedSprite> pair in Sprites)
             {
+                string bundleName = pair.Key;
+                int sep = bundleName.IndexOf('|');
+                if (sep > 0)
+                {
+                    bundleName = bundleName.Substring(0, sep);
+                }
+
+                if (IsPersistentSpriteBundle(bundleName))
+                {
+                    continue;
+                }
+
                 CachedSprite entry = pair.Value;
                 if (entry.RuntimeCreated && entry.Sprite != null)
                 {
                     UnityEngine.Object.Destroy(entry.Sprite);
                 }
+
+                if (removeKeys == null)
+                {
+                    removeKeys = new List<string>();
+                }
+
+                removeKeys.Add(pair.Key);
             }
 
-            Sprites.Clear();
+            if (removeKeys != null)
+            {
+                for (int i = 0; i < removeKeys.Count; i++)
+                {
+                    Sprites.Remove(removeKeys[i]);
+                }
+            }
         }
 
         static List<SpriteRequest> BuildRequests(BaseBattle battle)

@@ -4,6 +4,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// Session 级战斗视图 AB 作用域：首次 EnsureLoaded 加载，同 Session 重开复用，Shutdown 时 Release。
+    /// 公共 Prefab/图集跨局保留；关卡 RawImage、塔/子弹/道具预制体按关释放。
     /// </summary>
     public sealed class BattleAssetScope
     {

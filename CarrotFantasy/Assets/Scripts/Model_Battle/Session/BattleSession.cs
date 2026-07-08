@@ -71,7 +71,7 @@ namespace CarrotFantasy
             }
 
             AudioClipPreloader.RunBattleDefaults(null);
-            AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
+            AudioManager.Instance.PlayBattleBgm();
 
             this.ExecutePipeline(BattleRunIntent.Enter, this.runToken);
         }

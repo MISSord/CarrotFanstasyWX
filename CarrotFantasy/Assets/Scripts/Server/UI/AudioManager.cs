@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace CarrotFantasy
 {
@@ -240,6 +243,18 @@ namespace CarrotFantasy
             }
 
             this.audioSourceEffect.volume = this.effectVolume;
+        }
+
+        /// <summary>播放战斗 BGM；Editor 测试模式走 AB，其余走 Resources。</summary>
+        public int PlayBattleBgm(int priority = 1, Action<int> onPlaybackStarted = null)
+        {
+#if UNITY_EDITOR
+            if ((LoadMode)EditorPrefs.GetInt("GameLoadMode", 0) == LoadMode.Testing)
+            {
+                return this.PlayMusicByAb("audioclips/normalmordel_prefab", "BGMusic", priority, onPlaybackStarted);
+            }
+#endif
+            return this.PlayMusicByResources("AudioClips/NormalMordel/BGMusic", priority, onPlaybackStarted);
         }
 
         /// <summary>播放背景音乐（Resources）。</summary>

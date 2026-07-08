@@ -4,7 +4,10 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    /// <summary>战斗视图预制体异步预加载</summary>
+    /// <summary>
+    /// 战斗视图预制体异步预加载。
+    /// 公共包（fightpart_prefab、fightview）跨局保留；塔/子弹/道具按关加载并在离关时释放。
+    /// </summary>
     public static class BattleViewPrefabPreloader
     {
         struct PrefabRequest
@@ -13,8 +16,15 @@ namespace CarrotFantasy
             public string Asset;
         }
 
+        struct TrackedHandle
+        {
+            public string Bundle;
+            public AssetLoadHandle Handle;
+        }
+
         static readonly Dictionary<string, GameObject> Templates = new Dictionary<string, GameObject>(StringComparer.Ordinal);
-        static readonly List<AssetLoadHandle> Handles = new List<AssetLoadHandle>();
+        static readonly List<TrackedHandle> Handles = new List<TrackedHandle>();
+        static int preloadGeneration;
 
         public static bool IsReady { get; private set; }
 
@@ -28,8 +38,32 @@ namespace CarrotFantasy
             return template != null;
         }
 
+        /// <summary>全关卡共用的战斗预制体包，离关时不 Unload。</summary>
+        static bool IsPersistentPrefabBundle(string bundleName)
+        {
+            if (string.IsNullOrEmpty(bundleName))
+            {
+                return false;
+            }
+
+            return string.Equals(bundleName, FightViewPrefabAb.FightPartBundle, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(bundleName, FightViewPrefabAb.FightViewBundle, StringComparison.OrdinalIgnoreCase);
+        }
+
+        static string GetBundleNameFromTemplateKey(string templateKey)
+        {
+            if (string.IsNullOrEmpty(templateKey))
+            {
+                return string.Empty;
+            }
+
+            int sep = templateKey.IndexOf('|');
+            return sep > 0 ? templateKey.Substring(0, sep) : templateKey;
+        }
+
         public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
+            int generation = ++preloadGeneration;
             List<PrefabRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
@@ -53,23 +87,29 @@ namespace CarrotFantasy
                 PrefabRequest req = requests[i];
                 string key = MakeKey(req.Bundle, req.Asset);
                 GameObject cached;
-                if (Templates.TryGetValue(key, out cached))
+                if (Templates.TryGetValue(key, out cached) && IsTemplateAlive(cached))
                 {
-                    if (IsTemplateAlive(cached))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
+                if (cached != null)
+                {
                     Templates.Remove(key);
                 }
 
                 wait.Track(req.Bundle, req.Asset);
                 trackedCount++;
+
                 AssetLoadHandle handle = GameObjectResourceManager.Instance.LoadPrefab(
                     req.Bundle,
                     req.Asset,
                     go =>
                     {
+                        if (generation != preloadGeneration)
+                        {
+                            return;
+                        }
+
                         if (go != null)
                         {
                             Templates[key] = go;
@@ -81,7 +121,11 @@ namespace CarrotFantasy
 
                 if (handle.IsValid)
                 {
-                    Handles.Add(handle);
+                    Handles.Add(new TrackedHandle
+                    {
+                        Bundle = req.Bundle,
+                        Handle = handle,
+                    });
                 }
                 else
                 {
@@ -120,12 +164,43 @@ namespace CarrotFantasy
         public static void Clear()
         {
             IsReady = false;
-            for (int i = 0; i < Handles.Count; i++)
+            preloadGeneration++;
+
+            for (int i = Handles.Count - 1; i >= 0; i--)
             {
-                Handles[i].Dispose();
+                TrackedHandle tracked = Handles[i];
+                if (IsPersistentPrefabBundle(tracked.Bundle))
+                {
+                    continue;
+                }
+
+                tracked.Handle.Dispose();
+                Handles.RemoveAt(i);
             }
-            Handles.Clear();
-            Templates.Clear();
+
+            List<string> removeKeys = null;
+            foreach (KeyValuePair<string, GameObject> pair in Templates)
+            {
+                if (IsPersistentPrefabBundle(GetBundleNameFromTemplateKey(pair.Key)))
+                {
+                    continue;
+                }
+
+                if (removeKeys == null)
+                {
+                    removeKeys = new List<string>();
+                }
+
+                removeKeys.Add(pair.Key);
+            }
+
+            if (removeKeys != null)
+            {
+                for (int i = 0; i < removeKeys.Count; i++)
+                {
+                    Templates.Remove(removeKeys[i]);
+                }
+            }
         }
 
         static List<PrefabRequest> BuildRequests(BaseBattle battle)
