@@ -36,7 +36,20 @@ public static class AssetBundlePathHelper
     public static string GetLocalLZ4Path(string bundleName)
     {
         string normalizedBundleName = GetBundleFileName(bundleName).Replace('\\', '/');
-        return Path.Combine(Application.persistentDataPath, localSavePath, normalizedBundleName);
+        return Path.Combine(GetPersistentDownloadDirectory(), normalizedBundleName);
+    }
+
+    /// <summary>PC / 运行时 AB 热更下载目录（persistentDataPath/DownloadedAssetBundles）。</summary>
+    public static string GetPersistentDownloadDirectory()
+    {
+        Initialize();
+        return Path.Combine(Application.persistentDataPath, localSavePath);
+    }
+
+    /// <summary>本地缓存的 custom_manifest.json 路径。</summary>
+    public static string GetPersistentManifestPath()
+    {
+        return Path.Combine(Application.persistentDataPath, "custom_manifest.json");
     }
 
     /// <summary>

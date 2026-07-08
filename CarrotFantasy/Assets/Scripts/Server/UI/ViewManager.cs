@@ -187,6 +187,26 @@ public class ViewManager
         OpenView(typeof(T));
     }
 
+    public void CloseView<T>() where T : BaseView
+    {
+        CloseView(typeof(T));
+    }
+
+    public void CloseView(Type viewType)
+    {
+        if (viewType == null || !typeof(BaseView).IsAssignableFrom(viewType))
+        {
+            return;
+        }
+
+        if (viewTypeDic.TryGetValue(viewType, out BaseView view) == false)
+        {
+            return;
+        }
+
+        view.Close();
+    }
+
     public void FlushView(string name, int index, string key, string value)
     {
         if (viewDic.TryGetValue(name, out BaseView view))
@@ -214,27 +234,18 @@ public class ViewManager
         RefreshViewStackPauseState();
     }
 
-    /// <summary> 关闭所有仍处于打开状态（isOpen）的 View，自栈顶向下依次关闭。 </summary>
+    /// <summary>关闭所有 isOpen 的 View（延迟 Release）。用于非战斗场景切换等路径。</summary>
     public void CloseAllOpenViews()
     {
-        if (viewList == null) return;
-        var ordered = new List<BaseView>(32);
-        for (int i = (int)UILayer.Normal; i <= (int)UILayer.Max; ++i)
-        {
-            List<BaseView> list = viewList[(UILayer)i];
-            for (int j = 0; j < list.Count; ++j)
-            {
-                BaseView v = list[j];
-                if (v != null && v.GetIsOpen()) ordered.Add(v);
-            }
-        }
-        for (int k = ordered.Count - 1; k >= 0; k--)
-        {
-            ordered[k].Close();
-        }
+        this.CloseAllOpenViewsCore();
     }
 
     public void CloseAllPanel(int closeReason, BaseSceneType nextSceneType)
+    {
+        this.CloseAllOpenViewsCore();
+    }
+
+    void CloseAllOpenViewsCore()
     {
         if (viewList == null)
         {

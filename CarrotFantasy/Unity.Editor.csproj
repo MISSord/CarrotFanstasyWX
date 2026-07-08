@@ -70,21 +70,26 @@
     <Compile Include="Assets\Editor\Helper\EditorResHelper.cs" />
     <Compile Include="Assets\Editor\ImageSlicer.cs" />
     <Compile Include="Assets\Editor\BuildEditor\CustomManifestBuilderWindow.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AssetBundleCloudUploader.cs" />
     <Compile Include="Assets\Editor\UINameEntryDrawer.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\FbxToPrefabProcessor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildSettings.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildPipeline.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\AnimationClipExtractor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabABPathPostprocessor.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AssetBundleDeploySettings.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabUIImageLoaderAutoBinder.cs" />
     <Compile Include="Assets\Editor\HexWorld\HexWorldMapSampleCreator.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AtlasPackager.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
     <Compile Include="Assets\Editor\HexWorld\HexWorldMapEditorInspector.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AssetBundlePathMenu.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />
+    <None Include="Assets\Editor\ThirdParty\SshNet\SshNet.Security.Cryptography.dll" />
+    <None Include="Assets\Editor\ThirdParty\SshNet\Renci.SshNet.dll" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
@@ -431,6 +436,10 @@
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Renci.SshNet">
+      <HintPath>Assets\Editor\ThirdParty\SshNet\Renci.SshNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Google.Protobuf">
       <HintPath>Assets\Plugins\Google.Protobuf\Google.Protobuf.dll</HintPath>
       <Private>False</Private>
@@ -469,6 +478,10 @@
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Tracker.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SshNet.Security.Cryptography">
+      <HintPath>Assets\Editor\ThirdParty\SshNet\SshNet.Security.Cryptography.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DOTween">

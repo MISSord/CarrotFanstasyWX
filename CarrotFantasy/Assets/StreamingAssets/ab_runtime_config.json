@@ -1,4 +1,4 @@
 {
-    "serverDownloadUrlTemplate": "file:///D:/Work/CarrotFantasyWX/CarrotFantasy/Build/AssetBundles/{0}",
+    "serverDownloadUrlTemplate": "http://124.222.203.161/ab/{0}",
     "localSavePath": "DownloadedAssetBundles"
 }

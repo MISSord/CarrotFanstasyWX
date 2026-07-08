@@ -43,14 +43,28 @@ namespace CarrotFantasy
             return currentScene;
         }
 
-        private void RemoveScene()
+        /// <summary>
+        /// 卸载当前逻辑场景（切场景 / 退出游戏唯一入口）。
+        /// 战斗离关：BattleScene.Dispose → BattleSessionHost.Shutdown → BattleSession.Shutdown（不再经 CloseAllPanel 关战斗 UI）。
+        /// 非战斗离场景：CloseAllPanel → BaseScene.Dispose。
+        /// </summary>
+        public void TeardownCurrentScene()
+        {
+            this.RemoveScene();
+        }
+
+        void RemoveScene()
         {
             if (this.currentScene == null)
             {
                 return;
             }
 
-            ViewManager.Instance.CloseAllPanel(PanelCloseReasonType.SCENE_CHANGE, this.currentScene.sceneType);
+            if (this.currentScene.sceneType != BaseSceneType.BattleScene)
+            {
+                ViewManager.Instance.CloseAllPanel(PanelCloseReasonType.SCENE_CHANGE, this.currentScene.sceneType);
+            }
+
             ViewManager.Instance.SetShowPanelActive(false);
             this.currentScene.Dispose();
             this.currentScene = null;
@@ -304,6 +318,7 @@ namespace CarrotFantasy
 
         public void Dispose()
         {
+            this.TeardownCurrentScene();
         }
     }
 }

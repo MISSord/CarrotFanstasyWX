@@ -1,6 +1,11 @@
 namespace CarrotFantasy
 {
-    /// <summary>DDOL 战斗会话宿主：持有 Session、转发 Tick；不依赖 MonoBehaviour 生命周期。</summary>
+    /// <summary>
+    /// DDOL 战斗会话宿主：持有 Session、转发 Tick；不依赖 MonoBehaviour 生命周期。
+    /// <para>离关 teardown 单链路：SceneServer.LoadScene/TeardownCurrentScene → BattleScene.Dispose → <see cref="Shutdown"/>。</para>
+    /// <para>同关重开：<see cref="BattleSession.Restart"/>（仅关叠层 UI，不 Shutdown）。</para>
+    /// <para><see cref="BeginSession"/> 内若残留 Session 会先 Shutdown（换关兜底，正常切场景已在 Dispose 清掉）。</para>
+    /// </summary>
     public sealed class BattleSessionHost
     {
         BattleSession session;
@@ -56,7 +61,7 @@ namespace CarrotFantasy
             this.session.Run();
         }
 
-        /// <summary>离关统一 teardown，与场景切换 / 换关 / 联机回收共用。</summary>
+        /// <summary>离关 teardown；由 <see cref="BattleScene.Dispose"/> 或 <see cref="BeginSession"/> 换关兜底调用。</summary>
         public void Shutdown()
         {
             if (this.session == null)

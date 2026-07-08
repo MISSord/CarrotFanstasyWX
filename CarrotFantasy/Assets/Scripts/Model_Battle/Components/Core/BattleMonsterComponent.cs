@@ -182,7 +182,13 @@ namespace CarrotFantasy
                 return;
             }
 
-            BattleSchedulerComponent sche = (BattleSchedulerComponent)this.baseBattle.GetComponent(BattleComponentType.SchedulerComponent);
+            BattleSchedulerComponent sche = this.baseBattle.GetComponent(BattleComponentType.SchedulerComponent) as BattleSchedulerComponent;
+            if (sche == null)
+            {
+                this.scheId = 0;
+                return;
+            }
+
             sche.SilenceSingleSche(this.scheId);
             this.scheId = 0;
         }

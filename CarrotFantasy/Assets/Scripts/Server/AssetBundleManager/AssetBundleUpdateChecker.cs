@@ -617,7 +617,7 @@ public class AssetBundleUpdateChecker
     }
 
 #if UNITY_EDITOR
-    /// <summary>Editor 测试模式：启动时预加载本地清单，供 UIServer / StartLoadPanel 使用。</summary>
+    /// <summary>Editor 测试模式：启动时预加载本地清单。</summary>
     public static bool TryApplyLocalManifestForStartup()
     {
         LoadMode loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);

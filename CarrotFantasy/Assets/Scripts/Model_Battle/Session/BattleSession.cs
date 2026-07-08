@@ -101,7 +101,7 @@ namespace CarrotFantasy
 
             if (intent == BattleRunIntent.Replay)
             {
-                ViewManager.Instance?.CloseAllOpenViews();
+                BattleViewOpener.CloseOverlayBattleViews();
                 this.view.ResetRound(this.ResetModelForReplay);
                 GameViewObjectPool.Instance.PrepareForReplay();
 
@@ -273,7 +273,7 @@ namespace CarrotFantasy
             }
         }
 
-        /// <summary>离关统一 teardown：UI、AB、视图组件、Model 与对象池全量清理。</summary>
+        /// <summary>离关统一 teardown（单链路）：战斗 UI → AB → 视图组件 → Model → 对象池。</summary>
         public void Shutdown()
         {
             if (this.disposed)
@@ -281,8 +281,6 @@ namespace CarrotFantasy
                 return;
             }
 
-            ViewManager.Instance?.CloseAllOpenViews();
-            BattleViewOpener.ForceReleaseAllBattleViews();
             this.disposed = true;
             this.runToken++;
             this.RemoveListeners();
@@ -290,6 +288,8 @@ namespace CarrotFantasy
             AudioManager.Instance?.StopMusic();
             BattleViewEffectHelper.ClearActiveBuildEffects();
             BattleViewEffectHelper.ResetTemplates();
+
+            BattleViewOpener.ReleaseAllBattleViews();
 
             this.assetScope.Release();
 

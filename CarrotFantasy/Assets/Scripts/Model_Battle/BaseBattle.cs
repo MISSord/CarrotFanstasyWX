@@ -111,10 +111,11 @@ namespace CarrotFantasy
 
         public BaseBattleComponent GetComponent(String type)
         {
-            if (type != null)
+            if (type != null && componentDic.TryGetValue(type, out BaseBattleComponent component))
             {
-                return componentDic[type];
+                return component;
             }
+
             return null;
         }
 
@@ -192,7 +193,11 @@ namespace CarrotFantasy
 
         public virtual void ClearGameInfo()
         {
-            this.stateMachine.ClearGameInfo();
+            if (this.stateMachine != null)
+            {
+                this.stateMachine.ClearGameInfo();
+            }
+
             for (int i = componentList.Count - 1; i >= 0; i--)
             {
                 this.componentList[i].ClearInfo();

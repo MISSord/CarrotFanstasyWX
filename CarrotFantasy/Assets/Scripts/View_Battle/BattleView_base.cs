@@ -213,7 +213,13 @@ namespace CarrotFantasy
 
         public BaseBattleViewComponent GetComponent(String type)
         {
-            return this.componentDic[type];
+            BaseBattleViewComponent component;
+            if (this.componentDic.TryGetValue(type, out component))
+            {
+                return component;
+            }
+
+            return null;
         }
 
         public void OnTick(float time)

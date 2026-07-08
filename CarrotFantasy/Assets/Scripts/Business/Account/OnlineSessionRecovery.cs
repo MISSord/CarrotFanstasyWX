@@ -7,8 +7,6 @@ namespace CarrotFantasy
     {
         public static void ReturnToOnlineLogin(string message)
         {
-            ServerProvision.battleSessionHost?.Shutdown();
-
             MapServer mapServer = MapServer.Instance;
             if (mapServer != null)
             {
@@ -20,12 +18,21 @@ namespace CarrotFantasy
                 && sceneServer.GetCurScene() != null
                 && sceneServer.GetCurScene().sceneType != BaseSceneType.MainScene)
             {
+                // LoadScene → RemoveScene → BattleScene.Dispose → Shutdown，不在此先行 Shutdown。
                 sceneServer.LoadScene(BaseSceneType.MainScene, null, _ => ShowLoginGui(message));
                 return;
             }
 
-            ViewManager.Instance?.CloseAllOpenViews();
+            ClearStaleBattleSessionIfAny();
             ShowLoginGui(message);
+        }
+
+        static void ClearStaleBattleSessionIfAny()
+        {
+            if (ServerProvision.battleSessionHost?.HasActiveSession == true)
+            {
+                ServerProvision.battleSessionHost.Shutdown();
+            }
         }
 
         static void ShowLoginGui(string message)

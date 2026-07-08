@@ -98,6 +98,7 @@ namespace CarrotFantasy
             int rootId = this.gameObj != null ? this.gameObj.GetInstanceID() : 0;
             Debug.LogWarning("[BattleScene] Dispose: BattleRoot#" + rootId);
 
+            // 战斗离关单链路：Shutdown 释放战斗 UI / Model / View，SceneServer 不再 CloseAllPanel 战斗 View。
             ServerProvision.battleSessionHost?.Shutdown();
 
             if (this.listenerAdded)

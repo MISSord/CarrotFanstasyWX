@@ -16,8 +16,8 @@ namespace CarrotFantasy
         public const string TipViewPrefab = "ui/view/tipview_prefab";
         public const string TipPanelAsset = "TipPanel";
 
-        /// <summary>入口 Loading 面板所在 AB（需在编辑器中为对应预制体指定该 bundle）。</summary>
-        public const string StartLoadPanelBundle = "ui/view/startload_prefab";
+        /// <summary>入口 Loading 面板 Resources 路径（Assets/Resources/StartLoadPanel.prefab）。</summary>
+        public const string StartLoadPanelResource = "StartLoadPanel";
         public const string StartLoadPanelAsset = "StartLoadPanel";
         public const string MapNodeTowerAsset = "TowerNode";
     }

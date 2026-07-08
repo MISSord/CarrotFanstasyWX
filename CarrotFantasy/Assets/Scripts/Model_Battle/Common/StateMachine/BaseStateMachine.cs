@@ -80,17 +80,24 @@ namespace CarrotFantasy
             if (this.currentState != null)
             {
                 this.currentState.StateOut();
+                this.currentState = null;
             }
+
             foreach (KeyValuePair<String, BaseBattleState> stateInfo in stateDic)
             {
                 stateInfo.Value.Dispose();
             }
+
             this.stateDic.Clear();
         }
 
         public void Dispose()
         {
-            this.ClearGameInfo();
+            if (this.currentState != null || this.stateDic.Count > 0)
+            {
+                this.ClearGameInfo();
+            }
+
             this.eventDispatcher = null;
         }
     }

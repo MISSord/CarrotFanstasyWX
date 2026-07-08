@@ -16,13 +16,23 @@ public class ABPackagerWindow : EditorWindow
 
     private Vector2 scrollPosition;
     private bool showAdvancedSettings;
+    private bool showDeploySettings;
     private CustomManifest generatedManifest;
+
+    private string deployHost;
+    private int deployPort;
+    private string deployUser;
+    private string deployPassword;
+    private string deployRemotePath;
+    private bool deployUsePrivateKey;
+    private string deployPrivateKeyPath;
+    private bool promptUploadAfterBuild;
 
     [MenuItem("Tools/打开AssetBundle打包窗口")]
     public static void ShowWindow()
     {
         ABPackagerWindow window = GetWindow<ABPackagerWindow>("AB Packager");
-        window.minSize = new Vector2(420, 520);
+        window.minSize = new Vector2(420, 640);
         window.LoadFromSettings();
         window.Show();
     }
@@ -35,6 +45,31 @@ public class ABPackagerWindow : EditorWindow
         cdnUrlTemplate = AssetBundleBuildSettings.GetCdnUrlTemplate();
         lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(outputPath, buildTarget);
         curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(outputPath, buildTarget);
+        LoadDeploySettings();
+    }
+
+    void LoadDeploySettings()
+    {
+        deployHost = AssetBundleDeploySettings.Host;
+        deployPort = AssetBundleDeploySettings.Port;
+        deployUser = AssetBundleDeploySettings.User;
+        deployPassword = AssetBundleDeploySettings.Password;
+        deployRemotePath = AssetBundleDeploySettings.RemotePath;
+        deployUsePrivateKey = AssetBundleDeploySettings.UsePrivateKey;
+        deployPrivateKeyPath = AssetBundleDeploySettings.PrivateKeyPath;
+        promptUploadAfterBuild = AssetBundleDeploySettings.PromptUploadAfterBuild;
+    }
+
+    void SaveDeploySettings()
+    {
+        AssetBundleDeploySettings.Host = deployHost;
+        AssetBundleDeploySettings.Port = deployPort;
+        AssetBundleDeploySettings.User = deployUser;
+        AssetBundleDeploySettings.Password = deployPassword;
+        AssetBundleDeploySettings.RemotePath = deployRemotePath;
+        AssetBundleDeploySettings.UsePrivateKey = deployUsePrivateKey;
+        AssetBundleDeploySettings.PrivateKeyPath = deployPrivateKeyPath;
+        AssetBundleDeploySettings.PromptUploadAfterBuild = promptUploadAfterBuild;
     }
 
     void OnDestroy()
@@ -43,6 +78,7 @@ public class ABPackagerWindow : EditorWindow
         AssetBundleBuildSettings.SetBuildTarget(buildTarget);
         AssetBundleBuildSettings.SetCompressionType(compressionType);
         AssetBundleBuildSettings.SetCdnUrlTemplate(cdnUrlTemplate);
+        SaveDeploySettings();
     }
 
     void OnGUI()
@@ -119,6 +155,8 @@ public class ABPackagerWindow : EditorWindow
         copyToStreamingAssets = EditorGUILayout.Toggle("拷贝到 StreamingAssets", copyToStreamingAssets);
         packAtlasesBeforeBuild = EditorGUILayout.Toggle("构建前打包 UI 图集", packAtlasesBeforeBuild);
 
+        DrawDeploySettings();
+
         showAdvancedSettings = EditorGUILayout.Foldout(showAdvancedSettings, "高级设置");
         if (showAdvancedSettings)
         {
@@ -149,10 +187,65 @@ public class ABPackagerWindow : EditorWindow
                 AssetBundleBuildSettings.WriteRuntimeConfig(buildTarget);
             }
 
+            if (GUILayout.Button("测试上传当前平台目录"))
+            {
+                SaveDeploySettings();
+                TryUploadPlatformBundle(GetCurrentPlatformBundlePath());
+            }
+
             EditorGUI.indentLevel--;
         }
 
         EditorGUILayout.EndScrollView();
+    }
+
+    void DrawDeploySettings()
+    {
+        showDeploySettings = EditorGUILayout.Foldout(showDeploySettings, "云服务器上传 (SFTP)");
+        if (!showDeploySettings)
+        {
+            return;
+        }
+
+        EditorGUI.indentLevel++;
+        EditorGUILayout.HelpBox("打包成功后可一键上传到 Nginx 静态目录。默认目标为腾讯云 124.222.203.161。", MessageType.Info);
+
+        deployHost = EditorGUILayout.TextField("服务器地址", deployHost);
+        deployPort = EditorGUILayout.IntField("SSH 端口", deployPort);
+        deployUser = EditorGUILayout.TextField("用户名", deployUser);
+        deployRemotePath = EditorGUILayout.TextField("远程目录", deployRemotePath);
+        promptUploadAfterBuild = EditorGUILayout.Toggle("打包完成后询问上传", promptUploadAfterBuild);
+
+        deployUsePrivateKey = EditorGUILayout.Toggle("使用私钥登录", deployUsePrivateKey);
+        if (deployUsePrivateKey)
+        {
+            EditorGUILayout.BeginHorizontal();
+            deployPrivateKeyPath = EditorGUILayout.TextField("私钥路径", deployPrivateKeyPath);
+            if (GUILayout.Button("浏览", GUILayout.Width(60)))
+            {
+                string picked = EditorUtility.OpenFilePanel("选择 SSH 私钥", string.Empty, string.Empty);
+                if (!string.IsNullOrEmpty(picked))
+                {
+                    deployPrivateKeyPath = picked;
+                }
+            }
+            EditorGUILayout.EndHorizontal();
+            deployPassword = EditorGUILayout.PasswordField("私钥口令(可选)", deployPassword);
+        }
+        else
+        {
+            deployPassword = EditorGUILayout.PasswordField("SSH 密码", deployPassword);
+        }
+
+        EditorGUILayout.HelpBox("远程目录示例: /var/www/carrotfantasy/ab/StandaloneWindows", MessageType.None);
+        EditorGUI.indentLevel--;
+    }
+
+    string GetCurrentPlatformBundlePath()
+    {
+        return Path.Combine(
+            Path.GetFullPath(Path.Combine(Application.dataPath, "..", outputPath)),
+            AssetBundlePackager.GetPlatformFolder(buildTarget));
     }
 
     void DrawActions()
@@ -209,5 +302,71 @@ public class ABPackagerWindow : EditorWindow
             "确定");
 
         CustomManifestBuilderWindow.ShowWindow(generatedManifest);
+        SaveDeploySettings();
+
+        if (promptUploadAfterBuild
+            && EditorUtility.DisplayDialog(
+                "上传云端",
+                "AssetBundle 已打包完成。\n是否立即上传到云服务器？\n\n"
+                    + deployHost + ":" + deployRemotePath,
+                "上传",
+                "稍后"))
+        {
+            TryUploadPlatformBundle(result.PlatformBundlePath);
+        }
+    }
+
+    void TryUploadPlatformBundle(string platformBundlePath)
+    {
+        if (string.IsNullOrEmpty(platformBundlePath) || !Directory.Exists(platformBundlePath))
+        {
+            EditorUtility.DisplayDialog("上传失败", "平台输出目录不存在:\n" + platformBundlePath, "确定");
+            return;
+        }
+
+        if (!AssetBundleDeploySettings.TryValidate(out string validationError))
+        {
+            EditorUtility.DisplayDialog("上传失败", validationError, "确定");
+            return;
+        }
+
+        AssetBundleCloudUploadResult uploadResult = AssetBundleCloudUploader.UploadDirectory(platformBundlePath);
+        if (uploadResult.Cancelled)
+        {
+            EditorUtility.DisplayDialog(
+                "上传已取消",
+                string.Format("已上传 {0} 个文件。", uploadResult.UploadedFileCount),
+                "确定");
+            return;
+        }
+
+        if (!uploadResult.Success)
+        {
+            EditorUtility.DisplayDialog("上传失败", uploadResult.Message, "确定");
+            return;
+        }
+
+        EditorUtility.DisplayDialog(
+            "上传完成",
+            uploadResult.Message
+                + "\n\n服务器: " + deployHost
+                + "\n目录: " + deployRemotePath
+                + "\n\n可访问:\n"
+                + BuildManifestVerifyUrl(),
+            "确定");
+    }
+
+    string BuildManifestVerifyUrl()
+    {
+        string template = string.IsNullOrEmpty(cdnUrlTemplate)
+            ? AssetBundleBuildSettings.GetCdnUrlTemplate()
+            : cdnUrlTemplate;
+        if (string.IsNullOrEmpty(template))
+        {
+            return "(请先在 CDN URL 模板中配置 http 地址)";
+        }
+
+        string platformFolder = AssetBundlePackager.GetPlatformFolder(buildTarget);
+        return template.Replace("{0}", platformFolder) + "/custom_manifest.json";
     }
 }

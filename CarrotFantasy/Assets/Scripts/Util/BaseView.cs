@@ -38,6 +38,12 @@ public abstract class BaseView
 
     private bool isPausedByViewStack;
 
+    /// <summary>Close 后延迟 Release 的秒数；0 表示下一帧触发。子类可重写。</summary>
+    protected virtual float ReleaseDelayAfterCloseSeconds
+    {
+        get { return 5f; }
+    }
+
     // 子类实现：如 SetUILoadInfo、数据初始化等
     public abstract void InitData();
 
@@ -82,6 +88,11 @@ public abstract class BaseView
     protected void SetUILoadInfo(int index, string bundle, string asset)
     {
         viewLoader.RegisterAsset(index, bundle, asset);
+    }
+
+    protected void SetUIResourcesLoadInfo(int index, string resourcePath, string asset)
+    {
+        viewLoader.RegisterResourcesAsset(index, resourcePath, asset);
     }
 
     protected void ChangeIndex(int targetIndex)
@@ -262,28 +273,37 @@ public abstract class BaseView
 
     public virtual void Close()
     {
-        // 场景切换等路径会 CloseAllOpenViews；战斗内按钮也可能已 Close 过，重复关闭应静默忽略
-        if (!this.isOpen)
+        // 场景切换等路径会 CloseAllOpenViews；离战斗场景由 BattleSession.Shutdown 单链路释放战斗 UI。
+        if (this.isOpen)
+        {
+            CloseCallBack();
+
+            this.isOpen = false;
+            if (this.isPausedByViewStack)
+            {
+                this.isPausedByViewStack = false;
+                OnResume();
+            }
+
+            ViewManager.Instance.RemoveViewFromOpenList(this);
+            if (this.rootView != null)
+            {
+                this.rootView.transform.localPosition = new Vector2(99999, 99999);
+            }
+
+            viewLoader?.CancelInFlightLoads();
+        }
+
+        if (!this.isLoadRoot)
         {
             return;
         }
 
-        CloseCallBack();
+        this.ScheduleReleaseAfterCloseDelay();
+    }
 
-        this.isOpen = false;
-        if (this.isPausedByViewStack)
-        {
-            this.isPausedByViewStack = false;
-            OnResume();
-        }
-        ViewManager.Instance.RemoveViewFromOpenList(this);
-        if (this.rootView != null)
-        {
-            this.rootView.transform.localPosition = new Vector2(99999, 99999);
-        }
-
-        viewLoader?.CancelInFlightLoads();
-
+    void ScheduleReleaseAfterCloseDelay()
+    {
         if (this.delayReleaseId != null)
         {
             TimeUtility.Instance.RemoveTimeout(this.delayReleaseId);
@@ -292,35 +312,11 @@ public abstract class BaseView
 
         string time = Time.unscaledTime.ToString();
         this.delayReleaseId = this.viewName + time;
-        TimeUtility.Instance.SetTimeout(5f, this.Release, false, this.delayReleaseId);
-    }
-
-    /// <summary>取消延迟释放并立即销毁 UI 根节点（离战斗场景时用）。</summary>
-    public void CloseAndReleaseNow()
-    {
-        if (this.delayReleaseId != null)
-        {
-            TimeUtility.Instance.RemoveTimeout(this.delayReleaseId);
-            this.delayReleaseId = null;
-        }
-
-        if (this.isOpen)
-        {
-            CloseCallBack();
-            this.isOpen = false;
-            if (this.isPausedByViewStack)
-            {
-                this.isPausedByViewStack = false;
-                OnResume();
-            }
-
-            ViewManager.Instance?.RemoveViewFromOpenList(this);
-        }
-
-        if (this.isLoadRoot)
-        {
-            this.Release();
-        }
+        TimeUtility.Instance.SetTimeout(
+            this.ReleaseDelayAfterCloseSeconds,
+            this.Release,
+            false,
+            this.delayReleaseId);
     }
     #endregion
 

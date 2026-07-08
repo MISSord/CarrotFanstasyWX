@@ -66,10 +66,10 @@ namespace CarrotFantasy
             this.businessDic.Clear();
             this.businessList.Clear();
 
-            ServerProvision.battleSessionHost?.Shutdown();
             ServerProvision.connectionServer?.Dispose();
 
-            ServerProvision.sceneServer.Dispose();
+            // 场景卸载单链路：BattleScene.Dispose 内 Shutdown；不在此重复调用 battleSessionHost.Shutdown。
+            ServerProvision.sceneServer?.Dispose();
 
             AudioManager.Shutdown();
 

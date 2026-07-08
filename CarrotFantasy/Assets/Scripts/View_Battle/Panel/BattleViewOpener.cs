@@ -3,12 +3,19 @@ using UnityEngine;
 
 namespace CarrotFantasy
 {
-    /// <summary>打开战斗内 BaseView 前统一注入 battle。</summary>
+    /// <summary>战斗内 BaseView 的打开与释放；离关释放仅由 <see cref="BattleSession.Shutdown"/> 调用。</summary>
     public static class BattleViewOpener
     {
-        static readonly Type[] BattleViewTypes =
+        static readonly Type[] AllBattleViewTypes =
         {
             typeof(NormalModelPanel),
+            typeof(MenuView),
+            typeof(GameWinView),
+            typeof(GameOverView),
+        };
+
+        static readonly Type[] OverlayBattleViewTypes =
+        {
             typeof(MenuView),
             typeof(GameWinView),
             typeof(GameOverView),
@@ -47,23 +54,28 @@ namespace CarrotFantasy
             return true;
         }
 
-        /// <summary>离关时立即释放战斗 UI 缓存，避免 UINameTable / 监听跨局残留。</summary>
-        public static void ForceReleaseAllBattleViews()
+        /// <summary>同关重开：关闭菜单/结算等叠层，保留 NormalModelPanel。</summary>
+        public static void CloseOverlayBattleViews()
+        {
+            CloseBattleViews(OverlayBattleViewTypes);
+        }
+
+        /// <summary>离关：Close 全部战斗 UI，0 秒延迟下一帧 Release。</summary>
+        public static void ReleaseAllBattleViews()
+        {
+            CloseBattleViews(AllBattleViewTypes);
+        }
+
+        static void CloseBattleViews(Type[] viewTypes)
         {
             if (ViewManager.Instance == null)
             {
                 return;
             }
 
-            for (int i = 0; i < BattleViewTypes.Length; i++)
+            for (int i = 0; i < viewTypes.Length; i++)
             {
-                Type viewType = BattleViewTypes[i];
-                if (!ViewManager.Instance.viewTypeDic.TryGetValue(viewType, out BaseView view))
-                {
-                    continue;
-                }
-
-                view.CloseAndReleaseNow();
+                ViewManager.Instance.CloseView(viewTypes[i]);
             }
         }
     }

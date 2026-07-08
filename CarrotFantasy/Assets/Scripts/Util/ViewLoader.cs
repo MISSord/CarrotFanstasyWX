@@ -13,6 +13,8 @@ class ViewLoadEntry
 {
     public string bundleName;
     public string assetName;
+    public string resourcePath;
+    public bool useResources;
     public GameObject gameObject;
     public ViewLoadState state;
     public int order;
@@ -55,6 +57,25 @@ class ViewLoader
         {
             assetName = asset,
             bundleName = bundle,
+            order = _layerOrder,
+            state = ViewLoadState.None,
+        });
+    }
+
+    public void RegisterResourcesAsset(int index, string resourcePath, string asset)
+    {
+        _layerOrder++;
+        if (!_entriesByIndex.TryGetValue(index, out List<ViewLoadEntry> entries))
+        {
+            entries = new List<ViewLoadEntry>();
+            _entriesByIndex.Add(index, entries);
+        }
+
+        entries.Add(new ViewLoadEntry
+        {
+            assetName = asset,
+            resourcePath = resourcePath,
+            useResources = true,
             order = _layerOrder,
             state = ViewLoadState.None,
         });
@@ -183,6 +204,13 @@ class ViewLoader
             for (int i = 0; i < entries.Count; ++i)
             {
                 ViewLoadEntry entry = entries[i];
+                if (entry.useResources)
+                {
+                    entry.state = ViewLoadState.None;
+                    entry.loadIndex = -1;
+                    continue;
+                }
+
                 if (entry.state == ViewLoadState.Loaded)
                 {
                     AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName);
@@ -275,6 +303,13 @@ class ViewLoader
 
             anyRequested = true;
             entry.state = ViewLoadState.Loading;
+            if (entry.useResources)
+            {
+                GameObject prefab = Resources.Load<GameObject>(entry.resourcePath);
+                OnAssetLoaded(prefab, entry, index);
+                continue;
+            }
+
             int loadId = AssetBundleManager.Instance.LoadAsset<GameObject>(
                 entry.bundleName,
                 entry.assetName,
@@ -360,13 +395,16 @@ class ViewLoader
 
     private void AbandonAssetLoad(ViewLoadEntry entry)
     {
-        if (entry.loadIndex >= 0)
+        if (!entry.useResources)
         {
-            AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName, false, entry.loadIndex);
-        }
-        else
-        {
-            AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName);
+            if (entry.loadIndex >= 0)
+            {
+                AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName, false, entry.loadIndex);
+            }
+            else
+            {
+                AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName);
+            }
         }
 
         entry.state = ViewLoadState.None;

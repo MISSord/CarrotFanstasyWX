@@ -7,7 +7,7 @@ namespace CarrotFantasy
         {
             viewName = "StartLoadPanel";
             layer = UILayer.Normal;
-            SetUILoadInfo(0, UiViewAbPaths.StartLoadPanelBundle, UiViewAbPaths.StartLoadPanelAsset);
+            SetUIResourcesLoadInfo(0, UiViewAbPaths.StartLoadPanelResource, UiViewAbPaths.StartLoadPanelAsset);
         }
     }
 }

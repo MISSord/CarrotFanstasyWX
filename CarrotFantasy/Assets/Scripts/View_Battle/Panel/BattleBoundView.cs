@@ -5,6 +5,11 @@ namespace CarrotFantasy
     /// <summary>战斗内 UI：须在 Open 前由 Session 注入 battle，禁止运行时回查全局会话。</summary>
     public abstract class BattleBoundView : BaseView
     {
+        protected override float ReleaseDelayAfterCloseSeconds
+        {
+            get { return 0f; }
+        }
+
         protected BaseBattle battle;
         protected BattleDataComponent dataComponent;
         protected BattlePVEDataComponent pveDataComponent;

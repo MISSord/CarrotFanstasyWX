@@ -2,8 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-
-
 /// <summary>
 /// 萝卜
 /// </summary>
@@ -12,7 +10,6 @@ namespace CarrotFantasy
 {
     public class Carrot : MonoBehaviour
     {
-
         //萝卜的不同状态
         private Sprite[] sprites;
         private Animator animator;

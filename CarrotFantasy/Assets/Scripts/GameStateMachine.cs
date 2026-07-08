@@ -82,6 +82,8 @@ public class GameStateMachine
         states.Add(GameState.SelectGameMode, new SelectGameModeState(gameContext));
         states.Add(GameState.EnterGame, new EnterGameState(gameContext));
 
+        ViewManager.Instance.OpenView<StartLoadPanel>();
+
 #if UNITY_EDITOR
         loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
         if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
@@ -148,12 +150,10 @@ public class CheckUpdateState : BaseGameState
             useTestingBootstrap = true;
             AssetBundleManager.Instance.SetAssetBundleItem(testingResult.customManifest);
             Debug.Log("[Testing] 使用本地 AB 清单，跳过远程清单下载。");
-            ViewManager.Instance.OpenView<StartLoadPanel>();
             return;
         }
 #endif
 
-        ViewManager.Instance.OpenView<StartLoadPanel>();
         checker?.StartUpdateCheck(AssetBundlePathHelper.GetServerLoadUrl(), CheckResultCallBack);
     }
 
@@ -377,6 +377,7 @@ public class EnterGameState : BaseGameState
     public override void Enter()
     {
         Debug.Log("进入进游戏流程");
+        ViewManager.Instance.CloseView<StartLoadPanel>();
         UIServer.Instance.TryLoadDeferredAbUi();
         ViewManager.Instance.OpenView<MainPanel>();
     }

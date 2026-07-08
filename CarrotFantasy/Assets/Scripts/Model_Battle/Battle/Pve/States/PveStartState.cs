@@ -15,7 +15,13 @@ namespace CarrotFantasy
         {
             base.StateIn();
             BattleSchedulerComponent sch =
-                (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
+                this.Battle.GetComponent(BattleComponentType.SchedulerComponent) as BattleSchedulerComponent;
+            if (sch == null)
+            {
+                UnityEngine.Debug.LogError("[PveStartState] SchedulerComponent 未就绪，跳过开场调度");
+                return;
+            }
+
             float introDelay = BattleParamAccess.GetEffectiveStartGameDelaySeconds(this.Battle);
 
             this.Battle.eventDispatcher.DispatchEvent(BattleEvent.START_GAME);
@@ -42,7 +48,12 @@ namespace CarrotFantasy
         public override void StateOut()
         {
             BattleSchedulerComponent sch =
-                (BattleSchedulerComponent)this.Battle.GetComponent(BattleComponentType.SchedulerComponent);
+                this.Battle.GetComponent(BattleComponentType.SchedulerComponent) as BattleSchedulerComponent;
+            if (sch == null)
+            {
+                return;
+            }
+
             sch.SilenceSingleSche(this.introEndScheId);
             sch.SilenceSingleSche(this.countdownScheId);
         }

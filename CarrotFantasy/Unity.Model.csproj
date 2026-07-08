@@ -755,6 +755,10 @@
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\log4netPlastic.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Renci.SshNet">
+      <HintPath>Assets\Editor\ThirdParty\SshNet\Renci.SshNet.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Google.Protobuf">
       <HintPath>Assets\Plugins\Google.Protobuf\Google.Protobuf.dll</HintPath>
       <Private>False</Private>
@@ -793,6 +797,10 @@
     </Reference>
     <Reference Include="Unity.Analytics.Tracker">
       <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Tracker.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="SshNet.Security.Cryptography">
+      <HintPath>Assets\Editor\ThirdParty\SshNet\SshNet.Security.Cryptography.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="DOTween">
