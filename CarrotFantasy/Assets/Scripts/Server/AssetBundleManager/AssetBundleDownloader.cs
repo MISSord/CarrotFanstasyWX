@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +14,20 @@ public enum LoaderState
     Idle, //下载和解压全部AB包后方能进入该阶段
 }
 
-//AssetBundle下载器，负责AB下载与解压转换
+/// <summary>
+/// AB 下载与解压转换。
+///
+/// StartDownload 分支：
+/// - packsToDownload 非空 → 下 ZIP Pack，校验 Pack Size/MD5，解压后逐 AB 校验再落盘
+/// - 否则 → 按 BundleName 逐个下载，校验 Size/MD5；CompressedFormat==0 时再压成 LZ4
+///
+/// 断点续传：每个 AB（或 Pack）真正落盘成功后 UpsertLocalBundles 增量写本地清单；
+/// 全部成功后再 SaveLocalManifest 全量覆盖。未完成的包不会提前写入远程 Hash。
+/// 二次校验比对的是「下载下来的源文件」（与清单一致），不是转换后的 LZ4。
+/// 超时策略：以 stall（连续无字节增长）为主，绝对上限为辅；
+/// UnityWebRequest.timeout 仅作兜底，避免卡死。
+/// Pack 解压期间用 activePackOperations 阻止过早进入 Idle。
+/// </summary>
 public class AssetBundleDownloader
 {
     private const string LogTag = "AssetBundleDownloader";
@@ -34,7 +48,10 @@ public class AssetBundleDownloader
     private string finallDownloadUrl = string.Empty;
     private int maxConcurrentDownloads = 3; // 同时下载数量限制
     private int maxRetryCount = 3;
-    private float timeout = 30f;
+    /// <summary>连续无字节增长超过该秒数视为卡住（stall），触发重试。</summary>
+    private const float StallTimeoutSeconds = 25f;
+    /// <summary>单次请求绝对上限（秒），防止极端情况下永久挂起；真正判超时以 stall 为主。</summary>
+    private const int AbsoluteMaxTimeoutSeconds = 1800;
     private LoaderState loaderState = LoaderState.None;
 
     private bool enableLogging = true;
@@ -43,6 +60,21 @@ public class AssetBundleDownloader
 
     private Queue<ConvertTask> pendingConverts = new Queue<ConvertTask>();
     private List<ConvertTask> activeConverts = new List<ConvertTask>();
+
+    // 总下载进度与速度统计
+    private long totalDownloadSize = 0;
+    private long downloadedBytes = 0;
+    private long completedDownloadBytes = 0;
+    private float downloadSpeed = 0f;
+    private float lastDownloadedBytes = 0f;
+    private float lastSpeedUpdateTime = 0f;
+
+    // 下载后二次校验用清单
+    private Dictionary<string, CustomAssetBundleInfo> bundleInfoDict;
+    private CustomManifest currentManifest;
+
+    /// <summary>进行中的 Pack 解压/转换协程数；不为 0 时不能进入 Idle。</summary>
+    private int activePackOperations;
 
     /// <summary>
     /// 下载任务类
@@ -63,6 +95,16 @@ public class AssetBundleDownloader
         public string errorMessage;
         public System.Action<bool, string> callback;
         public bool isNeedConvert;
+        public bool isPackDownload;
+        public DownloadPackInfo packInfo;
+        /// <summary>本次请求开始时间（unscaledTime），用于绝对上限。</summary>
+        public float requestStartUnscaledTime;
+        /// <summary>上次观察到字节增长的时间（unscaledTime），用于 stall 检测。</summary>
+        public float lastProgressUnscaledTime;
+        /// <summary>上次观察到的已下载字节，用于判断是否有进度。</summary>
+        public long lastObservedDownloadedBytes;
+        /// <summary>已计入 completedDownloadBytes 的字节数；失败重试前需回退，避免进度虚高。</summary>
+        public long progressBytesCommitted;
     }
 
     /// <summary>
@@ -78,6 +120,8 @@ public class AssetBundleDownloader
         public ConvertStatus status;
         public string errorMessage;
         public System.Action<bool, string> callback;
+        /// <summary>对应下载任务已计入进度的字节，转换失败时回退。</summary>
+        public long progressBytesCommitted;
     }
 
     public enum DownloadStatus
@@ -114,14 +158,52 @@ public class AssetBundleDownloader
     public void StartDownload(GameContext context, System.Action<bool> finishCalls, System.Action<bool> callBacks)
     {
         loaderState = LoaderState.Loading;
+        activePackOperations = 0;
 
         UpdateCheckResult result = context.result;
         CustomManifest custom = result.customManifest;
+        currentManifest = custom;
         finallDownloadUrl = AssetBundlePathHelper.GetServerLoadUrl();
+
+        // 断点续传：每个包落盘成功时 UpsertLocalBundles；全部成功后再由 DownloadState 全量 SaveLocalManifest。
+        // 不要在开始时写完整远程清单，否则未下载的包也会带上远程 Hash，LZMA 下会误判已最新。
+
+        totalDownloadSize = result?.totalDownloadSize ?? 0;
+        downloadedBytes = 0;
+        completedDownloadBytes = 0;
+        downloadSpeed = 0f;
+        lastDownloadedBytes = 0f;
+        lastSpeedUpdateTime = 0f;
+        bundleInfoDict = new Dictionary<string, CustomAssetBundleInfo>(System.StringComparer.OrdinalIgnoreCase);
         if (result != null)
         {
+            // 建立下载后二次校验用的清单映射（仅待下载/待更新的包）
+            foreach (CustomAssetBundleInfo bundle in result.bundlesToDownload)
+            {
+                bundleInfoDict[bundle.BundleName] = bundle;
+            }
+            foreach (CustomAssetBundleInfo bundle in result.bundlesToUpdate)
+            {
+                bundleInfoDict[bundle.BundleName] = bundle;
+            }
+
+            // Pack 优先：Planner 已把差异 AB 映射为整 Pack
+            if (result.packsToDownload != null && result.packsToDownload.Count > 0)
+            {
+                this.DownloadPacks(result.packsToDownload.ToArray(), custom, null, callBacks);
+                return;
+            }
+
+            int totalBundles = result.bundlesToDownload.Count + result.bundlesToUpdate.Count;
+            if (totalBundles <= 0)
+            {
+                loaderState = LoaderState.Idle;
+                callBacks?.Invoke(true);
+                return;
+            }
+
             //两个列表加起来等于要下载的
-            string[] bundleStr = new string[result.bundlesToDownload.Count + result.bundlesToUpdate.Count];
+            string[] bundleStr = new string[totalBundles];
             int index = 0;
             List<CustomAssetBundleInfo> list = result.bundlesToDownload;
             for (int i = 0; i < result.bundlesToDownload.Count; i++)
@@ -137,6 +219,11 @@ public class AssetBundleDownloader
             }
             this.DownloadBundles(bundleStr, custom, null, callBacks);
         }
+        else
+        {
+            loaderState = LoaderState.Idle;
+            callBacks?.Invoke(false);
+        }
     }
 
     public void Update()
@@ -150,25 +237,66 @@ public class AssetBundleDownloader
     /// </summary>
     private void UpdateDownloads()
     {
-        if (loaderState == LoaderState.None) return;
+        // Idle/None 时若仍有任务（按需下载），自动进入 Loading。
+        if (loaderState == LoaderState.None || loaderState == LoaderState.Idle)
+        {
+            if (pendingDownloads.Count == 0 && activeDownloads.Count == 0)
+            {
+                return;
+            }
+
+            loaderState = LoaderState.Loading;
+        }
+
+        long currentDownloaded = completedDownloadBytes;
+        float nowUnscaled = Time.unscaledTime;
 
         // 检查正在下载的任务
         for (int i = activeDownloads.Count - 1; i >= 0; i--)
         {
             var task = activeDownloads[i];
 
-            if (task.webRequest != null && task.webRequest.isDone)
+            if (task.webRequest == null)
             {
-                HandleDownloadCompletion(task);
-                activeDownloads.RemoveAt(i);
+                continue;
             }
-            else if (task.webRequest != null)
+
+            if (!task.webRequest.isDone)
             {
-                // 更新进度
+                // 先刷新进度，再做 stall / 绝对超时判断
                 task.progress = task.webRequest.downloadProgress;
                 task.downloadedBytes = (long)task.webRequest.downloadedBytes;
+                UpdateDownloadProgressWatch(task, nowUnscaled);
                 OnDownloadProgress?.Invoke(task);
+
+                if (TryAbortTimedOutDownload(task, nowUnscaled))
+                {
+                    // 已在内部 Abort + 失败处理，本帧直接移除，避免下一帧再走 isDone 重复回调
+                    DisposeWebRequest(task);
+                    activeDownloads.RemoveAt(i);
+                    continue;
+                }
             }
+            else
+            {
+                HandleDownloadCompletion(task);
+                DisposeWebRequest(task);
+                activeDownloads.RemoveAt(i);
+            }
+
+            currentDownloaded += task.downloadedBytes;
+        }
+
+        downloadedBytes = currentDownloaded;
+
+        // 计算下载速度（每 0.5 秒更新一次）
+        float now = Time.unscaledTime;
+        float deltaTime = now - lastSpeedUpdateTime;
+        if (deltaTime >= 0.5f)
+        {
+            downloadSpeed = Mathf.Max(0f, (currentDownloaded - lastDownloadedBytes) / deltaTime);
+            lastDownloadedBytes = currentDownloaded;
+            lastSpeedUpdateTime = now;
         }
 
         // 启动新的下载任务
@@ -178,11 +306,10 @@ public class AssetBundleDownloader
             StartDownloadTask(task);
         }
 
-        //全部下载完，切换到解压状态
+        // 下载队列清空后进入 Convert；Pack 解压也算在 Convert 阶段。
         if (loaderState == LoaderState.Loading && pendingDownloads.Count == 0 && activeDownloads.Count == 0)
         {
             loaderState = LoaderState.Convert;
-            //这里加个回调，告诉外面进入解压状态，刷新界面
         }
     }
 
@@ -191,9 +318,11 @@ public class AssetBundleDownloader
     /// </summary>
     private void UpdateConverts()
     {
-        //处于下载阶段时不解压，避免IO过大
-        //进入游戏后下载器处于待机状态，这时候下载完成后直接解压，避免资源等待时间过长
-        if (loaderState == LoaderState.None || loaderState == LoaderState.Loading) return;
+        // 处于下载阶段时不解压，避免 IO 过大
+        if (loaderState == LoaderState.None || loaderState == LoaderState.Loading)
+        {
+            return;
+        }
 
         // 启动新的转换任务
         while (activeConverts.Count < 6 && pendingConverts.Count > 0) // 最多同时转换6个
@@ -202,15 +331,19 @@ public class AssetBundleDownloader
             StartConvertTask(task);
         }
 
-        //全部解压完成，进入idle状态，告诉外面处理完毕
-        if (loaderState == LoaderState.Convert && activeConverts.Count == 0 && pendingConverts.Count == 0)
+        // 单 AB 转换与 Pack 解压都结束后才 Idle
+        if (loaderState == LoaderState.Convert
+            && activeConverts.Count == 0
+            && pendingConverts.Count == 0
+            && activePackOperations <= 0)
         {
             loaderState = LoaderState.Idle;
         }
     }
 
     /// <summary>
-    /// 下载单个AB包
+    /// 下载单个 AB 包。
+    /// 按需下载时若 CDN URL 尚未初始化，会自动从 PathHelper 补齐。
     /// </summary>
     public void DownloadBundle(string bundleName, bool isNeedConvert, System.Action<bool, string> callback = null)
     {
@@ -218,6 +351,16 @@ public class AssetBundleDownloader
         {
             callback?.Invoke(false, "Bundle is already in download queue");
             return;
+        }
+
+        EnsureDownloadUrlReady();
+
+        long knownSize = 0;
+        if (bundleInfoDict != null
+            && bundleInfoDict.TryGetValue(bundleName, out CustomAssetBundleInfo info)
+            && info != null)
+        {
+            knownSize = info.Size;
         }
 
         //需要转换的话，放临时路径，不需要就直接放对应的位置
@@ -229,23 +372,115 @@ public class AssetBundleDownloader
             finalPath = AssetBundlePathHelper.GetLocalLZ4Path(bundleName),
             status = DownloadStatus.Pending,
             callback = callback,
-            isNeedConvert = isNeedConvert
+            isNeedConvert = isNeedConvert,
+            totalBytes = knownSize,
         };
 
-        //// 检查本地是否已存在最新版本
-        //if (IsLocalBundleUpToDate(bundleName))
-        //{
-        //    Log($"AB包 {bundleName} 已是最新版本，跳过下载");
-        //    callback?.Invoke(true, "Already up to date");
-        //    return;
-        //}
-
         pendingDownloads.Enqueue(downloadTask);
+        if (loaderState == LoaderState.None || loaderState == LoaderState.Idle)
+        {
+            loaderState = LoaderState.Loading;
+        }
+
         Log($"AB包 {bundleName} 已加入下载队列，当前位置: {pendingDownloads.Count}");
     }
 
+    public void DownloadPack(DownloadPackInfo packInfo, System.Action<bool, string> callback = null)
+    {
+        if (packInfo == null)
+        {
+            callback?.Invoke(false, "Pack 信息为空");
+            return;
+        }
+
+        if (IsPackAlreadyInQueue(packInfo.PackName))
+        {
+            callback?.Invoke(false, "Pack is already in download queue");
+            return;
+        }
+
+        EnsureDownloadUrlReady();
+
+        var downloadTask = new DownloadTask
+        {
+            bundleName = packInfo.PackName,
+            packInfo = packInfo,
+            isPackDownload = true,
+            remoteURL = $"{finallDownloadUrl}/{packInfo.PackFileName}",
+            tempPath = Path.Combine(Application.temporaryCachePath, packInfo.PackName + ".zip"),
+            finalPath = string.Empty,
+            status = DownloadStatus.Pending,
+            callback = callback,
+            isNeedConvert = false,
+            totalBytes = packInfo.PackSize,
+        };
+
+        pendingDownloads.Enqueue(downloadTask);
+        if (loaderState == LoaderState.None || loaderState == LoaderState.Idle)
+        {
+            loaderState = LoaderState.Loading;
+        }
+
+        Log($"下载 Pack {packInfo.PackName} 已加入队列，包含 {packInfo.BundleNames?.Length ?? 0} 个 AB");
+    }
+
+    /// <summary>按需下载时补齐 CDN 根 URL（热更 StartDownload 之外的入口也会用到）。</summary>
+    private void EnsureDownloadUrlReady()
+    {
+        if (!string.IsNullOrEmpty(finallDownloadUrl))
+        {
+            return;
+        }
+
+        finallDownloadUrl = AssetBundlePathHelper.GetServerLoadUrl();
+    }
+
+    public void DownloadPacks(DownloadPackInfo[] packs, CustomManifest custom, System.Action<int, int> progressCallback = null,
+        System.Action<bool> completeCallback = null)
+    {
+        SRPScheduler.StartRunCoroutine(DownloadPacksCoroutine(packs, progressCallback, completeCallback));
+    }
+
+    private IEnumerator DownloadPacksCoroutine(DownloadPackInfo[] packs, System.Action<int, int> progressCallback,
+        System.Action<bool> completeCallback)
+    {
+        int completedCount = 0;
+        int totalCount = packs.Length;
+        bool allSuccess = true;
+
+        Log($"开始批量下载 {totalCount} 个 Pack");
+
+        var completionFlags = new Dictionary<string, bool>();
+        foreach (DownloadPackInfo pack in packs)
+        {
+            completionFlags[pack.PackName] = false;
+        }
+
+        foreach (DownloadPackInfo pack in packs)
+        {
+            DownloadPack(pack, (success, message) =>
+            {
+                completionFlags[pack.PackName] = true;
+                if (!success)
+                {
+                    allSuccess = false;
+                }
+
+                completedCount++;
+                progressCallback?.Invoke(completedCount, totalCount);
+                Log($"Pack 下载处理完成: {pack.PackName} ({completedCount}/{totalCount})");
+            });
+        }
+
+        yield return new WaitUntil(() => completedCount >= totalCount);
+
+        Log($"批量 Pack 下载完成: 成功 {completedCount}/{totalCount}");
+        completeCallback?.Invoke(allSuccess);
+    }
+
     /// <summary>
-    /// 批量下载并转换AB包
+    /// 批量下载并转换 AB。
+    /// CompressedFormat==0（LZMA）时 isNeedConvert=true：先下到 temp，校验通过后再 Recompress 为 LZ4。
     /// </summary>
     public void DownloadBundles(string[] bundleNames, CustomManifest custom, System.Action<int, int> progressCallback = null,
         System.Action<bool> completeCallback = null)
@@ -294,14 +529,26 @@ public class AssetBundleDownloader
     }
 
     /// <summary>
-    /// 开始下载任务
+    /// 开始下载任务。
+    /// 主超时：stall（连续无字节增长）；辅超时：绝对上限。UWR.timeout 仅作兜底。
     /// </summary>
     private void StartDownloadTask(DownloadTask task)
     {
         task.status = DownloadStatus.Downloading;
         activeDownloads.Add(task);
 
-        Log($"开始下载: {task.bundleName}");
+        float now = Time.unscaledTime;
+        task.requestStartUnscaledTime = now;
+        task.lastProgressUnscaledTime = now;
+        task.lastObservedDownloadedBytes = 0;
+        task.downloadedBytes = 0;
+
+        Log(string.Format(
+            "开始下载: {0}, 大小={1}B, stall={2}s, 绝对上限={3}s",
+            task.bundleName,
+            task.totalBytes,
+            StallTimeoutSeconds,
+            AbsoluteMaxTimeoutSeconds));
 
         string targetDir = Path.GetDirectoryName(task.tempPath);
         if (!string.IsNullOrEmpty(targetDir) && !Directory.Exists(targetDir))
@@ -310,9 +557,72 @@ public class AssetBundleDownloader
         }
 
         task.webRequest = UnityWebRequest.Get(task.remoteURL);
-        task.webRequest.timeout = (int)timeout;
+        // UWR 绝对超时仅作兜底；真正判超时在 UpdateDownloads 的 stall 检测。
+        task.webRequest.timeout = AbsoluteMaxTimeoutSeconds;
         task.webRequest.downloadHandler = new DownloadHandlerFile(task.tempPath);
         task.webRequest.SendWebRequest();
+    }
+
+    /// <summary>有字节增长则刷新 stall 计时。</summary>
+    private static void UpdateDownloadProgressWatch(DownloadTask task, float nowUnscaled)
+    {
+        if (task.downloadedBytes > task.lastObservedDownloadedBytes)
+        {
+            task.lastObservedDownloadedBytes = task.downloadedBytes;
+            task.lastProgressUnscaledTime = nowUnscaled;
+        }
+    }
+
+    /// <summary>
+    /// stall 或绝对上限触发时 Abort 并走失败重试。返回 true 表示本任务已结束处理。
+    /// </summary>
+    private bool TryAbortTimedOutDownload(DownloadTask task, float nowUnscaled)
+    {
+        float stallElapsed = nowUnscaled - task.lastProgressUnscaledTime;
+        if (stallElapsed >= StallTimeoutSeconds)
+        {
+            string error = string.Format(
+                "stall timeout: {0:F1}s 无进度增长 (已下 {1}B / {2}B)",
+                stallElapsed,
+                task.downloadedBytes,
+                task.totalBytes);
+            LogError($"下载超时({task.bundleName}): {error}");
+            try
+            {
+                task.webRequest.Abort();
+            }
+            catch (Exception e)
+            {
+                LogError($"Abort 失败: {e.Message}");
+            }
+
+            HandleDownloadFailure(task, error);
+            return true;
+        }
+
+        float absoluteElapsed = nowUnscaled - task.requestStartUnscaledTime;
+        if (absoluteElapsed >= AbsoluteMaxTimeoutSeconds)
+        {
+            string error = string.Format(
+                "absolute timeout: 已持续 {0:F0}s (已下 {1}B / {2}B)",
+                absoluteElapsed,
+                task.downloadedBytes,
+                task.totalBytes);
+            LogError($"下载超时({task.bundleName}): {error}");
+            try
+            {
+                task.webRequest.Abort();
+            }
+            catch (Exception e)
+            {
+                LogError($"Abort 失败: {e.Message}");
+            }
+
+            HandleDownloadFailure(task, error);
+            return true;
+        }
+
+        return false;
     }
 
     //这个代码可以实现支持断点传输，先屏蔽
@@ -402,11 +712,34 @@ public class AssetBundleDownloader
     }
 
     /// <summary>
-    /// 处理下载成功
+    /// 处理下载成功。
+    /// 单 AB：VerifyDownloadedFile(Size+MD5) → 可选入队 LZ4 转换。
+    /// Pack：走 HandlePackDownloadSuccessCoroutine。
     /// </summary>
     private void HandleDownloadSuccess(DownloadTask task)
     {
-        Log($"下载成功: {task.bundleName}, 文件大小: {new FileInfo(task.tempPath).Length} bytes");
+        if (task.isPackDownload)
+        {
+            SRPScheduler.StartRunCoroutine(HandlePackDownloadSuccessCoroutine(task));
+            return;
+        }
+
+        long fileSize = 0;
+        if (File.Exists(task.tempPath))
+        {
+            fileSize = new FileInfo(task.tempPath).Length;
+        }
+
+        // 下载后二次校验（大小 + MD5）——校验对象是源文件，与清单 Hash 一致
+        if (!VerifyDownloadedFile(task.bundleName, task.tempPath, out string verifyError))
+        {
+            LogError($"下载文件校验失败: {task.bundleName}, {verifyError}");
+            HandleDownloadFailure(task, verifyError);
+            return;
+        }
+
+        Log($"下载成功: {task.bundleName}, 文件大小: {fileSize} bytes");
+        CommitDownloadProgress(task, fileSize);
 
         if (task.isNeedConvert == true)
         {
@@ -417,13 +750,16 @@ public class AssetBundleDownloader
                 sourcePath = task.tempPath,
                 targetPath = task.finalPath,
                 status = ConvertStatus.Pending,
-                callback = task.callback
+                callback = task.callback,
+                progressBytesCommitted = task.progressBytesCommitted,
             };
 
             pendingConverts.Enqueue(convertTask);
         }
         else
         {
+            // 无需转换：文件已落盘，立即增量记入本地清单，支持中断后续传。
+            PersistCompletedBundle(task.bundleName);
             Log(string.Format("{0}下载完成，无需解压", task.bundleName));
             task.callback?.Invoke(true, "");
         }
@@ -434,10 +770,105 @@ public class AssetBundleDownloader
     }
 
     /// <summary>
+    /// Pack：先 VerifyPackFile，再 ExtractPackCoroutine（内含逐 AB Size/MD5，可选转 LZ4）。
+    /// 解压期间计入 activePackOperations，避免 LoaderState 过早 Idle。
+    /// </summary>
+    private IEnumerator HandlePackDownloadSuccessCoroutine(DownloadTask task)
+    {
+        activePackOperations++;
+
+        long fileSize = 0;
+        if (File.Exists(task.tempPath))
+        {
+            fileSize = new FileInfo(task.tempPath).Length;
+        }
+
+        if (!AssetBundlePackExtractor.VerifyPackFile(task.tempPath, task.packInfo, out string verifyError))
+        {
+            LogError($"Pack 校验失败: {task.packInfo.PackName}, {verifyError}");
+            HandleDownloadFailure(task, verifyError);
+            activePackOperations = Mathf.Max(0, activePackOperations - 1);
+            yield break;
+        }
+
+        Log($"Pack 下载成功: {task.packInfo.PackName}, 文件大小: {fileSize} bytes");
+        CommitDownloadProgress(task, fileSize);
+
+        bool isNeedConvert = currentManifest != null && currentManifest.CompressedFormat == 0;
+        bool extractSuccess = false;
+        string extractError = string.Empty;
+        yield return AssetBundlePackExtractor.ExtractPackCoroutine(
+            task.tempPath,
+            task.packInfo,
+            bundleInfoDict,
+            isNeedConvert,
+            (success, error) =>
+            {
+                extractSuccess = success;
+                extractError = error;
+            });
+
+        TryDeleteFile(task.tempPath);
+
+        if (extractSuccess)
+        {
+            // Pack 内已落盘的 AB 增量写入本地清单。
+            PersistCompletedBundles(task.packInfo.BundleNames);
+            task.status = DownloadStatus.Completed;
+            task.callback?.Invoke(true, string.Empty);
+            OnDownloadProgress?.Invoke(task);
+        }
+        else
+        {
+            // HandleDownloadFailure 内会回退已计入进度，避免重试后总量虚高。
+            HandleDownloadFailure(task, string.IsNullOrEmpty(extractError) ? "Pack 解压失败" : extractError);
+        }
+
+        activePackOperations = Mathf.Max(0, activePackOperations - 1);
+    }
+
+    /// <summary>
+    /// 删除下载产生的临时/残缺文件，避免下次启动误用。
+    /// </summary>
+    private void DeleteDownloadArtifacts(DownloadTask task)
+    {
+        if (task == null)
+        {
+            return;
+        }
+
+        TryDeleteFile(task.tempPath);
+
+        if (!string.Equals(task.tempPath, task.finalPath, StringComparison.OrdinalIgnoreCase))
+        {
+            TryDeleteFile(task.finalPath);
+        }
+    }
+
+    private static void TryDeleteFile(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+        {
+            return;
+        }
+
+        try
+        {
+            File.Delete(filePath);
+        }
+        catch (Exception e)
+        {
+            GameLogController.Warning($"删除残缺文件失败: {filePath}, {e.Message}", LogTag);
+        }
+    }
+
+    /// <summary>
     /// 处理下载失败
     /// </summary>
     private void HandleDownloadFailure(DownloadTask task, string error)
     {
+        RollbackDownloadProgress(task);
+        DeleteDownloadArtifacts(task);
         task.retryCount++;
 
         if (task.retryCount < maxRetryCount)
@@ -445,6 +876,9 @@ public class AssetBundleDownloader
             Log($"下载失败，准备重试: {task.bundleName} ({task.retryCount}/{maxRetryCount})");
             task.status = DownloadStatus.Retrying;
             task.errorMessage = error;
+            task.downloadedBytes = 0;
+            task.lastObservedDownloadedBytes = 0;
+            task.progressBytesCommitted = 0;
 
             // 重新加入下载队列
             pendingDownloads.Enqueue(task);
@@ -464,6 +898,30 @@ public class AssetBundleDownloader
         OnDownloadProgress?.Invoke(task);
     }
 
+    /// <summary>将本次下载字节计入总进度（同一任务只计一次）。</summary>
+    private void CommitDownloadProgress(DownloadTask task, long bytes)
+    {
+        if (task == null || bytes <= 0 || task.progressBytesCommitted > 0)
+        {
+            return;
+        }
+
+        task.progressBytesCommitted = bytes;
+        completedDownloadBytes += bytes;
+    }
+
+    /// <summary>失败/重试前回退已计入的进度字节。</summary>
+    private void RollbackDownloadProgress(DownloadTask task)
+    {
+        if (task == null || task.progressBytesCommitted <= 0)
+        {
+            return;
+        }
+
+        completedDownloadBytes = Math.Max(0, completedDownloadBytes - task.progressBytesCommitted);
+        task.progressBytesCommitted = 0;
+    }
+
     /// <summary>
     /// 开始转换任务
     /// </summary>
@@ -479,7 +937,7 @@ public class AssetBundleDownloader
     }
 
     /// <summary>
-    /// 转换协程
+    /// LZMA → LZ4Runtime。成功后 LoadFromFile 验一次；转换后文件 Hash 与清单不同，启动校验见 UpdateChecker。
     /// </summary>
     private IEnumerator ConvertBundleCoroutine(ConvertTask task)
     {
@@ -519,6 +977,8 @@ public class AssetBundleDownloader
             {
                 OnDownloadComplete?.Invoke(task.bundleName, bundle);
                 bundle.Unload(false);
+                // 转换完成才算真正落盘，此时再记入本地清单。
+                PersistCompletedBundle(task.bundleName);
                 task.callback?.Invoke(true, "Download and convert successful");
                 Log($"AB包 {task.bundleName} 转换完成");
             }
@@ -535,6 +995,14 @@ public class AssetBundleDownloader
 
         if (!success)
         {
+            // 转换失败：回退下载阶段已计入的进度。
+            if (task.progressBytesCommitted > 0)
+            {
+                completedDownloadBytes = Math.Max(0, completedDownloadBytes - task.progressBytesCommitted);
+                task.progressBytesCommitted = 0;
+            }
+
+            TryDeleteFile(task.targetPath);
             task.status = ConvertStatus.Failed;
             task.errorMessage = errorMessage;
             task.callback?.Invoke(false, errorMessage);
@@ -568,6 +1036,27 @@ public class AssetBundleDownloader
         foreach (var task in pendingConverts)
         {
             if (task.bundleName == bundleName) return true;
+        }
+
+        return false;
+    }
+
+    private bool IsPackAlreadyInQueue(string packName)
+    {
+        foreach (DownloadTask task in activeDownloads)
+        {
+            if (task.isPackDownload && task.packInfo != null && task.packInfo.PackName == packName)
+            {
+                return true;
+            }
+        }
+
+        foreach (DownloadTask task in pendingDownloads)
+        {
+            if (task.isPackDownload && task.packInfo != null && task.packInfo.PackName == packName)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -619,6 +1108,8 @@ public class AssetBundleDownloader
             {
                 task.webRequest.Abort();
             }
+
+            DisposeWebRequest(task);
             pendingDownloads.Enqueue(task); // 重新加入队列
         }
         activeDownloads.Clear();
@@ -640,7 +1131,146 @@ public class AssetBundleDownloader
 
     public void EndDownload()
     {
+        foreach (DownloadTask task in activeDownloads)
+        {
+            if (task.webRequest != null)
+            {
+                task.webRequest.Abort();
+            }
 
+            DisposeWebRequest(task);
+            DeleteDownloadArtifacts(task);
+        }
+        activeDownloads.Clear();
+
+        while (pendingDownloads.Count > 0)
+        {
+            pendingDownloads.Dequeue();
+        }
+
+        foreach (ConvertTask task in activeConverts)
+        {
+            TryDeleteFile(task.sourcePath);
+            TryDeleteFile(task.targetPath);
+        }
+        activeConverts.Clear();
+
+        while (pendingConverts.Count > 0)
+        {
+            ConvertTask task = pendingConverts.Dequeue();
+            TryDeleteFile(task.sourcePath);
+            TryDeleteFile(task.targetPath);
+        }
+
+        activePackOperations = 0;
+        loaderState = LoaderState.None;
+        bundleInfoDict = null;
+        Log("下载流程已终止，已清理未完成文件");
+    }
+
+    private static void DisposeWebRequest(DownloadTask task)
+    {
+        if (task?.webRequest == null)
+        {
+            return;
+        }
+
+        try
+        {
+            task.webRequest.Dispose();
+        }
+        catch (Exception e)
+        {
+            GameLogController.Warning($"释放 UnityWebRequest 失败: {e.Message}", LogTag);
+        }
+
+        task.webRequest = null;
+    }
+
+    /// <summary>
+    /// 单个 AB 落盘成功后增量写入本地清单，支持中断后续传。
+    /// </summary>
+    private void PersistCompletedBundle(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName) || currentManifest == null)
+        {
+            return;
+        }
+
+        CustomAssetBundleInfo info = null;
+        if (bundleInfoDict != null)
+        {
+            bundleInfoDict.TryGetValue(bundleName, out info);
+        }
+
+        if (info == null && currentManifest.AssetBundles != null)
+        {
+            for (int i = 0; i < currentManifest.AssetBundles.Count; i++)
+            {
+                CustomAssetBundleInfo candidate = currentManifest.AssetBundles[i];
+                if (candidate != null
+                    && string.Equals(candidate.BundleName, bundleName, StringComparison.OrdinalIgnoreCase))
+                {
+                    info = candidate;
+                    break;
+                }
+            }
+        }
+
+        if (info == null)
+        {
+            return;
+        }
+
+        AssetBundleUpdateChecker.UpsertLocalBundles(currentManifest, new[] { info });
+    }
+
+    private void PersistCompletedBundles(string[] bundleNames)
+    {
+        if (bundleNames == null || bundleNames.Length == 0 || currentManifest == null)
+        {
+            return;
+        }
+
+        var completed = new List<CustomAssetBundleInfo>();
+        for (int i = 0; i < bundleNames.Length; i++)
+        {
+            string bundleName = bundleNames[i];
+            if (string.IsNullOrEmpty(bundleName))
+            {
+                continue;
+            }
+
+            CustomAssetBundleInfo info = null;
+            if (bundleInfoDict != null)
+            {
+                bundleInfoDict.TryGetValue(bundleName, out info);
+            }
+
+            if (info == null && currentManifest.AssetBundles != null)
+            {
+                for (int j = 0; j < currentManifest.AssetBundles.Count; j++)
+                {
+                    CustomAssetBundleInfo candidate = currentManifest.AssetBundles[j];
+                    if (candidate != null
+                        && string.Equals(candidate.BundleName, bundleName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        info = candidate;
+                        break;
+                    }
+                }
+            }
+
+            if (info != null)
+            {
+                completed.Add(info);
+            }
+        }
+
+        if (completed.Count > 0)
+        {
+            AssetBundleUpdateChecker.UpsertLocalBundles(currentManifest, completed);
+        }
     }
 
     private void Log(string message)
@@ -659,8 +1289,86 @@ public class AssetBundleDownloader
         }
     }
 
+    /// <summary>
+    /// 对下载后的源文件进行二次校验（大小 + MD5）。
+    /// 注意：转换后的 LZ4 文件不会走此方法；启动时由 UpdateChecker 用本地清单源 Hash 判版本。
+    /// </summary>
+    private bool VerifyDownloadedFile(string bundleName, string filePath, out string errorMessage)
+    {
+        errorMessage = "";
+        if (bundleInfoDict == null || !bundleInfoDict.TryGetValue(bundleName, out CustomAssetBundleInfo info))
+        {
+            return true;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            errorMessage = "下载文件不存在";
+            return false;
+        }
+
+        try
+        {
+            FileInfo fileInfo = new FileInfo(filePath);
+            if (info.Size > 0 && fileInfo.Length != info.Size)
+            {
+                errorMessage = $"文件大小不匹配: 本地 {fileInfo.Length} B != 清单 {info.Size} B";
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(info.Hash))
+            {
+                string localHash = AssetBundleUpdateChecker.ComputeFileMD5(filePath);
+                if (!string.Equals(localHash, info.Hash, StringComparison.OrdinalIgnoreCase))
+                {
+                    errorMessage = $"MD5 不匹配: 本地 {localHash} != 清单 {info.Hash}";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            errorMessage = $"校验异常: {e.Message}";
+            return false;
+        }
+    }
+
     public LoaderState GetLoaderState()
     {
         return this.loaderState;
+    }
+
+    /// <summary>获取总下载进度（0~1）。</summary>
+    public float GetTotalProgress()
+    {
+        if (totalDownloadSize <= 0) return 0f;
+        return Mathf.Clamp01((float)downloadedBytes / totalDownloadSize);
+    }
+
+    /// <summary>获取已下载字节数。</summary>
+    public long GetDownloadedBytes()
+    {
+        return downloadedBytes;
+    }
+
+    /// <summary>获取总需要下载的字节数。</summary>
+    public long GetTotalDownloadSize()
+    {
+        return totalDownloadSize;
+    }
+
+    /// <summary>获取格式化后的下载速度文本。</summary>
+    public string GetDownloadSpeedText()
+    {
+        return FormatBytesPerSecond(downloadSpeed);
+    }
+
+    private static string FormatBytesPerSecond(float bytesPerSecond)
+    {
+        if (bytesPerSecond < 1024) return $"{bytesPerSecond:F0} B/s";
+        if (bytesPerSecond < 1024 * 1024) return $"{bytesPerSecond / 1024.0f:F2} KB/s";
+        return $"{bytesPerSecond / (1024.0f * 1024.0f):F2} MB/s";
     }
 }

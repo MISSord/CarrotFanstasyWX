@@ -2,6 +2,10 @@
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// AB 打包工具窗口。实际构建走 AssetBundleBuildPipeline.BuildAndManifest：
+/// 图集 → Build AB → 生成清单+Pack → 可选 StreamingAssets / 云上传。
+/// </summary>
 public class ABPackagerWindow : EditorWindow
 {
     private string outputPath = AssetBundleBuildSettings.DefaultOutputRoot;
@@ -141,6 +145,7 @@ public class ABPackagerWindow : EditorWindow
         }
 
         compressionType = (CompressionType)EditorGUILayout.EnumPopup("压缩格式", compressionType);
+        EditorGUILayout.HelpBox(GetCompressionFormatHint(compressionType), MessageType.None);
 
         EditorGUI.BeginDisabledGroup(true);
         EditorGUILayout.TextField("上一版本 ID", lastVersionNumber.ToString());
@@ -248,6 +253,22 @@ public class ABPackagerWindow : EditorWindow
             AssetBundlePackager.GetPlatformFolder(buildTarget));
     }
 
+    /// <summary>压缩格式与实际产物算法的对应说明（写入清单 CompressedFormat）。</summary>
+    static string GetCompressionFormatHint(CompressionType compression)
+    {
+        switch (compression)
+        {
+            case CompressionType.StandardCompression:
+                return "StandardCompression → 产物为 LZMA（CompressedFormat=0）。体积小，下载后需再压成 LZ4 才能高效加载。";
+            case CompressionType.ChunkBasedCompression:
+                return "ChunkBasedCompression → 产物为 LZ4（CompressedFormat=1）。推荐：体积与加载速度较均衡，下载后无需再转换。";
+            case CompressionType.NoCompression:
+                return "NoCompression → 产物无压缩（CompressedFormat=2）。体积最大，加载最快，适合本地调试。";
+            default:
+                return "未知压缩格式。";
+        }
+    }
+
     void DrawActions()
     {
         GUILayout.Space(10);
@@ -272,6 +293,7 @@ public class ABPackagerWindow : EditorWindow
     {
         AssetBundleBuildSettings.SetCdnUrlTemplate(cdnUrlTemplate);
 
+        // forceRebuild 时 Pipeline 会 OR ForceRebuildAssetBundle，并保留所选压缩格式。
         var request = new AssetBundleBuildPipeline.BuildRequest
         {
             OutputRoot = outputPath,

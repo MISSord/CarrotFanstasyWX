@@ -337,13 +337,14 @@ public class AssetBundleManager
     }
 
     // AB包清单数据
-    private Dictionary<string, CustomAssetBundleInfo> _bundleManifests = new Dictionary<string, CustomAssetBundleInfo>();
+    private Dictionary<string, CustomAssetBundleInfo> _bundleManifests = new Dictionary<string, CustomAssetBundleInfo>(System.StringComparer.OrdinalIgnoreCase);
+    private CustomManifest _currentManifest;
 
     // 已加载的AB包
-    private Dictionary<string, BundleInfo> _loadedBundles = new Dictionary<string, BundleInfo>();
+    private Dictionary<string, BundleInfo> _loadedBundles = new Dictionary<string, BundleInfo>(System.StringComparer.OrdinalIgnoreCase);
 
     //全部的AB包信息
-    private Dictionary<string, BundleInfo> _allBundleDic = new Dictionary<string, BundleInfo>();
+    private Dictionary<string, BundleInfo> _allBundleDic = new Dictionary<string, BundleInfo>(System.StringComparer.OrdinalIgnoreCase);
 
     // 不同优先级的加载队列
     private Queue<BundleInfo> _lowPriorityQueue = new Queue<BundleInfo>();
@@ -384,6 +385,14 @@ public class AssetBundleManager
 #if UNITY_EDITOR
         loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
 #endif
+    }
+
+    /// <summary>卸载内存中的 AB 包并清空清单（清除缓存时调用）。</summary>
+    public void ClearRuntimeCache()
+    {
+        DeleteMe();
+        _bundleManifests.Clear();
+        _currentManifest = null;
     }
 
     public void DeleteMe()
@@ -431,6 +440,7 @@ public class AssetBundleManager
             return;
         }
 
+        _currentManifest = manifests;
         _bundleManifests.Clear();
         foreach (var abInfo in manifests.AssetBundles)
         {
@@ -896,13 +906,42 @@ public class AssetBundleManager
         // 检查本地是否存在（持久化目录或 StreamingAssets）
         if (!AssetBundlePathHelper.IsBundleAvailableAtRuntime(bundleName))
         {
-            DownloadBundle(bundleName, (bool isSucee, string message) =>
+            DownloadBundle(bundleName, (bool isSuccess, string message) =>
             {
-                if (isSucee)
+                if (isSuccess)
                 {
                     // 下载完成后重新尝试加载
                     LoadBundleWithDependencies(bundleName, priority);
+                    return;
                 }
+
+                GameLogController.Error(
+                    $"按需下载 AB 失败: {bundleName}, {message}",
+                    "AssetBundleManager");
+                OnBundleLoadFailed?.Invoke(bundleName);
+
+                BundleInfo failedInfo = GetBundleInfo(bundleName);
+                if (failedInfo == null)
+                {
+                    return;
+                }
+
+                foreach (string assetName in failedInfo.pendingAssets.ToList())
+                {
+                    var assetItem = failedInfo.GetAssetItem(assetName);
+                    if (assetItem == null)
+                    {
+                        continue;
+                    }
+
+                    assetItem.loadRequest = null;
+                    assetItem.assetObject = null;
+                    assetItem.RemoveReference();
+                    failedInfo.RemoveReference();
+                    assetItem.ExecuteCallbacks();
+                }
+
+                failedInfo.pendingAssets.Clear();
             });
             return;
         }
@@ -981,19 +1020,57 @@ public class AssetBundleManager
         // 递归加载依赖的依赖
         LoadBundleWithDependencies(dependencyName, priority);
 
-        // 监听依赖包加载完成事件
+        // 监听依赖包加载完成 / 失败
         System.Action<string> onDependencyLoaded = null;
+        System.Action<string> onDependencyFailed = null;
+
         onDependencyLoaded = (bundleName) =>
         {
             if (bundleName == dependencyName)
             {
-                // 依赖包加载完成，通知父包
                 parentBundle.OnDependencyLoaded(dependencyName);
-                OnBundleLoaded -= onDependencyLoaded; // 移除监听
+                OnBundleLoaded -= onDependencyLoaded;
+                OnBundleLoadFailed -= onDependencyFailed;
             }
         };
 
+        onDependencyFailed = (bundleName) =>
+        {
+            if (bundleName != dependencyName)
+            {
+                return;
+            }
+
+            OnBundleLoaded -= onDependencyLoaded;
+            OnBundleLoadFailed -= onDependencyFailed;
+
+            // 依赖失败：通知父包失败，避免资源回调永久挂起。
+            GameLogController.Error(
+                $"依赖包加载失败: {dependencyName}，父包 {parentBundle.bundleName} 无法继续",
+                "AssetBundleManager");
+            OnBundleLoadFailed?.Invoke(parentBundle.bundleName);
+
+            foreach (string assetName in parentBundle.pendingAssets.ToList())
+            {
+                var assetItem = parentBundle.GetAssetItem(assetName);
+                if (assetItem == null)
+                {
+                    continue;
+                }
+
+                assetItem.loadRequest = null;
+                assetItem.assetObject = null;
+                assetItem.RemoveReference();
+                parentBundle.RemoveReference();
+                assetItem.ExecuteCallbacks();
+            }
+
+            parentBundle.pendingAssets.Clear();
+            parentBundle.onDependenciesLoaded = null;
+        };
+
         OnBundleLoaded += onDependencyLoaded;
+        OnBundleLoadFailed += onDependencyFailed;
     }
 
     // 新增方法：内部加载AB包逻辑
@@ -1160,23 +1237,22 @@ public class AssetBundleManager
             return;
         }
 
-        bundleInfo.isLoading = true;
-        _loadingBundles.Add(bundleInfo);
-        _loadingBundleNames.Add(bundleInfo.bundleName);
-
         string path = AssetBundlePathHelper.GetRuntimeLoadPath(bundleInfo.bundleName);
 
         if (bundleInfo.loadPriority == LoadPriority.Sync)
         {
-            // 同步加载
+            // 同步加载：不进入 _loadingBundles，避免占死并发槽。
+            bundleInfo.isLoading = true;
+            _loadingBundleNames.Add(bundleInfo.bundleName);
             bundleInfo.bundle = AssetBundle.LoadFromFile(path);
             OnBundleLoadComplete(bundleInfo);
+            return;
         }
-        else
-        {
-            // 异步加载
-            bundleInfo.bundleRequest = AssetBundle.LoadFromFileAsync(path);
-        }
+
+        bundleInfo.isLoading = true;
+        _loadingBundles.Add(bundleInfo);
+        _loadingBundleNames.Add(bundleInfo.bundleName);
+        bundleInfo.bundleRequest = AssetBundle.LoadFromFileAsync(path);
 
         GameLogController.Log($"开始加载AB包: {bundleInfo.bundleName}, 优先级: {bundleInfo.loadPriority}, 依赖数: {bundleInfo.Dependencies.Count}", "AssetBundleManager");
     }
@@ -1396,6 +1472,17 @@ public class AssetBundleManager
     // 将AB包加入加载队列
     private void AddBundleToQueue(BundleInfo bundleInfo, LoadPriority priority)
     {
+        if (bundleInfo.isLoading || bundleInfo.isLoaded || _loadingBundleNames.Contains(bundleInfo.bundleName))
+        {
+            return;
+        }
+
+        // 已在任一优先级队列中则不再重复入队。
+        if (IsBundleInAnyQueue(bundleInfo))
+        {
+            return;
+        }
+
         switch (priority)
         {
             case LoadPriority.Low:
@@ -1414,17 +1501,27 @@ public class AssetBundleManager
         }
     }
 
-    // 下载AB包
+    private bool IsBundleInAnyQueue(BundleInfo bundleInfo)
+    {
+        return _lowPriorityQueue.Contains(bundleInfo)
+            || _mediumPriorityQueue.Contains(bundleInfo)
+            || _highPriorityQueue.Contains(bundleInfo);
+    }
+
+    // 下载AB包（按需补齐缺失文件）
     private void DownloadBundle(string bundleName, System.Action<bool, string> onDownloadComplete)
     {
         if (AssetBundleDownloader.Instance == null)
         {
             GameLogController.Error("AB下载器未设置", "AssetBundleManager");
+            onDownloadComplete?.Invoke(false, "Downloader missing");
             return;
         }
 
-        GameLogController.Log($"开始下载AB包: {bundleName}", "AssetBundleManager");
-        AssetBundleDownloader.Instance.DownloadBundle(bundleName, false, onDownloadComplete);
+        // CompressedFormat==0（LZMA）时需要下载后转 LZ4。
+        bool needConvert = _currentManifest != null && _currentManifest.CompressedFormat == 0;
+        GameLogController.Log($"开始下载AB包: {bundleName}, needConvert={needConvert}", "AssetBundleManager");
+        AssetBundleDownloader.Instance.DownloadBundle(bundleName, needConvert, onDownloadComplete);
     }
 
     // 卸载检查协程

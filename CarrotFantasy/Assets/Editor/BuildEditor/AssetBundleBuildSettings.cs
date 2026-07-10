@@ -2,7 +2,9 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>Editor 与运行时共用的 AB 构建/发布配置（路径、CDN 模板、版本号）。</summary>
+/// <summary>Editor 与运行时共用的 AB 构建/发布配置（路径、CDN 模板、版本号）。
+/// WriteRuntimeConfig 写入 StreamingAssets/ab_runtime_config.json，供 AssetBundlePathHelper 读取 CDN 模板。
+/// </summary>
 public static class AssetBundleBuildSettings
 {
     public const string DefaultOutputRoot = "Build/AssetBundles";

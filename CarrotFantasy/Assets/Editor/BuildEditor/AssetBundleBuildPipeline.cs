@@ -2,17 +2,30 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>AB 打包统一入口：Build → Manifest → 可选发布到 StreamingAssets。</summary>
+/// <summary>
+/// AB 打包统一入口（Editor）。
+///
+/// 完整流程：
+/// 1. 可选：打包 UI 图集（AtlasPackager）
+/// 2. BuildPipeline 生成平台 AB 到 Build/AssetBundles/{平台}/
+/// 3. 扫描落盘 AB，生成 custom_manifest.json（含 Size/MD5/依赖）
+/// 4. AssetBundlePackMerger 按规则合并 ZIP Pack，写入 DownloadPacks
+/// 5. 可选：拷贝到 StreamingAssets；写入 ab_runtime_config.json（CDN 模板）
+///
+/// 运行时热更会读取该清单：先按 AB 对比差异，再按 DownloadPacks 合并下载。
+/// </summary>
 public static class AssetBundleBuildPipeline
 {
     public struct BuildRequest
     {
         public string OutputRoot;
         public BuildTarget BuildTarget;
+        /// <summary>写入清单 CompressedFormat：0=LZMA，1=LZ4(ChunkBased)，2=无压缩。</summary>
         public CompressionType Compression;
         public int ManifestVersion;
         public bool ClearOutputFolder;
         public bool CopyToStreamingAssets;
+        /// <summary>强制重建时必须与 Compression 做按位或，否则会丢掉压缩选项、默认为 LZMA。</summary>
         public bool ForceRebuild;
         public bool ShowManifestDialog;
         public bool PackAtlasesBeforeBuild;
@@ -55,19 +68,26 @@ public static class AssetBundleBuildPipeline
         AssetBundleBuildSettings.SetBuildTarget(request.BuildTarget);
         AssetBundleBuildSettings.SetCompressionType(request.Compression);
 
+        // 平台输出目录：{OutputRoot}/{StandaloneWindows|Android|...}
+        // 注意：Win32/Win64 共用 StandaloneWindows，交替打包会互相覆盖。
         string platformPath = Path.Combine(
             Path.GetFullPath(Path.Combine(Application.dataPath, "..", request.OutputRoot)),
             AssetBundlePackager.GetPlatformFolder(request.BuildTarget));
         result.PlatformBundlePath = platformPath;
 
+        // —— 步骤 1：图集 ——
         if (request.PackAtlasesBeforeBuild)
         {
             AtlasPackager.PackForAbBuild();
         }
 
-        BuildAssetBundleOptions options = request.ForceRebuild
-            ? BuildAssetBundleOptions.ForceRebuildAssetBundle
-            : AssetBundlePackager.GetCompressionOption(request.Compression);
+        // —— 步骤 2：打 AB ——
+        // ForceRebuild 只能附加，不能替换压缩选项。
+        BuildAssetBundleOptions options = AssetBundlePackager.GetCompressionOption(request.Compression);
+        if (request.ForceRebuild)
+        {
+            options |= BuildAssetBundleOptions.ForceRebuildAssetBundle;
+        }
 
         bool built = AssetBundlePackager.BuildAssetBundles(
             platformPath,
@@ -81,6 +101,7 @@ public static class AssetBundleBuildPipeline
             return result;
         }
 
+        // —— 步骤 3+4：清单 + Pack 合并（在 GenerateManifest 内部完成）——
         result.Manifest = AssetBundlePackager.GenerateManifest(
             Path.GetFullPath(Path.Combine(Application.dataPath, "..", request.OutputRoot)),
             request.BuildTarget,
@@ -93,6 +114,7 @@ public static class AssetBundleBuildPipeline
             return result;
         }
 
+        // —— 步骤 5：可选内置包 + 运行时 CDN 配置 ——
         if (request.CopyToStreamingAssets)
         {
             AssetBundlePackager.CopyToStreamingAssets(platformPath, request.BuildTarget);

@@ -6,15 +6,16 @@ using UnityEngine;
 // 游戏状态枚举
 public enum GameState
 {
-    CheckUpdate,    // 检测更新
-    Download,       // 下载AB包
-    Login,          // 登录
-    SelectGameMode, // 选择单机/联机
-    EnterGame,      // 进游戏
-    InGame,         // 游戏中
-    Restart,        // 重启游戏
-    Exit,           // 游戏退出
-    Error,          // 游戏进程错误状态
+    CheckUpdate,      // 检测更新
+    DownloadConfirm,  // 下载确认
+    Download,         // 下载AB包
+    Login,            // 登录
+    SelectGameMode,   // 选择单机/联机
+    EnterGame,        // 进游戏
+    InGame,           // 游戏中
+    Restart,          // 重启游戏
+    Exit,             // 游戏退出
+    Error,            // 游戏进程错误状态
 }
 
 // 状态机接口
@@ -78,9 +79,11 @@ public class GameStateMachine
 
         // 初始化所有状态
         states.Add(GameState.CheckUpdate, new CheckUpdateState(gameContext));
+        states.Add(GameState.DownloadConfirm, new DownloadConfirmState(gameContext));
         states.Add(GameState.Download, new DownloadState(gameContext));
         states.Add(GameState.SelectGameMode, new SelectGameModeState(gameContext));
         states.Add(GameState.EnterGame, new EnterGameState(gameContext));
+        states.Add(GameState.Error, new ErrorState(gameContext));
 
         ViewManager.Instance.OpenView<StartLoadPanel>();
 
@@ -138,6 +141,7 @@ public class CheckUpdateState : BaseGameState
     public override void Enter()
     {
         Debug.Log("进入检测更新流程");
+        context.Clear();
         useTestingBootstrap = false;
         isFinishCheck = false;
 
@@ -164,8 +168,7 @@ public class CheckUpdateState : BaseGameState
         if (finalResutl.totalDownloadSize > 0) //有需要下载的
         {
             Debug.Log(string.Format("校验完成回调，需要下载{0}B的资源", finalResutl.totalDownloadSize));
-            // 打开下载确认界面
-            //ViewManager.Instance.OpenView("");
+            // 需要下载资源，进入 DownloadConfirmState 后弹出 IMGUI 确认对话框
         }
     }
 
@@ -197,7 +200,7 @@ public class CheckUpdateState : BaseGameState
         {
             if (context.result.hasChanges)
             {
-                root?.ChangeMachineState(GameState.Download);
+                root?.ChangeMachineState(GameState.DownloadConfirm);
             }
             else
             {
@@ -219,7 +222,7 @@ public class CheckUpdateState : BaseGameState
 
         if (context.result.hasChanges == true)
         {
-            root?.ChangeMachineState(GameState.Download);
+            root?.ChangeMachineState(GameState.DownloadConfirm);
         }
         else
         {
@@ -239,10 +242,73 @@ public class CheckUpdateState : BaseGameState
     public override GameState GetStateType() => GameState.CheckUpdate;
 }
 
+public class DownloadConfirmState : BaseGameState
+{
+    private GameObject dialogObject;
+
+    public DownloadConfirmState(GameContext context) : base(context)
+    {
+    }
+
+    public override void Enter()
+    {
+        Debug.Log("进入下载确认流程");
+        ShowDialog();
+    }
+
+    public override void Update()
+    {
+    }
+
+    public override void Exit()
+    {
+        Debug.Log("退出下载确认流程");
+        if (dialogObject != null)
+        {
+            GameObject.Destroy(dialogObject);
+            dialogObject = null;
+        }
+    }
+
+    public override GameState GetStateType() => GameState.DownloadConfirm;
+
+    private void ShowDialog()
+    {
+        if (context.result == null)
+        {
+            Debug.LogError("下载确认：更新结果为空，无法显示对话框");
+            return;
+        }
+
+        dialogObject = new GameObject("DownloadConfirmDialog");
+        GameMain main = GameObject.FindObjectOfType<GameMain>();
+        if (main != null)
+        {
+            dialogObject.transform.SetParent(main.transform, false);
+        }
+
+        DownloadConfirmDialog dialog = dialogObject.AddComponent<DownloadConfirmDialog>();
+        dialog.Setup(context.result.totalDownloadSize, OnDownloadClicked, OnExitClicked);
+    }
+
+    private void OnDownloadClicked()
+    {
+        GameMain root = GameObject.FindObjectOfType<GameMain>();
+        root?.ChangeMachineState(GameState.Download);
+    }
+
+    private void OnExitClicked()
+    {
+        BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.GAME_QUIT);
+    }
+}
+
 public class DownloadState : BaseGameState
 {
     private AssetBundleDownloader downloader;
-    private bool isSetABMainifest = false;
+    private bool isDownloadFinished;
+    private bool isDownloadSuccess;
+    private GameObject progressDialogObject;
 
     public DownloadState(GameContext gameContext) : base(gameContext)
     {
@@ -252,35 +318,69 @@ public class DownloadState : BaseGameState
 
     public override void Enter()
     {
-        isSetABMainifest = false;
+        isDownloadFinished = false;
+        isDownloadSuccess = false;
         Debug.Log("进入下载流程");
-        downloader?.StartDownload(context, FinsihDownCallBack, FinishDownLoadCallBack);
+        CreateProgressDialog();
+        downloader?.StartDownload(context, OnAllDownloadsFinished, OnAllDownloadsAndConvertsFinished);
     }
 
-    //只完成了全部下载的回调
-    private void FinsihDownCallBack(bool isSuccess)
+    private void CreateProgressDialog()
     {
-        Debug.Log("完成全部AB包下载");
+        progressDialogObject = new GameObject("DownloadProgressDialog");
+        GameMain main = GameObject.FindObjectOfType<GameMain>();
+        if (main != null)
+        {
+            progressDialogObject.transform.SetParent(main.transform, false);
+        }
+
+        DownloadProgressDialog dialog = progressDialogObject.AddComponent<DownloadProgressDialog>();
+        dialog.Setup(downloader);
     }
 
-    //完成全部下载和解压的回调
-    private void FinishDownLoadCallBack(bool isSuccess)
+    /// <summary>全部下载任务结束（尚未等转换时也可能触发；当前 Downloader 主要走 completeCallback）。</summary>
+    private void OnAllDownloadsFinished(bool isSuccess)
     {
+        Debug.Log(isSuccess ? "完成全部 AB 包下载" : "AB 包下载存在失败");
+    }
+
+    /// <summary>全部下载与解压/转换结束。</summary>
+    private void OnAllDownloadsAndConvertsFinished(bool isSuccess)
+    {
+        isDownloadFinished = true;
+        isDownloadSuccess = isSuccess;
+        if (!isSuccess)
+        {
+            Debug.LogError("AB 包下载未全部成功，不更新本地清单");
+            return;
+        }
+
+        // 仅全部成功后写本地清单，避免失败时远程 Hash 落盘导致下次误判已最新。
         AssetBundleUpdateChecker.SaveLocalManifest(context.result.customManifest);
         AssetBundleManager.Instance.SetAssetBundleItem(context.result.customManifest);
         LubanConfigLoader.Reload();
         GameJsonLoader.Reload();
-        isSetABMainifest = true;
     }
 
     public override void Update()
     {
         downloader?.Update();
 
-        //下载和解压完成，进行登录状态
-        if (downloader != null && downloader.GetLoaderState() == LoaderState.Idle && isSetABMainifest == true)
+        if (!isDownloadFinished)
         {
-            GameMain root = GameObject.FindObjectOfType<GameMain>();
+            return;
+        }
+
+        GameMain root = GameObject.FindObjectOfType<GameMain>();
+        if (!isDownloadSuccess)
+        {
+            root?.ChangeMachineState(GameState.Error);
+            return;
+        }
+
+        // 下载和解压完成，进入模式选择
+        if (downloader != null && downloader.GetLoaderState() == LoaderState.Idle)
+        {
             root?.ChangeMachineState(GameState.SelectGameMode);
         }
     }
@@ -288,10 +388,52 @@ public class DownloadState : BaseGameState
     public override void Exit()
     {
         Debug.Log("退出下载流程");
+        if (progressDialogObject != null)
+        {
+            GameObject.Destroy(progressDialogObject);
+            progressDialogObject = null;
+        }
         downloader?.EndDownload();
+        isDownloadFinished = false;
+        isDownloadSuccess = false;
     }
 
     public override GameState GetStateType() => GameState.Download;
+}
+
+/// <summary>热更检查或下载失败时的兜底状态：提示后退出。</summary>
+public class ErrorState : BaseGameState
+{
+    public ErrorState(GameContext context) : base(context)
+    {
+    }
+
+    public override void Enter()
+    {
+        Debug.LogError("进入错误状态：资源更新失败");
+#if UNITY_EDITOR
+        if (UnityEditor.EditorUtility.DisplayDialog(
+                "资源更新失败",
+                "资源下载或校验失败，请检查网络后重试。",
+                "退出"))
+        {
+            UnityEditor.EditorApplication.isPlaying = false;
+        }
+#else
+        BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.GAME_QUIT);
+#endif
+    }
+
+    public override void Update()
+    {
+    }
+
+    public override void Exit()
+    {
+        Debug.Log("退出错误状态");
+    }
+
+    public override GameState GetStateType() => GameState.Error;
 }
 
 public class LoginState : BaseGameState

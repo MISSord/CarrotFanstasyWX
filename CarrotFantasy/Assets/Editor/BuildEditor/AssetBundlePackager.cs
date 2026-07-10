@@ -1,9 +1,22 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// Editor 侧 AB 构建与清单生成。
+///
+/// BuildAssetBundles：调用 Unity BuildPipeline，输出到平台目录。
+/// GenerateManifest：以「磁盘上实际存在的 AB 文件」为准写 custom_manifest.json，
+/// 再调用 PackMerger 生成 packs/*.zip 与 DownloadPacks。
+///
+/// 清单字段与运行时校验的对应关系：
+/// - Size / Hash：构建产物的字节大小与 MD5（下载后二次校验用）
+/// - CompressedFormat：0 时运行时会再压成 LZ4，启动校验不能再用该 Hash 对转换后文件
+/// - Dependencies：扁平依赖列表，供加载时预拉依赖包
+/// </summary>
 public static class AssetBundlePackager
 {
     public static readonly BuildTarget[] availablePlatforms = {
@@ -24,7 +37,10 @@ public static class AssetBundlePackager
         "WebGL",
     };
 
-    /// <summary>Build asset bundles to output path（平台子目录，如 .../StandaloneWindows）。</summary>
+    /// <summary>
+    /// 构建 AB 到指定平台输出目录（如 .../StandaloneWindows）。
+    /// clearFolders 为 true 时会整目录删除；仅拒绝盘符根与工程根，输出路径请勿指到桌面等。
+    /// </summary>
     public static bool BuildAssetBundles(string outputPath,
                                         BuildTarget buildTarget,
                                         BuildAssetBundleOptions compression = BuildAssetBundleOptions.None,
@@ -106,6 +122,9 @@ public static class AssetBundlePackager
         AssetDatabase.Refresh();
     }
 
+    /// <summary>
+    /// 平台目录名。Win32 与 Win64 均映射为 StandaloneWindows，与运行时 GetRuntimePlatformFolder 一致。
+    /// </summary>
     public static string GetPlatformFolder(BuildTarget target)
     {
         switch (target)
@@ -148,6 +167,16 @@ public static class AssetBundlePackager
         return repath.ToLower();
     }
 
+    /// <summary>
+    /// 生成 custom_manifest.json。
+    ///
+    /// 流程：
+    /// 1. 扫描平台输出目录中的 AB 文件（跳过 .meta/.manifest/.json/.txt、平台总清单文件、packs/）
+    /// 2. 为每个文件写 BundleName / Size / MD5 / 扁平依赖
+    /// 3. 诊断「AssetDatabase 有登记但未落盘」的包（只告警，不写入清单）
+    /// 4. PackMerger 合并 ZIP，填充 DownloadPacks
+    /// 5. 落盘 custom_manifest.json 与 version.txt
+    /// </summary>
     public static CustomManifest GenerateManifest(
         string bundleRootPath,
         BuildTarget target,
@@ -171,6 +200,7 @@ public static class AssetBundlePackager
             BuildTime = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
             buildTime = System.DateTime.Now.Ticks,
             ManifestVersion = versionNumber,
+            // 与 CompressionType 枚举序号一致，运行时用 CompressedFormat==0 判断是否需 LZ4 再压缩。
             CompressedFormat = compressedFormat,
         };
 
@@ -188,7 +218,15 @@ public static class AssetBundlePackager
                 }
 
                 string bundleKey = GetBundlePath(bundlePath, file);
+                // Unity 会在输出目录生成与平台同名的总清单 AB，不进入热更列表。
                 if (IsPlatformManifestBundleFile(bundleKey, target))
+                {
+                    continue;
+                }
+
+                // packs/ 是合并下载产物，由 DownloadPacks 描述，不作为独立 AB 条目。
+                if (bundleKey.StartsWith(PackGroupingDefaults.PacksFolderName + "/", StringComparison.OrdinalIgnoreCase)
+                    || file.EndsWith(PackGroupingDefaults.PackFileExtension, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
@@ -222,6 +260,9 @@ public static class AssetBundlePackager
         }
 
         LogMissingOnDiskSummary(missingOnDisk);
+
+        // 合并 Pack 必须在写 JSON 之前，以便 DownloadPacks 一并序列化。
+        AssetBundlePackMerger.BuildPacks(generatedManifest, bundlePath);
 
         string manifestJson = JsonUtility.ToJson(generatedManifest, true);
         string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");

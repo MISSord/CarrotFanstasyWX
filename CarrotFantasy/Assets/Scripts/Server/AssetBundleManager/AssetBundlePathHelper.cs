@@ -5,6 +5,11 @@ using UnityEngine;
 /// <summary>
 /// AssetBundle 路径管理：持久化目录、StreamingAssets、热更 CDN 根 URL。
 /// CDN 模板由 Editor 写入 StreamingAssets/ab_runtime_config.json。
+///
+/// 加载优先级（GetRuntimeLoadPath）：
+/// 1. persistentDataPath/DownloadedAssetBundles/{bundle}
+/// 2. Editor：Build 输出（file:// CDN 模板指向的目录）
+/// 3. StreamingAssets/AssetBundles/{平台}/{bundle}
 /// </summary>
 public static class AssetBundlePathHelper
 {
@@ -158,7 +163,9 @@ public static class AssetBundlePathHelper
             fileName);
 
 #if UNITY_ANDROID && !UNITY_EDITOR
-        return true;
+        // Android StreamingAssets 无法用 File.Exists 可靠探测；
+        // 仅当持久化目录已有文件时视为可用，否则走下载/解压流程。
+        return false;
 #else
         return File.Exists(streamingPath);
 #endif

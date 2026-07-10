@@ -68,6 +68,11 @@ namespace CarrotFantasy
                 return;
             }
 
+            if (this.phase == Phase.SelectMode)
+            {
+                this.DrawClearCacheButton();
+            }
+
             float panelWidth = 360f;
             float panelHeight = this.phase == Phase.SelectMode ? 190f : (string.IsNullOrEmpty(this.loginPrompt) ? 260f : 300f);
             float x = (Screen.width - panelWidth) * 0.5f;
@@ -94,6 +99,29 @@ namespace CarrotFantasy
             }
 
             GUILayout.EndArea();
+        }
+
+        private void DrawClearCacheButton()
+        {
+            const float buttonWidth = 110f;
+            const float buttonHeight = 36f;
+            float x = Screen.width - buttonWidth - 20f;
+            float y = 20f;
+
+            if (GUI.Button(new Rect(x, y, buttonWidth, buttonHeight), "清除缓存"))
+            {
+                this.OnClearCacheClicked();
+            }
+        }
+
+        private void OnClearCacheClicked()
+        {
+            AssetBundleCacheCleaner.ClearAll();
+            this.Hide();
+            if (this.gameMain != null)
+            {
+                this.gameMain.ChangeMachineState(GameState.CheckUpdate);
+            }
         }
 
         private void DrawSelectMode()

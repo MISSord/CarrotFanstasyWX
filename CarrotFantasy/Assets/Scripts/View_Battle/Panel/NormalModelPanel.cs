@@ -209,6 +209,8 @@ namespace CarrotFantasy
             }
 
             this.InitPages();
+            // 重开时 StartUI 可能仍为 active，需先关掉再开，才能让 Animator 从头播放倒计时。
+            this.nodeStartUI.SetActive(false);
             this.nodeStartUI.SetActive(true);
         }
 
