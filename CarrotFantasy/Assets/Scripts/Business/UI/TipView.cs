@@ -1,4 +1,3 @@
-using DG.Tweening;
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,7 +10,7 @@ namespace CarrotFantasy
         private Image imgBg;
         private GameObject nodeTran;
         private Transform transform;
-        private Tween[] mainPanelTween;//0.上，1.下
+        private SimpleTween[] mainPanelTween;
 
         private Vector3 defaultPosition;
         private int scheId;
@@ -31,11 +30,11 @@ namespace CarrotFantasy
             this.defaultPosition = new Vector3(0, -(curSize.y / 2 + PREFAB_HEIGHT), 0.5f);
             this.transform.localPosition = this.defaultPosition;
 
-            mainPanelTween = new Tween[2];
-            mainPanelTween[0] = transform.DOLocalMoveY(0, 0.5f);
+            mainPanelTween = new SimpleTween[2];
+            mainPanelTween[0] = SimpleTween.LocalMoveY(transform, 0, 0.5f);
             mainPanelTween[0].SetAutoKill(false);
             mainPanelTween[0].Pause();
-            mainPanelTween[1] = transform.DOLocalMoveY(curSize.y / 2 + PREFAB_HEIGHT, 0.5f);
+            mainPanelTween[1] = SimpleTween.LocalMoveY(transform, curSize.y / 2 + PREFAB_HEIGHT, 0.5f);
             mainPanelTween[1].SetAutoKill(false);
             mainPanelTween[1].Pause();
             mainPanelTween[1].OnComplete(() =>

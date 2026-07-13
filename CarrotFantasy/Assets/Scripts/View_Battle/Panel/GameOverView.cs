@@ -71,14 +71,12 @@ namespace CarrotFantasy
 
         private void OnReplay()
         {
-            UIServer.Instance.PlayButtonEffect();
             Close();
             this.battle.eventDispatcher.DispatchEvent(BattleEvent.REPLAY_THE_GAME);
         }
 
         private void OnChooseOtherLevel()
         {
-            UIServer.Instance.PlayButtonEffect();
             Close();
             BusinessProvision.Instance.eventDispatcher.DispatchEvent(CommonEventType.RETURN_TO_MAIN_SCENE);
         }

@@ -1,4 +1,3 @@
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -114,9 +113,12 @@ namespace CarrotFantasy
 
             }
 
-            DOTween.To(() => scrollRect.horizontalNormalizedPosition, lerpValue => scrollRect.horizontalNormalizedPosition = lerpValue,
-                lastProportion, 0.5f).SetEase(Ease.OutQuint);
-            UIServer.Instance.PlayPagingEffect();
+            SimpleTween.To(
+                () => scrollRect.horizontalNormalizedPosition,
+                lerpValue => scrollRect.horizontalNormalizedPosition = lerpValue,
+                lastProportion,
+                0.5f,
+                SimpleEase.OutQuint);
         }
 
         public void OnBeginDrag(PointerEventData eventData)
@@ -126,5 +128,4 @@ namespace CarrotFantasy
     }
 
 }
-
 

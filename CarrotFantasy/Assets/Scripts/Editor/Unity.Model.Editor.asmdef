@@ -1,7 +1,9 @@
 {
     "name": "Unity.Model.Editor",
     "references": [
-        "Unity.Model",
+        "CarrotFantasy.HotUpdate",
+        "CarrotFantasy.AOT",
+        "CarrotFantasy.Shared",
         "Unity.ThirdParty",
         "CfNet.Generated"
     ],

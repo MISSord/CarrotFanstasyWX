@@ -17,6 +17,10 @@ namespace CarrotFantasy
             this.zhLangage.Add(1002, "你共击退了   {0}  {1}    / {2} 波怪物");
             this.zhLangage.Add(1003, "关卡:{0}-{1} 当前处于冒险模式");
             this.zhLangage.Add(1004, "金币数量不足");
+
+            //settingPanel
+            this.zhLangage.Add(2001, "当前分辨率：{0}");
+            this.zhLangage.Add(2002, "当前显示设置：{0}");
         }
     }
 }

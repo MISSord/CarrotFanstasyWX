@@ -68,7 +68,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (this.phase == Phase.SelectMode)
+            if (this.phase == Phase.SelectMode && this.ShouldShowClearCacheButton())
             {
                 this.DrawClearCacheButton();
             }
@@ -99,6 +99,19 @@ namespace CarrotFantasy
             }
 
             GUILayout.EndArea();
+        }
+
+        private bool ShouldShowClearCacheButton()
+        {
+#if UNITY_EDITOR
+            // 开发 / Debug 模式不走 AB 下载，隐藏选模式页上的清缓存入口。
+            LoadMode loadMode = (LoadMode)UnityEditor.EditorPrefs.GetInt("GameLoadMode", 0);
+            if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+            {
+                return false;
+            }
+#endif
+            return true;
         }
 
         private void DrawClearCacheButton()

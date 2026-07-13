@@ -672,7 +672,7 @@ PlayerSettings:
     iPhone: 1
   scriptingBackend:
     Android: 1
-    Standalone: 0
+    Standalone: 1
     iPhone: 1
   il2cppCompilerConfiguration: {}
   managedStrippingLevel:
@@ -780,7 +780,7 @@ PlayerSettings:
   luminVersion:
     m_VersionCode: 1
     m_VersionName: 
-  apiCompatibilityLevel: 6
+  apiCompatibilityLevel: 3
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
   cloudProjectId: 

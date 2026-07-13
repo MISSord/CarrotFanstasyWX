@@ -19,6 +19,14 @@ public static class AssetBundleCloudUploader
 {
     public static AssetBundleCloudUploadResult UploadDirectory(string localDirectory)
     {
+        return UploadDirectory(localDirectory, relativePathFilter: null);
+    }
+
+    /// <param name="relativePathFilter">返回 true 表示上传；null 表示全部上传。</param>
+    public static AssetBundleCloudUploadResult UploadDirectory(
+        string localDirectory,
+        Func<string, bool> relativePathFilter)
+    {
         var result = new AssetBundleCloudUploadResult();
 
         if (!AssetBundleDeploySettings.TryValidate(out string validationError))
@@ -33,7 +41,7 @@ public static class AssetBundleCloudUploader
             return result;
         }
 
-        List<LocalUploadFile> files = CollectFiles(localDirectory);
+        List<LocalUploadFile> files = CollectFiles(localDirectory, relativePathFilter);
         if (files.Count == 0)
         {
             result.Message = "本地目录中没有可上传的文件。";
@@ -115,6 +123,33 @@ public static class AssetBundleCloudUploader
         }
     }
 
+    /// <summary>代码热更：只上传 hybridclr / 清单 / version / packs。</summary>
+    public static bool IsCodeHotUpdateUploadPath(string relativePath)
+    {
+        if (string.IsNullOrEmpty(relativePath))
+        {
+            return false;
+        }
+
+        string path = relativePath.Replace('\\', '/').ToLowerInvariant();
+        if (path == "custom_manifest.json" || path == "version.txt")
+        {
+            return true;
+        }
+
+        if (path.StartsWith("hybridclr/", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (path.StartsWith("packs/", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     static SftpClient CreateClient()
     {
         string host = AssetBundleDeploySettings.Host.Trim();
@@ -142,7 +177,9 @@ public static class AssetBundleCloudUploader
         return new SftpClient(connectionInfo);
     }
 
-    static List<LocalUploadFile> CollectFiles(string localDirectory)
+    static List<LocalUploadFile> CollectFiles(
+        string localDirectory,
+        Func<string, bool> relativePathFilter)
     {
         var files = new List<LocalUploadFile>();
         string root = Path.GetFullPath(localDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -156,6 +193,11 @@ public static class AssetBundleCloudUploader
 
             string relativePath = fullPath.Substring(root.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
             relativePath = relativePath.Replace('\\', '/');
+
+            if (relativePathFilter != null && !relativePathFilter(relativePath))
+            {
+                continue;
+            }
 
             var info = new FileInfo(fullPath);
             files.Add(new LocalUploadFile

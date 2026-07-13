@@ -216,6 +216,11 @@ namespace CarrotFantasy.EditorTools
                 ExecuteCommand();
             }
 
+            if (GUILayout.Button("清空下载缓存", GUILayout.Width(110f), GUILayout.Height(28f)))
+            {
+                ClearDownloadCache();
+            }
+
             if (GUILayout.Button("清空日志", GUILayout.Width(80f), GUILayout.Height(28f)))
             {
                 logLines.Clear();
@@ -227,6 +232,14 @@ namespace CarrotFantasy.EditorTools
                 AppendLog("快照预览已刷新。");
             }
             EditorGUILayout.EndHorizontal();
+        }
+
+        void ClearDownloadCache()
+        {
+            AssetBundleCacheCleaner.ClearAll();
+            AppendLog("已清空本地下载缓存（DownloadedAssetBundles / custom_manifest / 临时文件）。");
+            Debug.Log("[GM] 已清空本地下载缓存");
+            Repaint();
         }
 
         void DrawLogSection()

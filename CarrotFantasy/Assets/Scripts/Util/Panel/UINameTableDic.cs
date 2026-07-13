@@ -98,6 +98,11 @@ public class UINameTableDic
         return gameObject;
     }
 
+    public bool Has(string name)
+    {
+        return !string.IsNullOrEmpty(name) && this.uiEntries.ContainsKey(name) && this.uiEntries[name] != null;
+    }
+
     void RemoveStaleEntry(string name)
     {
         this.uiEntries.Remove(name);

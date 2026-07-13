@@ -213,7 +213,10 @@ public class ABPackagerWindow : EditorWindow
         }
 
         EditorGUI.indentLevel++;
-        EditorGUILayout.HelpBox("打包成功后可一键上传到 Nginx 静态目录。默认目标为腾讯云 124.222.203.161。", MessageType.Info);
+        EditorGUILayout.HelpBox(
+            "打包成功后可一键上传到 Nginx 静态目录。\n"
+            + "主机 / 账号 / 密码等保存在本机 EditorPrefs，不会写入工程，也不会提交到 Git。",
+            MessageType.Info);
 
         deployHost = EditorGUILayout.TextField("服务器地址", deployHost);
         deployPort = EditorGUILayout.IntField("SSH 端口", deployPort);
@@ -242,7 +245,7 @@ public class ABPackagerWindow : EditorWindow
             deployPassword = EditorGUILayout.PasswordField("SSH 密码", deployPassword);
         }
 
-        EditorGUILayout.HelpBox("远程目录示例: /var/www/carrotfantasy/ab/StandaloneWindows", MessageType.None);
+        EditorGUILayout.HelpBox("远程目录示例: /var/www/your-game/ab/StandaloneWindows", MessageType.None);
         EditorGUI.indentLevel--;
     }
 
@@ -272,6 +275,35 @@ public class ABPackagerWindow : EditorWindow
     void DrawActions()
     {
         GUILayout.Space(10);
+
+        EditorGUILayout.BeginHorizontal();
+        GUI.color = new Color(0.45f, 0.75f, 1f);
+        if (GUILayout.Button("仅热更代码（Generate + 同步 DLL + 清单）", GUILayout.Height(32)))
+        {
+            SaveDeploySettings();
+            if (buildTarget != EditorUserBuildSettings.activeBuildTarget)
+            {
+                EditorUtility.DisplayDialog(
+                    "平台不一致",
+                    "窗口目标平台与 Build Settings 激活平台不一致。\n请先切换 Build Settings 到: "
+                    + buildTarget,
+                    "确定");
+            }
+            else
+            {
+                HybridCLRCodeHotUpdatePipeline.Run(buildTarget, promptUpload: true);
+                lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(outputPath, buildTarget);
+                curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(outputPath, buildTarget);
+            }
+        }
+        GUI.color = Color.white;
+        EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.HelpBox(
+            "「仅热更代码」不重打 Unity AB：执行 HybridCLR Generate/All，同步 DLL，刷新清单与 Packs，完成后询问是否上传（仅 hybridclr/packs/清单）。",
+            MessageType.None);
+
+        GUILayout.Space(6);
         EditorGUILayout.BeginHorizontal();
 
         GUI.color = Color.green;

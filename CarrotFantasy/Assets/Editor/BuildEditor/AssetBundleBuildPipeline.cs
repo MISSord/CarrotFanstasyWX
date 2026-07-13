@@ -101,7 +101,7 @@ public static class AssetBundleBuildPipeline
             return result;
         }
 
-        // —— 步骤 3+4：清单 + Pack 合并（在 GenerateManifest 内部完成）——
+        // —— 步骤 3+4：清单 + Pack 合并（GenerateManifest 会先同步 HybridCLR DLL）——
         result.Manifest = AssetBundlePackager.GenerateManifest(
             Path.GetFullPath(Path.Combine(Application.dataPath, "..", request.OutputRoot)),
             request.BuildTarget,

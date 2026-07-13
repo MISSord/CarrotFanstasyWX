@@ -191,6 +191,10 @@ public static class AssetBundlePackager
             return null;
         }
 
+        // HybridCLR 的 .dll.bytes 不是 Unity AB：需在扫描清单前拷入输出目录。
+        // 完整打 AB 若勾选清空输出，会删掉此前手动同步的 hybridclr/，必须在此补回。
+        CarrotFantasy.Editor.HybridCLRProjectSetup.EnsureDllsInAbOutput(target);
+
         // 清理 AssetDatabase 里已无资源引用的历史包名，避免 GetAllAssetBundleNames 虚高。
         AssetDatabase.RemoveUnusedAssetBundleNames();
 
@@ -246,7 +250,12 @@ public static class AssetBundlePackager
                 };
 
                 HashSet<string> processedBundles = new HashSet<string>();
-                GenerateFlatDependencyList(registeredName, 0, processedBundles);
+                // HybridCLR 原始 DLL 不是 Unity AB，无依赖图。
+                if (!CarrotFantasy.HybridCLRPaths.IsHybridClrRawFile(bundleKey))
+                {
+                    GenerateFlatDependencyList(registeredName, 0, processedBundles);
+                }
+
                 info.Dependencies = processedBundles
                     .Select(NormalizeBundleName)
                     .ToArray();

@@ -1,5 +1,3 @@
-
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -89,7 +87,12 @@ namespace CarrotFantasy
                 moveDistance = moveOneItemLength;
                 currentIndex--;
             }
-            DOTween.To(() => contentTrans.localPosition, lerpValue => contentTrans.localPosition = lerpValue, currentContentLocalPos + new Vector3(moveDistance, 0, 0), 0.5f).SetEase(Ease.OutQuint);
+            SimpleTween.To(
+                () => contentTrans.localPosition,
+                lerpValue => contentTrans.localPosition = lerpValue,
+                currentContentLocalPos + new Vector3(moveDistance, 0, 0),
+                0.5f,
+                SimpleEase.OutQuint);
             currentContentLocalPos += new Vector3(moveDistance, 0, 0);
         }
 
@@ -111,7 +114,12 @@ namespace CarrotFantasy
             {
                 UpdatePanel(true);
             }
-            DOTween.To(() => contentTrans.localPosition, lerpValue => contentTrans.localPosition = lerpValue, currentContentLocalPos + new Vector3(moveDistance, 0, 0), 0.5f).SetEase(Ease.OutQuint);
+            SimpleTween.To(
+                () => contentTrans.localPosition,
+                lerpValue => contentTrans.localPosition = lerpValue,
+                currentContentLocalPos + new Vector3(moveDistance, 0, 0),
+                0.5f,
+                SimpleEase.OutQuint);
             currentContentLocalPos += new Vector3(moveDistance, 0, 0);
         }
 
@@ -129,7 +137,12 @@ namespace CarrotFantasy
             {
                 UpdatePanel(false);
             }
-            DOTween.To(() => contentTrans.localPosition, lerpValue => contentTrans.localPosition = lerpValue, currentContentLocalPos + new Vector3(moveDistance, 0, 0), 0.5f).SetEase(Ease.OutQuint);
+            SimpleTween.To(
+                () => contentTrans.localPosition,
+                lerpValue => contentTrans.localPosition = lerpValue,
+                currentContentLocalPos + new Vector3(moveDistance, 0, 0),
+                0.5f,
+                SimpleEase.OutQuint);
             currentContentLocalPos += new Vector3(moveDistance, 0, 0);
         }
 

@@ -16,6 +16,8 @@
 /CarrotFantasy/Assets/AssetStoreTools*
 /CarrotFantasy/Assets/StreamingAssets/aa.meta
 /CarrotFantasy/Assets/StreamingAssets/aa/
+/CarrotFantasy/Assets/TextMesh Pro/
+/CarrotFantasy/Assets/TextMesh Pro.meta
 
 # =============== IDE / OS ===============
 /.vs/
@@ -23,6 +25,7 @@
 /CarrotFantasy/.vs/
 /.vscode/
 /.idea/
+.tmp/
 *.csproj
 *.sln
 *.suo
@@ -39,7 +42,12 @@
 .DS_Store
 Thumbs.db
 
-# =============== Optional: packages lock (按团队策略) ===============
-# 如果你希望锁定依赖版本，保留 Packages/packages-lock.json（不要忽略）
-# 如果不锁定，可以取消注释下一行
-# /CarrotFantasy/Packages/packages-lock.json
+# =============== HybridCLR ===============
+/CarrotFantasy/HybridCLRData/
+/CarrotFantasy/Library/Il2cppBuildCache/
+
+# =============== Local secrets / machine-specific ===============
+# 由 AB 打包窗口写入；含 CDN 地址，勿提交真实环境配置。
+# 参考模板：Assets/StreamingAssets/ab_runtime_config.example.json
+/CarrotFantasy/Assets/StreamingAssets/ab_runtime_config.json
+/CarrotFantasy/Assets/StreamingAssets/ab_runtime_config.json.meta

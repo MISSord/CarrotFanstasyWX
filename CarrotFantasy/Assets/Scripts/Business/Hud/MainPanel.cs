@@ -1,4 +1,3 @@
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,7 +8,7 @@ namespace CarrotFantasy
         private Animator carrotAnimator;
         private Transform monsterTrans;
         private Transform cloudTrans;
-        private Tween[] mainPanelTween;
+        private SimpleTween[] mainPanelTween;
 
         public override void InitData()
         {
@@ -25,11 +24,11 @@ namespace CarrotFantasy
             this.monsterTrans = this.nameTableDic["spr_monster"].transform;
             this.cloudTrans = this.nameTableDic["spr_cloud"].transform;
 
-            mainPanelTween = new Tween[2];
-            mainPanelTween[0] = transform.DOLocalMoveX(1920, 0.5f);
+            mainPanelTween = new SimpleTween[2];
+            mainPanelTween[0] = SimpleTween.LocalMoveX(transform, 1920, 0.5f);
             mainPanelTween[0].SetAutoKill(false);
             mainPanelTween[0].Pause();
-            mainPanelTween[1] = transform.DOLocalMoveX(-1920, 0.5f);
+            mainPanelTween[1] = SimpleTween.LocalMoveX(transform, -1920, 0.5f);
             mainPanelTween[1].SetAutoKill(false);
             mainPanelTween[1].Pause();
 
@@ -55,8 +54,17 @@ namespace CarrotFantasy
 
         private void PlayUITween()
         {
-            this.monsterTrans.DOLocalMoveY(20, 7f).SetLoops(-1, LoopType.Yoyo);
-            this.cloudTrans.DOLocalMoveX(1300, 30f).SetLoops(-1, LoopType.Restart);
+            if (this.monsterTrans != null)
+            {
+                SimpleTween.Kill(this.monsterTrans, false);
+                SimpleTween.LocalMoveY(this.monsterTrans, 20, 7f).SetLoops(-1, SimpleLoopType.Yoyo).Play();
+            }
+
+            if (this.cloudTrans != null)
+            {
+                SimpleTween.Kill(this.cloudTrans, false);
+                SimpleTween.LocalMoveX(this.cloudTrans, 1300, 30f).SetLoops(-1, SimpleLoopType.Restart).Play();
+            }
         }
 
         public void ShowSetPanel()
@@ -85,6 +93,20 @@ namespace CarrotFantasy
 
         protected override void ReleaseCallBack()
         {
+            if (this.monsterTrans != null)
+            {
+                SimpleTween.Kill(this.monsterTrans, false);
+            }
+
+            if (this.cloudTrans != null)
+            {
+                SimpleTween.Kill(this.cloudTrans, false);
+            }
+
+            if (this.transform != null)
+            {
+                SimpleTween.Kill(this.transform, false);
+            }
         }
     }
 }

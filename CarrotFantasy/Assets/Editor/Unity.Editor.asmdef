@@ -2,7 +2,11 @@
     "name": "Unity.Editor",
     "references": [
         "Unity.ThirdParty",
-        "Unity.Model"
+        "CarrotFantasy.AOT",
+        "CarrotFantasy.HotUpdate",
+        "CarrotFantasy.Shared",
+        "HybridCLR.Editor",
+        "HybridCLR.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

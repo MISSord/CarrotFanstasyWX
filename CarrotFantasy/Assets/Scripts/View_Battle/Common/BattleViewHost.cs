@@ -57,7 +57,11 @@ namespace CarrotFantasy
             return false;
         }
 
-        /// <summary>BattleScene 加载完成后查找场景内唯一的 BattleViewHost。</summary>
+        /// <summary>
+        /// BattleScene 加载完成后查找场景内唯一的 BattleViewHost。
+        /// HybridCLR IL2CPP 下场景内序列化的热更 MonoBehaviour 常会变成 Missing Script，
+        /// 因此找不到时回退到对 BattleRoot 运行时 AddComponent（与 GameModeSelectGui 同类做法）。
+        /// </summary>
         public static BattleViewHost FindInLoadedBattleScene()
         {
             Scene targetScene = SceneLoader.FindLoadedSceneByName(BattleUnitySceneName);
@@ -79,7 +83,59 @@ namespace CarrotFantasy
                 return null;
             }
 
+            BattleViewHost host = TryAddHostToBattleRoot(targetScene);
+            if (host != null)
+            {
+                return host;
+            }
+
+            BattleFlowLog.Abort(
+                "FindInLoadedBattleScene",
+                "scene=" + targetScene.name + " 中未找到 BattleViewHost，且无法定位 BattleRoot");
+            return null;
+        }
+
+        static BattleViewHost TryAddHostToBattleRoot(Scene targetScene)
+        {
+            GameObject battleRoot = FindBattleRoot(targetScene);
+            if (battleRoot == null)
+            {
+                return null;
+            }
+
+            BattleViewHost existing = battleRoot.GetComponent<BattleViewHost>();
+            if (existing != null)
+            {
+                existing.EnsureSceneContainerBound();
+                return existing;
+            }
+
+            BattleViewHost host = battleRoot.AddComponent<BattleViewHost>();
+            // 场景序列化的 sceneContainerRef 在 Missing Script 时会丢失，运行时按子节点名补绑。
+            host.EnsureSceneContainerBound();
+            if (!host.IsReady)
+            {
+                BattleFlowLog.Abort(
+                    "TryAddHostToBattleRoot",
+                    "已 AddComponent，但未找到名为 SceneContainer 的子节点");
+                return null;
+            }
+
+            return host;
+        }
+
+        static GameObject FindBattleRoot(Scene targetScene)
+        {
             GameObject[] roots = targetScene.GetRootGameObjects();
+            for (int i = 0; i < roots.Length; i++)
+            {
+                GameObject root = roots[i];
+                if (root != null && root.name == "BattleRoot")
+                {
+                    return root;
+                }
+            }
+
             for (int i = 0; i < roots.Length; i++)
             {
                 GameObject root = roots[i];
@@ -88,22 +144,13 @@ namespace CarrotFantasy
                     continue;
                 }
 
-                BattleViewHost host = root.GetComponent<BattleViewHost>();
-                if (host != null)
+                Transform child = root.transform.Find("BattleRoot");
+                if (child != null)
                 {
-                    return host;
-                }
-
-                host = root.GetComponentInChildren<BattleViewHost>(true);
-                if (host != null)
-                {
-                    return host;
+                    return child.gameObject;
                 }
             }
 
-            BattleFlowLog.Abort(
-                "FindInLoadedBattleScene",
-                "scene=" + targetScene.name + " 中未找到 BattleViewHost");
             return null;
         }
 
@@ -218,7 +265,40 @@ namespace CarrotFantasy
             if (child != null)
             {
                 this.ApplySceneContainer(child.gameObject);
+                return;
             }
+
+            // 兜底：深度查找（防止层级微调后 Find 直属失败）
+            Transform deep = FindDeepChild(this.transform, SceneContainerName);
+            if (deep != null)
+            {
+                this.ApplySceneContainer(deep.gameObject);
+            }
+        }
+
+        static Transform FindDeepChild(Transform parent, string name)
+        {
+            if (parent == null || string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < parent.childCount; i++)
+            {
+                Transform child = parent.GetChild(i);
+                if (child.name == name)
+                {
+                    return child;
+                }
+
+                Transform nested = FindDeepChild(child, name);
+                if (nested != null)
+                {
+                    return nested;
+                }
+            }
+
+            return null;
         }
 
         void ApplySceneContainer(GameObject container)
@@ -228,13 +308,10 @@ namespace CarrotFantasy
                 return;
             }
 
+            // 运行时深度找到的 SceneContainer 若不是直属子节点，提到 BattleRoot 下再绑定。
             if (container.transform.parent != this.transform)
             {
-                BattleFlowLog.Abort(
-                    "ApplySceneContainer",
-                    "SceneContainer#" + container.GetInstanceID() +
-                    " 不是 BattleRoot#" + this.gameObject.GetInstanceID() + " 的直接子节点");
-                return;
+                container.transform.SetParent(this.transform, false);
             }
 
             this.sceneContainer = container;

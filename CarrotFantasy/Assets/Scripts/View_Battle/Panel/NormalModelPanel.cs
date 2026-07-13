@@ -146,7 +146,6 @@ namespace CarrotFantasy
 
         private void ShowMenu()
         {
-            UIServer.Instance.PlayButtonEffect();
             this.battle.eventDispatcher.DispatchEvent(BattleEvent.PAUSE_THE_GAME);
             BattleViewOpener.Open<MenuView>(this.battle);
         }
@@ -290,7 +289,6 @@ namespace CarrotFantasy
 
         private void BtnPauseGame()
         {
-            UIServer.Instance.PlayButtonEffect();
             if (this.isPause)
             {
                 this.battle.eventDispatcher.DispatchEvent(BattleEvent.GO_ON_GAME);

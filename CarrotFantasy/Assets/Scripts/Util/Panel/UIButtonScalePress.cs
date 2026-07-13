@@ -1,4 +1,3 @@
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,7 +5,7 @@ using UnityEngine.UI;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 按钮按下时用 DOTween 缩放到 <see cref="pressedScale"/>，抬起或指针离开交互区域时恢复到 <see cref="releasedScale"/>。
+    /// 按钮按下时用 SimpleTween 缩放到 <see cref="pressedScale"/>，抬起或指针离开交互区域时恢复到 <see cref="releasedScale"/>。
     /// 挂在与 <see cref="Button"/> 同一物体上；需要 Graphic 可射线检测（如 Image）。
     /// </summary>
     [DisallowMultipleComponent]
@@ -32,10 +31,10 @@ namespace CarrotFantasy
         private float releaseDuration = 0.12f;
 
         [SerializeField]
-        private Ease pressEase = Ease.OutQuad;
+        private SimpleEase pressEase = SimpleEase.OutQuad;
 
         [SerializeField]
-        private Ease releaseEase = Ease.OutQuad;
+        private SimpleEase releaseEase = SimpleEase.OutQuad;
 
         [Tooltip("使用 Unscaled DeltaTime（暂停时仍可播放）")]
         [SerializeField]
@@ -66,7 +65,7 @@ namespace CarrotFantasy
             this.isPressed = false;
             if (this.resetToReleasedOnEnable && this.scaleTarget != null)
             {
-                this.scaleTarget.DOKill(false);
+                SimpleTween.Kill(this.scaleTarget, false);
                 this.scaleTarget.localScale = this.releasedScale;
             }
         }
@@ -75,7 +74,7 @@ namespace CarrotFantasy
         {
             if (this.scaleTarget != null)
             {
-                this.scaleTarget.DOKill(false);
+                SimpleTween.Kill(this.scaleTarget, false);
                 this.scaleTarget.localScale = this.releasedScale;
             }
 
@@ -117,15 +116,15 @@ namespace CarrotFantasy
             this.TweenToScale(this.releasedScale, this.releaseDuration, this.releaseEase);
         }
 
-        private void TweenToScale(Vector3 target, float duration, Ease ease)
+        private void TweenToScale(Vector3 target, float duration, SimpleEase ease)
         {
             if (this.scaleTarget == null)
             {
                 return;
             }
 
-            this.scaleTarget.DOKill(false);
-            Tween tw = this.scaleTarget.DOScale(target, Mathf.Max(0f, duration)).SetEase(ease);
+            SimpleTween.Kill(this.scaleTarget, false);
+            SimpleTween tw = SimpleTween.Scale(this.scaleTarget, target, Mathf.Max(0f, duration), ease).Play();
             if (this.useUnscaledTime)
             {
                 tw.SetUpdate(true);

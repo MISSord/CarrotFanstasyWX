@@ -113,7 +113,6 @@ namespace CarrotFantasy
             }
 
             scrollerList.JumpTo(next, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: false);
-            UIServer.Instance.PlayPagingEffect();
         }
 
         private void ToTheLastLevelPage()
@@ -125,7 +124,6 @@ namespace CarrotFantasy
             }
 
             scrollerList.JumpTo(prev, tweenTime: 0.5f, selectOnArrive: true, invokeCallback: false);
-            UIServer.Instance.PlayPagingEffect();
         }
 
         protected override void ReleaseCallBack()

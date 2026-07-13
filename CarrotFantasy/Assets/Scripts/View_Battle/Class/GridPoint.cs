@@ -1,4 +1,3 @@
-using DG.Tweening;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -66,12 +65,12 @@ namespace CarrotFantasy
         {
             if (this.spriteRenderer != null)
             {
-                this.spriteRenderer.DOKill();
+                SimpleTween.Kill(this.spriteRenderer);
                 this.spriteRenderer.enabled = false;
                 this.spriteRenderer.color = new Color(1f, 1f, 1f, 1f);
             }
 
-            this.transform.DOKill();
+            SimpleTween.Kill(this.transform);
 
             if (this.levelUpSignalGo != null)
             {
@@ -87,9 +86,19 @@ namespace CarrotFantasy
             }
 
             this.spriteRenderer.sprite = this.startSprite;
-            this.spriteRenderer.DOKill();
-            this.spriteRenderer
-                .DOColor(new Color(1, 1, 1, 0.2f), 3f)
+            SimpleTween.Kill(this.spriteRenderer);
+            SimpleTween.To(
+                    () => this.spriteRenderer.color,
+                    c =>
+                    {
+                        if (this.spriteRenderer != null)
+                        {
+                            this.spriteRenderer.color = c;
+                        }
+                    },
+                    new Color(1, 1, 1, 0.2f),
+                    3f)
+                .SetTarget(this.spriteRenderer)
                 .OnComplete(ChangeSpriteToGrid);
         }
 
@@ -135,10 +144,10 @@ namespace CarrotFantasy
         {
             if (this.spriteRenderer != null)
             {
-                this.spriteRenderer.DOKill();
+                SimpleTween.Kill(this.spriteRenderer);
             }
 
-            this.transform.DOKill();
+            SimpleTween.Kill(this.transform);
         }
 
         private void OnMouseDown()
@@ -214,9 +223,19 @@ namespace CarrotFantasy
             }
 
             spriteRenderer.enabled = true;
-            spriteRenderer.DOKill();
-            spriteRenderer
-                .DOColor(new Color(1, 1, 1, 0), 2f)
+            SimpleTween.Kill(spriteRenderer);
+            SimpleTween.To(
+                    () => spriteRenderer.color,
+                    c =>
+                    {
+                        if (spriteRenderer != null)
+                        {
+                            spriteRenderer.color = c;
+                        }
+                    },
+                    new Color(1, 1, 1, 0),
+                    2f)
+                .SetTarget(spriteRenderer)
                 .OnComplete(() =>
                 {
                     if (!this.IsSpriteRendererAlive())
@@ -230,4 +249,3 @@ namespace CarrotFantasy
         }
     }
 }
-

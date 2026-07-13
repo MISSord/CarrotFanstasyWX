@@ -1,13 +1,13 @@
 using UnityEditor;
 using UnityEngine;
 
-/// <summary>AB 云服务器 SFTP 上传配置（EditorPrefs）。</summary>
+/// <summary>
+/// AB 云服务器 SFTP 上传配置。
+/// 全部落在本机 EditorPrefs，不写进工程文件；默认值为空，避免真实主机信息进入 Git。
+/// </summary>
 public static class AssetBundleDeploySettings
 {
-    public const string DefaultHost = "124.222.203.161";
     public const int DefaultPort = 22;
-    public const string DefaultUser = "root";
-    public const string DefaultRemotePath = "/var/www/carrotfantasy/ab/StandaloneWindows";
 
     const string PrefsHost = "AB_DeployHost";
     const string PrefsPort = "AB_DeployPort";
@@ -20,7 +20,7 @@ public static class AssetBundleDeploySettings
 
     public static string Host
     {
-        get => EditorPrefs.GetString(PrefsHost, DefaultHost);
+        get => EditorPrefs.GetString(PrefsHost, string.Empty);
         set => EditorPrefs.SetString(PrefsHost, value ?? string.Empty);
     }
 
@@ -32,7 +32,7 @@ public static class AssetBundleDeploySettings
 
     public static string User
     {
-        get => EditorPrefs.GetString(PrefsUser, DefaultUser);
+        get => EditorPrefs.GetString(PrefsUser, string.Empty);
         set => EditorPrefs.SetString(PrefsUser, value ?? string.Empty);
     }
 
@@ -44,7 +44,7 @@ public static class AssetBundleDeploySettings
 
     public static string RemotePath
     {
-        get => EditorPrefs.GetString(PrefsRemotePath, DefaultRemotePath);
+        get => EditorPrefs.GetString(PrefsRemotePath, string.Empty);
         set => EditorPrefs.SetString(PrefsRemotePath, NormalizeRemotePath(value));
     }
 
@@ -70,7 +70,7 @@ public static class AssetBundleDeploySettings
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            return DefaultRemotePath;
+            return string.Empty;
         }
 
         return path.Replace('\\', '/').TrimEnd('/');
@@ -80,7 +80,7 @@ public static class AssetBundleDeploySettings
     {
         if (string.IsNullOrWhiteSpace(Host))
         {
-            errorMessage = "服务器地址不能为空。";
+            errorMessage = "服务器地址不能为空（保存在本机 EditorPrefs，不会提交到 Git）。";
             return false;
         }
 

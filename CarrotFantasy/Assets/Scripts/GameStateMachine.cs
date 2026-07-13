@@ -3,22 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-// 游戏状态枚举
-public enum GameState
-{
-    CheckUpdate,      // 检测更新
-    DownloadConfirm,  // 下载确认
-    Download,         // 下载AB包
-    Login,            // 登录
-    SelectGameMode,   // 选择单机/联机
-    EnterGame,        // 进游戏
-    InGame,           // 游戏中
-    Restart,          // 重启游戏
-    Exit,             // 游戏退出
-    Error,            // 游戏进程错误状态
-}
-
-// 状态机接口
+// 状态机接口（GameState 枚举在 CarrotFantasy.Shared）
 public interface IGameState
 {
     void Enter();
@@ -43,23 +28,7 @@ public abstract class BaseGameState : IGameState
     public abstract GameState GetStateType();
 }
 
-// 共享数据上下文
-public class GameContext
-{
-    // 更新相关数据
-    public UpdateCheckResult result { get; set; }
-
-    // 下载进度
-    public float DownloadProgress { get; set; }
-
-    // 清理上下文（重启时使用）
-    public void Clear()
-    {
-        result = null;
-    }
-}
-
-// 状态机管理器
+// 状态机管理器（GameContext 在 CarrotFantasy.AOT）
 public class GameStateMachine
 {
     private Dictionary<GameState, IGameState> states = new Dictionary<GameState, IGameState>();
@@ -87,17 +56,15 @@ public class GameStateMachine
 
         ViewManager.Instance.OpenView<StartLoadPanel>();
 
+        // 资源更新（含 HybridCLR DLL）已在 AOT 的 AotResourceUpdateRunner 完成，
+        // 热更层从选模式开始；配置表在此重新加载以吃到最新 AB。
+        LubanConfigLoader.Reload();
+        GameJsonLoader.Reload();
+
 #if UNITY_EDITOR
         loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
-        {
-            ChangeState(GameState.SelectGameMode);
-            return;
-        }
 #endif
-
-        // 初始状态：检测更新
-        ChangeState(GameState.CheckUpdate);
+        ChangeState(GameState.SelectGameMode);
     }
 
     public void Update(float deltaTime)
