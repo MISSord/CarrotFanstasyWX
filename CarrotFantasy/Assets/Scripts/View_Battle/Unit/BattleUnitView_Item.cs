@@ -14,13 +14,11 @@ namespace CarrotFantasy
         private Vector3 hpBarLocalOffset;
         private BVBattleWorldUiComponent worldUiCached;
         private bool hpBarCreated;
-        private SpriteRenderer spriteRender;
         private Item item;
 
         public override void InitTransform(Transform node)
         {
             base.InitTransform(node);
-            this.spriteRender = this.transform.GetComponent<SpriteRenderer>();
             this.item = this.transform.GetComponent<Item>();
             if (this.item != null)
             {
@@ -190,7 +188,6 @@ namespace CarrotFantasy
             this.DestroyHpBar();
             this.worldUiCached = null;
             base.ClearUnitInfo();
-            this.spriteRender = null;
             this.item = null;
         }
     }

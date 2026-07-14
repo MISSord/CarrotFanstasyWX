@@ -88,6 +88,8 @@
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
     <Compile Include="Assets\Editor\HexWorld\HexWorldMapEditorInspector.cs" />
     <Compile Include="Assets\Editor\BuildEditor\HybridCLRCodeHotUpdatePipeline.cs" />
+    <Compile Include="Assets\Editor\GameViewHierarchyPicker.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\PcPlayerRebuildAdvisor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />

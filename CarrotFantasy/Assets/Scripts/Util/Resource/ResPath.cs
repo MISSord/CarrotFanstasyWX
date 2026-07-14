@@ -13,5 +13,10 @@ namespace CarrotFantasy {
         {
             return "ui/view/gameoption/images_atlas";
         }
+
+        public static string GetSettingViewImagePath()
+        {
+            return "ui/view/settingview/images_atlas";
+        }
     }
 }

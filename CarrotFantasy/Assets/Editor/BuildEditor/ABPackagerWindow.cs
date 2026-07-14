@@ -355,6 +355,9 @@ public class ABPackagerWindow : EditorWindow
             "平台: " + buildTarget + "\n路径: " + result.PlatformBundlePath,
             "确定");
 
+        PcPlayerRebuildAdvisor.ShowAfterPack(
+            "AssetBundle 打包已完成。\n平台: " + buildTarget);
+
         CustomManifestBuilderWindow.ShowWindow(generatedManifest);
         SaveDeploySettings();
 

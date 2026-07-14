@@ -12,14 +12,18 @@ namespace CarrotFantasy
 
         private void OnMouseDown()
         {
-            if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            if (this.itemView == null)
             {
                 return;
             }
+
+            if (UnityEngine.EventSystems.EventSystem.current != null
+                && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
             this.itemView.RefreshTarget();
         }
-
     }
 }
-
-

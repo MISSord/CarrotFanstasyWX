@@ -5,11 +5,11 @@ namespace CarrotFantasy
 {
     public class SetPanel : BaseView
     {
-        private GameObject optionPageGo;
-        private GameObject producerPageGo;
-        private bool playBGMusic = true;
-        private bool playEffectMusic = true;
-        public Sprite[] btnSpritesList;
+        private const string SpriteEffectOn = "setting02-hd_15";
+        private const string SpriteEffectOff = "setting02-hd_21";
+        private const string SpriteMusicOn = "setting02-hd_6";
+        private const string SpriteMusicOff = "setting02-hd_11";
+
         private int stateId;
         private Vector3 fadePosition = new Vector3(0, 3000, 0);
         private Vector3 showPosition = Vector3.zero;
@@ -28,44 +28,29 @@ namespace CarrotFantasy
         {
             viewName = "SetPanel";
             layer = UILayer.Normal;
-            this.btnSpritesList = new Sprite[4];
             SetUILoadInfo(0, UiViewAbPaths.SettingViewPrefab, "SetPanel");
         }
 
         protected override void LoadCallBack()
         {
             this.stateId = 1;
-
-            this.optionPageGo = this.nameTableDic["OptionPage"];
-            this.producerPageGo = this.nameTableDic["ProducerPage"];
-
             this.LoadResource();
             this.AddListener();
             this.BindDisplaySettingsUi();
-
-            this.nameTableDic["Btn_BGAudio"].GetComponent<Image>().sprite =
-                AudioManager.Instance.musicEnable == true ? this.btnSpritesList[2] : this.btnSpritesList[3];
-            this.nameTableDic["Btn_EffectAudio"].GetComponent<Image>().sprite =
-                AudioManager.Instance.effectEnable == true ? this.btnSpritesList[0] : this.btnSpritesList[1];
-
             this.UpdatePagePosition();
         }
 
         private void UpdatePagePosition()
         {
-            this.optionPageGo.transform.localPosition = this.stateId == 1 ? this.showPosition : this.fadePosition;
-            this.producerPageGo.transform.localPosition = this.stateId == 2 ? this.showPosition : this.fadePosition;
+
         }
 
         private void AddListener()
         {
             XUI.AddButtonListener(this.nameTableDic["Btn_BGAudio"].GetComponent<Button>(), this.UpdateMusicState);
             XUI.AddButtonListener(this.nameTableDic["Btn_EffectAudio"].GetComponent<Button>(), this.UpdateEffectState);
-
             XUI.AddButtonListener(this.nameTableDic["Btn_Option"].GetComponent<Button>(), this.ShowOptionPage);
             XUI.AddButtonListener(this.nameTableDic["Btn_Producer"].GetComponent<Button>(), this.ShowProducePage);
-
-            XUI.AddButtonListener(this.nameTableDic["Btn_Return"].GetComponent<Button>(), this.ReturnToLastPanel);
         }
 
         /// <summary>
@@ -230,40 +215,45 @@ namespace CarrotFantasy
 
         private void UpdateMusicState()
         {
-            Image bgAudioImg = this.nameTableDic["Btn_BGAudio"].GetComponent<Image>();
-            if (AudioManager.Instance.musicEnable == true)
-            {
-                bgAudioImg.sprite = this.btnSpritesList[3];
-                AudioManager.Instance.SetMusicEnable(false);
-            }
-            else
-            {
-                bgAudioImg.sprite = this.btnSpritesList[2];
-                AudioManager.Instance.SetMusicEnable(true);
-            }
+            AudioManager.Instance.SetMusicEnable(!AudioManager.Instance.musicEnable);
+            this.ApplyMusicButtonSprite();
         }
 
         private void UpdateEffectState()
         {
-            Image effectImg = this.nameTableDic["Btn_EffectAudio"].GetComponent<Image>();
-            if (AudioManager.Instance.effectEnable == true)
-            {
-                effectImg.sprite = this.btnSpritesList[1];
-                AudioManager.Instance.SetEffectEnable(false);
-            }
-            else
-            {
-                effectImg.sprite = this.btnSpritesList[0];
-                AudioManager.Instance.SetEffectEnable(true);
-            }
+            AudioManager.Instance.SetEffectEnable(!AudioManager.Instance.effectEnable);
+            this.ApplyEffectButtonSprite();
         }
 
+        /// <summary>通过 UIImageLoader 加载设置页音效按钮图。</summary>
         private void LoadResource()
         {
-            this.btnSpritesList[0] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_15");
-            this.btnSpritesList[1] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_21");
-            this.btnSpritesList[2] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_6");
-            this.btnSpritesList[3] = ResourceLoader.Instance.loadRes<Sprite>("Pictures/Main/SetPanel/OptionPage/setting02-hd_11");
+            this.ApplyMusicButtonSprite();
+            this.ApplyEffectButtonSprite();
+        }
+
+        private void ApplyMusicButtonSprite()
+        {
+            Image bgAudioImg = this.nameTableDic["Btn_BGAudio"].GetComponent<Image>();
+            if (bgAudioImg == null)
+            {
+                return;
+            }
+
+            string asset = AudioManager.Instance.musicEnable ? SpriteMusicOn : SpriteMusicOff;
+            bgAudioImg.SetSprite(ResPath.GetSettingViewImagePath(), asset);
+        }
+
+        private void ApplyEffectButtonSprite()
+        {
+            Image effectImg = this.nameTableDic["Btn_EffectAudio"].GetComponent<Image>();
+            if (effectImg == null)
+            {
+                return;
+            }
+
+            string asset = AudioManager.Instance.effectEnable ? SpriteEffectOn : SpriteEffectOff;
+            effectImg.SetSprite(ResPath.GetSettingViewImagePath(), asset);
         }
 
         protected override void ReleaseCallBack()

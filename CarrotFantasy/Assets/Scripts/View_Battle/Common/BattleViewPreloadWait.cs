@@ -7,6 +7,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 战斗视图预加载批次等待：纯异步计数 + 超时汇总失败项，不干预 <see cref="AssetBundleManager"/>。
+    /// <see cref="Start"/> 前即使全部同步回调也不会完成，避免 Track/Load 循环中途因 AB 缓存同步回调提前进关。
     /// </summary>
     public sealed class BattleViewPreloadWait
     {
@@ -18,6 +19,7 @@ namespace CarrotFantasy
         readonly HashSet<string> pendingKeys = new HashSet<string>(StringComparer.Ordinal);
         readonly List<string> failedKeys = new List<string>();
         string timeoutTaskId;
+        bool started;
         bool completed;
 
         public IReadOnlyList<string> FailedKeys
@@ -65,12 +67,12 @@ namespace CarrotFantasy
                 this.failedKeys.Add(key);
             }
 
-            if (this.pendingKeys.Count <= 0)
-            {
-                this.TryComplete(false);
-            }
+            this.TryCompleteIfIdle();
         }
 
+        /// <summary>
+        /// 登记阶段结束后调用。此前同步回调只扣 pending，不触发 onComplete。
+        /// </summary>
         public void Start()
         {
             if (this.completed)
@@ -78,9 +80,10 @@ namespace CarrotFantasy
                 return;
             }
 
+            this.started = true;
+
             if (this.pendingKeys.Count <= 0)
             {
-                Debug.LogWarning("[" + this.tag + "] 预加载批次无 pending 项，立即完成。");
                 this.TryComplete(false);
                 return;
             }
@@ -108,6 +111,16 @@ namespace CarrotFantasy
             this.pendingKeys.Clear();
             this.LogFailures(true);
             this.TryComplete(true);
+        }
+
+        void TryCompleteIfIdle()
+        {
+            if (!this.started || this.pendingKeys.Count > 0)
+            {
+                return;
+            }
+
+            this.TryComplete(false);
         }
 
         void TryComplete(bool fromTimeout)

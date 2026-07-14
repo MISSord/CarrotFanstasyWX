@@ -35,6 +35,8 @@ namespace CarrotFantasy
             BusinessProvision.Instance.Init();
             BusinessProvision.Instance.LoadBusiness();
 
+            RuntimeGmConsole.EnsureInstalled();
+
             if (host.GetComponent<GameModeSelectGui>() == null)
             {
                 host.AddComponent<GameModeSelectGui>();

@@ -1,0 +1,14 @@
+﻿{
+    "target": "StandaloneWindows64",
+    "builtAtUtc": "2026-07-14 09:42:56 UTC",
+    "outputPath": "D:\\Work\\CarrotFantasyWX\\CarrotFantasy\\Build\\PC\\CarrotFantasyPcAotFingerprint.json",
+    "fingerprint": "eded80b7239858eda788d5a379c0e5f0a439d56f6e76056f73ff88293024c4b2",
+    "folderNames": [
+        "Assets/Scripts/AOT",
+        "Assets/Scripts/Shared"
+    ],
+    "folderHashes": [
+        "2061d1882f579c5c62594998f751b5a3a59d34fe7bb4ad8ca6636f14438053a5",
+        "dbbac846396f290ca07b6e6ff05cbf405826295c97d0c1ad93debf8d90a10f1f"
+    ]
+}

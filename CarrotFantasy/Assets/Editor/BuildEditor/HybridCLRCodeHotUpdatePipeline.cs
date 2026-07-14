@@ -119,6 +119,8 @@ public static class HybridCLRCodeHotUpdatePipeline
             EditorUtility.ClearProgressBar();
             EditorUtility.DisplayDialog("代码热更完成", result.Message, "确定");
 
+            PcPlayerRebuildAdvisor.ShowAfterPack("代码热更（Generate + 同步 DLL + 清单）已完成。");
+
             if (promptUpload)
             {
                 PromptAndUpload(platformPath);

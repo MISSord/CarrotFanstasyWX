@@ -19,7 +19,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &224479630268673540
 RectTransform:
   m_ObjectHideFlags: 0
@@ -163,7 +163,7 @@ GameObject:
   - component: {fileID: 114862344445344730}
   - component: {fileID: 8521386288583627266}
   m_Layer: 5
-  m_Name: Btn_Return
+  m_Name: btn_close_window
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -390,95 +390,6 @@ MonoBehaviour:
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_2
   _lastRecordedSpriteInstanceId: 40038
---- !u!1 &1146328271982126
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 224763405528276604}
-  - component: {fileID: 222131037206115474}
-  - component: {fileID: 1887454090290403292}
-  - component: {fileID: 1109521577195233358}
-  m_Layer: 5
-  m_Name: ProducerPage
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!224 &224763405528276604
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1146328271982126}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.9999936, y: 0.9999936, z: 0.9999936}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 224360710924489458}
-  m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!222 &222131037206115474
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1146328271982126}
-  m_CullTransparentMesh: 0
---- !u!114 &1887454090290403292
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1146328271982126}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/setting01-hd_2
-  defaultAssetName: setting01-hd_2
-  _lastRecordedSpriteInstanceId: 40010
---- !u!114 &1109521577195233358
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1146328271982126}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 87a1c7edd728a044ea0f579cbf43eb6c, type: 3}
-  m_UVRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
 --- !u!1 &1149227691287700
 GameObject:
   m_ObjectHideFlags: 0
@@ -603,7 +514,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 224775867125511912}
-  - {fileID: 224763405528276604}
   - {fileID: 4919423711888422695}
   m_Father: {fileID: 0}
   m_RootOrder: 0
@@ -626,36 +536,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiEntries:
-  - name: OptionPage
-    uiReference: {fileID: 1149227691287700}
-  - name: ProducerPage
-    uiReference: {fileID: 1146328271982126}
-  - name: Btn_EffectAudio
-    uiReference: {fileID: 1510889386057350}
+  - name: Btn_ApplyDisplay
+    uiReference: {fileID: 6993922315880953022}
   - name: Btn_BGAudio
     uiReference: {fileID: 1685372121190142}
+  - name: Btn_DisplayModeNext
+    uiReference: {fileID: 1752330325618019607}
+  - name: Btn_DisplayModePrev
+    uiReference: {fileID: 3806159035410153452}
+  - name: Btn_EffectAudio
+    uiReference: {fileID: 1510889386057350}
   - name: Btn_Option
     uiReference: {fileID: 1991779740775686}
   - name: Btn_Producer
     uiReference: {fileID: 1038533378587562}
-  - name: Btn_Return
+  - name: Btn_ResolutionNext
+    uiReference: {fileID: 6059270991033466183}
+  - name: Btn_ResolutionPrev
+    uiReference: {fileID: 4766814453882264696}
+  - name: OptionPage
+    uiReference: {fileID: 1149227691287700}
+  - name: Txt_DisplayMode
+    uiReference: {fileID: 6789451670001829810}
+  - name: Txt_Resolution
+    uiReference: {fileID: 5611242520401857071}
+  - name: btn_close_window
     uiReference: {fileID: 1114682092639218}
   - name: node_DisplaySettings
     uiReference: {fileID: 761530719378425103}
-  - name: Txt_Resolution
-    uiReference: {fileID: 5611242520401857071}
-  - name: Txt_DisplayMode
-    uiReference: {fileID: 6789451670001829810}
-  - name: Btn_ApplyDisplay
-    uiReference: {fileID: 6993922315880953022}
-  - name: Btn_ResolutionPrev
-    uiReference: {fileID: 4766814453882264696}
-  - name: Btn_ResolutionNext
-    uiReference: {fileID: 6059270991033466183}
-  - name: Btn_DisplayModePrev
-    uiReference: {fileID: 3806159035410153452}
-  - name: Btn_DisplayModeNext
-    uiReference: {fileID: 1752330325618019607}
 --- !u!1 &1510889386057350
 GameObject:
   m_ObjectHideFlags: 0
@@ -1059,7 +967,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -290, y: 40}
+  m_AnchoredPosition: {x: 0, y: 21.13}
   m_SizeDelta: {x: 200, y: 48}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222069550824519756
@@ -1888,7 +1796,7 @@ RectTransform:
   - {fileID: 224183661760833474}
   - {fileID: 224479630268673540}
   m_Father: {fileID: 224360710924489458}
-  m_RootOrder: 2
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}

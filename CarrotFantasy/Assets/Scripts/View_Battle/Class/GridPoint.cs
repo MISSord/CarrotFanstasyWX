@@ -20,8 +20,6 @@ namespace CarrotFantasy
         private BVMapComponent bvMapComponent;
         private GameObject levelUpSignalGo;//是否可升级信号
 
-
-
         bool IsSpriteRendererAlive()
         {
             return this.spriteRenderer != null;
