@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public static class ToggleSelectedActiveEditor
 {
-    [MenuItem("Tools/切换选中节点激活状态 _SPACE")]
+    [MenuItem("Tools/编辑器/切换选中节点激活状态 _SPACE", false, 620)]
     private static void ToggleSelectedActive()
     {
         GameObject[] selectedObjects = Selection.gameObjects;
@@ -37,7 +37,7 @@ public static class ToggleSelectedActiveEditor
         }
     }
 
-    [MenuItem("Tools/切换选中节点激活状态 _SPACE", true)]
+    [MenuItem("Tools/编辑器/切换选中节点激活状态 _SPACE", true)]
     private static bool ValidateToggleSelectedActive()
     {
         GameObject[] selectedObjects = Selection.gameObjects;

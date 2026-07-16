@@ -38,7 +38,7 @@ public static class LevelSpawnSheetImporter
         return Path.Combine(GetRepositoryRoot(), SpawnSheetRelativePath.Replace('/', Path.DirectorySeparatorChar));
     }
 
-    [MenuItem("CarrotFantasy/关卡刷怪表/导入 ConfigTools/LevelSpawn 下全部 CSV")]
+    [MenuItem("Tools/CarrotFantasy/关卡刷怪表/导入 ConfigTools/LevelSpawn 下全部 CSV", false, 10)]
     private static void ImportAllCsvInFolder()
     {
         string folder = GetSpawnSheetFolderAbsolute();
@@ -65,7 +65,7 @@ public static class LevelSpawnSheetImporter
         Debug.Log(string.Format("[LevelSpawnSheet] 已处理 CSV 数量: {0}（目录: {1}）", files.Length, folder));
     }
 
-    [MenuItem("CarrotFantasy/关卡刷怪表/选择 CSV 文件导入...")]
+    [MenuItem("Tools/CarrotFantasy/关卡刷怪表/选择 CSV 文件导入...", false, 11)]
     private static void ImportCsvViaFilePanel()
     {
         string folder = GetSpawnSheetFolderAbsolute();

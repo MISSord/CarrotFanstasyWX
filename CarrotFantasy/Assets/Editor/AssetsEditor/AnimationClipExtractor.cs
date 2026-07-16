@@ -4,7 +4,7 @@ using System.IO;
 
 public class AnimationClipExtractor : EditorWindow
 {
-    [MenuItem("Tools/Extract Animation Clips")]
+    [MenuItem("Tools/资源/Extract Animation Clips", false, 401)]
     static void ExtractClips()
     {
         Object[] selectedObjects = Selection.GetFiltered(typeof(Object), SelectionMode.DeepAssets);

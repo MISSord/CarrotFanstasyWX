@@ -6,9 +6,9 @@ using UnityEngine;
 /// <summary>AB 相关 Editor 快捷菜单。</summary>
 public static class AssetBundlePathMenu
 {
-    const string OpenPcDownloadMenu = "Tools/AB工具/打开 PC AB 下载目录 _F10";
+    const string OpenPcDownloadMenu = "Tools/AssetBundle/打开 PC AB 下载目录 _F10";
 
-    [MenuItem(OpenPcDownloadMenu)]
+    [MenuItem(OpenPcDownloadMenu, false, 310)]
     public static void OpenPcAbDownloadDirectory()
     {
         AssetBundlePathHelper.Initialize();
@@ -18,7 +18,7 @@ public static class AssetBundlePathMenu
         Debug.Log("[AB Tools] PC AB 下载目录: " + downloadDir);
     }
 
-    [MenuItem("Tools/AB工具/打开 PC 持久化数据目录")]
+    [MenuItem("Tools/AssetBundle/打开 PC 持久化数据目录", false, 311)]
     public static void OpenPcPersistentDataDirectory()
     {
         string persistentDir = Application.persistentDataPath;

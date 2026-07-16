@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 仅热更代码：HybridCLR Generate/All → 同步 DLL → 刷新清单/Pack → 询问是否上传云端。
+/// 仅热更代码：HybridCLR Generate/All → 同步 DLL → 刷新清单/Pack → 可选上传云端。
 /// 不重新打 Unity AssetBundle。
 /// </summary>
 public static class HybridCLRCodeHotUpdatePipeline
@@ -21,15 +21,36 @@ public static class HybridCLRCodeHotUpdatePipeline
     [MenuItem("Tools/HybridCLR/一键热更代码（Generate+同步+清单）", priority = 110)]
     public static void RunFromMenu()
     {
-        Run(EditorUserBuildSettings.activeBuildTarget, promptUpload: true, showManifestDialog: false);
+        Run(
+            EditorUserBuildSettings.activeBuildTarget,
+            promptUpload: true,
+            showManifestDialog: false,
+            interactive: true);
     }
 
     public static Result Run(bool promptUpload, bool showManifestDialog = false)
     {
-        return Run(AssetBundleBuildSettings.GetBuildTarget(), promptUpload, showManifestDialog);
+        return Run(
+            AssetBundleBuildSettings.GetBuildTarget(),
+            promptUpload,
+            showManifestDialog,
+            interactive: true);
     }
 
-    public static Result Run(BuildTarget target, bool promptUpload, bool showManifestDialog = false)
+    public static Result Run(
+        BuildTarget target,
+        bool promptUpload,
+        bool showManifestDialog = false)
+    {
+        return Run(target, promptUpload, showManifestDialog, interactive: true);
+    }
+
+    /// <param name="interactive">false 时不弹 Dialog / RebuildAdvisor，供 Batch CLI 使用。</param>
+    public static Result Run(
+        BuildTarget target,
+        bool promptUpload,
+        bool showManifestDialog,
+        bool interactive)
     {
         var result = new Result();
         if (EditorUserBuildSettings.activeBuildTarget != target)
@@ -39,7 +60,7 @@ public static class HybridCLRCodeHotUpdatePipeline
                 "请先在 File → Build Settings 切换到目标平台（HybridCLR Generate 依赖激活平台），再执行代码热更。",
                 EditorUserBuildSettings.activeBuildTarget,
                 target);
-            EditorUtility.DisplayDialog("代码热更失败", result.Message, "确定");
+            Fail(result, interactive);
             return result;
         }
 
@@ -49,21 +70,29 @@ public static class HybridCLRCodeHotUpdatePipeline
 
         try
         {
-            EditorUtility.DisplayProgressBar("代码热更", "HybridCLR Generate/All…", 0.1f);
+            if (interactive)
+            {
+                EditorUtility.DisplayProgressBar("代码热更", "HybridCLR Generate/All…", 0.1f);
+            }
+
             if (!EditorApplication.ExecuteMenuItem("HybridCLR/Generate/All"))
             {
                 // 部分 Unity 版本 ExecuteMenuItem 对子菜单返回 false，仍继续尝试同步。
                 Debug.LogWarning("[HybridCLRCodeHotUpdate] ExecuteMenuItem 返回 false，继续尝试同步 DLL。");
             }
 
-            EditorUtility.DisplayProgressBar("代码热更", "同步 DLL 到 StreamingAssets / AB 输出…", 0.45f);
+            if (interactive)
+            {
+                EditorUtility.DisplayProgressBar("代码热更", "同步 DLL 到 StreamingAssets / AB 输出…", 0.45f);
+            }
+
             int copied = HybridCLRProjectSetup.SyncDllsForHotUpdate(target);
             result.CopiedDllCount = copied;
             if (copied <= 0)
             {
                 result.Message =
                     "未复制到任何 DLL。请确认已安装 IL2CPP 工具链，且 Generate/All 已生成 HotUpdate/AOT DLL。";
-                EditorUtility.DisplayDialog("代码热更失败", result.Message, "确定");
+                Fail(result, interactive);
                 return result;
             }
 
@@ -72,7 +101,7 @@ public static class HybridCLRCodeHotUpdatePipeline
                 result.Message =
                     "AB 平台输出目录不存在:\n" + platformPath +
                     "\n请先完整打一次 AssetBundle，再使用代码热更。";
-                EditorUtility.DisplayDialog("代码热更失败", result.Message, "确定");
+                Fail(result, interactive);
                 return result;
             }
 
@@ -81,11 +110,15 @@ public static class HybridCLRCodeHotUpdatePipeline
                 || Directory.GetFiles(hybridClrHotUpdate, "*.dll.bytes").Length == 0)
             {
                 result.Message = "同步后未找到 hybridclr/hotupdate/*.dll.bytes，请查看 Console。";
-                EditorUtility.DisplayDialog("代码热更失败", result.Message, "确定");
+                Fail(result, interactive);
                 return result;
             }
 
-            EditorUtility.DisplayProgressBar("代码热更", "刷新 custom_manifest / Packs…", 0.75f);
+            if (interactive)
+            {
+                EditorUtility.DisplayProgressBar("代码热更", "刷新 custom_manifest / Packs…", 0.75f);
+            }
+
             int version = AssetBundleBuildSettings.SuggestNextManifestVersion(outputRoot, target);
             CompressionType compression = AssetBundleBuildSettings.GetCompressionType();
             string fullOutputRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", outputRoot));
@@ -100,7 +133,7 @@ public static class HybridCLRCodeHotUpdatePipeline
             if (manifest == null)
             {
                 result.Message = "生成清单失败，请查看 Console。";
-                EditorUtility.DisplayDialog("代码热更失败", result.Message, "确定");
+                Fail(result, interactive);
                 return result;
             }
 
@@ -116,14 +149,33 @@ public static class HybridCLRCodeHotUpdatePipeline
                 manifest.ManifestVersion,
                 platformPath);
 
-            EditorUtility.ClearProgressBar();
-            EditorUtility.DisplayDialog("代码热更完成", result.Message, "确定");
-
-            PcPlayerRebuildAdvisor.ShowAfterPack("代码热更（Generate + 同步 DLL + 清单）已完成。");
+            if (interactive)
+            {
+                EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayDialog("代码热更完成", result.Message, "确定");
+                PcPlayerRebuildAdvisor.ShowAfterPack("代码热更（Generate + 同步 DLL + 清单）已完成。");
+            }
+            else
+            {
+                Debug.Log("[HybridCLRCodeHotUpdate] " + result.Message.Replace('\n', ' '));
+            }
 
             if (promptUpload)
             {
-                PromptAndUpload(platformPath);
+                if (interactive)
+                {
+                    PromptAndUpload(platformPath);
+                }
+                else
+                {
+                    AssetBundleCloudUploadResult uploadResult = UploadCodeHotUpdate(platformPath);
+                    if (!uploadResult.Success)
+                    {
+                        result.Success = false;
+                        result.Message = result.Message + "\n上传失败: " + uploadResult.Message;
+                        Debug.LogError("[HybridCLRCodeHotUpdate] 上传失败: " + uploadResult.Message);
+                    }
+                }
             }
 
             return result;
@@ -132,13 +184,66 @@ public static class HybridCLRCodeHotUpdatePipeline
         {
             result.Message = e.Message;
             Debug.LogException(e);
-            EditorUtility.DisplayDialog("代码热更失败", e.Message, "确定");
+            Fail(result, interactive);
             return result;
         }
         finally
         {
-            EditorUtility.ClearProgressBar();
+            if (interactive)
+            {
+                EditorUtility.ClearProgressBar();
+            }
         }
+    }
+
+    static void Fail(Result result, bool interactive)
+    {
+        Debug.LogError("[HybridCLRCodeHotUpdate] " + result.Message);
+        if (interactive)
+        {
+            EditorUtility.DisplayDialog("代码热更失败", result.Message, "确定");
+        }
+    }
+
+    /// <summary>无确认框上传代码热更产物（hybridclr / packs / 清单）。</summary>
+    public static AssetBundleCloudUploadResult UploadCodeHotUpdate(string platformBundlePath)
+    {
+        var fail = new AssetBundleCloudUploadResult();
+        if (string.IsNullOrEmpty(platformBundlePath) || !Directory.Exists(platformBundlePath))
+        {
+            fail.Message = "平台输出目录不存在:\n" + platformBundlePath;
+            Debug.LogError("[HybridCLRCodeHotUpdate] " + fail.Message);
+            return fail;
+        }
+
+        if (!AssetBundleDeploySettings.TryValidate(out string validationError))
+        {
+            fail.Message = validationError;
+            Debug.LogError("[HybridCLRCodeHotUpdate] 上传失败: " + validationError);
+            return fail;
+        }
+
+        AssetBundleCloudUploadResult uploadResult = AssetBundleCloudUploader.UploadDirectory(
+            platformBundlePath,
+            AssetBundleCloudUploader.IsCodeHotUpdateUploadPath);
+
+        if (uploadResult.Cancelled)
+        {
+            Debug.LogWarning(
+                "[HybridCLRCodeHotUpdate] 上传已取消，已上传 "
+                + uploadResult.UploadedFileCount
+                + " 个文件。");
+            return uploadResult;
+        }
+
+        if (!uploadResult.Success)
+        {
+            Debug.LogError("[HybridCLRCodeHotUpdate] 上传失败: " + uploadResult.Message);
+            return uploadResult;
+        }
+
+        Debug.Log("[HybridCLRCodeHotUpdate] 上传完成: " + uploadResult.Message);
+        return uploadResult;
     }
 
     public static void PromptAndUpload(string platformBundlePath)
@@ -162,16 +267,7 @@ public static class HybridCLRCodeHotUpdatePipeline
             return;
         }
 
-        if (!AssetBundleDeploySettings.TryValidate(out string validationError))
-        {
-            EditorUtility.DisplayDialog("上传失败", validationError, "确定");
-            return;
-        }
-
-        AssetBundleCloudUploadResult uploadResult = AssetBundleCloudUploader.UploadDirectory(
-            platformBundlePath,
-            AssetBundleCloudUploader.IsCodeHotUpdateUploadPath);
-
+        AssetBundleCloudUploadResult uploadResult = UploadCodeHotUpdate(platformBundlePath);
         if (uploadResult.Cancelled)
         {
             EditorUtility.DisplayDialog(

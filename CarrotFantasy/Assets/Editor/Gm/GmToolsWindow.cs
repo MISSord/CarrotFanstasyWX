@@ -65,7 +65,7 @@ namespace CarrotFantasy.EditorTools
             new GmShortcut("选关 2-3", "/gm openMap 2 3", true),
         };
 
-        [MenuItem(MenuPath)]
+        [MenuItem(MenuPath, false, 1)]
         public static void Open()
         {
             var window = GetWindow<GmToolsWindow>("CarrotFantasy GM");

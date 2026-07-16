@@ -64,7 +64,7 @@ namespace CarrotFantasy
         private Texture2D filterOnBg;
         private Texture2D filterOffBg;
 
-#if UNITY_STANDALONE || UNITY_EDITOR
+#if CF_DEV_TOOLS || UNITY_EDITOR
         public static void EnsureInstalled()
         {
             if (instance != null)
@@ -137,7 +137,7 @@ namespace CarrotFantasy
 
         private void OnGUI()
         {
-#if !UNITY_STANDALONE && !UNITY_EDITOR
+#if !CF_DEV_TOOLS && !UNITY_EDITOR
             return;
 #else
             this.EnsureStyles();

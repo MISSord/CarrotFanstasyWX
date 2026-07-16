@@ -5,7 +5,7 @@ using UnityEngine;
 public class CustomManifestBuilderWindow : EditorWindow
 {
     private const string WndTitle = "AB 包清单";
-    private const string MenuPath = "Tools/管理 AB 包清单";
+    private const string MenuPath = "Tools/AssetBundle/管理清单";
 
     private string bundleRootPath = AssetBundleBuildSettings.DefaultOutputRoot;
     public CustomManifest generatedManifest;
@@ -21,7 +21,7 @@ public class CustomManifestBuilderWindow : EditorWindow
         window.LoadFromSettings(manifest);
     }
 
-    [MenuItem(MenuPath)]
+    [MenuItem(MenuPath, false, 301)]
     public static void ShowWindow()
     {
         CustomManifestBuilderWindow window = GetWindow<CustomManifestBuilderWindow>(WndTitle);

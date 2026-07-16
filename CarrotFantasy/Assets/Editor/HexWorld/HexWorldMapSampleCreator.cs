@@ -10,7 +10,7 @@ public static class HexWorldMapSampleCreator
 	const string RootFolder = "Assets/Game/HexWorld/Sample";
 	const int MapWidth = 30;
 
-	[MenuItem("CarrotFantasy/Create Sample World Map Assets")]
+	[MenuItem("Tools/CarrotFantasy/Create Sample World Map Assets", false, 30)]
 	static void CreateSampleAssets ()
 	{
 		EnsureFolder("Assets/Game");

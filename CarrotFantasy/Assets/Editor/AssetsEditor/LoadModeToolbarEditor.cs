@@ -23,7 +23,7 @@ public class LoadModeToolbarEditor : EditorWindow
     private GameLoadMode currentMode;
     private Vector2 scrollPosition;
 
-    [MenuItem("Tools/游戏加载模式设置")]
+    [MenuItem("Tools/编辑器/游戏加载模式设置", false, 600)]
     public static void ShowWindow()
     {
         LoadModeToolbarEditor window = GetWindow<LoadModeToolbarEditor>("加载模式");

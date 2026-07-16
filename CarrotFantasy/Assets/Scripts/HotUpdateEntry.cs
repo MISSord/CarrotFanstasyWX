@@ -35,7 +35,9 @@ namespace CarrotFantasy
             BusinessProvision.Instance.Init();
             BusinessProvision.Instance.LoadBusiness();
 
+#if CF_DEV_TOOLS || UNITY_EDITOR
             RuntimeGmConsole.EnsureInstalled();
+#endif
 
             if (host.GetComponent<GameModeSelectGui>() == null)
             {

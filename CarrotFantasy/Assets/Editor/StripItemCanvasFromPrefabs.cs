@@ -7,7 +7,7 @@ public static class StripItemCanvasFromPrefabs
 {
     const string ItemPrefabFolder = "Assets/Game/FightPart/Item";
 
-    [MenuItem("Tools/Battle/Strip ItemCanvas From Item Prefabs")]
+    [MenuItem("Tools/战斗/Strip ItemCanvas From Item Prefabs", false, 500)]
     public static void StripAll()
     {
         string[] guids = AssetDatabase.FindAssets("t:Prefab", new[] { ItemPrefabFolder });

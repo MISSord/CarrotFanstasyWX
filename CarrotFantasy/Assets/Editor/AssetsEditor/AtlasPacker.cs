@@ -6,7 +6,7 @@ public class AtlasPacker : EditorWindow
     private string targetFolderPath = "Assets";
     private bool includeSubdirectories = true;
 
-    [MenuItem("Tools/图集打包工具")]
+    [MenuItem("Tools/AssetBundle/图集打包", false, 302)]
     public static void ShowWindow()
     {
         GetWindow<AtlasPacker>("图集打包工具");

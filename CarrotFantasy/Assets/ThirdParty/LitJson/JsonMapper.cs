@@ -342,7 +342,7 @@ namespace LitJson
             if (reader.Token == JsonToken.ArrayEnd)
                 return null;
 
-            //ILRuntime doesn't support nullable valuetype
+            // Historical note (ILRuntime-era LitJson fork): nullable valuetype path disabled.
             Type underlying_type = inst_type;//Nullable.GetUnderlyingType(inst_type);
             Type value_type = inst_type;
 

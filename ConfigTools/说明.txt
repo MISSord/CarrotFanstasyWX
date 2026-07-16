@@ -1,7 +1,13 @@
 config 文件夹是 MiniTemplate（Luban 配表）
 
-导表：
-  双击 Config/Config/gen.bat 或 ConfigTools/gen_code_json.bat
+【推荐导表入口（唯一）】
+  ConfigTools/gen_code_json.bat
+  双击即可；产出见下方「导出位置」。
+
+其它脚本（兼容保留，一般不用）：
+  ConfigTools/Config/gen.bat     — 与 gen_code_json.bat 同类，旧入口
+  ConfigTools/Config/gen.sh      — Linux/mac 旧入口
+  ConfigTools/gen_code_json-debug.bat — 调试用旧 ClientServer 路径，勿作日常导表
 
 Unity 运行时依赖（导表后若报 CS0246 Luban / SimpleJSON）：
   已放在 CarrotFantasy/Assets/Scripts/LubanLib/
@@ -16,8 +22,12 @@ Unity 运行时依赖（导表后若报 CS0246 Luban / SimpleJSON）：
 
 关卡刷怪配表（CSV，非 Luban）：
   ConfigTools/LevelSpawn/*.csv
-  Unity 菜单：CarrotFantasy -> 关卡刷怪表 -> 导入 ConfigTools/LevelSpawn 下全部 CSV
+  Unity 菜单：Tools -> CarrotFantasy -> 关卡刷怪表 -> 导入 ConfigTools/LevelSpawn 下全部 CSV
   导入后写入 CarrotFantasy/Assets/Game/Json/Level 与 StreamingAssets 同名关卡 JSON 的 roundInfo
 
 战斗 combat 流程（Tick 顺序、索敌、子弹、碰撞、空间网格）：
   CarrotFantasy/Assets/Scripts/Model_Battle/BattleCombatFlow.md
+
+热更说明：
+  运行时热更使用 HybridCLR，不是 ILRuntime。
+  JSON 库 LitJson 在 CarrotFantasy/Assets/ThirdParty/LitJson/（仅解析用）。

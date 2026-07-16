@@ -17,6 +17,8 @@ public static class AssetBundlePathHelper
 
     public static string ServerDownloadURL = DefaultServerDownloadUrlTemplate;
     public static string localSavePath = "DownloadedAssetBundles";
+    /// <summary>来自 ab_runtime_config.json 的环境名；未配置时为空。</summary>
+    public static string RuntimeEnv = string.Empty;
 
     private static bool initialized;
 
@@ -218,6 +220,11 @@ public static class AssetBundlePathHelper
                 return;
             }
 
+            if (!string.IsNullOrEmpty(config.env))
+            {
+                RuntimeEnv = config.env;
+            }
+
             if (!string.IsNullOrEmpty(config.serverDownloadUrlTemplate))
             {
                 ServerDownloadURL = config.serverDownloadUrlTemplate;
@@ -227,6 +234,12 @@ public static class AssetBundlePathHelper
             {
                 localSavePath = config.localSavePath;
             }
+
+            Debug.Log(
+                "[AssetBundlePathHelper] 运行配置已加载 env="
+                + RuntimeEnv
+                + " url="
+                + ServerDownloadURL);
         }
         catch (System.Exception ex)
         {

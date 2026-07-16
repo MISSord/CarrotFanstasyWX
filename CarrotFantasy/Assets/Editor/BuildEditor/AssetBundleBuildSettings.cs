@@ -156,14 +156,26 @@ public static class AssetBundleBuildSettings
     /// <summary>写入 StreamingAssets，供运行时 AssetBundlePathHelper 读取。</summary>
     public static void WriteRuntimeConfig(BuildTarget target)
     {
+        WriteRuntimeConfig(target, CarrotFantasy.BuildChannelDefines.EnvDev);
+    }
+
+    /// <summary>写入 StreamingAssets；env 为 dev/staging/prod。</summary>
+    public static void WriteRuntimeConfig(BuildTarget target, string env)
+    {
         string template = GetCdnUrlTemplate();
         if (string.IsNullOrEmpty(template))
         {
             template = BuildDefaultCdnUrlTemplate(GetFullOutputRoot());
         }
 
+        if (string.IsNullOrEmpty(env))
+        {
+            env = CarrotFantasy.BuildChannelDefines.EnvDev;
+        }
+
         var config = new AssetBundleRuntimeConfig
         {
+            env = env,
             serverDownloadUrlTemplate = template,
             localSavePath = AssetBundlePathHelper.localSavePath,
         };
@@ -178,6 +190,6 @@ public static class AssetBundleBuildSettings
 
         File.WriteAllText(destPath, json);
         AssetDatabase.Refresh();
-        Debug.Log("[AB Build] 已写入运行时配置: " + destPath);
+        Debug.Log("[AB Build] 已写入运行时配置 env=" + env + " -> " + destPath);
     }
 }

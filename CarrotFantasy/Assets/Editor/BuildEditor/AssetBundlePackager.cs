@@ -187,7 +187,13 @@ public static class AssetBundlePackager
         string bundlePath = Path.Combine(bundleRootPath, GetPlatformFolder(target));
         if (!Directory.Exists(bundlePath))
         {
-            EditorUtility.DisplayDialog("错误", "AB 包目录不存在！", "确定");
+            const string missingMsg = "AB 包目录不存在！";
+            Debug.LogError("[AB Build] " + missingMsg + " path=" + bundlePath);
+            if (showSuccessDialog)
+            {
+                EditorUtility.DisplayDialog("错误", missingMsg, "确定");
+            }
+
             return null;
         }
 

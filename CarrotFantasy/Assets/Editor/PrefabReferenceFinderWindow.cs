@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class PrefabReferenceFinderWindow : EditorWindow
 {
-    private const string MenuPath = "Tools/资源工具/Prefab 引用查找";
+    private const string MenuPath = "Tools/资源/Prefab 引用查找";
 
     private Object _targetAsset;
     private readonly List<string> _matchedPrefabPaths = new List<string>();
     private Vector2 _scrollPos;
 
-    [MenuItem(MenuPath)]
+    [MenuItem(MenuPath, false, 400)]
     private static void OpenWindow()
     {
         var window = GetWindow<PrefabReferenceFinderWindow>("Prefab 引用查找");

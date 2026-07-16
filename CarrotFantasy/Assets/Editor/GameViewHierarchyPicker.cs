@@ -266,7 +266,7 @@ public static class GameViewHierarchyPicker
         return path;
     }
 
-    [MenuItem("Tools/Game 视图点选 Hierarchy/开启", false, 500)]
+    [MenuItem("Tools/编辑器/Game 视图点选 Hierarchy/开启", false, 610)]
     static void MenuEnable()
     {
         //EditorPrefs.SetBool(PrefsWantEnabled, true);
@@ -280,7 +280,7 @@ public static class GameViewHierarchyPicker
         }
     }
 
-    [MenuItem("Tools/Game 视图点选 Hierarchy/关闭", false, 501)]
+    [MenuItem("Tools/编辑器/Game 视图点选 Hierarchy/关闭", false, 611)]
     static void MenuDisable()
     {
         //EditorPrefs.SetBool(PrefsWantEnabled, false);

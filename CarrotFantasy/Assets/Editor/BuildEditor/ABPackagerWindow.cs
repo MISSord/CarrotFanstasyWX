@@ -32,7 +32,7 @@ public class ABPackagerWindow : EditorWindow
     private string deployPrivateKeyPath;
     private bool promptUploadAfterBuild;
 
-    [MenuItem("Tools/打开AssetBundle打包窗口")]
+    [MenuItem("Tools/AssetBundle/打开打包窗口", false, 300)]
     public static void ShowWindow()
     {
         ABPackagerWindow window = GetWindow<ABPackagerWindow>("AB Packager");

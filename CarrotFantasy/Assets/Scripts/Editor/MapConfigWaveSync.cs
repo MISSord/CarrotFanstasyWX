@@ -16,7 +16,7 @@ public static class MapConfigWaveSync
     private const string MapConfigGame = "Assets/Game/Json/MapConfig.json";
     private const string LevelJsonFolder = "Assets/Game/Json/Level";
 
-    [MenuItem("CarrotFantasy/关卡刷怪表/同步所有关卡波次到 MapConfig")]
+    [MenuItem("Tools/CarrotFantasy/关卡刷怪表/同步所有关卡波次到 MapConfig", false, 12)]
     public static void SyncAllLevelsFromJson()
     {
         try

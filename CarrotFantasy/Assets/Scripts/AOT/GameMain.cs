@@ -27,7 +27,9 @@ namespace CarrotFantasy
 
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             DisplaySettings.ApplySavedOrDefault();
+#if CF_DEV_TOOLS || UNITY_EDITOR
             RuntimeLogConsole.EnsureInstalled();
+#endif
 
             SRPScheduler.Init();
             AssetBundlePathHelper.Initialize();

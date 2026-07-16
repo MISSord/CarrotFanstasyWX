@@ -12,7 +12,7 @@ public class FbxToPrefabProcessor : AssetPostprocessor
         }
     }
 
-    [MenuItem("Tools/Create Prefab From Selected FBX")]
+    [MenuItem("Tools/资源/Create Prefab From Selected FBX", false, 402)]
     static void CreatePrefabFromSelectedFBX()
     {
         GameObject selectedObject = Selection.activeGameObject;

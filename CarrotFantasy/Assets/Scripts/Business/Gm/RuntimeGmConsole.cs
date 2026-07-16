@@ -75,7 +75,7 @@ namespace CarrotFantasy
         private bool stylesReady;
         private Texture2D panelBg;
 
-#if UNITY_STANDALONE || UNITY_EDITOR
+#if CF_DEV_TOOLS || UNITY_EDITOR
         public static void EnsureInstalled()
         {
             if (instance != null)
@@ -127,7 +127,7 @@ namespace CarrotFantasy
 
         private void OnGUI()
         {
-#if !UNITY_STANDALONE && !UNITY_EDITOR
+#if !CF_DEV_TOOLS && !UNITY_EDITOR
             return;
 #else
             this.EnsureStyles();
