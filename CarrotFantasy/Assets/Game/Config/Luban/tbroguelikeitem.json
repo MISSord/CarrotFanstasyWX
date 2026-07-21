@@ -1,0 +1,39 @@
+[
+  {
+    "ItemId": 1001,
+    "Name": "开局资金+",
+    "Price": 80,
+    "MaxOwn": 1,
+    "EffectIds": [
+      2001
+    ]
+  },
+  {
+    "ItemId": 1002,
+    "Name": "塔伤强化",
+    "Price": 120,
+    "MaxOwn": 1,
+    "EffectIds": [
+      2002
+    ]
+  },
+  {
+    "ItemId": 1003,
+    "Name": "全面增益",
+    "Price": 200,
+    "MaxOwn": 1,
+    "EffectIds": [
+      2003,
+      2004
+    ]
+  },
+  {
+    "ItemId": 1004,
+    "Name": "毒弹补给",
+    "Price": 150,
+    "MaxOwn": 1,
+    "EffectIds": [
+      2005
+    ]
+  }
+]

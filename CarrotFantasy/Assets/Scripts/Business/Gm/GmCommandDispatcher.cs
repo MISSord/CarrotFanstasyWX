@@ -88,6 +88,8 @@ namespace CarrotFantasy
             sb.AppendLine("preview                                         输出当前快照");
             sb.AppendLine("startBattle <大关> <小关>                       进战斗（需 Play）");
             sb.AppendLine("openMap [大关] [小关]                           打开选关（需 Play）");
+            sb.AppendLine("startRoguelike <大关> <小关>                   进肉鸽小关地图（需 Play）");
+            sb.AppendLine("openRoguelikeMap [大关] [小关]                 打开肉鸽选关（需 Play）");
             sb.AppendLine("help [指令名]                                   显示帮助");
             return sb.ToString();
         }
@@ -154,6 +156,8 @@ namespace CarrotFantasy
                 { "preview", HandlePreview },
                 { "startbattle", HandleStartBattle },
                 { "openmap", HandleOpenMap },
+                { "startroguelike", HandleStartRoguelike },
+                { "openroguelikemap", HandleOpenRoguelikeMap },
             };
         }
 
@@ -432,6 +436,85 @@ namespace CarrotFantasy
             panel.OpenForBigLevel(big, level);
             ViewManager.Instance.OpenView<MapNormalLevelPanel>();
             return GmCommandResult.Ok(string.Format("已打开选关界面，选中 {0}-{1}。", big, level));
+        }
+
+        static GmCommandResult HandleStartRoguelike(GmCommandContext ctx, string[] args)
+        {
+            if (!UnityEngine.Application.isPlaying)
+            {
+                return GmCommandResult.Fail("startRoguelike 需要在 Play 模式下执行。");
+            }
+
+            if (args.Length < 2)
+            {
+                return GmCommandResult.Fail("用法: /gm startRoguelike <大关> <小关>");
+            }
+
+            if (!TryParseInt(args[0], out int big) || !TryParseInt(args[1], out int level))
+            {
+                return GmCommandResult.Fail("大关或小关参数无效。");
+            }
+
+            if (RoguelikeMapServer.Instance == null)
+            {
+                return GmCommandResult.Fail("RoguelikeMapServer 未初始化。");
+            }
+
+            if (RoguelikeLevelConfigReader.Instance.Get(big, level) == null)
+            {
+                return GmCommandResult.Fail(string.Format("无肉鸽关卡配置 {0}-{1}。", big, level));
+            }
+
+            RoguelikeMapServer.Instance.mapModel.ForceUnlockLevel(big, level);
+            if (!RoguelikeMapServer.Instance.EnterLevel(big, level))
+            {
+                return GmCommandResult.Fail(string.Format("进入肉鸽关卡 {0}-{1} 失败。", big, level));
+            }
+
+            RoguelikeLevelDef def = RoguelikeMapServer.Instance.GetLevelDef(big, level);
+            return GmCommandResult.Ok(string.Format(
+                "已进入肉鸽 {0}-{1}（{2}），shopPool={3}，startingGold={4}。",
+                big,
+                level,
+                def != null ? def.displayName : "?",
+                def != null ? def.shopPoolId : 0,
+                def != null ? def.startingGold : 0));
+        }
+
+        static GmCommandResult HandleOpenRoguelikeMap(GmCommandContext ctx, string[] args)
+        {
+            if (!UnityEngine.Application.isPlaying)
+            {
+                return GmCommandResult.Fail("openRoguelikeMap 需要在 Play 模式下执行。");
+            }
+
+            int big = 1;
+            int level = 1;
+            if (args.Length >= 1 && !TryParseInt(args[0], out big))
+            {
+                return GmCommandResult.Fail("大关参数无效: " + args[0]);
+            }
+
+            if (args.Length >= 2 && !TryParseInt(args[1], out level))
+            {
+                return GmCommandResult.Fail("小关参数无效: " + args[1]);
+            }
+
+            if (ViewManager.Instance == null)
+            {
+                return GmCommandResult.Fail("ViewManager 未初始化。");
+            }
+
+            ViewManager.Instance.OpenView<RoguelikeBigLevelPanel>();
+            if (!ViewManager.Instance.viewTypeDic.TryGetValue(typeof(RoguelikeNormalLevelPanel), out BaseView levelView))
+            {
+                return GmCommandResult.Fail("RoguelikeNormalLevelPanel 未注册。");
+            }
+
+            var panel = (RoguelikeNormalLevelPanel)levelView;
+            panel.OpenForBigLevel(big, level);
+            ViewManager.Instance.OpenView<RoguelikeNormalLevelPanel>();
+            return GmCommandResult.Ok(string.Format("已打开肉鸽选关界面，选中 {0}-{1}。", big, level));
         }
 
         static List<string> SplitTokens(string text)

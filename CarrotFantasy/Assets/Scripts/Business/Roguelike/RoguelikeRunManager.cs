@@ -68,7 +68,15 @@ namespace CarrotFantasy
             int mapId = controller.MapAsset.name.GetHashCode();
             if (!RoguelikeRunServer.Instance.IsRunActive)
             {
-                RoguelikeRunServer.Instance.StartRun(mapId, this.mapRuntime.ExportProgress());
+                // 选关进图会先 StartRun；直接进 Scene 时由 MapServer 按默认/最近关兜底。
+                if (RoguelikeMapServer.Instance != null)
+                {
+                    RoguelikeMapServer.Instance.EnsureRunForDirectSceneEntry(mapId);
+                }
+                else
+                {
+                    RoguelikeRunServer.Instance.StartRunFromMapIdFallback(mapId, this.mapRuntime.ExportProgress());
+                }
             }
 
             this.BindContext(this.mapRuntime.Context);
@@ -270,8 +278,14 @@ namespace CarrotFantasy
             }
 
             GUILayout.BeginArea(new Rect(10f, Screen.height - 120f, 320f, 110f), GUI.skin.box);
+            RoguelikeRunState run = RoguelikeRunServer.Instance.ActiveRun;
+            if (run != null)
+            {
+                GUILayout.Label("Level: " + run.bigLevelId + "-" + run.levelId + " pool=" + run.shopPoolId);
+            }
             GUILayout.Label("Roguelike Gold: " + RoguelikeRunServer.Instance.RoguelikeGold);
             GUILayout.Label("Inventory: " + string.Join(", ", RoguelikeRunServer.Instance.OwnedItemIds));
+            GUILayout.Label("StartEffects: " + string.Join(", ", RoguelikeRunServer.Instance.StartingEffectIds));
             GUILayout.Label("Shop: 1/2/3 buy, C close | Random: C close");
             GUILayout.EndArea();
         }

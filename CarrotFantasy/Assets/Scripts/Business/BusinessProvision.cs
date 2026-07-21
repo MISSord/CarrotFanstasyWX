@@ -32,6 +32,7 @@ namespace CarrotFantasy
             this.businessDic.Add(BusinessType.AccountServer, AccountServer.Instance);
             this.businessDic.Add(BusinessType.MapServer, MapServer.Instance);
             this.businessDic.Add(BusinessType.SettingServer, SettingServer.Instance);
+            this.businessDic.Add(BusinessType.RoguelikeMapServer, RoguelikeMapServer.Instance);
             this.businessDic.Add(BusinessType.RoguelikeRunServer, RoguelikeRunServer.Instance);
             this.businessDic.Add(BusinessType.BattleParamServer, BattleParamServer.Instance);
 

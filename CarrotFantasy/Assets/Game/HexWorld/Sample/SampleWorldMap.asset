@@ -26,6 +26,14 @@ MonoBehaviour:
     payload: 
     triggerTiming: 0
     postRule: 0
+  - pointId: 155
+    q: 3
+    r: 5
+    kind: 0
+    eventKind: 0
+    payload: 
+    triggerTiming: 0
+    postRule: 0
   - pointId: 157
     q: 5
     r: 5
@@ -74,9 +82,17 @@ MonoBehaviour:
     payload: 
     triggerTiming: 0
     postRule: 0
-  - pointId: 155
-    q: 3
-    r: 5
+  - pointId: 190
+    q: 7
+    r: 6
+    kind: 0
+    eventKind: 0
+    payload: 
+    triggerTiming: 0
+    postRule: 0
+  - pointId: 131
+    q: 9
+    r: 4
     kind: 0
     eventKind: 0
     payload: 

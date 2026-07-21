@@ -19,6 +19,7 @@ Unity 运行时依赖（导表后若报 CS0246 Luban / SimpleJSON）：
 
 已接入 Luban 的数据表：
   Tower.xlsx / Monster.xlsx / Bullet.xlsx / Buff.xlsx / Item.xlsx
+  RoguelikeEffect.xlsx / RoguelikeItem.xlsx / RoguelikeShopPool.xlsx / RoguelikeLevel.xlsx
 
 关卡刷怪配表（CSV，非 Luban）：
   ConfigTools/LevelSpawn/*.csv

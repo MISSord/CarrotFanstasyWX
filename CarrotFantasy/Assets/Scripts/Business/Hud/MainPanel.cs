@@ -40,12 +40,12 @@ namespace CarrotFantasy
         private void AddListener()
         {
             Button btnNormal = this.nameTableDic["btn_normal"].GetComponent<Button>();
-            Button btnBoss = this.nameTableDic["btn_boss"].GetComponent<Button>();
+            Button btnRoguelike = this.nameTableDic["btn_roguelike"].GetComponent<Button>();
             Button btnExitGame = this.nameTableDic["btn_exit_game"].GetComponent<Button>();
             Button btnHelp = this.nameTableDic["btn_help"].GetComponent<Button>();
             Button btnSet = this.nameTableDic["btn_set"].GetComponent<Button>();
 
-            XUI.AddButtonListener(btnBoss, this.ToBossModel);
+            XUI.AddButtonListener(btnRoguelike, this.ToRoguelikeModel);
             XUI.AddButtonListener(btnNormal, this.ToNormalModel);
             XUI.AddButtonListener(btnExitGame, this.ExitGame);
             XUI.AddButtonListener(btnHelp, this.ShowHelpPanel);
@@ -82,8 +82,9 @@ namespace CarrotFantasy
             ViewManager.Instance.OpenView<MapBigLevelPanel>();
         }
 
-        public void ToBossModel()
+        public void ToRoguelikeModel()
         {
+            ViewManager.Instance.OpenView<RoguelikeBigLevelPanel>();
         }
 
         public void ExitGame()

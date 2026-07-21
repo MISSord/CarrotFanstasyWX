@@ -6,6 +6,7 @@ namespace CarrotFantasy
         public const string AccountServer = "AccountServer";
         public const string MapServer = "MapServer";
         public const string BattleParamServer = "BattleParamServer";
+        public const string RoguelikeMapServer = "RoguelikeMapServer";
         public const string RoguelikeRunServer = "RoguelikeRunServer";
         public const string SettingServer = "SettingServer";
     }

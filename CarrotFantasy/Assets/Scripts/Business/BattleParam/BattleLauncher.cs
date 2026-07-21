@@ -21,11 +21,11 @@ namespace CarrotFantasy
             PveModelBattleParams p = PveModelBattleParams.CreateRoguelike(bigLevelId, levelId);
             if (RoguelikeRunServer.Instance != null && RoguelikeRunServer.Instance.IsRunActive)
             {
-                RoguelikeRunServer.Instance.CollectBattleModifiers(
-                    out int startCoinBonus,
-                    out int towerDamagePercentBonus);
-                p.StartCoinBonus = startCoinBonus;
-                p.TowerDamagePercentBonus = towerDamagePercentBonus;
+                var mods = new RoguelikeBattleModifiers();
+                RoguelikeRunServer.Instance.CollectBattleModifiers(mods);
+                p.StartCoinBonus = mods.StartCoinBonus;
+                p.TowerDamagePercentBonus = mods.TowerDamagePercentBonus;
+                AppendGlobalBuffIds(p, mods.GlobalBuffIds);
             }
 
             StartPve(p);

@@ -58,41 +58,41 @@
     <Analyzer Include="C:\Program Files\Microsoft Visual Studio\18\Insiders\Common7\IDE\Extensions\Microsoft\Visual Studio Tools for Unity\Analyzers\Microsoft.Unity.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Editor\BuildEditor\PcBuildChannel.cs" />
-    <Compile Include="Assets\Editor\BuildEditor\HybridCLRCodeHotUpdatePipeline.cs" />
-    <Compile Include="Assets\Editor\UINameTableEditor.cs" />
-    <Compile Include="Assets\Editor\PrefabReferenceFinderWindow.cs" />
-    <Compile Include="Assets\Editor\MapTool.cs" />
-    <Compile Include="Assets\Editor\BuildEditor\ABPackagerWindow.cs" />
-    <Compile Include="Assets\Editor\StripItemCanvasFromPrefabs.cs" />
-    <Compile Include="Assets\Editor\AssetsEditor\AtlasPacker.cs" />
-    <Compile Include="Assets\Editor\ToggleSelectedActiveEditor.cs" />
-    <Compile Include="Assets\Editor\GlobalConfigEditor\GlobalConfigEditor.cs" />
-    <Compile Include="Assets\Editor\Gm\GmToolsWindow.cs" />
-    <Compile Include="Assets\Editor\Helper\EditorResHelper.cs" />
-    <Compile Include="Assets\Editor\BuildEditor\HybridCLRProjectSetup.cs" />
-    <Compile Include="Assets\Editor\ImageSlicer.cs" />
-    <Compile Include="Assets\Editor\BuildEditor\AssetBundlePathMenu.cs" />
     <Compile Include="Assets\Editor\BuildEditor\CustomManifestBuilderWindow.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\PcBuildChannel.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleCloudUploader.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\HybridCLRCodeHotUpdatePipeline.cs" />
     <Compile Include="Assets\Editor\UINameEntryDrawer.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PcPlayerRebuildAdvisor.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\FbxToPrefabProcessor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildSettings.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildPipeline.cs" />
+    <Compile Include="Assets\Editor\UINameTableEditor.cs" />
+    <Compile Include="Assets\Editor\PrefabReferenceFinderWindow.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\AnimationClipExtractor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabABPathPostprocessor.cs" />
+    <Compile Include="Assets\Editor\MapTool.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleDeploySettings.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\ABPackagerWindow.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PrefabUIImageLoaderAutoBinder.cs" />
     <Compile Include="Assets\Editor\HexWorld\HexWorldMapSampleCreator.cs" />
     <Compile Include="Assets\Editor\GameViewHierarchyPicker.cs" />
+    <Compile Include="Assets\Editor\StripItemCanvasFromPrefabs.cs" />
+    <Compile Include="Assets\Editor\AssetsEditor\AtlasPacker.cs" />
+    <Compile Include="Assets\Editor\ToggleSelectedActiveEditor.cs" />
+    <Compile Include="Assets\Editor\GlobalConfigEditor\GlobalConfigEditor.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\PcPlayerBuildPipeline.cs" />
+    <Compile Include="Assets\Editor\Gm\GmToolsWindow.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AtlasPackager.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackMerger.cs" />
     <Compile Include="Assets\Editor\AssetsEditor\LoadModeToolbarEditor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackager.cs" />
     <Compile Include="Assets\Editor\HexWorld\HexWorldMapEditorInspector.cs" />
+    <Compile Include="Assets\Editor\Helper\EditorResHelper.cs" />
     <Compile Include="Assets\Editor\BuildEditor\Batch\BuildCli.cs" />
-    <Compile Include="Assets\Editor\BuildEditor\PcPlayerBuildPipeline.cs" />
+    <Compile Include="Assets\Editor\ImageSlicer.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\HybridCLRProjectSetup.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\AssetBundlePathMenu.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\Editor\Unity.Editor.asmdef" />
@@ -444,8 +444,24 @@
       <HintPath>D:\Tool\Unity2021.3.45f1\Unity 2021.3.45f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>Assets\Plugins\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Plastic.Newtonsoft.Json">
+      <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Newtonsoft.Json.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="LZ4">
       <HintPath>Packages\com.code-philosophy.hybridclr\Plugins\LZ4.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Unity.Plastic.Antlr3.Runtime">
+      <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="DOTweenEditor">
+      <HintPath>Assets\Plugins\Demigiant\DOTween\Editor\DOTweenEditor.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="log4netPlastic">
@@ -472,44 +488,12 @@
       <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\unityplastic.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ICSharpCode.SharpZipLib">
-      <HintPath>Assets\Plugins\ICSharpCode.SharpZipLib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@3.2.1\Runtime\Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe">
-      <HintPath>Assets\Plugins\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Plastic.Newtonsoft.Json">
-      <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Newtonsoft.Json.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Analytics.StandardEvents">
-      <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\AnalyticsStandardEvents\Unity.Analytics.StandardEvents.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Analytics.Editor">
-      <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Editor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Plastic.Antlr3.Runtime">
-      <HintPath>Library\PackageCache\com.unity.collab-proxy@2.5.2\Lib\Editor\PlasticSCM\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="DOTweenEditor">
-      <HintPath>Assets\Plugins\Demigiant\DOTween\Editor\DOTweenEditor.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Unity.Analytics.Tracker">
-      <HintPath>Library\PackageCache\com.unity.analytics@3.6.12\Unity.Analytics.Tracker.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
     <Reference Include="SshNet.Security.Cryptography">
       <HintPath>Assets\Editor\ThirdParty\SshNet\SshNet.Security.Cryptography.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>Assets\Plugins\ICSharpCode.SharpZipLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="nunit.framework">

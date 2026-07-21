@@ -6,6 +6,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 肉鸽 Run 层：肉鸽金币、背包、商店购买。生命周期跨越多次战斗与大地图节点。
+    /// 选关/解锁由 <see cref="RoguelikeMapServer"/> 负责。
     /// </summary>
     public class RoguelikeRunServer : BaseServer<RoguelikeRunServer>
     {
@@ -14,6 +15,8 @@ namespace CarrotFantasy
 
         public EventDispatcher eventDispatcher { get; private set; }
         public RoguelikeRunState ActiveRun { get; private set; }
+
+        readonly RoguelikeBattleModifiers battleModsCache = new RoguelikeBattleModifiers();
 
         public bool IsRunActive
         {
@@ -26,6 +29,7 @@ namespace CarrotFantasy
         protected override void OnSingletonInit()
         {
             this.eventDispatcher = new EventDispatcher();
+            RoguelikeEffectConfigReader.Instance.Init();
             RoguelikeItemConfigReader.Instance.Init();
             RoguelikeShopConfigReader.Instance.Init();
         }
@@ -33,45 +37,89 @@ namespace CarrotFantasy
         public override void LoadModule()
         {
             base.LoadModule();
-            BusinessProvision.Instance.eventDispatcher.AddListener(CommonEventType.ENTER_ROGUELIKE_MAP, this.EnterRoguelikeMap);
-        }
-
-        void EnterRoguelikeMap()
-        {
-            ServerProvision.sceneServer.LoadScene(BaseSceneType.RoguelikeMapScene, null);
         }
 
         public override void Dispose()
         {
-            if (BusinessProvision.Instance != null)
-            {
-                BusinessProvision.Instance.eventDispatcher.RemoveListener(CommonEventType.ENTER_ROGUELIKE_MAP, this.EnterRoguelikeMap);
-            }
             this.ActiveRun = null;
             base.Dispose();
         }
 
-        public void StartRun(int mapId, HexWorldProgress progress = null)
+        /// <summary>用选关快照开一局；旧的仅 mapId 入口请走 <see cref="StartRunFromMapIdFallback"/>。</summary>
+        public void StartRun(RoguelikeRunStartParams startParams)
         {
+            if (startParams == null)
+            {
+                Debug.LogError("[RoguelikeRunServer] StartRun params is null.");
+                return;
+            }
+
+            int gold = startParams.startingGold > 0 ? startParams.startingGold : DefaultStartingGold;
             this.ActiveRun = new RoguelikeRunState
             {
-                mapId = mapId,
-                roguelikeGold = DefaultStartingGold,
+                bigLevelId = startParams.bigLevelId,
+                levelId = startParams.levelId,
+                mapId = startParams.mapId,
+                hexMapAssetId = startParams.hexMapAssetId,
+                shopPoolId = startParams.shopPoolId,
+                encounterTableId = startParams.encounterTableId,
+                randomEventPoolId = startParams.randomEventPoolId,
+                runSeed = startParams.runSeed,
+                roguelikeGold = gold,
                 isActive = true,
             };
-            if (progress != null)
+
+            if (startParams.startingEffectIds != null)
             {
-                this.ActiveRun.mapProgress = CloneProgress(progress);
+                for (int i = 0; i < startParams.startingEffectIds.Length; i++)
+                {
+                    int effectId = startParams.startingEffectIds[i];
+                    if (effectId > 0 && !this.ActiveRun.startingEffectIds.Contains(effectId))
+                    {
+                        this.ActiveRun.startingEffectIds.Add(effectId);
+                    }
+                }
+            }
+
+            int bonusGold = RoguelikeEffectCompiler.SumStartingRoguelikeGold(this.ActiveRun.startingEffectIds);
+            if (bonusGold > 0)
+            {
+                this.ActiveRun.roguelikeGold += bonusGold;
+            }
+
+            if (startParams.mapProgress != null)
+            {
+                this.ActiveRun.mapProgress = CloneProgress(startParams.mapProgress);
             }
             else
             {
-                this.ActiveRun.mapProgress.mapId = mapId;
+                this.ActiveRun.mapProgress.mapId = startParams.mapId;
             }
 
             this.PendingBattlePointId = 0;
             this.PendingEncounterId = 0;
             this.eventDispatcher.DispatchEvent(RoguelikeEvent.RUN_STARTED);
             this.DispatchGoldChanged(0);
+            Debug.Log(
+                "[RoguelikeRun] StartRun " + startParams.bigLevelId + "-" + startParams.levelId +
+                " shopPool=" + startParams.shopPoolId +
+                " gold=" + this.ActiveRun.roguelikeGold +
+                " effects=" + this.ActiveRun.startingEffectIds.Count);
+        }
+
+        /// <summary>兼容旧调用：仅有 mapId 时按默认金币开局（无章节配置）。</summary>
+        public void StartRunFromMapIdFallback(int mapId, HexWorldProgress progress = null)
+        {
+            this.StartRun(new RoguelikeRunStartParams
+            {
+                bigLevelId = 0,
+                levelId = 0,
+                mapId = mapId,
+                shopPoolId = 0,
+                startingGold = DefaultStartingGold,
+                startingEffectIds = Array.Empty<int>(),
+                mapProgress = progress,
+            });
         }
 
         public void EndRun(RoguelikeRunEndReason reason)
@@ -100,6 +148,18 @@ namespace CarrotFantasy
                     return Array.Empty<int>();
                 }
                 return this.ActiveRun.ownedItemIds;
+            }
+        }
+
+        public IReadOnlyList<int> StartingEffectIds
+        {
+            get
+            {
+                if (!this.IsRunActive)
+                {
+                    return Array.Empty<int>();
+                }
+                return this.ActiveRun.startingEffectIds;
             }
         }
 
@@ -156,28 +216,55 @@ namespace CarrotFantasy
             return true;
         }
 
+        public int CountOwnedItem(int itemId)
+        {
+            if (!this.IsRunActive || itemId <= 0)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            for (int i = 0; i < this.ActiveRun.ownedItemIds.Count; i++)
+            {
+                if (this.ActiveRun.ownedItemIds[i] == itemId)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public bool OwnsItem(int itemId)
+        {
+            return this.CountOwnedItem(itemId) > 0;
+        }
+
+        public bool IsItemSoldOut(int itemId)
+        {
+            if (!RoguelikeItemConfigReader.Instance.TryGet(itemId, out RoguelikeItemDef def))
+            {
+                return true;
+            }
+            return this.CountOwnedItem(itemId) >= def.maxOwn;
+        }
+
         public bool TryAddItem(int itemId)
         {
             if (!this.IsRunActive || itemId <= 0)
             {
                 return false;
             }
-            if (!RoguelikeItemConfigReader.Instance.TryGet(itemId, out _))
+            if (!RoguelikeItemConfigReader.Instance.TryGet(itemId, out RoguelikeItemDef def))
             {
                 return false;
             }
-            if (this.ActiveRun.ownedItemIds.Contains(itemId))
+            if (this.CountOwnedItem(itemId) >= def.maxOwn)
             {
                 return false;
             }
             this.ActiveRun.ownedItemIds.Add(itemId);
             this.eventDispatcher.DispatchEvent<int>(RoguelikeEvent.INVENTORY_CHANGED, itemId);
             return true;
-        }
-
-        public bool OwnsItem(int itemId)
-        {
-            return this.IsRunActive && this.ActiveRun.ownedItemIds.Contains(itemId);
         }
 
         public void SetActiveShopPoint(int shopPointId)
@@ -206,7 +293,10 @@ namespace CarrotFantasy
                 return list;
             }
 
-            int[] itemIds = RoguelikeShopConfigReader.Instance.GetItemIdsForShop(shopPointId);
+            int seed = this.ActiveRun.runSeed ^ (shopPointId * 397);
+            int[] itemIds = RoguelikeShopConfigReader.Instance.ResolveShelfItemIds(
+                this.ActiveRun.shopPoolId,
+                seed);
             for (int i = 0; i < itemIds.Length; i++)
             {
                 int itemId = itemIds[i];
@@ -220,7 +310,7 @@ namespace CarrotFantasy
                     itemId = itemId,
                     price = def.price,
                     displayName = def.displayName,
-                    soldOut = this.OwnsItem(itemId),
+                    soldOut = this.IsItemSoldOut(itemId),
                 });
             }
             return list;
@@ -238,7 +328,7 @@ namespace CarrotFantasy
             {
                 return false;
             }
-            if (this.OwnsItem(itemId))
+            if (this.IsItemSoldOut(itemId))
             {
                 return false;
             }
@@ -257,25 +347,30 @@ namespace CarrotFantasy
             return true;
         }
 
-        /// <summary>汇总背包对单局战斗的加成（由 <see cref="BattleLauncher"/> 写入开战参数并由 <see cref="BattleGlobalBuffComponent"/> 应用）。</summary>
-        public void CollectBattleModifiers(out int startCoinBonus, out int towerDamagePercentBonus)
+        /// <summary>汇总开局效果 + 背包道具效果，写入开战加成。</summary>
+        public void CollectBattleModifiers(RoguelikeBattleModifiers mods)
         {
-            startCoinBonus = 0;
-            towerDamagePercentBonus = 0;
+            if (mods == null)
+            {
+                return;
+            }
+
+            mods.Clear();
             if (!this.IsRunActive)
             {
                 return;
             }
 
-            for (int i = 0; i < this.ActiveRun.ownedItemIds.Count; i++)
-            {
-                if (!RoguelikeItemConfigReader.Instance.TryGet(this.ActiveRun.ownedItemIds[i], out RoguelikeItemDef def))
-                {
-                    continue;
-                }
-                startCoinBonus += def.startBattleCoinBonus;
-                towerDamagePercentBonus += def.towerDamagePercentBonus;
-            }
+            RoguelikeEffectCompiler.CompileEffectIds(this.ActiveRun.startingEffectIds, mods);
+            RoguelikeEffectCompiler.CompileItemIds(this.ActiveRun.ownedItemIds, mods);
+        }
+
+        /// <summary>兼容旧签名：只返回金币/塔伤；全局 Buff 请用 <see cref="CollectBattleModifiers(RoguelikeBattleModifiers)"/>。</summary>
+        public void CollectBattleModifiers(out int startCoinBonus, out int towerDamagePercentBonus)
+        {
+            this.CollectBattleModifiers(this.battleModsCache);
+            startCoinBonus = this.battleModsCache.StartCoinBonus;
+            towerDamagePercentBonus = this.battleModsCache.TowerDamagePercentBonus;
         }
 
         public void OnBattleVictory()
@@ -313,6 +408,5 @@ namespace CarrotFantasy
             }
             return dst;
         }
-
     }
 }

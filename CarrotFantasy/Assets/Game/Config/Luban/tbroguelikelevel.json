@@ -1,0 +1,79 @@
+[
+  {
+    "BigLevelId": 1,
+    "LevelId": 1,
+    "DisplayName": "草原入门",
+    "HexMapAssetId": "SampleWorldMap",
+    "ShopPoolId": 1,
+    "StartingGold": 100,
+    "StartingEffectIds": [],
+    "EncounterTableId": 1,
+    "RandomEventPoolId": 1
+  },
+  {
+    "BigLevelId": 1,
+    "LevelId": 2,
+    "DisplayName": "草原进阶",
+    "HexMapAssetId": "SampleWorldMap",
+    "ShopPoolId": 1,
+    "StartingGold": 120,
+    "StartingEffectIds": [
+      2001
+    ],
+    "EncounterTableId": 1,
+    "RandomEventPoolId": 1
+  },
+  {
+    "BigLevelId": 1,
+    "LevelId": 3,
+    "DisplayName": "草原挑战",
+    "HexMapAssetId": "SampleWorldMap",
+    "ShopPoolId": 2,
+    "StartingGold": 100,
+    "StartingEffectIds": [
+      2002
+    ],
+    "EncounterTableId": 2,
+    "RandomEventPoolId": 2
+  },
+  {
+    "BigLevelId": 2,
+    "LevelId": 1,
+    "DisplayName": "地下入门",
+    "HexMapAssetId": "SampleWorldMap",
+    "ShopPoolId": 2,
+    "StartingGold": 100,
+    "StartingEffectIds": [],
+    "EncounterTableId": 2,
+    "RandomEventPoolId": 2
+  },
+  {
+    "BigLevelId": 2,
+    "LevelId": 2,
+    "DisplayName": "地下进阶",
+    "HexMapAssetId": "SampleWorldMap",
+    "ShopPoolId": 3,
+    "StartingGold": 150,
+    "StartingEffectIds": [
+      2001,
+      2002
+    ],
+    "EncounterTableId": 3,
+    "RandomEventPoolId": 2
+  },
+  {
+    "BigLevelId": 2,
+    "LevelId": 3,
+    "DisplayName": "地下终章",
+    "HexMapAssetId": "SampleWorldMap",
+    "ShopPoolId": 3,
+    "StartingGold": 80,
+    "StartingEffectIds": [
+      2003,
+      2004,
+      2006
+    ],
+    "EncounterTableId": 3,
+    "RandomEventPoolId": 3
+  }
+]

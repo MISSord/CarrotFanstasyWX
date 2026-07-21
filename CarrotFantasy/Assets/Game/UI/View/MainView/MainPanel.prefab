@@ -136,7 +136,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Btn_Help
-  _lastRecordedSpriteInstanceId: 46510
+  _lastRecordedSpriteInstanceId: 54448
 --- !u!1 &1028903024054316
 GameObject:
   m_ObjectHideFlags: 0
@@ -191,8 +191,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiEntries:
-  - name: btn_boss
-    uiReference: {fileID: 1627964372533596}
   - name: btn_exit_game
     uiReference: {fileID: 1622880899886894}
   - name: btn_help
@@ -201,6 +199,8 @@ MonoBehaviour:
     uiReference: {fileID: 2575983301584838067}
   - name: btn_normal
     uiReference: {fileID: 1359254519708610}
+  - name: btn_roguelike
+    uiReference: {fileID: 1627964372533596}
   - name: btn_set
     uiReference: {fileID: 1851339160123426}
   - name: node_carrot
@@ -300,7 +300,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: FlyMonster
-  _lastRecordedSpriteInstanceId: 46534
+  _lastRecordedSpriteInstanceId: 54444
 --- !u!1 &1200737407963828
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,7 +392,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Leaf1
-  _lastRecordedSpriteInstanceId: 46536
+  _lastRecordedSpriteInstanceId: 54566
 --- !u!1 &1231001879295710
 GameObject:
   m_ObjectHideFlags: 0
@@ -484,7 +484,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Leaf3
-  _lastRecordedSpriteInstanceId: 46540
+  _lastRecordedSpriteInstanceId: 54564
 --- !u!1 &1283307548845210
 GameObject:
   m_ObjectHideFlags: 0
@@ -576,7 +576,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Cloud
-  _lastRecordedSpriteInstanceId: 46532
+  _lastRecordedSpriteInstanceId: 54458
 --- !u!1 &1359254519708610
 GameObject:
   m_ObjectHideFlags: 0
@@ -727,7 +727,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Btn_Normal
-  _lastRecordedSpriteInstanceId: 46518
+  _lastRecordedSpriteInstanceId: 54442
 --- !u!114 &2647162226729689984
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -959,7 +959,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
   defaultAssetName: close_normal
-  _lastRecordedSpriteInstanceId: 46548
+  _lastRecordedSpriteInstanceId: 54454
 --- !u!1 &1627964372533596
 GameObject:
   m_ObjectHideFlags: 0
@@ -974,7 +974,7 @@ GameObject:
   - component: {fileID: 114176181757685568}
   - component: {fileID: 1694615161921157956}
   m_Layer: 5
-  m_Name: btn_boss
+  m_Name: btn_roguelike
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1109,7 +1109,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Btn_Normal
-  _lastRecordedSpriteInstanceId: 46518
+  _lastRecordedSpriteInstanceId: 54442
 --- !u!1 &1667325082287264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1201,7 +1201,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/maintitle
   defaultAssetName: MainTitle
-  _lastRecordedSpriteInstanceId: 46280
+  _lastRecordedSpriteInstanceId: 54550
 --- !u!1 &1803117802962108
 GameObject:
   m_ObjectHideFlags: 0
@@ -1293,7 +1293,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: CarrotBody
-  _lastRecordedSpriteInstanceId: 46530
+  _lastRecordedSpriteInstanceId: 54568
 --- !u!1 &1851339160123426
 GameObject:
   m_ObjectHideFlags: 0
@@ -1430,7 +1430,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Btn_SetLight
-  _lastRecordedSpriteInstanceId: 46528
+  _lastRecordedSpriteInstanceId: 54450
 --- !u!1 &1969897163301580
 GameObject:
   m_ObjectHideFlags: 0
@@ -1522,7 +1522,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: leaf2
-  _lastRecordedSpriteInstanceId: 46538
+  _lastRecordedSpriteInstanceId: 54570
 --- !u!1 &740705278202063576
 GameObject:
   m_ObjectHideFlags: 0
@@ -1872,7 +1872,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: Btn_Normal
-  _lastRecordedSpriteInstanceId: 46518
+  _lastRecordedSpriteInstanceId: 54442
 --- !u!1 &4530780191319591703
 GameObject:
   m_ObjectHideFlags: 0
@@ -1961,7 +1961,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/mainbg
   defaultAssetName: MainBG
-  _lastRecordedSpriteInstanceId: 41072
+  _lastRecordedSpriteInstanceId: 54504
 --- !u!1 &4575523279557376594
 GameObject:
   m_ObjectHideFlags: 0
@@ -2041,7 +2041,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "BOSS\u6A21\u5F0F"
+  m_Text: "\u8089\u9E3D\u6A21\u5F0F"
 --- !u!1 &5965152313475841102
 GameObject:
   m_ObjectHideFlags: 0

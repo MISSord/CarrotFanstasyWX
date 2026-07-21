@@ -19,6 +19,22 @@ public partial class Tables
     public TbBullet TbBullet {get; }
     public TbBuff TbBuff {get; }
     public TbItem TbItem {get; }
+    /// <summary>
+    /// 肉鸽效果
+    /// </summary>
+    public TbRoguelikeEffect TbRoguelikeEffect {get; }
+    /// <summary>
+    /// 肉鸽商店道具
+    /// </summary>
+    public TbRoguelikeItem TbRoguelikeItem {get; }
+    /// <summary>
+    /// 肉鸽商店池
+    /// </summary>
+    public TbRoguelikeShopPool TbRoguelikeShopPool {get; }
+    /// <summary>
+    /// 肉鸽小关
+    /// </summary>
+    public TbRoguelikeLevel TbRoguelikeLevel {get; }
 
     public Tables(System.Func<string, JSONNode> loader)
     {
@@ -27,6 +43,10 @@ public partial class Tables
         TbBullet = new TbBullet(loader("tbbullet"));
         TbBuff = new TbBuff(loader("tbbuff"));
         TbItem = new TbItem(loader("tbitem"));
+        TbRoguelikeEffect = new TbRoguelikeEffect(loader("tbroguelikeeffect"));
+        TbRoguelikeItem = new TbRoguelikeItem(loader("tbroguelikeitem"));
+        TbRoguelikeShopPool = new TbRoguelikeShopPool(loader("tbroguelikeshoppool"));
+        TbRoguelikeLevel = new TbRoguelikeLevel(loader("tbroguelikelevel"));
         ResolveRef();
     }
     
@@ -37,6 +57,10 @@ public partial class Tables
         TbBullet.ResolveRef(this);
         TbBuff.ResolveRef(this);
         TbItem.ResolveRef(this);
+        TbRoguelikeEffect.ResolveRef(this);
+        TbRoguelikeItem.ResolveRef(this);
+        TbRoguelikeShopPool.ResolveRef(this);
+        TbRoguelikeLevel.ResolveRef(this);
     }
 }
 
