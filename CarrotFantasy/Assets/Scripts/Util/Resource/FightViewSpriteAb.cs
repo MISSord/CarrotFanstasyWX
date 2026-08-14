@@ -49,9 +49,28 @@ namespace CarrotFantasy
             return string.Format("ui/rawimages/{0}", assetName.ToLowerInvariant());
         }
 
-        public static string MonsterPortraitAssetName(int monsterId)
+        /// <summary>战斗 Sprite 包：ui/sprites/{relPath}（小地图/怪物头像等按 Sprite 导入）。</summary>
+        public static string SpriteBundle(string relPath)
+        {
+            return string.Format("ui/sprites/{0}", relPath.ToLowerInvariant());
+        }
+
+        /// <summary>小地图 BG/Road 包（按 bigLevel 分目录）。</summary>
+        public static string MapSpriteBundle(int bigLevel, string assetName)
+        {
+            return string.Format("ui/sprites/gamemap/{0}/{1}", bigLevel, assetName.ToLowerInvariant());
+        }
+
+        /// <summary>怪物头像资源名：{monsterId}-{idx}。带 bigLevel 区分不同大关同名怪物头像。</summary>
+        public static string MonsterPortraitAssetName(int bigLevel, int monsterId)
         {
             return string.Format("{0}-1", monsterId);
+        }
+
+        /// <summary>怪物头像包：按 bigLevel 分层，ui/sprites/monster/{bigLevel}/{asset}。</summary>
+        public static string MonsterPortraitBundle(int bigLevel, string assetName)
+        {
+            return string.Format("ui/sprites/monster/{0}/{1}", bigLevel, assetName.ToLowerInvariant());
         }
 
         public static bool TryGetNormalMordel(string assetName, out UnityEngine.Sprite sprite)
@@ -70,24 +89,6 @@ namespace CarrotFantasy
                 TowerAtlasBundle(towerId),
                 canClick ? TowerCanClick1 : TowerCanClick0,
                 out sprite);
-        }
-
-        public static bool TryGetMapBg(int bigLevel, int level, out UnityEngine.Sprite sprite)
-        {
-            string assetName = MapBgAssetName(bigLevel, level);
-            return BattleViewSpritePreloader.TryGetSprite(RawImageBundle(assetName), assetName, out sprite);
-        }
-
-        public static bool TryGetMapRoad(int bigLevel, int level, out UnityEngine.Sprite sprite)
-        {
-            string assetName = MapRoadAssetName(bigLevel, level);
-            return BattleViewSpritePreloader.TryGetSprite(RawImageBundle(assetName), assetName, out sprite);
-        }
-
-        public static bool TryGetMonsterPortrait(int monsterId, out UnityEngine.Sprite sprite)
-        {
-            string assetName = MonsterPortraitAssetName(monsterId);
-            return BattleViewSpritePreloader.TryGetSprite(RawImageBundle(assetName), assetName, out sprite);
         }
     }
 }

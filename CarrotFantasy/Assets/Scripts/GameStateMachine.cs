@@ -211,7 +211,7 @@ public class CheckUpdateState : BaseGameState
 
 public class DownloadConfirmState : BaseGameState
 {
-    private GameObject dialogObject;
+    private AotDownloadConfirmView confirmView;
 
     public DownloadConfirmState(GameContext context) : base(context)
     {
@@ -230,10 +230,10 @@ public class DownloadConfirmState : BaseGameState
     public override void Exit()
     {
         Debug.Log("退出下载确认流程");
-        if (dialogObject != null)
+        if (confirmView != null)
         {
-            GameObject.Destroy(dialogObject);
-            dialogObject = null;
+            confirmView.Close();
+            confirmView = null;
         }
     }
 
@@ -247,15 +247,16 @@ public class DownloadConfirmState : BaseGameState
             return;
         }
 
-        dialogObject = new GameObject("DownloadConfirmDialog");
+        AotBootUi.EnsureEventSystem();
+        Transform parent = null;
         GameMain main = GameObject.FindObjectOfType<GameMain>();
         if (main != null)
         {
-            dialogObject.transform.SetParent(main.transform, false);
+            parent = main.transform;
         }
 
-        DownloadConfirmDialog dialog = dialogObject.AddComponent<DownloadConfirmDialog>();
-        dialog.Setup(context.result.totalDownloadSize, OnDownloadClicked, OnExitClicked);
+        confirmView = new AotDownloadConfirmView();
+        confirmView.Open(context.result.totalDownloadSize, OnDownloadClicked, OnExitClicked, parent);
     }
 
     private void OnDownloadClicked()
@@ -275,7 +276,7 @@ public class DownloadState : BaseGameState
     private AssetBundleDownloader downloader;
     private bool isDownloadFinished;
     private bool isDownloadSuccess;
-    private GameObject progressDialogObject;
+    private AotDownloadProgressView progressView;
 
     public DownloadState(GameContext gameContext) : base(gameContext)
     {
@@ -294,15 +295,16 @@ public class DownloadState : BaseGameState
 
     private void CreateProgressDialog()
     {
-        progressDialogObject = new GameObject("DownloadProgressDialog");
+        AotBootUi.EnsureEventSystem();
+        Transform parent = null;
         GameMain main = GameObject.FindObjectOfType<GameMain>();
         if (main != null)
         {
-            progressDialogObject.transform.SetParent(main.transform, false);
+            parent = main.transform;
         }
 
-        DownloadProgressDialog dialog = progressDialogObject.AddComponent<DownloadProgressDialog>();
-        dialog.Setup(downloader);
+        progressView = new AotDownloadProgressView();
+        progressView.Open(downloader, parent);
     }
 
     /// <summary>全部下载任务结束（尚未等转换时也可能触发；当前 Downloader 主要走 completeCallback）。</summary>
@@ -332,6 +334,7 @@ public class DownloadState : BaseGameState
     public override void Update()
     {
         downloader?.Update();
+        progressView?.Refresh();
 
         if (!isDownloadFinished)
         {
@@ -355,10 +358,10 @@ public class DownloadState : BaseGameState
     public override void Exit()
     {
         Debug.Log("退出下载流程");
-        if (progressDialogObject != null)
+        if (progressView != null)
         {
-            GameObject.Destroy(progressDialogObject);
-            progressDialogObject = null;
+            progressView.Close();
+            progressView = null;
         }
         downloader?.EndDownload();
         isDownloadFinished = false;

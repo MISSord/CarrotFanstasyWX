@@ -64,8 +64,9 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         bool isSpriteAtlas = path.EndsWith(".spriteatlas");
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
+        bool isImageInSpritesFolder = IsImageInSpritesFolder(path);
         bool useGameFolderRule = UseGameFolderRule(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder || IsLubanConfigJson(path) || useGameFolderRule;
+        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
     }
 
     private static string BuildAssetBundleName(string path)
@@ -111,6 +112,20 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return "ui/rawimages/" + imageName;
         }
 
+        if (IsImageInSpritesFolder(path))
+        {
+            // Assets/Game/UI/Sprites/{relPath}/name.png -> ui/sprites/{relPath}/name
+            string normalizedPath = path.Replace('\\', '/');
+            int marker = normalizedPath.IndexOf("/UI/Sprites/", System.StringComparison.OrdinalIgnoreCase);
+            string rel = marker >= 0
+                ? normalizedPath.Substring(marker + "/UI/Sprites/".Length)
+                : normalizedPath;
+            rel = rel.ToLowerInvariant();
+            string imageName = Path.GetFileNameWithoutExtension(rel);
+            string dir = Path.GetDirectoryName(rel)?.Replace('\\', '/') ?? string.Empty;
+            return string.IsNullOrEmpty(dir) ? "ui/sprites/" + imageName : "ui/sprites/" + dir + "/" + imageName;
+        }
+
         if (UseGameFolderRule(path))
             return normalizedBundleName + "_prefab";
 
@@ -122,14 +137,25 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
     {
         string normalizedPath = path.ToLower().Replace('\\', '/');
         bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
-        return isImage && normalizedPath.Contains("/images/");
+        // Atlas source images only; never treat ui/sprites or ui/rawimages as atlas inputs.
+        return isImage
+               && normalizedPath.Contains("/images/")
+               && !normalizedPath.Contains("/ui/sprites/")
+               && !normalizedPath.Contains("/ui/rawimages/");
     }
 
     private static bool IsImageInRawImagesFolder(string path)
     {
         string normalizedPath = path.ToLower().Replace('\\', '/');
         bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
-        return isImage && normalizedPath.Contains("/rawimages/");
+        return isImage && normalizedPath.Contains("/ui/rawimages/");
+    }
+
+    private static bool IsImageInSpritesFolder(string path)
+    {
+        string normalizedPath = path.ToLower().Replace('\\', '/');
+        bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
+        return isImage && normalizedPath.Contains("/ui/sprites/");
     }
 
     private static bool IsViewLikePrefab(string path)
@@ -163,6 +189,10 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
 
         string extension = Path.GetExtension(normalizedPath);
         if (string.IsNullOrEmpty(extension))
+            return false;
+
+        // Image folders have dedicated naming rules; never fall through to *_prefab.
+        if (IsImageInSpritesFolder(path) || IsImageInRawImagesFolder(path) || IsImageInImagesFolder(path))
             return false;
 
         // Skip source/metadata files that should not participate in AB naming.

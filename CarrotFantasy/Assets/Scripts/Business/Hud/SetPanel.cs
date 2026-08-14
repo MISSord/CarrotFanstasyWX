@@ -241,7 +241,7 @@ namespace CarrotFantasy
             }
 
             string asset = AudioManager.Instance.musicEnable ? SpriteMusicOn : SpriteMusicOff;
-            bgAudioImg.SetSprite(ResPath.GetSettingViewImagePath(), asset);
+            bgAudioImg.SetAtlasSprite(ResPath.GetSettingViewImagePath(), asset);
         }
 
         private void ApplyEffectButtonSprite()
@@ -253,7 +253,7 @@ namespace CarrotFantasy
             }
 
             string asset = AudioManager.Instance.effectEnable ? SpriteEffectOn : SpriteEffectOff;
-            effectImg.SetSprite(ResPath.GetSettingViewImagePath(), asset);
+            effectImg.SetAtlasSprite(ResPath.GetSettingViewImagePath(), asset);
         }
 
         protected override void ReleaseCallBack()

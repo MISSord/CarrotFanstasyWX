@@ -53,6 +53,10 @@ namespace CarrotFantasy
         public static AssetLoadManager Instance => _instance ?? (_instance = new AssetLoadManager());
 
         private readonly Dictionary<int, AssetLoadRequest> _requestMap = new Dictionary<int, AssetLoadRequest>();
+        private readonly ObjectPool<AssetLoadRequest> _requestPool = new ObjectPool<AssetLoadRequest>(
+            16,
+            256,
+            ClearRequest);
 
         private int _nextId = 1;
 
@@ -60,6 +64,22 @@ namespace CarrotFantasy
 
         private AssetLoadManager()
         {
+        }
+
+        private static void ClearRequest(AssetLoadRequest request)
+        {
+            request.Id = 0;
+            request.BundleName = null;
+            request.AssetName = null;
+            request.CallbackId = -1;
+            request.IsReleased = false;
+            request.IsLoaded = false;
+            request.Callback = null;
+        }
+
+        private void RecycleRequest(AssetLoadRequest request)
+        {
+            _requestPool.Release(request);
         }
 
         public AssetLoadHandle LoadAsset<T>(string bundleName, string assetName, Action<T> onLoaded, LoadPriority priority = LoadPriority.Medium, string operationName = null)
@@ -82,16 +102,14 @@ namespace CarrotFantasy
             }
 
             int requestId = _nextId++;
-            var request = new AssetLoadRequest
-            {
-                Id = requestId,
-                BundleName = bundleName,
-                AssetName = assetName,
-                CallbackId = -1,
-                IsReleased = false,
-                IsLoaded = false,
-                Callback = obj => onLoaded?.Invoke(obj as T)
-            };
+            AssetLoadRequest request = _requestPool.Get();
+            request.Id = requestId;
+            request.BundleName = bundleName;
+            request.AssetName = assetName;
+            request.CallbackId = -1;
+            request.IsReleased = false;
+            request.IsLoaded = false;
+            request.Callback = obj => onLoaded?.Invoke(obj as T);
 
             _requestMap[requestId] = request;
             request.CallbackId = AssetBundleManager.Instance.LoadAsset<T>(
@@ -130,6 +148,7 @@ namespace CarrotFantasy
             }
 
             _requestMap.Remove(requestId);
+            RecycleRequest(request);
         }
 
         private void OnAssetLoaded(int requestId, UnityEngine.Object asset)
@@ -142,6 +161,7 @@ namespace CarrotFantasy
             if (request.IsReleased)
             {
                 _requestMap.Remove(requestId);
+                RecycleRequest(request);
                 return;
             }
 

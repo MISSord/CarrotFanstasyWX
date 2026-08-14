@@ -18,7 +18,7 @@ namespace CarrotFantasy
 
         private List<GameObject> towerContentImageGos;
 
-        private readonly List<AssetLoadHandle> _panelPrefabHandles = new List<AssetLoadHandle>();
+        private int _towerPrefabHandle = PrefabResourceManager.InvalidHandle;
         private GameObject _tplNodeTower;
         private bool _isLoadTower = false;
 
@@ -57,11 +57,11 @@ namespace CarrotFantasy
                 towerContentImageGos.Clear();
             }
 
-            for (int i = 0; i < _panelPrefabHandles.Count; i++)
+            if (_towerPrefabHandle != PrefabResourceManager.InvalidHandle)
             {
-                _panelPrefabHandles[i].Dispose();
+                PrefabResourceManager.Instance.Unload(_towerPrefabHandle);
+                _towerPrefabHandle = PrefabResourceManager.InvalidHandle;
             }
-            _panelPrefabHandles.Clear();
 
             _tplNodeTower = null;
             scrollerList = null;
@@ -177,16 +177,31 @@ namespace CarrotFantasy
         {
             towerContentImageGos = new List<GameObject>();
 
-            GameObjectResourceManager.Instance.LoadPrefab(UiViewAbPaths.MapViewPrefab, UiViewAbPaths.MapNodeTowerAsset, (GameObject obj) => {
-                _tplNodeTower = obj;
-                for (int i = 0; i < towerCount; i++)
+            _towerPrefabHandle = PrefabResourceManager.Instance.Load(
+                UiViewAbPaths.MapViewPrefab,
+                UiViewAbPaths.MapNodeTowerAsset,
+                obj =>
                 {
-                    towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, nodeTowerTrans));
-                }
+                    if (obj == null)
+                    {
+                        if (_towerPrefabHandle != PrefabResourceManager.InvalidHandle)
+                        {
+                            PrefabResourceManager.Instance.Unload(_towerPrefabHandle);
+                            _towerPrefabHandle = PrefabResourceManager.InvalidHandle;
+                        }
 
-                _isLoadTower = true;
-                UpdateTowerUI();
-            });
+                        return;
+                    }
+
+                    _tplNodeTower = obj;
+                    for (int i = 0; i < towerCount; i++)
+                    {
+                        towerContentImageGos.Add(InstantiateUiUnderParent(_tplNodeTower, nodeTowerTrans));
+                    }
+
+                    _isLoadTower = true;
+                    UpdateTowerUI();
+                });
         }
 
         private GameObject InstantiateUiUnderParent(GameObject tpl, Transform parentTrans)
@@ -220,8 +235,7 @@ namespace CarrotFantasy
             {
                 Image towerimg = towerContentImageGos[i].GetComponent<Image>();
                 string asset = "tower_" + stage.mTowerIDList[i];
-                string bundle = ResPath.GetGameOptionImagePath();
-                towerimg.SetSprite(bundle, asset);
+                towerimg.SetAtlasSprite(ResPath.GetGameOptionImagePath(), asset);
                 towerContentImageGos[i].SetActive(true);
             }
 

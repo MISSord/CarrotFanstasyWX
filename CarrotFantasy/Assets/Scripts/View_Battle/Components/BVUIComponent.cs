@@ -237,28 +237,15 @@ namespace CarrotFantasy
             int bigLevel = this.pveDataComponent.bigLevel;
             int level = this.pveDataComponent.level;
 
-            Sprite mapBgSprite;
-            if (FightViewSpriteAb.TryGetMapBg(bigLevel, level, out mapBgSprite))
-            {
-                this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sprite = mapBgSprite;
-            }
-            else
-            {
-                Debug.LogError(
-                    "[BVUIComponent] 小地图 BG 未预加载: Level_" + bigLevel + "_" + level + "_BG");
-            }
+            string bgAsset = FightViewSpriteAb.MapBgAssetName(bigLevel, level);
+            SpriteRenderer mapBg = this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>();
+            mapBg.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel, bgAsset), bgAsset);
+            mapBg.sortingOrder = 0;
 
-            Sprite mapRoadSprite;
-            if (FightViewSpriteAb.TryGetMapRoad(bigLevel, level, out mapRoadSprite))
-            {
-                this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sprite = mapRoadSprite;
-            }
-            else
-            {
-                Debug.LogError("[BVUIComponent] 小地图 Road 未预加载: Level_" + bigLevel + "_" + level + "_Road");
-            }
-            this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>().sortingOrder = 0;
-            this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>().sortingOrder = 1;
+            string roadAsset = FightViewSpriteAb.MapRoadAssetName(bigLevel, level);
+            SpriteRenderer mapRoad = this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>();
+            mapRoad.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel, roadAsset), roadAsset);
+            mapRoad.sortingOrder = 1;
 
             GameObject tplTargetSignal = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);
             if (tplTargetSignal == null)

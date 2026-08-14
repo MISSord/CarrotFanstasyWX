@@ -16,6 +16,7 @@ namespace CarrotFantasy
         private BVBattleWorldUiComponent worldUiCached;
         private readonly MonsterBuffIconBar buffIconBar = new MonsterBuffIconBar();
         private SpriteRenderer spriteRender;
+        private SpriteLoader spriteLoader;
         private Animator animator;
         private static readonly Color NormalSpriteTint = Color.white;
         private static readonly Color StunSpriteTint = new Color(0.72f, 0.72f, 0.78f, 1f);
@@ -26,6 +27,12 @@ namespace CarrotFantasy
         {
             base.InitTransform(node);
             this.spriteRender = this.transform.GetComponent<SpriteRenderer>();
+            this.spriteLoader = this.transform.GetComponent<SpriteLoader>();
+            if (this.spriteLoader == null && this.spriteRender != null)
+            {
+                this.spriteLoader = this.transform.gameObject.AddComponent<SpriteLoader>();
+            }
+
             this.animator = this.transform.GetComponent<Animator>();
         }
 
@@ -61,14 +68,16 @@ namespace CarrotFantasy
             this.CacheWorldUi();
             base.Init();
             BattleUnit_Monster monster = (BattleUnit_Monster)this.unit;
-            Sprite portrait;
-            if (FightViewSpriteAb.TryGetMonsterPortrait(monster.monsterId, out portrait))
+            int bigLevel = monster.curLevel;
+            string portraitAsset = FightViewSpriteAb.MonsterPortraitAssetName(bigLevel, monster.monsterId);
+            string portraitBundle = FightViewSpriteAb.MonsterPortraitBundle(bigLevel, portraitAsset);
+            if (this.spriteLoader != null)
             {
-                this.spriteRender.sprite = portrait;
+                this.spriteLoader.SetSprite(portraitBundle, portraitAsset);
             }
-            else
+            else if (this.spriteRender != null)
             {
-                Debug.LogError("[BattleUnitView_Monster] 怪物 Sprite 未预加载: id=" + monster.monsterId);
+                this.spriteRender.sprite = null;
             }
 
             this.animator.runtimeAnimatorController = ResourceLoader.Instance.loadRes<RuntimeAnimatorController>(
@@ -225,9 +234,15 @@ namespace CarrotFantasy
             this.buffIconBar.ClearAll();
             this.DetachHpBarFromWorldLayer();
             this.worldUiCached = null;
+            if (this.spriteLoader != null)
+            {
+                this.spriteLoader.ReleaseCurrent();
+            }
+
             base.ClearUnitInfo();
             this.animator = null;
             this.spriteRender = null;
+            this.spriteLoader = null;
         }
     }
 }

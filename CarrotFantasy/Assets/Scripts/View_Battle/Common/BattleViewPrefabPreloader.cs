@@ -7,6 +7,7 @@ namespace CarrotFantasy
     /// <summary>
     /// 战斗视图预制体异步预加载。
     /// 公共包（fightpart_prefab、fightview）跨局保留；塔/子弹/道具按关加载并在离关时释放。
+    /// 模板经 <see cref="PrefabResourceManager"/> Load/Unload 成对管理。
     /// </summary>
     public static class BattleViewPrefabPreloader
     {
@@ -19,7 +20,7 @@ namespace CarrotFantasy
         struct TrackedHandle
         {
             public string Bundle;
-            public AssetLoadHandle Handle;
+            public int HandleId;
         }
 
         static readonly Dictionary<string, GameObject> Templates = new Dictionary<string, GameObject>(StringComparer.Ordinal);
@@ -30,7 +31,7 @@ namespace CarrotFantasy
 
         public static string MakeKey(string bundleName, string assetName)
         {
-            return bundleName + "|" + assetName;
+            return PrefabResourceManager.MakeKey(bundleName, assetName);
         }
 
         static bool IsTemplateAlive(GameObject template)
@@ -100,7 +101,7 @@ namespace CarrotFantasy
                 wait.Track(req.Bundle, req.Asset);
                 trackedCount++;
 
-                AssetLoadHandle handle = GameObjectResourceManager.Instance.LoadPrefab(
+                int handleId = PrefabResourceManager.Instance.Load(
                     req.Bundle,
                     req.Asset,
                     go =>
@@ -119,12 +120,12 @@ namespace CarrotFantasy
                     },
                     LoadPriority.Medium);
 
-                if (handle.IsValid)
+                if (handleId != PrefabResourceManager.InvalidHandle)
                 {
                     Handles.Add(new TrackedHandle
                     {
                         Bundle = req.Bundle,
-                        Handle = handle,
+                        HandleId = handleId,
                     });
                 }
                 else
@@ -174,7 +175,7 @@ namespace CarrotFantasy
                     continue;
                 }
 
-                tracked.Handle.Dispose();
+                PrefabResourceManager.Instance.Unload(tracked.HandleId);
                 Handles.RemoveAt(i);
             }
 

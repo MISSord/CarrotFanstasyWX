@@ -40,6 +40,9 @@ public enum LoadPriority
     Low = 0,
     Medium = 1,
     High = 2,
+    /// <summary>
+    /// 同步加载
+    /// </summary>
     Sync = 3,
     Max = 4
 }
@@ -260,8 +263,26 @@ public class BundleInfo
         pendingAssets.Clear();
         isLoaded = false;
         isLoading = false;
+        bundleRequest = null;
         _referencedDependencies.Clear();
         _loadedDependencySet.Clear();
+    }
+
+    /// <summary>
+    /// 仅卸载 AB 文件（Unload false），保留已 Load 出的 assetObject，供图集等上层长期持有。
+    /// </summary>
+    public void UnloadFileKeepAssets()
+    {
+        if (bundle != null)
+        {
+            bundle.Unload(false);
+            bundle = null;
+        }
+
+        isLoaded = false;
+        isLoading = false;
+        bundleRequest = null;
+        pendingAssets.Clear();
     }
 
     // 新增方法：检查依赖是否全部加载完成
@@ -376,6 +397,10 @@ public class AssetBundleManager
 #if UNITY_EDITOR
     private LoadMode loadMode;
     private List<AssetBaseLoadInfo> assetBaseLoadInfos = new List<AssetBaseLoadInfo>();
+
+    /// <summary>Development/Debug 直读 AssetDatabase，不经真实 AB。</summary>
+    public bool IsEditorDirectLoad =>
+        loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode;
 #endif
 
     public void Init()
@@ -587,6 +612,112 @@ public class AssetBundleManager
 
         already = GetBundleInfo(bundleName);
         if (already != null && already.isLoaded)
+        {
+            Complete(true);
+        }
+    }
+
+    /// <summary>
+    /// 加载包内全部指定类型资源后立刻 Unload(false) 卸掉 AB 文件，资源对象由调用方持有。
+    /// 用于图集：一次进内存后不再依赖包文件。
+    /// </summary>
+    public void LoadAllAssetsAndUnloadFile<T>(
+        string bundleName,
+        Action<T[]> onComplete,
+        LoadPriority priority = LoadPriority.Medium)
+        where T : UnityEngine.Object
+    {
+        if (string.IsNullOrEmpty(bundleName))
+        {
+            GameLogController.Error("LoadAllAssetsAndUnloadFile: bundleName 为空", "AssetBundleManager");
+            onComplete?.Invoke(null);
+            return;
+        }
+
+#if UNITY_EDITOR
+        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        {
+            onComplete?.Invoke(EditorAssetLoader.LoadAllAssetsFromBundle<T>(bundleName));
+            return;
+        }
+#endif
+
+        if (!_bundleManifests.ContainsKey(bundleName))
+        {
+            GameLogController.Warning(
+                $"LoadAllAssetsAndUnloadFile: 清单中不存在包 {bundleName}",
+                "AssetBundleManager");
+            onComplete?.Invoke(null);
+            return;
+        }
+
+        BundleInfo bundleInfo = GetOrCreateBundleInfo(bundleName);
+
+        void FinishSuccess()
+        {
+            T[] assets = null;
+            if (bundleInfo.bundle != null)
+            {
+                assets = bundleInfo.bundle.LoadAllAssets<T>();
+            }
+
+            TryUnloadBundleFileKeepAssets(bundleName);
+            onComplete?.Invoke(assets ?? System.Array.Empty<T>());
+        }
+
+        if (bundleInfo.isLoaded && bundleInfo.bundle != null)
+        {
+            FinishSuccess();
+            return;
+        }
+
+        bundleInfo.AddReference();
+        bool completed = false;
+        Action<string> onLoaded = null;
+        Action<string> onFailed = null;
+
+        void Complete(bool ok)
+        {
+            if (completed)
+            {
+                return;
+            }
+
+            completed = true;
+            OnBundleLoaded -= onLoaded;
+            OnBundleLoadFailed -= onFailed;
+            bundleInfo.RemoveReference();
+
+            if (!ok)
+            {
+                onComplete?.Invoke(null);
+                return;
+            }
+
+            FinishSuccess();
+        }
+
+        onLoaded = name =>
+        {
+            if (name == bundleName)
+            {
+                Complete(true);
+            }
+        };
+        onFailed = name =>
+        {
+            if (name == bundleName)
+            {
+                Complete(false);
+            }
+        };
+
+        OnBundleLoaded += onLoaded;
+        OnBundleLoadFailed += onFailed;
+        LoadBundleWithDependencies(bundleName, priority);
+
+        BundleInfo loaded = GetBundleInfo(bundleName);
+        if (loaded != null && loaded.isLoaded && loaded.bundle != null)
         {
             Complete(true);
         }
@@ -846,6 +977,80 @@ public class AssetBundleManager
         }
     }
 
+    /// <summary>
+    /// 卸载 AB 包文件内存，保留已加载的资源对象（Unity Unload false）。
+    /// 若包内仍有资源正在加载则跳过并返回 false。
+    /// </summary>
+    public bool TryUnloadBundleFileKeepAssets(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName) ||
+            !_allBundleDic.TryGetValue(bundleName, out BundleInfo bundleInfo))
+        {
+            return false;
+        }
+
+        if (bundleInfo.bundle == null)
+        {
+            _loadedBundles.Remove(bundleName);
+            return true;
+        }
+
+        if (bundleInfo.isLoading || _loadingBundleNames.Contains(bundleName))
+        {
+            return false;
+        }
+
+        if (bundleInfo.pendingAssets != null && bundleInfo.pendingAssets.Count > 0)
+        {
+            return false;
+        }
+
+        foreach (AssetItem assetItem in bundleInfo.assetItems.Values)
+        {
+            if (assetItem.loadRequest != null)
+            {
+                return false;
+            }
+        }
+
+        bundleInfo.UnloadFileKeepAssets();
+        _loadedBundles.Remove(bundleName);
+        GameLogController.Log($"卸载AB包文件(保留资源): {bundleName}", "AssetBundleManager");
+        return true;
+    }
+
+    /// <summary>
+    /// 从跟踪中移除已加载资源；可选 Destroy 对象。用于图集逻辑引用归零后释放内存。
+    /// </summary>
+    public void DropLoadedAsset(string bundleName, string assetName, bool destroyObject = true)
+    {
+        if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetName))
+        {
+            return;
+        }
+
+        if (!_allBundleDic.TryGetValue(bundleName, out BundleInfo bundleInfo))
+        {
+            return;
+        }
+
+        if (!bundleInfo.assetItems.TryGetValue(assetName, out AssetItem assetItem))
+        {
+            return;
+        }
+
+        assetItem.RemoveAllCallbacks();
+        assetItem.loadRequest = null;
+
+        if (destroyObject && assetItem.assetObject != null)
+        {
+            UnityEngine.Object.Destroy(assetItem.assetObject);
+        }
+
+        assetItem.assetObject = null;
+        bundleInfo.assetItems.Remove(assetName);
+    }
+
     //// 强制回收所有未使用的AB包
     //public void ForceUnloadUnusedBundles()
     //{
@@ -1076,9 +1281,16 @@ public class AssetBundleManager
     // 新增方法：内部加载AB包逻辑
     private void LoadBundleInternal(string bundleName, LoadPriority priority)
     {
-        // 如果已经加载或正在加载，只增加引用计数（已经在LoadAsset中处理）
-        if (_loadedBundles.TryGetValue(bundleName, out BundleInfo loadedBundle) ||
-            _loadingBundleNames.Contains(bundleName))
+        // 已在加载，或包文件仍在内存中，则不必重复入队
+        if (_loadingBundleNames.Contains(bundleName))
+        {
+            return;
+        }
+
+        if (_loadedBundles.TryGetValue(bundleName, out BundleInfo loadedBundle) &&
+            loadedBundle != null &&
+            loadedBundle.isLoaded &&
+            loadedBundle.bundle != null)
         {
             return;
         }

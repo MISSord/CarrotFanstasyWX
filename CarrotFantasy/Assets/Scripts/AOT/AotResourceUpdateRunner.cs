@@ -9,7 +9,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// AOT 侧资源更新：在加载热更 DLL 之前完成 CheckUpdate / Download。
-    /// 复用现有 AssetBundleUpdateChecker / Downloader 与 IMGUI 对话框。
+    /// 使用 <see cref="AotResourcesView"/>（Resources + UINameTable）展示确认/进度/错误界面。
     /// </summary>
     public static class AotResourceUpdateRunner
     {
@@ -159,23 +159,29 @@ namespace CarrotFantasy
             UpdateCheckResult checkResult,
             System.Action<Result> onFinished)
         {
+            AotBootUi.EnsureEventSystem();
+
             bool confirmed = false;
             bool cancelled = false;
 
-            GameObject confirmGo = new GameObject("DownloadConfirmDialog");
-            confirmGo.transform.SetParent(host.transform, false);
-            DownloadConfirmDialog confirm = confirmGo.AddComponent<DownloadConfirmDialog>();
-            confirm.Setup(
-                checkResult.totalDownloadSize,
-                () => confirmed = true,
-                () => cancelled = true);
+            Transform parent = host != null ? host.transform : null;
+            var confirmView = new AotDownloadConfirmView();
+            if (!confirmView.Open(
+                    checkResult.totalDownloadSize,
+                    () => confirmed = true,
+                    () => cancelled = true,
+                    parent))
+            {
+                onFinished?.Invoke(Result.Failed);
+                yield break;
+            }
 
             while (!confirmed && !cancelled)
             {
                 yield return null;
             }
 
-            Object.Destroy(confirmGo);
+            confirmView.Close();
 
             if (cancelled)
             {
@@ -188,9 +194,12 @@ namespace CarrotFantasy
             AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
             downloader.Init();
 
-            GameObject progressGo = new GameObject("DownloadProgressDialog");
-            progressGo.transform.SetParent(host.transform, false);
-            progressGo.AddComponent<DownloadProgressDialog>().Setup(downloader);
+            var progressView = new AotDownloadProgressView();
+            if (!progressView.Open(downloader, parent))
+            {
+                onFinished?.Invoke(Result.Failed);
+                yield break;
+            }
 
             bool downloadFinished = false;
             bool downloadSuccess = false;
@@ -211,11 +220,13 @@ namespace CarrotFantasy
             while (!downloadFinished || downloader.GetLoaderState() != LoaderState.Idle)
             {
                 downloader.Update();
+                progressView.Refresh();
                 yield return null;
             }
 
+            progressView.Refresh();
             downloader.EndDownload();
-            Object.Destroy(progressGo);
+            progressView.Close();
 
             if (!downloadSuccess)
             {
@@ -235,26 +246,28 @@ namespace CarrotFantasy
             MonoBehaviour host,
             System.Action<Result> onFinished)
         {
+            AotBootUi.EnsureEventSystem();
+
             bool continueChosen = false;
             bool exitChosen = false;
+            Transform parent = host != null ? host.transform : null;
 
-            GameObject dialogGo = new GameObject("UpdateListFallbackDialog");
-            if (host != null)
+            var dialog = new AotUpdateListFallbackView();
+            if (!dialog.Open(
+                    onContinue: () => continueChosen = true,
+                    onExit: () => exitChosen = true,
+                    parent))
             {
-                dialogGo.transform.SetParent(host.transform, false);
+                onFinished?.Invoke(Result.Failed);
+                yield break;
             }
-
-            UpdateListFallbackDialog dialog = dialogGo.AddComponent<UpdateListFallbackDialog>();
-            dialog.Setup(
-                onContinue: () => continueChosen = true,
-                onExit: () => exitChosen = true);
 
             while (!continueChosen && !exitChosen)
             {
                 yield return null;
             }
 
-            Object.Destroy(dialogGo);
+            dialog.Close();
 
             if (exitChosen)
             {
@@ -269,28 +282,30 @@ namespace CarrotFantasy
         /// <summary>获取热更新列表失败：提示后仅允许退出；重启按钮暂无逻辑。</summary>
         private static IEnumerator ShowUpdateListErrorDialog(MonoBehaviour host)
         {
+            AotBootUi.EnsureEventSystem();
+
             bool exitChosen = false;
+            Transform parent = host != null ? host.transform : null;
 
-            GameObject dialogGo = new GameObject("UpdateListErrorDialog");
-            if (host != null)
+            var dialog = new AotUpdateListErrorView();
+            if (!dialog.Open(
+                    onExit: () => exitChosen = true,
+                    onRestart: () =>
+                    {
+                        // TODO: 实现进程级重启；当前按需求点击无反应。
+                    },
+                    parent))
             {
-                dialogGo.transform.SetParent(host.transform, false);
+                QuitApp();
+                yield break;
             }
-
-            UpdateListErrorDialog dialog = dialogGo.AddComponent<UpdateListErrorDialog>();
-            dialog.Setup(
-                onExit: () => exitChosen = true,
-                onRestart: () =>
-                {
-                    // TODO: 实现进程级重启；当前按需求点击无反应。
-                });
 
             while (!exitChosen)
             {
                 yield return null;
             }
 
-            Object.Destroy(dialogGo);
+            dialog.Close();
             QuitApp();
         }
 

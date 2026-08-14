@@ -1,10 +1,58 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 #endif
 using UnityEngine;
 
 public static class EditorAssetLoader
 {
+#if UNITY_EDITOR
+    /// <summary>编辑器下按 AB 名收集包内全部指定类型资源（Development/Debug 直读用）。</summary>
+    public static T[] LoadAllAssetsFromBundle<T>(string bundleName) where T : Object
+    {
+        if (string.IsNullOrEmpty(bundleName))
+        {
+            return System.Array.Empty<T>();
+        }
+
+        string[] paths = AssetDatabase.GetAssetPathsFromAssetBundle(bundleName);
+        if (paths == null || paths.Length == 0)
+        {
+            return System.Array.Empty<T>();
+        }
+
+        var list = new List<T>();
+        var seen = new HashSet<int>();
+        for (int i = 0; i < paths.Length; i++)
+        {
+            Object[] assets = AssetDatabase.LoadAllAssetsAtPath(paths[i]);
+            if (assets == null)
+            {
+                continue;
+            }
+
+            for (int j = 0; j < assets.Length; j++)
+            {
+                T typed = assets[j] as T;
+                if (typed == null)
+                {
+                    continue;
+                }
+
+                int id = typed.GetInstanceID();
+                if (!seen.Add(id))
+                {
+                    continue;
+                }
+
+                list.Add(typed);
+            }
+        }
+
+        return list.ToArray();
+    }
+#endif
+
     /// <summary>
     /// 在编辑器下加载指定路径的资源
     /// </summary>

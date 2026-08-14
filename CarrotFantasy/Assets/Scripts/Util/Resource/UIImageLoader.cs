@@ -7,7 +7,8 @@ using UnityEditor;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 绑定到Image/RawImage节点，负责图片资源请求、替换和自动释放。
+    /// 绑定到 Image/RawImage，负责图片请求、替换与释放。
+    /// 图集精灵经 <see cref="AtlasResourceManager"/> 计数；非图集 Sprite/Texture 经对应 Manager + Handle。
     /// </summary>
     [DisallowMultipleComponent]
     public class UIImageLoader : MonoBehaviour
@@ -18,20 +19,13 @@ namespace CarrotFantasy
         [Header("AB配置")]
         [SerializeField] private string defaultBundleName;
         [SerializeField] private string defaultAssetName;
-        //[SerializeField] 
         private LoadPriority defaultLoadPriority = LoadPriority.Medium;
-        //[SerializeField] 
-        //private bool autoLoadOnEnable = true;
-
-        //[Header("生命周期")]
-        //[SerializeField]
-        //private bool releaseOnDisable = true;
-        //[SerializeField] 
         private bool clearSpriteOnRelease = true;
 
         private AssetLoadHandle _currentHandle = AssetLoadHandle.Invalid;
+        private int _atlasToken = AtlasResourceManager.InvalidToken;
         private int _requestVersion = 0;
-        [SerializeField, HideInInspector] 
+        [SerializeField, HideInInspector]
         private int _lastRecordedSpriteInstanceId;
 
         private void Reset()
@@ -54,7 +48,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// 编辑器下供外部调用：自动绑定Image/RawImage，并从当前贴图刷新AB字段。
+        /// 编辑器下供外部调用：自动绑定 Image/RawImage，并从当前贴图刷新 AB 字段。
         /// </summary>
         public bool EditorRefreshBindingAndPath()
         {
@@ -146,14 +140,6 @@ namespace CarrotFantasy
         }
 #endif
 
-        //private void OnDisable()
-        //{
-        //    if (releaseOnDisable)
-        //    {
-        //        ReleaseCurrent();
-        //    }
-        //}
-
         private void OnDestroy()
         {
             ReleaseCurrent();
@@ -161,13 +147,7 @@ namespace CarrotFantasy
 
         private void OnEnable()
         {
-            //if (!autoLoadOnEnable)
-            //{
-            //    return;
-            //}
-
-            // 未释放的情况下无需重复加载（比如 releaseOnDisable=false 时反复启用组件）。
-            if (_currentHandle.IsValid)
+            if (_currentHandle.IsValid || _atlasToken != AtlasResourceManager.InvalidToken)
             {
                 return;
             }
@@ -180,8 +160,66 @@ namespace CarrotFantasy
             SetSprite(defaultBundleName, defaultAssetName, defaultLoadPriority);
         }
 
+        /// <summary>
+        /// 从图集取图。<paramref name="bundleName"/> 为图集 AB 包名（含 images_atlas）。
+        /// 引用由本组件在换图/销毁时自动 Release，业务无需关心计数。
+        /// </summary>
+        public void SetAtlasSprite(string bundleName, string spriteName, LoadPriority priority = LoadPriority.Medium)
+        {
+            _requestVersion++;
+            int currentVersion = _requestVersion;
+
+            ReleaseCurrent();
+            defaultBundleName = bundleName;
+            defaultAssetName = spriteName;
+            defaultLoadPriority = priority;
+            EnsureGraphicBinding();
+
+            if (targetImage == null)
+            {
+                GameLogController.Warning(
+                    "SetAtlasSprite 需要 Image 组件: " + gameObject.name,
+                    "UIImageLoader");
+                return;
+            }
+
+            if (targetRawImage != null)
+            {
+                GameLogController.Error(
+                    "SetAtlasSprite 不允许用于 RawImage：图集 Sprite 只能赋给 Image。",
+                    "UIImageLoader");
+                return;
+            }
+
+            _atlasToken = AtlasResourceManager.Instance.AcquireSprite(
+                bundleName,
+                spriteName,
+                sprite =>
+                {
+                    if (currentVersion != _requestVersion || targetImage == null)
+                    {
+                        return;
+                    }
+
+                    targetImage.sprite = sprite;
+                },
+                priority);
+        }
+
+        /// <summary>
+        /// 按 AB 路径加载。若目标为图集包则自动转 <see cref="SetAtlasSprite"/>。
+        /// Image 只允许 Sprite（图集/普通 Sprite 包）；RawImage 只允许 rawimages 包（Texture）。
+        /// </summary>
         public void SetSprite(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
+            EnsureGraphicBinding();
+
+            if (targetImage != null && AtlasResourceManager.Instance.IsAtlasBundle(bundleName))
+            {
+                SetAtlasSprite(bundleName, assetName, priority);
+                return;
+            }
+
             _requestVersion++;
             int currentVersion = _requestVersion;
 
@@ -189,11 +227,18 @@ namespace CarrotFantasy
             defaultBundleName = bundleName;
             defaultAssetName = assetName;
             defaultLoadPriority = priority;
-            EnsureGraphicBinding();
 
             if (targetImage != null)
             {
-                _currentHandle = ImageResourceManager.Instance.LoadSprite(
+                if (IsRawImageBundle(bundleName))
+                {
+                    GameLogController.Error(
+                        "Image 不允许加载 rawimages 包（Texture）：" + bundleName + "/" + assetName + "，请改用图集或普通 Sprite 包。",
+                        "UIImageLoader");
+                    return;
+                }
+
+                _currentHandle = SpriteResourceManager.Instance.Load(
                     bundleName,
                     assetName,
                     sprite =>
@@ -211,7 +256,15 @@ namespace CarrotFantasy
 
             if (targetRawImage != null)
             {
-                _currentHandle = ImageResourceManager.Instance.LoadTexture(
+                if (!IsRawImageBundle(bundleName))
+                {
+                    GameLogController.Error(
+                        "RawImage 只允许加载 rawimages 包（Texture）：" + bundleName + "/" + assetName,
+                        "UIImageLoader");
+                    return;
+                }
+
+                _currentHandle = TextureResourceManager.Instance.Load(
                     bundleName,
                     assetName,
                     texture =>
@@ -227,18 +280,14 @@ namespace CarrotFantasy
             }
         }
 
-        //public void ReloadDefault()
-        //{
-        //    if (string.IsNullOrEmpty(defaultBundleName) || string.IsNullOrEmpty(defaultAssetName))
-        //    {
-        //        return;
-        //    }
-
-        //    SetSprite(defaultBundleName, defaultAssetName, defaultLoadPriority);
-        //}
-
         public void ReleaseCurrent()
         {
+            if (_atlasToken != AtlasResourceManager.InvalidToken)
+            {
+                AtlasResourceManager.Instance.Release(_atlasToken);
+                _atlasToken = AtlasResourceManager.InvalidToken;
+            }
+
             if (_currentHandle.IsValid)
             {
                 _currentHandle.Dispose();
@@ -280,6 +329,12 @@ namespace CarrotFantasy
             }
 
             return changed;
+        }
+
+        private static bool IsRawImageBundle(string bundleName)
+        {
+            return !string.IsNullOrEmpty(bundleName) &&
+                   bundleName.StartsWith("ui/rawimages/", System.StringComparison.OrdinalIgnoreCase);
         }
     }
 }

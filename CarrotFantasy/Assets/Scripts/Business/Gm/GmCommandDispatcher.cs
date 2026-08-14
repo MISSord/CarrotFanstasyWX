@@ -90,6 +90,7 @@ namespace CarrotFantasy
             sb.AppendLine("openMap [大关] [小关]                           打开选关（需 Play）");
             sb.AppendLine("startRoguelike <大关> <小关>                   进肉鸽小关地图（需 Play）");
             sb.AppendLine("openRoguelikeMap [大关] [小关]                 打开肉鸽选关（需 Play）");
+            sb.AppendLine("resdump                                         打印资源管理器快照/未释放 handle");
             sb.AppendLine("help [指令名]                                   显示帮助");
             return sb.ToString();
         }
@@ -158,7 +159,18 @@ namespace CarrotFantasy
                 { "openmap", HandleOpenMap },
                 { "startroguelike", HandleStartRoguelike },
                 { "openroguelikemap", HandleOpenRoguelikeMap },
+                { "resdump", HandleResDump },
             };
+        }
+
+        static GmCommandResult HandleResDump(GmCommandContext ctx, string[] args)
+        {
+            ResourceManagerDiagnostics.DumpAll("gm resdump");
+            return GmCommandResult.Ok(
+                "已输出资源快照到日志。alive Prefab=" +
+                PrefabResourceManager.Instance.AliveHandleCount +
+                " GameObject=" +
+                GameObjectResourceManager.Instance.AliveHandleCount);
         }
 
         static GmCommandResult HandleHelp(GmCommandContext ctx, string[] args)

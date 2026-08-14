@@ -10,28 +10,23 @@ namespace CarrotFantasy
 {
     public class Carrot : MonoBehaviour
     {
-        //萝卜的不同状态
-        private Sprite[] sprites;
         private Animator animator;
         private float timeVal;
         private SpriteRenderer sr;
+        private SpriteLoader spriteLoader;
         private Text hpText;
 
         private BattlePVEDataComponent dataComponent;
 
         public void Init(BaseBattle battle)
         {
-            sprites = new Sprite[7];
-            for (int i = 0; i < sprites.Length; i++)
-            {
-                if (!FightViewSpriteAb.TryGetCarrotState(i, out sprites[i]))
-                {
-                    Debug.LogError("[Carrot] 状态 Sprite 未预加载: index=" + i);
-                }
-            }
-
             this.animator = this.GetComponent<Animator>();
             this.sr = this.GetComponent<SpriteRenderer>();
+            this.spriteLoader = this.GetComponent<SpriteLoader>();
+            if (this.spriteLoader == null && this.sr != null)
+            {
+                this.spriteLoader = this.gameObject.AddComponent<SpriteLoader>();
+            }
 
             Transform hpTextTransform = this.transform.Find("HpCanvas/txt_live");
             if (hpTextTransform != null)
@@ -51,7 +46,6 @@ namespace CarrotFantasy
             this.ResetVisualToCurrentHp();
         }
 
-        // Update is called once per frame
         void Update()
         {
             if (timeVal >= 5)
@@ -100,19 +94,39 @@ namespace CarrotFantasy
             {
                 this.animator.enabled = true;
                 this.animator.Play("Idle", 0, 0f);
-                this.sr.sprite = null;
+                if (this.spriteLoader != null)
+                {
+                    this.spriteLoader.ReleaseCurrent();
+                }
+                else
+                {
+                    this.sr.sprite = null;
+                }
+
                 this.timeVal = 0f;
                 return;
             }
 
             this.animator.enabled = false;
-            if (hp >= 7)
+            int spriteIndex = hp >= 7 ? 6 : (hp - 1);
+            if (spriteIndex < 0)
             {
-                this.sr.sprite = this.sprites[6];
+                return;
             }
-            else if (hp > 0)
+
+            if (this.spriteLoader != null)
             {
-                this.sr.sprite = this.sprites[hp - 1];
+                this.spriteLoader.SetAtlasSprite(
+                    FightViewSpriteAb.CarrotAtlas,
+                    FightViewSpriteAb.CarrotStateAsset(spriteIndex));
+            }
+            else if (!FightViewSpriteAb.TryGetCarrotState(spriteIndex, out Sprite sprite))
+            {
+                Debug.LogError("[Carrot] 状态 Sprite 未预加载: index=" + spriteIndex);
+            }
+            else
+            {
+                this.sr.sprite = sprite;
             }
         }
 
@@ -122,9 +136,11 @@ namespace CarrotFantasy
             {
                 this.dataComponent.eventDispatcher.RemoveListener(BattleEvent.CARROT_LIVE_REDUCE, this.UpdateCarrotUI);
             }
+
+            if (this.spriteLoader != null)
+            {
+                this.spriteLoader.ReleaseCurrent();
+            }
         }
     }
 }
-
-
-

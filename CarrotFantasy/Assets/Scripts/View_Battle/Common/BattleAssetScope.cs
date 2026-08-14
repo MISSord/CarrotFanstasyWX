@@ -4,7 +4,8 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// Session 级战斗视图 AB 作用域：首次 EnsureLoaded 加载，同 Session 重开复用，Shutdown 时 Release。
-    /// 公共 Prefab/图集跨局保留；关卡 RawImage、塔/子弹/道具预制体按关释放。
+    /// 公共 Prefab/图集跨局保留；塔/子弹/道具预制体按关释放。
+    /// 单 Sprite/Texture（小地图、怪物头像）不在此预加载，由各 loader 在战斗准备期提前加载。
     /// </summary>
     public sealed class BattleAssetScope
     {
@@ -53,6 +54,10 @@ namespace CarrotFantasy
             BattleViewPrefabPreloader.Clear();
             BattleViewSpritePreloader.Clear();
             this.loaded = false;
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            ResourceManagerDiagnostics.DumpAll("BattleAssetScope.Release");
+#endif
         }
     }
 }

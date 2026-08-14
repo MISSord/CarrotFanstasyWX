@@ -4,7 +4,9 @@
         "CarrotFantasy.AOT",
         "CarrotFantasy.Shared",
         "Unity.ThirdParty",
-        "CfNet.Generated"
+        "CfNet.Generated",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Core.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

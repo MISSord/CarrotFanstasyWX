@@ -101,8 +101,7 @@ namespace CarrotFantasy
                 {
                     imgCarrot.gameObject.SetActive(true);
                     string asset = "Carrot_" + info.carrotState;
-                    string bundle = ResPath.GetGameOptionImagePath();
-                    carrotImage.SetSprite(bundle, asset);
+                    carrotImage.SetAtlasSprite(ResPath.GetGameOptionImagePath(), asset);
                 }
 
                 if (button != null)

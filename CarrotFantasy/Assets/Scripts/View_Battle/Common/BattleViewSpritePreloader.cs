@@ -5,69 +5,31 @@ using UnityEngine;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// 战斗视图 Sprite 异步预加载。
-    /// Atlas 资源走 <see cref="ImageResourceManager.LoadSprite"/>；
-    /// RawImages 目录资源按 Texture 加载后运行时转 Sprite（与关卡 UI 的 RawImage 约定一致）。
+    /// 战斗视图图集预加载。
+    /// 只预加载图集（<see cref="AtlasResourceManager"/>，整图集进内存后卸 AB）；
+    /// 单 Sprite/Texture（小地图、怪物头像等）不预加载，由对应模块（SpriteLoader/UIImageLoader）
+    /// 在战斗准备期提前发起标准加载，底层 asset 缓存保证二次 Load 同步命中。
     /// </summary>
     public static class BattleViewSpritePreloader
     {
-        struct SpriteRequest
+        struct AtlasRequest
         {
             public string Bundle;
             public string Asset;
         }
 
-        struct CachedSprite
+        struct AtlasTokenHold
         {
-            public Sprite Sprite;
-            public bool RuntimeCreated;
+            public string BundleName;
+            public int Token;
         }
 
-        struct TrackedHandle
-        {
-            public string Bundle;
-            public AssetLoadHandle Handle;
-        }
-
-        static readonly Dictionary<string, CachedSprite> Sprites = new Dictionary<string, CachedSprite>(StringComparer.Ordinal);
-        static readonly List<TrackedHandle> Handles = new List<TrackedHandle>();
+        static readonly List<AtlasTokenHold> AtlasTokens = new List<AtlasTokenHold>();
         static int preloadGeneration;
 
         public static bool IsReady { get; private set; }
 
-        public static string MakeKey(string bundleName, string assetName)
-        {
-            return bundleName + "|" + assetName;
-        }
-
-        static bool IsRawImageBundle(string bundleName)
-        {
-            return !string.IsNullOrEmpty(bundleName) &&
-                   bundleName.StartsWith("ui/rawimages/", StringComparison.OrdinalIgnoreCase);
-        }
-
-        static Sprite CreateSpriteFromTexture(Texture texture)
-        {
-            Texture2D texture2D = texture as Texture2D;
-            if (texture2D == null)
-            {
-                return null;
-            }
-
-            return Sprite.Create(
-                texture2D,
-                new Rect(0f, 0f, texture2D.width, texture2D.height),
-                new Vector2(0.5f, 0.5f),
-                100f);
-        }
-
-        static bool IsSpriteAlive(Sprite sprite)
-        {
-            return sprite != null;
-        }
-
-        /// <summary>通用图集跨局保留，避免离关 Unload 后下一关并发重载失败。</summary>
-        static bool IsPersistentSpriteBundle(string bundleName)
+        static bool IsPersistentAtlasBundle(string bundleName)
         {
             if (string.IsNullOrEmpty(bundleName))
             {
@@ -86,13 +48,15 @@ namespace CarrotFantasy
         public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
         {
             int generation = ++preloadGeneration;
-            List<SpriteRequest> requests = BuildRequests(battle);
+            List<AtlasRequest> requests = BuildRequests(battle);
             if (requests.Count == 0)
             {
                 IsReady = true;
                 onComplete?.Invoke(true);
                 return;
             }
+
+            MarkPersistentAtlases(requests);
 
             BattleViewPreloadWait wait = new BattleViewPreloadWait(
                 "BattleViewSpritePreloader",
@@ -106,87 +70,10 @@ namespace CarrotFantasy
             int trackedCount = 0;
             for (int i = 0; i < requests.Count; i++)
             {
-                SpriteRequest req = requests[i];
-                string key = MakeKey(req.Bundle, req.Asset);
-                CachedSprite cached;
-                if (Sprites.TryGetValue(key, out cached) && IsSpriteAlive(cached.Sprite))
-                {
-                    continue;
-                }
-
-                if (cached.Sprite != null)
-                {
-                    Sprites.Remove(key);
-                }
-
+                AtlasRequest req = requests[i];
                 wait.Track(req.Bundle, req.Asset);
                 trackedCount++;
-
-                AssetLoadHandle handle;
-                if (IsRawImageBundle(req.Bundle))
-                {
-                    handle = ImageResourceManager.Instance.LoadTexture(
-                        req.Bundle,
-                        req.Asset,
-                        texture =>
-                        {
-                            if (generation != preloadGeneration)
-                            {
-                                return;
-                            }
-
-                            Sprite sprite = CreateSpriteFromTexture(texture);
-                            if (sprite != null)
-                            {
-                                Sprites[key] = new CachedSprite
-                                {
-                                    Sprite = sprite,
-                                    RuntimeCreated = true,
-                                };
-                            }
-
-                            wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
-                        },
-                        LoadPriority.Medium);
-                }
-                else
-                {
-                    handle = ImageResourceManager.Instance.LoadSprite(
-                        req.Bundle,
-                        req.Asset,
-                        sprite =>
-                        {
-                            if (generation != preloadGeneration)
-                            {
-                                return;
-                            }
-
-                            if (sprite != null)
-                            {
-                                Sprites[key] = new CachedSprite
-                                {
-                                    Sprite = sprite,
-                                    RuntimeCreated = false,
-                                };
-                            }
-
-                            wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
-                        },
-                        LoadPriority.Medium);
-                }
-
-                if (handle.IsValid)
-                {
-                    Handles.Add(new TrackedHandle
-                    {
-                        Bundle = req.Bundle,
-                        Handle = handle,
-                    });
-                }
-                else
-                {
-                    wait.NotifyFinished(req.Bundle, req.Asset, false);
-                }
+                BeginAtlasAcquire(generation, wait, req);
             }
 
             if (trackedCount <= 0)
@@ -199,6 +86,56 @@ namespace CarrotFantasy
             wait.Start();
         }
 
+        static void MarkPersistentAtlases(List<AtlasRequest> requests)
+        {
+            var marked = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < requests.Count; i++)
+            {
+                string bundle = requests[i].Bundle;
+                if (!IsPersistentAtlasBundle(bundle))
+                {
+                    continue;
+                }
+
+                if (!marked.Add(bundle))
+                {
+                    continue;
+                }
+
+                AtlasResourceManager.Instance.SetResident(bundle, true);
+            }
+        }
+
+        static void BeginAtlasAcquire(int generation, BattleViewPreloadWait wait, AtlasRequest req)
+        {
+            int token = AtlasResourceManager.Instance.AcquireSprite(
+                req.Bundle,
+                req.Asset,
+                sprite =>
+                {
+                    if (generation != preloadGeneration)
+                    {
+                        return;
+                    }
+
+                    wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
+                },
+                LoadPriority.Medium);
+
+            if (token == AtlasResourceManager.InvalidToken)
+            {
+                wait.NotifyFinished(req.Bundle, req.Asset, false);
+                return;
+            }
+
+            AtlasTokens.Add(new AtlasTokenHold
+            {
+                BundleName = req.Bundle,
+                Token = token,
+            });
+        }
+
+        /// <summary>图集 Sprite 同步就绪查询（整图集已进内存时命中）。单 Sprite 不缓存，调用方应走 loader 异步加载。</summary>
         public static bool TryGetSprite(string bundleName, string assetName, out Sprite sprite)
         {
             sprite = null;
@@ -207,14 +144,8 @@ namespace CarrotFantasy
                 return false;
             }
 
-            CachedSprite loaded;
-            if (!Sprites.TryGetValue(MakeKey(bundleName, assetName), out loaded) || loaded.Sprite == null)
-            {
-                return false;
-            }
-
-            sprite = loaded.Sprite;
-            return true;
+            return AtlasResourceManager.Instance.IsAtlasBundle(bundleName) &&
+                   AtlasResourceManager.Instance.TryPeekSprite(bundleName, assetName, out sprite);
         }
 
         public static void Clear()
@@ -222,59 +153,19 @@ namespace CarrotFantasy
             IsReady = false;
             preloadGeneration++;
 
-            for (int i = Handles.Count - 1; i >= 0; i--)
+            for (int i = AtlasTokens.Count - 1; i >= 0; i--)
             {
-                TrackedHandle tracked = Handles[i];
-                if (IsPersistentSpriteBundle(tracked.Bundle))
-                {
-                    continue;
-                }
-
-                tracked.Handle.Dispose();
-                Handles.RemoveAt(i);
-            }
-
-            List<string> removeKeys = null;
-            foreach (KeyValuePair<string, CachedSprite> pair in Sprites)
-            {
-                string bundleName = pair.Key;
-                int sep = bundleName.IndexOf('|');
-                if (sep > 0)
-                {
-                    bundleName = bundleName.Substring(0, sep);
-                }
-
-                if (IsPersistentSpriteBundle(bundleName))
-                {
-                    continue;
-                }
-
-                CachedSprite entry = pair.Value;
-                if (entry.RuntimeCreated && entry.Sprite != null)
-                {
-                    UnityEngine.Object.Destroy(entry.Sprite);
-                }
-
-                if (removeKeys == null)
-                {
-                    removeKeys = new List<string>();
-                }
-
-                removeKeys.Add(pair.Key);
-            }
-
-            if (removeKeys != null)
-            {
-                for (int i = 0; i < removeKeys.Count; i++)
-                {
-                    Sprites.Remove(removeKeys[i]);
-                }
+                AtlasTokenHold hold = AtlasTokens[i];
+                // persistent 图集内存由 SetResident 保活，token 仍须 Release 归还计数，
+                // 否则每局 Run() 都会对同一图集新增持有，导致 _tokens/RefCount 跨局累积。
+                AtlasResourceManager.Instance.Release(hold.Token);
+                AtlasTokens.RemoveAt(i);
             }
         }
 
-        static List<SpriteRequest> BuildRequests(BaseBattle battle)
+        static List<AtlasRequest> BuildRequests(BaseBattle battle)
         {
-            var list = new List<SpriteRequest>();
+            var list = new List<AtlasRequest>();
             var dedupe = new HashSet<string>(StringComparer.Ordinal);
 
             void Add(string bundle, string asset)
@@ -284,13 +175,13 @@ namespace CarrotFantasy
                     return;
                 }
 
-                string key = MakeKey(bundle, asset);
+                string key = bundle + "|" + asset;
                 if (!dedupe.Add(key))
                 {
                     return;
                 }
 
-                list.Add(new SpriteRequest { Bundle = bundle, Asset = asset });
+                list.Add(new AtlasRequest { Bundle = bundle, Asset = asset });
             }
 
             Add(FightViewSpriteAb.NormalMordelAtlas, FightViewSpriteAb.GridNormal);
@@ -320,51 +211,7 @@ namespace CarrotFantasy
                 }
             }
 
-            BattlePVEDataComponent pveData = BattlePVEDataComponent.GetFrom(battle);
-            if (pveData != null)
-            {
-                string bgAsset = FightViewSpriteAb.MapBgAssetName(pveData.bigLevel, pveData.level);
-                Add(FightViewSpriteAb.RawImageBundle(bgAsset), bgAsset);
-
-                string roadAsset = FightViewSpriteAb.MapRoadAssetName(pveData.bigLevel, pveData.level);
-                Add(FightViewSpriteAb.RawImageBundle(roadAsset), roadAsset);
-            }
-
-            CollectLevelMonsterPortraits(battle, Add);
-
             return list;
-        }
-
-        static void CollectLevelMonsterPortraits(BaseBattle battle, Action<string, string> add)
-        {
-            LevelInfo levelInfo = ResolveLevelInfo(battle);
-            if (levelInfo == null || levelInfo.roundInfo == null)
-            {
-                return;
-            }
-
-            var monsterIds = new HashSet<int>();
-            for (int i = 0; i < levelInfo.roundInfo.Count; i++)
-            {
-                WaveSpawnPlan plan = SpawnPlanCompiler.Compile(levelInfo.roundInfo[i]);
-                for (int j = 0; j < plan.Count; j++)
-                {
-                    monsterIds.Add(plan.MonsterIds[j]);
-                }
-            }
-
-            foreach (int monsterId in monsterIds)
-            {
-                string assetName = FightViewSpriteAb.MonsterPortraitAssetName(monsterId);
-                add(FightViewSpriteAb.RawImageBundle(assetName), assetName);
-            }
-        }
-
-        static LevelInfo ResolveLevelInfo(BaseBattle battle)
-        {
-            IBattleMapLevelData mapData =
-                battle.GetComponent(BattleComponentType.MapComponent) as IBattleMapLevelData;
-            return mapData != null ? mapData.LevelInfo : null;
         }
     }
 }

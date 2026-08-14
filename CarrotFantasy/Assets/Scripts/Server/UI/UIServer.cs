@@ -20,6 +20,7 @@ namespace CarrotFantasy
         private TipView tipPanel;
         private bool tipPanelLoadRequested;
         private string pendingTip;
+        private int tipPrefabHandle = PrefabResourceManager.InvalidHandle;
         public Vector2 curSetScreenSize = new Vector2(1920, 1440);
 
         public override void LoadModule()
@@ -95,7 +96,7 @@ namespace CarrotFantasy
 
         private void AddTipPanel()
         {
-            GameObjectResourceManager.Instance.LoadPrefab(
+            this.tipPrefabHandle = PrefabResourceManager.Instance.Load(
                 UiViewAbPaths.TipViewPrefab,
                 UiViewAbPaths.TipPanelAsset,
                 this.OnTipPanelLoaded,
@@ -107,6 +108,13 @@ namespace CarrotFantasy
             if (template == null)
             {
                 Debug.LogError("[UIServer] TipPanel 加载失败");
+                if (this.tipPrefabHandle != PrefabResourceManager.InvalidHandle)
+                {
+                    PrefabResourceManager.Instance.Unload(this.tipPrefabHandle);
+                    this.tipPrefabHandle = PrefabResourceManager.InvalidHandle;
+                }
+
+                this.tipPanelLoadRequested = false;
                 return;
             }
 
@@ -159,6 +167,12 @@ namespace CarrotFantasy
             {
                 GameObject.Destroy(this.nodeObject);
                 this.nodeObject = null;
+            }
+
+            if (this.tipPrefabHandle != PrefabResourceManager.InvalidHandle)
+            {
+                PrefabResourceManager.Instance.Unload(this.tipPrefabHandle);
+                this.tipPrefabHandle = PrefabResourceManager.InvalidHandle;
             }
 
             this.tipPanel = null;

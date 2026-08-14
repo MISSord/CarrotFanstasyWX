@@ -36,6 +36,9 @@ namespace CarrotFantasy
             mainCamera.nearClipPlane = 0.1f;
             mainCamera.farClipPlane = 100f;
 
+            // URP Camera Stack：战斗主相机作为 Base，承接全局 UICamera Overlay
+            UIPresentationPersistence.BindUiCameraToBaseCamera(mainCamera);
+
             if (Debug.isDebugBuild)
             {
                 Debug.Log(

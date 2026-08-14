@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CarrotFantasy;
 using UnityEngine;
 
 enum ViewLoadState
@@ -18,7 +19,7 @@ class ViewLoadEntry
     public GameObject gameObject;
     public ViewLoadState state;
     public int order;
-    public int loadIndex;
+    public int prefabHandle = PrefabResourceManager.InvalidHandle;
 }
 
 /// <summary>BaseView 的 AB 子资源加载、实例化与 index 级加载状态。</summary>
@@ -207,21 +208,17 @@ class ViewLoader
                 if (entry.useResources)
                 {
                     entry.state = ViewLoadState.None;
-                    entry.loadIndex = -1;
+                    entry.prefabHandle = PrefabResourceManager.InvalidHandle;
                     continue;
                 }
 
-                if (entry.state == ViewLoadState.Loaded)
+                if (entry.prefabHandle != PrefabResourceManager.InvalidHandle)
                 {
-                    AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName);
-                }
-                else if (entry.state == ViewLoadState.Loading)
-                {
-                    AssetBundleManager.Instance.CancelAssetLoad(entry.bundleName, entry.assetName, entry.loadIndex);
+                    PrefabResourceManager.Instance.Unload(entry.prefabHandle);
+                    entry.prefabHandle = PrefabResourceManager.InvalidHandle;
                 }
 
                 entry.state = ViewLoadState.None;
-                entry.loadIndex = -1;
             }
         }
 
@@ -244,13 +241,13 @@ class ViewLoader
                     continue;
                 }
 
-                if (entry.loadIndex >= 0)
+                if (entry.prefabHandle != PrefabResourceManager.InvalidHandle)
                 {
-                    AssetBundleManager.Instance.CancelAssetLoad(entry.bundleName, entry.assetName, entry.loadIndex);
+                    PrefabResourceManager.Instance.Unload(entry.prefabHandle);
+                    entry.prefabHandle = PrefabResourceManager.InvalidHandle;
                 }
 
                 entry.state = ViewLoadState.None;
-                entry.loadIndex = -1;
                 affectedIndices.Add(pair.Key);
             }
         }
@@ -310,16 +307,10 @@ class ViewLoader
                 continue;
             }
 
-            int loadId = AssetBundleManager.Instance.LoadAsset<GameObject>(
+            entry.prefabHandle = PrefabResourceManager.Instance.Load(
                 entry.bundleName,
                 entry.assetName,
-                (GameObject obj) => { OnAssetLoaded(obj, entry, index); });
-            entry.loadIndex = loadId;
-            if (entry.state != ViewLoadState.Loading)
-            {
-                // 同步 CACHE_HIT 回调已处理完毕（含放弃路径）
-                entry.loadIndex = -1;
-            }
+                prefab => OnAssetLoaded(prefab, entry, index));
         }
 
         if (!anyRequested)
@@ -340,8 +331,13 @@ class ViewLoader
 
         if (prefab == null)
         {
+            if (entry.prefabHandle != PrefabResourceManager.InvalidHandle)
+            {
+                PrefabResourceManager.Instance.Unload(entry.prefabHandle);
+                entry.prefabHandle = PrefabResourceManager.InvalidHandle;
+            }
+
             entry.state = ViewLoadState.None;
-            entry.loadIndex = -1;
             Debug.LogError("[ViewLoader] AB 资源加载失败: " + entry.bundleName + " / " + entry.assetName);
             RefreshIndexState(targetIndex);
             ProcessQueue();
@@ -361,7 +357,6 @@ class ViewLoader
         instanceObj.SetActive(false);
         entry.gameObject = instanceObj;
         entry.state = ViewLoadState.Loaded;
-        entry.loadIndex = -1;
 
         NotifyIndexLoadComplete(targetIndex);
     }
@@ -395,20 +390,13 @@ class ViewLoader
 
     private void AbandonAssetLoad(ViewLoadEntry entry)
     {
-        if (!entry.useResources)
+        if (!entry.useResources && entry.prefabHandle != PrefabResourceManager.InvalidHandle)
         {
-            if (entry.loadIndex >= 0)
-            {
-                AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName, false, entry.loadIndex);
-            }
-            else
-            {
-                AssetBundleManager.Instance.UnloadAsset(entry.bundleName, entry.assetName);
-            }
+            PrefabResourceManager.Instance.Unload(entry.prefabHandle);
+            entry.prefabHandle = PrefabResourceManager.InvalidHandle;
         }
 
         entry.state = ViewLoadState.None;
-        entry.loadIndex = -1;
     }
 
     private bool HasInFlightLoadForIndex(int index)

@@ -92,6 +92,9 @@ public class ViewManager
         {
             Debug.LogWarning("[ViewManager] 未找到 UICamera，UI Canvas 可能无法渲染。");
         }
+
+        // URP：UICamera 必须作为 Overlay 挂到当前场景 MainCamera 的 Camera Stack
+        UIPresentationPersistence.BindUiCameraToSceneMainCamera();
     }
 
     public void SetShowPanelActive(bool isCanShow)

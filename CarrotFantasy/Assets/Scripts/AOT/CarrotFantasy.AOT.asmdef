@@ -2,7 +2,8 @@
     "name": "CarrotFantasy.AOT",
     "references": [
         "CarrotFantasy.Shared",
-        "HybridCLR.Runtime"
+        "HybridCLR.Runtime",
+        "UnityEngine.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

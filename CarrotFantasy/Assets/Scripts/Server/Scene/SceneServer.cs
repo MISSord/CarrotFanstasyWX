@@ -225,6 +225,8 @@ namespace CarrotFantasy
 
             this.BindUICameraFromActiveScene();
             ViewManager.Instance?.RebindScenePresentation();
+            // 场景 MainCamera 已就绪：把 DontDestroyOnLoad 的 UICamera Overlay 挂到其 Camera Stack
+            UIPresentationPersistence.BindUiCameraToSceneMainCamera();
 
             BaseScene targetScene = null;
             switch (sceneType)

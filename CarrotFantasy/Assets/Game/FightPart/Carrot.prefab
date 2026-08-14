@@ -91,7 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: Hp
-  _lastRecordedSpriteInstanceId: 46682
+  _lastRecordedSpriteInstanceId: 22924
 --- !u!1 &1139038664492914
 GameObject:
   m_ObjectHideFlags: 0
@@ -288,6 +288,7 @@ GameObject:
   - component: {fileID: 95386102114504150}
   - component: {fileID: 6648841597267178176}
   - component: {fileID: 4160593540433438741}
+  - component: {fileID: 644785320006596654}
   m_Layer: 0
   m_Name: Carrot
   m_TagString: Untagged
@@ -409,3 +410,18 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 0.76, y: 1.08, z: 0.19999999}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &644785320006596654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1750923591671190}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/images/carrot/images_atlas
+  defaultAssetName: Items01-hd_30
+  _lastRecordedSpriteInstanceId: 22896
