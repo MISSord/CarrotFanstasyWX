@@ -50,7 +50,7 @@ namespace CarrotFantasy
         private const float RESET_PLAYING_EFFECT_INTERVAL = 0.1f;
         private readonly Dictionary<string, float> effectLastPlayTime = new Dictionary<string, float>(StringComparer.Ordinal);
 
-        private readonly Dictionary<string, AudioClip> clipCacheAb = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
+        private AssetBundleScope _clipScope;
         private readonly Dictionary<string, AudioClip> clipCacheResources = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
 
         public void Init()
@@ -86,6 +86,7 @@ namespace CarrotFantasy
             this.RefreshMusicVolume();
             this.RefreshEffectActiveState();
             this.RefreshEffectVolume();
+            this._clipScope = AssetBundleScope.Create("Audio");
         }
 
         /// <summary>
@@ -130,32 +131,13 @@ namespace CarrotFantasy
                 return;
             }
 
-            string cacheKey = BuildAbCacheKey(bundleName, assetName);
-            if (this.clipCacheAb.TryGetValue(cacheKey, out AudioClip cached) && cached != null)
-            {
-                onLoaded?.Invoke(cached);
-                return;
-            }
-
-            if (AssetBundleManager.Instance == null)
+            if (this._clipScope == null)
             {
                 onLoaded?.Invoke(null);
                 return;
             }
 
-            AssetBundleManager.Instance.LoadAsset<AudioClip>(
-                bundleName.Trim().Replace('\\', '/').ToLowerInvariant(),
-                assetName.Trim(),
-                loaded =>
-                {
-                    if (loaded != null)
-                    {
-                        this.clipCacheAb[cacheKey] = loaded;
-                    }
-
-                    onLoaded?.Invoke(loaded);
-                },
-                LoadPriority.Medium);
+            this._clipScope.Use<AudioClip>(bundleName, assetName, onLoaded);
         }
 
         /// <summary>
@@ -460,11 +442,15 @@ namespace CarrotFantasy
             this.audioSourceMusic?.Stop();
             this.audioSourceEffect?.Stop();
             this.effectLastPlayTime.Clear();
-            this.clipCacheAb.Clear();
             this.clipCacheResources.Clear();
             this.currentMusicUid = 0;
             this.currentMusicKey = null;
             GameObject.Destroy(this.nodeObject);
+            if (this._clipScope != null)
+            {
+                this._clipScope.Dispose();
+                this._clipScope = null;
+            }
             this.nodeObject = null;
             this.audioSourceMusic = null;
             this.audioSourceEffect = null;

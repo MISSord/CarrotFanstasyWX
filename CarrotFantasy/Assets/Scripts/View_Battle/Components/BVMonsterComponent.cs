@@ -6,15 +6,8 @@ namespace CarrotFantasy
 {
     public class BVMonsterComponent : BaseBattleViewComponent
     {
-        private GameObject noInstanGameObject;
-        private AssetLoadHandle _monsterPrefabHandle;
-        private GameObject _destroyEffectTemplate;
-        private AssetLoadHandle _destroyEffectHandle;
-        private GameObject _monsterCanvasTemplate;
-        private AssetLoadHandle _monsterCanvasHandle;
         private GameObject rootGameObject;
-
-        private BattleSchedulerComponent scheComponent;
+        private int _useEpoch;
 
         private Dictionary<BattleUnit_Monster, BattleUnitView_Monster> monsterDic = new Dictionary<BattleUnit_Monster, BattleUnitView_Monster>();
 
@@ -23,24 +16,16 @@ namespace CarrotFantasy
             this.componentType = BattleViewComponentType.MONSTER;
         }
 
+        public override void CollectWarm(AssetBundleBatch batch)
+        {
+            batch.Keep<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab);
+            batch.Keep<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterCanvas);
+        }
+
         public override void Init()
         {
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("MonsterContainer");
-            this.noInstanGameObject = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab, out _monsterPrefabHandle);
-            if (this.noInstanGameObject == null)
-            {
-                Debug.LogError("[BVMonsterComponent] MonsterPrefab 加载失败");
-            }
-
-            this._monsterCanvasTemplate = GameObjectResourceManager.Instance.LoadPrefabBlocking(
-                FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterCanvas, out this._monsterCanvasHandle);
-            if (this._monsterCanvasTemplate == null)
-            {
-                Debug.LogError("[BVMonsterComponent] MonsterCanvas 预制体加载失败");
-            }
-
-            this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
 
             GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.Monster);
             GameViewObjectPool.Instance.RegisterGameObject(BattleUnitViewType.DestroyEffect);
@@ -72,12 +57,18 @@ namespace CarrotFantasy
                 }
                 if (node == null)
                 {
-                    node = GameObject.Instantiate(this.noInstanGameObject);
+                    GameObject monsterTpl = this.BundleScope.Get<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab);
+                    if (monsterTpl == null)
+                    {
+                        return;
+                    }
+
+                    node = GameObject.Instantiate(monsterTpl);
                     node.transform.SetParent(this.rootGameObject.transform);
                 }
 
-                GameObject hpCanvasGo = this._monsterCanvasTemplate != null
-                    ? GameObject.Instantiate(this._monsterCanvasTemplate) : null;
+                GameObject canvasTpl = this.BundleScope.Get<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterCanvas);
+                GameObject hpCanvasGo = canvasTpl != null ? GameObject.Instantiate(canvasTpl) : null;
                 monsterView.InitTransform(node.transform);
                 monsterView.AttachMonsterHpCanvas(hpCanvasGo);
                 monsterView.LoadInfo(this.battleView, monster);
@@ -115,20 +106,42 @@ namespace CarrotFantasy
 
             //特效
             GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
+            int epoch = this._useEpoch;
             if (sell == null)
             {
-                if (_destroyEffectTemplate == null)
+                this.BundleScope.Use<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, tpl =>
                 {
-                        _destroyEffectTemplate = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, out _destroyEffectHandle);
-                }
+                    if (epoch != this._useEpoch || tpl == null)
+                    {
+                        return;
+                    }
 
-                sell = _destroyEffectTemplate != null ? GameObject.Instantiate(_destroyEffectTemplate) : null;
+                    this.PlayDestroyEffect(GameObject.Instantiate(tpl), unit);
+                });
             }
+            else
+            {
+                this.PlayDestroyEffect(sell, unit);
+            }
+        }
+
+        private void PlayDestroyEffect(GameObject sell, BattleUnit unit)
+        {
+            if (sell == null)
+            {
+                return;
+            }
+
             sell.transform.GetComponent<Animator>().enabled = true;
             UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
             sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
             Sche.DelayExeOnceTimes(() =>
             {
+                if (sell == null)
+                {
+                    return;
+                }
+
                 sell.transform.GetComponent<Animator>().enabled = false;
                 GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
             }, 0.5f);
@@ -136,27 +149,7 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
-            if (_monsterPrefabHandle.IsValid)
-            {
-                _monsterPrefabHandle.Dispose();
-                _monsterPrefabHandle = AssetLoadHandle.Invalid;
-            }
-
-            if (_monsterCanvasHandle.IsValid)
-            {
-                _monsterCanvasHandle.Dispose();
-                _monsterCanvasHandle = AssetLoadHandle.Invalid;
-            }
-
-            _monsterCanvasTemplate = null;
-
-            if (_destroyEffectHandle.IsValid)
-            {
-                _destroyEffectHandle.Dispose();
-                _destroyEffectHandle = AssetLoadHandle.Invalid;
-            }
-
-            _destroyEffectTemplate = null;
+            this._useEpoch++;
             foreach (KeyValuePair<BattleUnit_Monster, BattleUnitView_Monster> info in this.monsterDic)
             {
                 info.Value.ClearUnitInfo();

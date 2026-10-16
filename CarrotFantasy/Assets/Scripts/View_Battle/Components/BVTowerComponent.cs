@@ -7,16 +7,12 @@ namespace CarrotFantasy
     public class BVTowerComponent : BaseBattleViewComponent
     {
         private GameObject rootGameObject;
-
         public Dictionary<BattleUnit_Tower, BattleUnitView_Tower> towerViewDic = new Dictionary<BattleUnit_Tower, BattleUnitView_Tower>();
 
         private GameObject buildGameObject;
         private GameObject sellGameObject;
-        private AssetLoadHandle _buildEffectHandle;
-        private AssetLoadHandle _sellEffectHandle;
-
-        private readonly Dictionary<string, GameObject> _towerPrefabTemplates = new Dictionary<string, GameObject>();
-        private readonly Dictionary<string, AssetLoadHandle> _towerPrefabHandles = new Dictionary<string, AssetLoadHandle>();
+        private int _useEpoch;
+        private readonly HashSet<BattleUnit_Tower> _waitingSpawn = new HashSet<BattleUnit_Tower>();
 
         private BattleSchedulerComponent scheComponent;
 
@@ -25,16 +21,27 @@ namespace CarrotFantasy
             this.componentType = BattleViewComponentType.TOWER;
         }
 
+        public override void CollectWarm(AssetBundleBatch batch)
+        {
+            batch.Keep<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.BuildEffect);
+            batch.Keep<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect);
+            BattleTowerComponent towers = (BattleTowerComponent)this.battle.GetComponent(BattleComponentType.TowerComponent);
+            if (towers == null || towers.canBuildTowerList == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < towers.canBuildTowerListLength; i++)
+            {
+                batch.Keep<GameObject>(FightViewPrefabAb.TowerSetBundleName(towers.canBuildTowerList[i]), "1");
+            }
+        }
+
         public override void Init()
         {
             BVSceneComponent scene = (BVSceneComponent)this.battleView.GetComponent(BattleViewComponentType.SCENE);
             this.rootGameObject = scene.RegisterGameContainer("TowerContainer");
-
-            this.buildGameObject = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.BuildEffect, out _buildEffectHandle);
-            this.sellGameObject = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, out _sellEffectHandle);
-
             this.scheComponent = (BattleSchedulerComponent)this.battle.GetComponent(BattleComponentType.SchedulerComponent);
-
             this.AddListener();
         }
 
@@ -50,41 +57,32 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveTowerView);
         }
 
-        private GameObject GetTowerPrefabTemplate(int towerId, int towerLevelIndex)
-        {
-            string bundleName = FightViewPrefabAb.TowerSetBundleName(towerId);
-            string assetName = towerLevelIndex.ToString();
-            string cacheKey = bundleName + "/" + assetName;
-            if (_towerPrefabTemplates.TryGetValue(cacheKey, out GameObject cached) && cached != null)
-            {
-                return cached;
-            }
-
-            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle handle);
-            if (tpl == null)
-            {
-                Debug.LogError($"[BVTowerComponent] 防御塔预制体加载失败: bundle={bundleName}, asset={assetName}");
-                return null;
-            }
-
-            _towerPrefabTemplates[cacheKey] = tpl;
-            _towerPrefabHandles[cacheKey] = handle;
-            return tpl;
-        }
-
         private void RegisterTowerView(String type, BattleUnit unit)
         {
             if (type.Equals(BattleUnitType.TOWER) == false) return;
             BattleUnit_Tower tower = (BattleUnit_Tower)unit;
+            int epoch = this._useEpoch;
+            this._waitingSpawn.Add(tower);
+            this.BundleScope.Use<GameObject>(
+                FightViewPrefabAb.TowerSetBundleName(tower.towerID),
+                (tower.curLevel + 1).ToString(),
+                tpl =>
+                {
+                    if (epoch != this._useEpoch || tpl == null || !this._waitingSpawn.Remove(tower))
+                    {
+                        return;
+                    }
+
+                    this.SpawnTower(tower, tpl, true);
+                });
+        }
+
+        private void SpawnTower(BattleUnit_Tower tower, GameObject towerTpl, bool playBuild)
+        {
             BattleUnitView_Tower towerView = GameViewObjectPool.Instance.getNewBattleUnitView<BattleUnitView_Tower>(BattleUnitViewType.Tower);
             if (towerView == null)
             {
                 towerView = new BattleUnitView_Tower();
-            }
-            GameObject towerTpl = GetTowerPrefabTemplate(tower.towerID, tower.curLevel + 1);
-            if (towerTpl == null)
-            {
-                return;
             }
 
             GameObject towerObj = GameObject.Instantiate(towerTpl);
@@ -94,15 +92,13 @@ namespace CarrotFantasy
             tower.eventDipatcher.AddListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
             towerView.Init();
             this.towerViewDic.Add(tower, towerView);
-            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerBulid");
-            if (this.buildGameObject != null)
+            if (!playBuild)
             {
-                GameObject build = GameObject.Instantiate(this.buildGameObject);
-                UnitTransformComponent tran = (UnitTransformComponent)unit.GetComponent(UnitComponentType.TRANSFORM);
-                build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-
-                scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
+                return;
             }
+
+            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerBulid");
+            this.PlayEffect(this.GetEffect(ref this.buildGameObject, FightViewPrefabAb.BuildEffect), tower);
         }
 
         private void RemoveTowerView(String type, BattleUnit unit)
@@ -121,64 +117,69 @@ namespace CarrotFantasy
             tower.eventDipatcher.RemoveListener<BattleUnit_Tower>(BattleEvent.TOWER_LEVEL_UP, this.ReloadTran);
 
             this.towerViewDic.Remove(tower);
+            this._waitingSpawn.Remove(tower);
             GameViewObjectPool.Instance.PushViewObjectToPool(BattleUnitViewType.Tower, towerView);
             AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerSell");
 
-            if (this.sellGameObject != null)
-            {
-                GameObject sell = GameObject.Instantiate(this.sellGameObject);
-                UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);
-                sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-
-                scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(sell); }, 0.5f);
-            }
+            this.PlayEffect(this.GetEffect(ref this.sellGameObject, FightViewPrefabAb.DestoryEffect), tower);
         }
 
         private void ReloadTran(BattleUnit_Tower tower)
         {
-            BattleUnitView_Tower towerView = this.towerViewDic[tower];
-            GameObject.Destroy(towerView.transform.gameObject);
-            GameObject towerTpl = GetTowerPrefabTemplate(tower.towerID, tower.curLevel + 1);
-            if (towerTpl == null)
+            if (!this.towerViewDic.TryGetValue(tower, out BattleUnitView_Tower towerView))
             {
                 return;
             }
 
-            GameObject towerObj = GameObject.Instantiate(towerTpl);
-            towerView.InitTransform(towerObj.transform);
-            towerView.ReloadInfo();
-            AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerUpdata");
+            GameObject.Destroy(towerView.transform.gameObject);
+            int epoch = this._useEpoch;
+            this.BundleScope.Use<GameObject>(
+                FightViewPrefabAb.TowerSetBundleName(tower.towerID),
+                (tower.curLevel + 1).ToString(),
+                tpl =>
+                {
+                    if (epoch != this._useEpoch || tpl == null || !this.towerViewDic.ContainsKey(tower))
+                    {
+                        return;
+                    }
 
-            if (this.buildGameObject != null)
+                    GameObject towerObj = GameObject.Instantiate(tpl);
+                    towerView.InitTransform(towerObj.transform);
+                    towerView.ReloadInfo();
+                    AudioManager.Instance.PlayEffectByResources("AudioClips/NormalMordel/Tower/TowerUpdata");
+                    this.PlayEffect(this.GetEffect(ref this.buildGameObject, FightViewPrefabAb.BuildEffect), tower);
+                });
+        }
+
+        private GameObject GetEffect(ref GameObject cache, string assetName)
+        {
+            if (cache == null)
             {
-                GameObject build = GameObject.Instantiate(this.buildGameObject);
-                UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);
-                build.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-
-                scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(build); }, 0.5f);
+                cache = this.BundleScope.Get<GameObject>(FightViewPrefabAb.FightPartBundle, assetName);
             }
+
+            return cache;
+        }
+
+        private void PlayEffect(GameObject template, BattleUnit_Tower tower)
+        {
+            if (template == null || this.scheComponent == null)
+            {
+                return;
+            }
+
+            GameObject effect = GameObject.Instantiate(template);
+            UnitTransformComponent tran = (UnitTransformComponent)tower.GetComponent(UnitComponentType.TRANSFORM);
+            effect.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
+            this.scheComponent.DelayExeOnceTimes(() => { GameObject.Destroy(effect); }, 0.5f);
         }
 
         public override void ClearGameInfo()
         {
-            foreach (KeyValuePair<string, AssetLoadHandle> kv in _towerPrefabHandles)
-            {
-                kv.Value.Dispose();
-            }
-
-            _towerPrefabHandles.Clear();
-            _towerPrefabTemplates.Clear();
-            if (_buildEffectHandle.IsValid)
-            {
-                _buildEffectHandle.Dispose();
-                _buildEffectHandle = AssetLoadHandle.Invalid;
-            }
-
-            if (_sellEffectHandle.IsValid)
-            {
-                _sellEffectHandle.Dispose();
-                _sellEffectHandle = AssetLoadHandle.Invalid;
-            }
+            this._useEpoch++;
+            this._waitingSpawn.Clear();
+            this.buildGameObject = null;
+            this.sellGameObject = null;
 
             foreach (KeyValuePair<BattleUnit_Tower, BattleUnitView_Tower> info in this.towerViewDic)
             {

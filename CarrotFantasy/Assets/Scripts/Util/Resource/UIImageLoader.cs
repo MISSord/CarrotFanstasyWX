@@ -29,7 +29,8 @@ namespace CarrotFantasy
         //[SerializeField] 
         private bool clearSpriteOnRelease = true;
 
-        private AssetLoadHandle _currentHandle = AssetLoadHandle.Invalid;
+        private AssetBundleHandle<Sprite> _spriteHandle;
+        private AssetBundleHandle<Texture> _textureHandle;
         private int _requestVersion = 0;
         [SerializeField, HideInInspector] 
         private int _lastRecordedSpriteInstanceId;
@@ -150,7 +151,7 @@ namespace CarrotFantasy
             //}
 
             // 未释放的情况下无需重复加载（比如 releaseOnDisable=false 时反复启用组件）。
-            if (_currentHandle.IsValid)
+            if ((_spriteHandle != null && _spriteHandle.IsValid) || (_textureHandle != null && _textureHandle.IsValid))
             {
                 return;
             }
@@ -176,37 +177,31 @@ namespace CarrotFantasy
 
             if (targetImage != null)
             {
-                _currentHandle = ImageResourceManager.Instance.LoadSprite(
-                    bundleName,
-                    assetName,
-                    sprite =>
+                _spriteHandle = ImageLoader.Instance.LoadSprite(bundleName, assetName, priority);
+                _spriteHandle.Completed += sprite =>
+                {
+                    if (currentVersion != _requestVersion || targetImage == null)
                     {
-                        if (currentVersion != _requestVersion || targetImage == null)
-                        {
-                            return;
-                        }
+                        return;
+                    }
 
-                        targetImage.sprite = sprite;
-                    },
-                    priority);
+                    targetImage.sprite = sprite;
+                };
                 return;
             }
 
             if (targetRawImage != null)
             {
-                _currentHandle = ImageResourceManager.Instance.LoadTexture(
-                    bundleName,
-                    assetName,
-                    texture =>
+                _textureHandle = ImageLoader.Instance.LoadTexture(bundleName, assetName, priority);
+                _textureHandle.Completed += texture =>
+                {
+                    if (currentVersion != _requestVersion || targetRawImage == null)
                     {
-                        if (currentVersion != _requestVersion || targetRawImage == null)
-                        {
-                            return;
-                        }
+                        return;
+                    }
 
-                        targetRawImage.texture = texture;
-                    },
-                    priority);
+                    targetRawImage.texture = texture;
+                };
             }
         }
 
@@ -222,10 +217,16 @@ namespace CarrotFantasy
 
         public void ReleaseCurrent()
         {
-            if (_currentHandle.IsValid)
+            if (_spriteHandle != null)
             {
-                _currentHandle.Dispose();
-                _currentHandle = AssetLoadHandle.Invalid;
+                _spriteHandle.Release();
+                _spriteHandle = null;
+            }
+
+            if (_textureHandle != null)
+            {
+                _textureHandle.Release();
+                _textureHandle = null;
             }
 
             if (clearSpriteOnRelease && targetImage != null)

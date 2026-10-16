@@ -47,6 +47,15 @@ namespace CarrotFantasy
             }
         }
 
+        public void CollectAbAssets(AssetBundleBatch boot, AssetBundleBatch warm)
+        {
+            for (int i = 0; i < this.componentList.Count; i++)
+            {
+                this.componentList[i].CollectBoot(boot);
+                this.componentList[i].CollectWarm(warm);
+            }
+        }
+
         public void AddComponent(BaseBattleViewComponent component)
         {
             if (component == null) return;

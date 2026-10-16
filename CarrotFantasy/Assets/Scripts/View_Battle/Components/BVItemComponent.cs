@@ -11,10 +11,7 @@ namespace CarrotFantasy
         private int _itemBigLevel;
         private GameObject rootGameObject;
 
-        private readonly Dictionary<string, GameObject> _itemPrefabTemplates = new Dictionary<string, GameObject>();
-        private readonly Dictionary<string, AssetLoadHandle> _itemPrefabHandles = new Dictionary<string, AssetLoadHandle>();
-        private GameObject _destroyEffectTemplate;
-        private AssetLoadHandle _destroyEffectHandle;
+        private int _useEpoch;
 
         public BVItemComponent(BattleView_base battleView) : base(battleView)
         {
@@ -22,6 +19,20 @@ namespace CarrotFantasy
             BattlePVEDataComponent pveData = BattlePVEDataComponent.GetFrom(this.battleView.battle);
             this._itemBigLevel = pveData != null ? pveData.bigLevel : 1;
             this.componentType = BattleViewComponentType.Item;
+        }
+
+        public override void CollectBoot(AssetBundleBatch batch)
+        {
+            if (this.itemComponent == null || this.itemComponent.battleItemList == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < this.itemComponent.battleItemList.Count; i++)
+            {
+                BattleUnit_Item item = this.itemComponent.battleItemList[i];
+                batch.Keep<GameObject>(FightViewPrefabAb.ItemBundleName(this._itemBigLevel), item.itemId.ToString());
+            }
         }
 
         public override void Init()
@@ -48,37 +59,15 @@ namespace CarrotFantasy
             this.eventDispatcher.RemoveListener<String, BattleUnit>(BattleEvent.BATTLE_UNIT_REMOVE, this.RemoveItemView);
         }
 
-        private GameObject GetItemPrefabTemplate(int bigLevel, int itemId)
-        {
-            string bundleName = FightViewPrefabAb.ItemBundleName(bigLevel);
-            string assetName = itemId.ToString();
-            string cacheKey = bundleName + "/" + assetName;
-            if (_itemPrefabTemplates.TryGetValue(cacheKey, out GameObject cached) && cached != null)
-            {
-                return cached;
-            }
-
-            GameObject tpl = GameObjectResourceManager.Instance.LoadPrefabBlocking(bundleName, assetName, out AssetLoadHandle handle);
-            if (tpl == null)
-            {
-                Debug.LogError($"[BVItemComponent] 道具预制体加载失败: bundle={bundleName}, asset={assetName}");
-                return null;
-            }
-
-            _itemPrefabTemplates[cacheKey] = tpl;
-            _itemPrefabHandles[cacheKey] = handle;
-            return tpl;
-        }
-
         private void CreateItemView(BattleUnit_Item item)
         {
-            BattleUnitView_Item itemView = new BattleUnitView_Item();
-            GameObject tpl = GetItemPrefabTemplate(_itemBigLevel, item.itemId);
+            GameObject tpl = this.BundleScope.Get<GameObject>(FightViewPrefabAb.ItemBundleName(this._itemBigLevel), item.itemId.ToString());
             if (tpl == null)
             {
                 return;
             }
 
+            BattleUnitView_Item itemView = new BattleUnitView_Item();
             GameObject itemGo = GameObject.Instantiate(tpl);
             itemGo.transform.SetParent(this.rootGameObject.transform);
             itemView.InitTransform(itemGo.transform);
@@ -100,42 +89,46 @@ namespace CarrotFantasy
 
                 //特效
                 GameObject sell = GameViewObjectPool.Instance.GetNewGameObject(BattleUnitViewType.DestroyEffect);
+                int epoch = this._useEpoch;
                 if (sell == null)
                 {
-                    if (_destroyEffectTemplate == null)
+                    this.BundleScope.Use<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, tpl =>
                     {
-                        _destroyEffectTemplate = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect, out _destroyEffectHandle);
-                    }
+                        if (epoch != this._useEpoch || tpl == null)
+                        {
+                            return;
+                        }
 
-                    sell = _destroyEffectTemplate != null ? GameObject.Instantiate(_destroyEffectTemplate) : null;
+                        this.PlayDestroyEffect(GameObject.Instantiate(tpl), obj);
+                    });
                 }
-                sell.transform.GetComponent<Animator>().enabled = true;
-                UnitTransformComponent tran = (UnitTransformComponent)obj.GetComponent(UnitComponentType.TRANSFORM);
-                sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
-                Sche.DelayExeOnceTimes(() =>
+                else
                 {
-                    sell.transform.GetComponent<Animator>().enabled = false;
-                    GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
-                }, 0.5f);
+                    this.PlayDestroyEffect(sell, obj);
+                }
             }
+        }
+
+        private void PlayDestroyEffect(GameObject sell, BattleUnit obj)
+        {
+            sell.transform.GetComponent<Animator>().enabled = true;
+            UnitTransformComponent tran = (UnitTransformComponent)obj.GetComponent(UnitComponentType.TRANSFORM);
+            sell.transform.position = new Vector3((float)tran.lastFrameX, (float)tran.lastFrameY, 0);
+            Sche.DelayExeOnceTimes(() =>
+            {
+                if (sell == null)
+                {
+                    return;
+                }
+
+                sell.transform.GetComponent<Animator>().enabled = false;
+                GameViewObjectPool.Instance.PushGameObjectToPool(BattleUnitViewType.DestroyEffect, sell);
+            }, 0.5f);
         }
 
         public override void ClearGameInfo()
         {
-            foreach (KeyValuePair<string, AssetLoadHandle> kv in _itemPrefabHandles)
-            {
-                kv.Value.Dispose();
-            }
-
-            _itemPrefabHandles.Clear();
-            _itemPrefabTemplates.Clear();
-            if (_destroyEffectHandle.IsValid)
-            {
-                _destroyEffectHandle.Dispose();
-                _destroyEffectHandle = AssetLoadHandle.Invalid;
-            }
-
-            _destroyEffectTemplate = null;
+            this._useEpoch++;
             foreach (KeyValuePair<BattleUnit_Item, BattleUnitView_Item> info in this.itemDic)
             {
                 info.Value.ClearUnitInfo();

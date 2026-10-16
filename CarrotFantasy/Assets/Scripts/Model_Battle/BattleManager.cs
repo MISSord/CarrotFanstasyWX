@@ -17,15 +17,25 @@ namespace CarrotFantasy
 
         /// <summary>全局 Sche 上预约的延时开局任务；重开或 Dispose 前需静默，避免多条回调叠加。</summary>
         private int _pendingStartGameSchId;
+        private AssetBundleScope _bundleScope;
+        private int _loadEpoch;
+        private bool _bootReady;
+        private bool _warmReady;
+        private bool _delayElapsed;
+
+        public AssetBundleScope BundleScope
+        {
+            get { return this._bundleScope; }
+        }
 
         private void Awake()
         {
             instance = this;
         }
 
-        public void Init()
+        public void Init(AssetBundleScope bundleScope)
         {
-            AudioClipPreloader.RunBattleDefaults(null);
+            this._bundleScope = bundleScope;
             AudioManager.Instance.PlayMusicByResources("AudioClips/NormalMordel/BGMusic");
             if (BattleParamServer.Instance.isPVE == true)
             {
@@ -101,7 +111,8 @@ namespace CarrotFantasy
         private void RunDelayedStartGame()
         {
             this._pendingStartGameSchId = 0;
-            this.StartGame();
+            this._delayElapsed = true;
+            this.TryStartGame();
         }
 
         private void CancelPendingDelayedStartGame()
@@ -121,13 +132,74 @@ namespace CarrotFantasy
 
         public void InitBattle()
         {
+            this._bootReady = false;
+            this._warmReady = false;
+            this._delayElapsed = false;
+            int epoch = ++this._loadEpoch;
+
             this.baseBattle.Init();
             this.baseBattle.InitComponent();
 
             this.baseBattleView.Init();
-            this.baseBattleView.InitComponents();
 
-            ViewManager.Instance.OpenView<NormalModelPanel>();
+            if (this._bundleScope == null)
+            {
+                GameLogController.Error("战斗 scope 未创建，无法加载战斗资源", AssetBundleLoaders.LogTag);
+                return;
+            }
+
+            AssetBundleBatch boot = this._bundleScope.CreateBatch();
+            AssetBundleBatch warm = this._bundleScope.CreateBatch();
+            this.baseBattleView.CollectAbAssets(boot, warm);
+
+            boot.WhenReady(ok =>
+            {
+                if (epoch != this._loadEpoch)
+                {
+                    return;
+                }
+
+                if (!ok)
+                {
+                    return;
+                }
+
+                this._bootReady = true;
+                this.baseBattleView.InitComponents();
+                ViewManager.Instance.OpenView<NormalModelPanel>();
+                this.TryStartGame();
+            });
+
+            warm.WhenReady(ok =>
+            {
+                if (epoch != this._loadEpoch)
+                {
+                    return;
+                }
+
+                if (!ok)
+                {
+                    GameLogController.Warning("战斗 Warm 有资源失败，开打继续，用到时跳过对应视图", AssetBundleLoaders.LogTag);
+                }
+
+                this._warmReady = true;
+                this.TryStartGame();
+            });
+        }
+
+        private void TryStartGame()
+        {
+            if (!this._bootReady || !this._warmReady || !this._delayElapsed)
+            {
+                return;
+            }
+
+            if (this.baseBattleView != null && this.baseBattleView.isStart)
+            {
+                return;
+            }
+
+            this.StartGame();
         }
 
         public void StartGame()

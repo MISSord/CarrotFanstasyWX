@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CarrotFantasy;
 using UnityEngine;
 
 class UIDownInfo
@@ -54,6 +55,20 @@ public abstract class BaseView
     private Dictionary<int, bool> isFirstOpenDic = new Dictionary<int, bool>(); // 各 index 是否已首次打开
     private Queue<int> needToLoadIndexQueue = new Queue<int>();
     private Dictionary<int, Dictionary<string, string>> flushInfo = new Dictionary<int, Dictionary<string, string>>();
+    private AssetBundleScope _bundleScope;
+
+    protected AssetBundleScope ViewBundleScope
+    {
+        get
+        {
+            if (this._bundleScope == null)
+            {
+                this._bundleScope = AssetBundleScope.Create("View:" + this.viewName);
+            }
+
+            return this._bundleScope;
+        }
+    }
 
     private bool isPausedByViewStack;
 
@@ -95,22 +110,11 @@ public abstract class BaseView
         rootCanvas = null;
         rootView = null;
 
-        // 卸载或取消已加载/加载中的 AB 子资源
-        foreach (var info in uiLoadInfoDic)
+        // 卸载交给界面 scope。先销毁实例，再释放句柄。
+        if (this._bundleScope != null)
         {
-            List<UIDownInfo> list = info.Value;
-            for (int i = 0; i < list.Count; ++i)
-            {
-                UIDownInfo downInfo = list[i];
-                if (downInfo.isLoaded == LoadState.Loaded)
-                {
-                    AssetBundleManager.Instance.UnloadAsset(downInfo.bundleName, downInfo.assetName);
-                }
-                else if (downInfo.isLoaded == LoadState.Loading)
-                {
-                    AssetBundleManager.Instance.CancelAssetLoad(downInfo.bundleName, downInfo.assetName, downInfo.loadIndex);
-                }
-            }
+            this._bundleScope.Dispose();
+            this._bundleScope = null;
         }
 
         // 清延迟释放标记
@@ -397,10 +401,8 @@ public abstract class BaseView
             {
                 UIDownInfo info = infos[i];
                 info.isLoaded = LoadState.Loading;
-                info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(
-                    info.bundleName,
-                    info.assetName,
-                    (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });
+                AssetBundleHandle<GameObject> handle = this.ViewBundleScope.Load<GameObject>(info.bundleName, info.assetName);
+                handle.Completed += obj => { AssetBundleLoadCallBack(obj, info, index); };
             }
         }
     }
@@ -408,7 +410,7 @@ public abstract class BaseView
     private void AssetBundleLoadCallBack(GameObject obj, UIDownInfo info, int targetIndex)
     {
         // 已关闭则忽略异步回调
-        if (this.isOpen == false)
+        if (this.isOpen == false || obj == null)
         {
             return;
         }
@@ -417,7 +419,6 @@ public abstract class BaseView
         instanceObj.SetActive(false);
         info.gameObject = instanceObj;
         info.isLoaded = LoadState.Loaded;
-        info.loadIndex = -1;
 
         // 若需可在此显式设 RectTransform、兄弟顺序等
         // instanceObj.transform.SetParent(rootView.transform);

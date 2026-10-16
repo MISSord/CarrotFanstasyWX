@@ -21,5 +21,17 @@ namespace CarrotFantasy
         public virtual void OnTick(float time) { }
         public virtual void ClearGameInfo() { } //重新开始游戏前调用
         public virtual void Dispose() { }
+
+        public virtual void CollectBoot(AssetBundleBatch batch) { }
+
+        public virtual void CollectWarm(AssetBundleBatch batch) { }
+
+        protected AssetBundleScope BundleScope
+        {
+            get
+            {
+                return BattleManager.Instance != null ? BattleManager.Instance.BundleScope : null;
+            }
+        }
     }
 }

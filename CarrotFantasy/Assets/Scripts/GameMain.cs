@@ -32,6 +32,7 @@ namespace CarrotFantasy
 
             assetBundleManager = new AssetBundleManager();
             assetBundleManager.Init();
+            AssetBundleLoaders.Init();
 
             UIUtil.Instance.Init();
             ServerProvision.Instance.Init();
@@ -56,6 +57,7 @@ namespace CarrotFantasy
 
             ViewManager.Instance?.Update();
             AssetBundleManager.Instance.Update();
+            AssetBundleLoaders.Tick();
             Sche.Tick(new Fix64(Time.deltaTime));
             if (BusinessProvision.Instance.IsGameQuit == true)
             {

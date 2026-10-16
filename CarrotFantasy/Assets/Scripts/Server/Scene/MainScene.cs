@@ -24,6 +24,7 @@ namespace CarrotFantasy
         public override void Init()
         {
             base.Init();
+            AssetBundleLoaders.RequestSweep();
 
             // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
             //Sche.DelayExeOnceTimes(() => {

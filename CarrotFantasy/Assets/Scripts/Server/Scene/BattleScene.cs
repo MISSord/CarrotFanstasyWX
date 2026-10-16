@@ -5,6 +5,8 @@ namespace CarrotFantasy
 {
     public class BattleScene : BaseScene
     {
+        private AssetBundleScope _bundleScope;
+
         public BattleScene(BaseSceneType type, string name, Dictionary<string, dynamic> param) : base(type, name, param)
         {
             this.prefabUrl = null;
@@ -25,7 +27,9 @@ namespace CarrotFantasy
             this.AddListener();
 
             BattleManager manager = this.gameObj.AddComponent<BattleManager>();
-            manager.Init();
+            AssetBundleScope scope = AssetBundleScope.Create("Battle");
+            this._bundleScope = scope;
+            manager.Init(scope);
             manager.InitBattle();
 
             manager.ScheduleDelayedStartGame(2.0f);
@@ -48,7 +52,18 @@ namespace CarrotFantasy
 
         public override void Dispose()
         {
-            BattleManager.Instance.Dispose();
+            if (BattleManager.Instance != null)
+            {
+                BattleManager.Instance.Dispose();
+            }
+
+            if (this._bundleScope != null)
+            {
+                this._bundleScope.Dispose();
+                this._bundleScope = null;
+            }
+
+            AssetBundleLoaders.RequestSweep();
             this.RemoveListener();
             base.Dispose();
         }

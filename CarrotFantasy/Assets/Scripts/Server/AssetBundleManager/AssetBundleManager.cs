@@ -572,6 +572,58 @@ public class AssetBundleManager
         }
     }
 
+    /// <summary>卸掉引用已经为 0 的已加载包，本次最多 maxBundles 个。</summary>
+    public int UnloadUnreferencedBundles(int maxBundles)
+    {
+        if (maxBundles <= 0)
+        {
+            return 0;
+        }
+
+        List<string> toUnload = new List<string>();
+        foreach (KeyValuePair<string, BundleInfo> pair in _loadedBundles)
+        {
+            BundleInfo info = pair.Value;
+            if (info.referenceCount <= 0 && !info.isLoading)
+            {
+                toUnload.Add(pair.Key);
+                if (toUnload.Count >= maxBundles)
+                {
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < toUnload.Count; i++)
+        {
+            UnloadBundle(toUnload[i], false);
+        }
+
+        return toUnload.Count;
+    }
+
+    public int LoadAsset(string bundleName, string assetName, Type expectedType, AssetLoadCallback callback, LoadPriority priority = LoadPriority.Medium)
+    {
+        AssetLoadCallback typedCallback = asset => callback?.Invoke(asset);
+
+#if UNITY_EDITOR
+        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        {
+            AssetBaseLoadInfo info = new AssetBaseLoadInfo()
+            {
+                bundleName = bundleName,
+                assetName = assetName,
+                expectedType = expectedType,
+                _callback = typedCallback,
+            };
+            assetBaseLoadInfos.Add(info);
+            return -1;
+        }
+#endif
+
+        return LoadAsset(bundleName, assetName, typedCallback, priority);
+    }
+
 #if UNITY_EDITOR
     private void UpdateAssetBaseLoad()
     {

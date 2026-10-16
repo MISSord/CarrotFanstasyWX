@@ -5,7 +5,6 @@ namespace CarrotFantasy
 {
     public class BVMapComponent : BaseBattleViewComponent
     {
-        private readonly List<AssetLoadHandle> _prefabHandles = new List<AssetLoadHandle>();
         public Sprite sprGirdNoramlState;
         public Sprite sprGirdStartState;
         public Sprite sprGirdCantBuildState;
@@ -25,6 +24,11 @@ namespace CarrotFantasy
             this.componentType = BattleViewComponentType.MAP;
         }
 
+        public override void CollectBoot(AssetBundleBatch batch)
+        {
+            batch.Keep<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Grid);
+        }
+
         public override void Init()
         {
             this.sprGirdNoramlState = ResourceLoader.Instance.loadRes<Sprite>("Pictures/NormalMordel/Game/Grid");
@@ -35,15 +39,9 @@ namespace CarrotFantasy
 
         private void LoadMapGrid()
         {
-            GameObject item = GameObjectResourceManager.Instance.LoadPrefabBlocking(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Grid, out AssetLoadHandle h);
-            if (h.IsValid)
-            {
-                _prefabHandles.Add(h);
-            }
-
+            GameObject item = this.BundleScope.Get<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Grid);
             if (item == null)
             {
-                Debug.LogError("[BVMapComponent] Grid 预制体加载失败");
                 return;
             }
 
@@ -81,12 +79,6 @@ namespace CarrotFantasy
 
         public override void ClearGameInfo()
         {
-            for (int i = 0; i < _prefabHandles.Count; i++)
-            {
-                _prefabHandles[i].Dispose();
-            }
-
-            _prefabHandles.Clear();
             base.ClearGameInfo();
         }
 
