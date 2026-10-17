@@ -4,11 +4,4 @@
 public class GameContext
 {
     public UpdateCheckResult result { get; set; }
-
-    public float DownloadProgress { get; set; }
-
-    public void Clear()
-    {
-        result = null;
-    }
 }

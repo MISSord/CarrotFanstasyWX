@@ -2,23 +2,18 @@
 <linker>
   <assembly fullname="CarrotFantasy.AOT">
     <type fullname="AssetBundleCacheCleaner" preserve="all" />
-    <type fullname="AssetBundleDownloader" preserve="all" />
     <type fullname="AssetBundleManager" preserve="all" />
     <type fullname="AssetBundlePathHelper" preserve="all" />
-    <type fullname="AssetBundleUpdateChecker" preserve="all" />
-    <type fullname="AssetLoadCallback`1" preserve="all" />
+    <type fullname="AssetLoadCallback" preserve="all" />
     <type fullname="CarrotFantasy.DisplaySettings" preserve="all" />
     <type fullname="CarrotFantasy.DisplaySettings/Snapshot" preserve="all" />
     <type fullname="CarrotFantasy.GameMain" preserve="all" />
-    <type fullname="CheckerState" preserve="all" />
-    <type fullname="CustomManifest" preserve="all" />
-    <type fullname="DownloadConfirmDialog" preserve="all" />
-    <type fullname="DownloadProgressDialog" preserve="all" />
     <type fullname="GameContext" preserve="all" />
     <type fullname="GameLogController" preserve="all" />
     <type fullname="LoadPriority" preserve="all" />
-    <type fullname="LoaderState" preserve="all" />
-    <type fullname="UpdateCheckResult" preserve="all" />
+    <type fullname="UINameEntry" preserve="all" />
+    <type fullname="UINameTable" preserve="all" />
+    <type fullname="UINameTableDic" preserve="all" />
   </assembly>
   <assembly fullname="CarrotFantasy.Shared">
     <type fullname="CarrotFantasy.GameState" preserve="all" />
@@ -39,9 +34,12 @@
     <type fullname="Google.Protobuf.MessageParser`1" preserve="all" />
   </assembly>
   <assembly fullname="System">
+    <type fullname="System.CodeDom.Compiler.GeneratedCodeAttribute" preserve="all" />
     <type fullname="System.Collections.Generic.Queue`1" preserve="all" />
     <type fullname="System.Collections.Generic.Queue`1/Enumerator" preserve="all" />
     <type fullname="System.Collections.Generic.Stack`1" preserve="all" />
+    <type fullname="System.ComponentModel.EditorBrowsableAttribute" preserve="all" />
+    <type fullname="System.ComponentModel.EditorBrowsableState" preserve="all" />
     <type fullname="System.Diagnostics.Stopwatch" preserve="all" />
   </assembly>
   <assembly fullname="System.Core">
@@ -49,6 +47,11 @@
     <type fullname="System.Collections.Generic.HashSet`1/Enumerator" preserve="all" />
     <type fullname="System.Linq.Enumerable" preserve="all" />
     <type fullname="System.Runtime.CompilerServices.DynamicAttribute" preserve="all" />
+  </assembly>
+  <assembly fullname="Unity.RenderPipelines.Universal.Runtime">
+    <type fullname="UnityEngine.Rendering.Universal.CameraExtensions" preserve="all" />
+    <type fullname="UnityEngine.Rendering.Universal.CameraRenderType" preserve="all" />
+    <type fullname="UnityEngine.Rendering.Universal.UniversalAdditionalCameraData" preserve="all" />
   </assembly>
   <assembly fullname="Unity.ThirdParty">
     <type fullname="EnhancedUI.EnhancedScroller.EnhancedScroller" preserve="all" />
@@ -80,7 +83,6 @@
     <type fullname="UnityEngine.Component" preserve="all" />
     <type fullname="UnityEngine.Coroutine" preserve="all" />
     <type fullname="UnityEngine.CreateAssetMenuAttribute" preserve="all" />
-    <type fullname="UnityEngine.Debug" preserve="all" />
     <type fullname="UnityEngine.DefaultExecutionOrder" preserve="all" />
     <type fullname="UnityEngine.DisallowMultipleComponent" preserve="all" />
     <type fullname="UnityEngine.Events.UnityAction" preserve="all" />
@@ -212,6 +214,7 @@
     <type fullname="System.Collections.Generic.Dictionary`2/ValueCollection" preserve="all" />
     <type fullname="System.Collections.Generic.Dictionary`2/ValueCollection/Enumerator" preserve="all" />
     <type fullname="System.Collections.Generic.ICollection`1" preserve="all" />
+    <type fullname="System.Collections.Generic.IDictionary`2" preserve="all" />
     <type fullname="System.Collections.Generic.IEnumerable`1" preserve="all" />
     <type fullname="System.Collections.Generic.IEnumerator`1" preserve="all" />
     <type fullname="System.Collections.Generic.IEqualityComparer`1" preserve="all" />
@@ -261,6 +264,8 @@
     <type fullname="System.NotSupportedException" preserve="all" />
     <type fullname="System.Nullable`1" preserve="all" />
     <type fullname="System.Object" preserve="all" />
+    <type fullname="System.ParamArrayAttribute" preserve="all" />
+    <type fullname="System.Random" preserve="all" />
     <type fullname="System.Reflection.DefaultMemberAttribute" preserve="all" />
     <type fullname="System.Reflection.MemberInfo" preserve="all" />
     <type fullname="System.Runtime.CompilerServices.CompilationRelaxationsAttribute" preserve="all" />
