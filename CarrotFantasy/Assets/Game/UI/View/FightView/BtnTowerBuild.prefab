@@ -135,5 +135,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/images/tower/1/images_atlas
-  defaultAssetName: CanClick1
+  defaultAssetName: canclick1
   _lastRecordedSpriteInstanceId: 22886

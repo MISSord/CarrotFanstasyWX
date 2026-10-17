@@ -91,7 +91,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_14
+  defaultAssetName: monsternest_14
   _lastRecordedSpriteInstanceId: 26974
 --- !u!1 &1044536329863932
 GameObject:
@@ -222,7 +222,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_34
+  defaultAssetName: monsternest_34
   _lastRecordedSpriteInstanceId: 27010
 --- !u!1 &1161367898605788
 GameObject:
@@ -484,7 +484,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_36
+  defaultAssetName: monsternest_36
   _lastRecordedSpriteInstanceId: 27016
 --- !u!1 &1402635312841110
 GameObject:
@@ -577,7 +577,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_34
+  defaultAssetName: monsternest_34
   _lastRecordedSpriteInstanceId: 27010
 --- !u!1 &1417618523666858
 GameObject:
@@ -800,7 +800,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_19
+  defaultAssetName: monsternest_19
   _lastRecordedSpriteInstanceId: 26978
 --- !u!1 &1500565244165030
 GameObject:
@@ -1036,7 +1036,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_55
+  defaultAssetName: monsternest_55
   _lastRecordedSpriteInstanceId: 27028
 --- !u!1 &1581689529430502
 GameObject:
@@ -1180,7 +1180,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_22
+  defaultAssetName: monsternest_22
   _lastRecordedSpriteInstanceId: 26982
 --- !u!1 &1709100394098656
 GameObject:
@@ -1272,7 +1272,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_23
+  defaultAssetName: monsternest_23
   _lastRecordedSpriteInstanceId: 26986
 --- !u!1 &1733444609459908
 GameObject:
@@ -1364,7 +1364,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_47
+  defaultAssetName: monsternest_47
   _lastRecordedSpriteInstanceId: 27024
 --- !u!1 &1755458598475026
 GameObject:

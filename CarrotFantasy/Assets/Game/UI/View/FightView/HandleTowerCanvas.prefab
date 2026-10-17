@@ -136,7 +136,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: Btn_SellTower
+  defaultAssetName: btn_selltower
   _lastRecordedSpriteInstanceId: 27140
 --- !u!1 &1110204262724908910
 GameObject:
@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: Btn_CanUpLevel
+  defaultAssetName: btn_canuplevel
   _lastRecordedSpriteInstanceId: 27132
 --- !u!1 &1110204263703105750
 GameObject:

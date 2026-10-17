@@ -90,7 +90,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: HpSlider
+  defaultAssetName: hpslider
   _lastRecordedSpriteInstanceId: 106188
 --- !u!1 &1173456521980219804
 GameObject:
@@ -183,7 +183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: HpHolder
+  defaultAssetName: hpholder
   _lastRecordedSpriteInstanceId: 106192
 --- !u!1 &1174289625983899266
 GameObject:

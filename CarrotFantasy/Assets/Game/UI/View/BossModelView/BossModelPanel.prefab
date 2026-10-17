@@ -2969,7 +2969,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
-  defaultAssetName: Carrot_3
+  defaultAssetName: carrot_3
   _lastRecordedSpriteInstanceId: 27592
 --- !u!1 &1831720129471980
 GameObject:

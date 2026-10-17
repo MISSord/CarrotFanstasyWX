@@ -90,5 +90,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/loadbg
-  defaultAssetName: LoadBG
+  defaultAssetName: loadbg
   _lastRecordedSpriteInstanceId: 27442

@@ -470,7 +470,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/level_1_bg_right
-  defaultAssetName: Level_1_BG_Right
+  defaultAssetName: level_1_bg_right
   _lastRecordedSpriteInstanceId: 23582
 --- !u!1 &1569359193881780
 GameObject:
@@ -559,7 +559,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/level_1_bg_left
-  defaultAssetName: Level_1_BG_Left
+  defaultAssetName: level_1_bg_left
   _lastRecordedSpriteInstanceId: 23584
 --- !u!1 &1637293756476974
 GameObject:

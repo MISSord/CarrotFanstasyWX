@@ -296,7 +296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
-  defaultAssetName: Btn_Return
+  defaultAssetName: btn_return
   _lastRecordedSpriteInstanceId: 39994
 --- !u!1 &1139911536846220
 GameObject:
@@ -2238,7 +2238,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Btn_Normal
+  defaultAssetName: btn_normal
   _lastRecordedSpriteInstanceId: 46518
 --- !u!114 &6779987652969911560
 MonoBehaviour:

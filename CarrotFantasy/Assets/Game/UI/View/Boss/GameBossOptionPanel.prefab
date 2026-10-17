@@ -274,7 +274,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
-  defaultAssetName: AllClear
+  defaultAssetName: allclear
   _lastRecordedSpriteInstanceId: 24216
 --- !u!1 &1133735313546436
 GameObject:

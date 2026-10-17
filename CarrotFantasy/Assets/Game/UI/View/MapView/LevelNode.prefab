@@ -90,7 +90,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
-  defaultAssetName: AllClear
+  defaultAssetName: allclear
   _lastRecordedSpriteInstanceId: 23924
 --- !u!1 &1405891757714304
 GameObject:
@@ -421,7 +421,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
-  defaultAssetName: Carrot_3
+  defaultAssetName: carrot_3
   _lastRecordedSpriteInstanceId: 23926
 --- !u!1 &288277958456688274
 GameObject:
@@ -510,5 +510,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/level_1_1
-  defaultAssetName: Level_1_1
+  defaultAssetName: level_1_1
   _lastRecordedSpriteInstanceId: 23904

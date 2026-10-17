@@ -135,7 +135,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Btn_Help
+  defaultAssetName: btn_help
   _lastRecordedSpriteInstanceId: 21740
 --- !u!1 &1028903024054316
 GameObject:
@@ -299,7 +299,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: FlyMonster
+  defaultAssetName: flymonster
   _lastRecordedSpriteInstanceId: 21736
 --- !u!1 &1200737407963828
 GameObject:
@@ -391,7 +391,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Leaf1
+  defaultAssetName: leaf1
   _lastRecordedSpriteInstanceId: 21778
 --- !u!1 &1231001879295710
 GameObject:
@@ -483,7 +483,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Leaf3
+  defaultAssetName: leaf3
   _lastRecordedSpriteInstanceId: 21776
 --- !u!1 &1283307548845210
 GameObject:
@@ -575,7 +575,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Cloud
+  defaultAssetName: cloud
   _lastRecordedSpriteInstanceId: 21750
 --- !u!1 &1359254519708610
 GameObject:
@@ -726,7 +726,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Btn_Normal
+  defaultAssetName: btn_normal
   _lastRecordedSpriteInstanceId: 21734
 --- !u!114 &2647162226729689984
 MonoBehaviour:
@@ -1108,7 +1108,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Btn_Normal
+  defaultAssetName: btn_normal
   _lastRecordedSpriteInstanceId: 21734
 --- !u!1 &1667325082287264
 GameObject:
@@ -1170,7 +1170,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/maintitle
-  defaultAssetName: MainTitle
+  defaultAssetName: maintitle
   _lastRecordedSpriteInstanceId: 21784
 --- !u!114 &6802493459274729928
 MonoBehaviour:
@@ -1289,7 +1289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: CarrotBody
+  defaultAssetName: carrotbody
   _lastRecordedSpriteInstanceId: 21780
 --- !u!1 &1851339160123426
 GameObject:
@@ -1426,7 +1426,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Btn_SetLight
+  defaultAssetName: btn_setlight
   _lastRecordedSpriteInstanceId: 21742
 --- !u!1 &1969897163301580
 GameObject:
@@ -1868,7 +1868,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
-  defaultAssetName: Btn_Normal
+  defaultAssetName: btn_normal
   _lastRecordedSpriteInstanceId: 21734
 --- !u!1 &4530780191319591703
 GameObject:
@@ -1957,7 +1957,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/mainbg
-  defaultAssetName: MainBG
+  defaultAssetName: mainbg
   _lastRecordedSpriteInstanceId: 21752
 --- !u!1 &4575523279557376594
 GameObject:

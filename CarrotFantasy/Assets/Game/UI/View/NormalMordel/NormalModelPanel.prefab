@@ -265,7 +265,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: pause_1
-  _lastRecordedSpriteInstanceId: 24946
+  _lastRecordedSpriteInstanceId: 28352
 --- !u!1 &1291467742513814
 GameObject:
   m_ObjectHideFlags: 0
@@ -474,8 +474,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: Items02-hd_165
-  _lastRecordedSpriteInstanceId: 25254
+  defaultAssetName: items02-hd_165
+  _lastRecordedSpriteInstanceId: 29136
 --- !u!1 &1516941657730048
 GameObject:
   m_ObjectHideFlags: 0
@@ -566,8 +566,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: Items02-hd_68
-  _lastRecordedSpriteInstanceId: 25256
+  defaultAssetName: items02-hd_68
+  _lastRecordedSpriteInstanceId: 29140
 --- !u!1 &1618489538536258
 GameObject:
   m_ObjectHideFlags: 0
@@ -663,7 +663,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: touming-hd.pvr_13
-  _lastRecordedSpriteInstanceId: 25238
+  _lastRecordedSpriteInstanceId: 28332
 --- !u!1 &1641655574077848
 GameObject:
   m_ObjectHideFlags: 0
@@ -746,7 +746,7 @@ MonoBehaviour:
   m_PixelsPerUnitMultiplier: 1
 --- !u!95 &95599440473348806
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -760,6 +760,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -928,7 +929,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: menu_1
-  _lastRecordedSpriteInstanceId: 25252
+  _lastRecordedSpriteInstanceId: 28328
 --- !u!1 &1848390176524954
 GameObject:
   m_ObjectHideFlags: 0
@@ -961,7 +962,7 @@ RectTransform:
   - {fileID: 224822497322479478}
   - {fileID: 224832169735450838}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -981,28 +982,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   uiEntries:
-  - name: node_TopPage
-    uiReference: {fileID: 1618489538536258}
-  - name: StartUI
-    uiReference: {fileID: 1641655574077848}
-  - name: Img_Num
-    uiReference: {fileID: 1516941657730048}
-  - name: Btn_Pause
-    uiReference: {fileID: 1095854762844164}
-  - name: Btn_Menu
-    uiReference: {fileID: 1786387714145458}
   - name: Btn_GameSpeed
     uiReference: {fileID: 1865766121589408}
-  - name: node_playing_text
-    uiReference: {fileID: 1454035031833190}
-  - name: txt_waves_info
-    uiReference: {fileID: 1291467742513814}
+  - name: Btn_Menu
+    uiReference: {fileID: 1786387714145458}
+  - name: Btn_Pause
+    uiReference: {fileID: 1095854762844164}
+  - name: Img_Num
+    uiReference: {fileID: 1516941657730048}
+  - name: StartUI
+    uiReference: {fileID: 1641655574077848}
   - name: img_round_count
     uiReference: {fileID: 1920444095781944}
+  - name: node_TopPage
+    uiReference: {fileID: 1618489538536258}
   - name: node_pause
     uiReference: {fileID: 1066958026861672}
+  - name: node_playing_text
+    uiReference: {fileID: 1454035031833190}
   - name: txt_coin
     uiReference: {fileID: 1892918214648344}
+  - name: txt_waves_info
+    uiReference: {fileID: 1291467742513814}
 --- !u!1 &1865766121589408
 GameObject:
   m_ObjectHideFlags: 0
@@ -1151,7 +1152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: speed_1
-  _lastRecordedSpriteInstanceId: 25244
+  _lastRecordedSpriteInstanceId: 28334
 --- !u!1 &1892918214648344
 GameObject:
   m_ObjectHideFlags: 0
@@ -1323,7 +1324,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover0-hd_0
-  _lastRecordedSpriteInstanceId: 25246
+  _lastRecordedSpriteInstanceId: 29138
 --- !u!1 &7047203246734822491
 GameObject:
   m_ObjectHideFlags: 0

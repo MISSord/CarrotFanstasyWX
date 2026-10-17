@@ -208,5 +208,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
-  defaultAssetName: Coin
+  defaultAssetName: coin
   _lastRecordedSpriteInstanceId: 46658

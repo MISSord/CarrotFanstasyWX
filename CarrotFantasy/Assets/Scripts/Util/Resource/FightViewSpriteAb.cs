@@ -8,19 +8,19 @@ namespace CarrotFantasy
         public const string NormalMordelAtlas = "ui/view/normalmordel/images_atlas";
         public const string CarrotAtlas = "ui/images/carrot/images_atlas";
 
-        public const string GridNormal = "Grid";
-        public const string GridStart = "StartSprite";
-        public const string GridCantBuild = "cantBuild";
+        public const string GridNormal = "grid";
+        public const string GridStart = "startsprite";
+        public const string GridCantBuild = "cantbuild";
 
-        public const string BtnCantUpLevel = "Btn_CantUpLevel";
-        public const string BtnCanUpLevel = "Btn_CanUpLevel";
-        public const string BtnReachHighestLevel = "Btn_ReachHighestLevel";
+        public const string BtnCantUpLevel = "btn_cantuplevel";
+        public const string BtnCanUpLevel = "btn_canuplevel";
+        public const string BtnReachHighestLevel = "btn_reachhighestlevel";
 
         public const string PausePlaying = "pause_1";
         public const string PausePaused = "pause_3";
 
-        public const string TowerCanClick0 = "CanClick0";
-        public const string TowerCanClick1 = "CanClick1";
+        public const string TowerCanClick0 = "canclick0";
+        public const string TowerCanClick1 = "canclick1";
 
         public static string TowerAtlasBundle(int towerId)
         {
@@ -35,13 +35,13 @@ namespace CarrotFantasy
         /// <summary>关卡小地图底图：Level_{bigLevel}_{level}_BG（全局唯一，避免跨章节同名冲突）。</summary>
         public static string MapBgAssetName(int bigLevel, int level)
         {
-            return string.Format("Level_{0}_{1}_BG", bigLevel, level);
+            return string.Format("level_{0}_{1}_bg", bigLevel, level);
         }
 
         /// <summary>关卡小地图路径图：Level_{bigLevel}_{level}_Road。</summary>
         public static string MapRoadAssetName(int bigLevel, int level)
         {
-            return string.Format("Level_{0}_{1}_Road", bigLevel, level);
+            return string.Format("level_{0}_{1}_road", bigLevel, level);
         }
 
         public static string RawImageBundle(string assetName)

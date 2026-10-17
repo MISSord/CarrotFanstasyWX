@@ -26,7 +26,7 @@ namespace CarrotFantasy
 
 
             SingleMapInfo info = data.mapInfo;
-            string asset = string.Format("Level_{0}_{1}", info.bigLevelId, info.levelId);
+            string asset = string.Format("level_{0}_{1}", info.bigLevelId, info.levelId);
             string bundle = ResPath.GetRawImagePath(asset);
             levelImage.SetTexture(bundle, asset);
 
@@ -100,7 +100,7 @@ namespace CarrotFantasy
                 if (info.carrotState != 0 && imgCarrot != null && carrotImage != null)
                 {
                     imgCarrot.gameObject.SetActive(true);
-                    string asset = "Carrot_" + info.carrotState;
+                    string asset = "carrot_" + info.carrotState;
                     carrotImage.SetAtlasSprite(ResPath.GetGameOptionImagePath(), asset);
                 }
 

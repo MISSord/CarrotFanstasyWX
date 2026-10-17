@@ -415,7 +415,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/petsfirst-hd.pvr_0
-  defaultAssetName: PetsFirst-hd.pvr_0
+  defaultAssetName: petsfirst-hd.pvr_0
   _lastRecordedSpriteInstanceId: 27420
 --- !u!1 &1300196564638436
 GameObject:
@@ -564,7 +564,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_61
+  defaultAssetName: monsternest_61
   _lastRecordedSpriteInstanceId: 27042
 --- !u!1 &1333567528713564
 GameObject:
@@ -657,7 +657,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_12
+  defaultAssetName: petsfree-hd.pvr_12
   _lastRecordedSpriteInstanceId: 27086
 --- !u!1 &1397650088203710
 GameObject:
@@ -755,7 +755,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_29
+  defaultAssetName: monsternest_29
   _lastRecordedSpriteInstanceId: 26998
 --- !u!1 &1408806999334204
 GameObject:
@@ -904,7 +904,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_103
+  defaultAssetName: petsfree-hd.pvr_103
   _lastRecordedSpriteInstanceId: 27082
 --- !u!1 &1479895683393758
 GameObject:
@@ -997,7 +997,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_1
+  defaultAssetName: petsfree-hd.pvr_1
   _lastRecordedSpriteInstanceId: 27078
 --- !u!1 &1488873794250584
 GameObject:
@@ -1290,7 +1290,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_103
+  defaultAssetName: petsfree-hd.pvr_103
   _lastRecordedSpriteInstanceId: 27082
 --- !u!1 &1553781177049976
 GameObject:
@@ -1383,7 +1383,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_3
+  defaultAssetName: petsfree-hd.pvr_3
   _lastRecordedSpriteInstanceId: 27094
 --- !u!1 &1579006370865576
 GameObject:
@@ -1624,7 +1624,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_32
+  defaultAssetName: monsternest_32
   _lastRecordedSpriteInstanceId: 27002
 --- !u!1 &1705747733685500
 GameObject:
@@ -1799,7 +1799,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: MonsterNest_0
+  defaultAssetName: monsternest_0
   _lastRecordedSpriteInstanceId: 26968
 --- !u!1 &1803607072214102
 GameObject:
@@ -1892,7 +1892,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_0
+  defaultAssetName: petsfree-hd.pvr_0
   _lastRecordedSpriteInstanceId: 27074
 --- !u!1 &1803696643949652
 GameObject:
@@ -2041,7 +2041,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
-  defaultAssetName: PetsFree-hd.pvr_103
+  defaultAssetName: petsfree-hd.pvr_103
   _lastRecordedSpriteInstanceId: 27082
 --- !u!1 &1859234631484154
 GameObject:

@@ -425,7 +425,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
-  defaultAssetName: Items03-hd.pvr_0
+  defaultAssetName: items03-hd.pvr_0
   _lastRecordedSpriteInstanceId: 22990
 --- !u!1 &9098662794295679887
 GameObject:
