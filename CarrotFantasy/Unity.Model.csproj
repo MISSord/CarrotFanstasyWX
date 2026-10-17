@@ -271,7 +271,6 @@
     <Compile Include="Assets\Scripts\Model_Battle\Buff\BuffEventPayload.cs" />
     <Compile Include="Assets\Scripts\Server\UI\ViewManager.cs" />
     <Compile Include="Assets\Scripts\Server\Scene\MainScene.cs" />
-    <Compile Include="Assets\Scripts\GameMain.cs" />
     <Compile Include="Assets\Scripts\Server\ServerType.cs" />
     <Compile Include="Assets\Scripts\Business\Standalone\StandaloneBackendMock.cs" />
     <Compile Include="Assets\Scripts\Model_Battle\Config\ItemConfigReader.cs" />

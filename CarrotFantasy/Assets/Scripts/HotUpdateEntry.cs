@@ -33,6 +33,7 @@ namespace CarrotFantasy
             }
 
             this.gameStateMachine = new GameStateMachine();
+            AssetBundleLoaders.Init();
 
             ServerProvision.Instance.Init();
             BusinessProvision.Instance.Init();
@@ -53,6 +54,7 @@ namespace CarrotFantasy
         public void Tick(float deltaTime)
         {
             ViewManager.Instance?.Update();
+            AssetBundleLoaders.Tick();
             this.gameStateMachine?.Update(deltaTime);
             Sche.Tick(new Fix64(deltaTime));
             ServerProvision.battleSessionHost?.Tick(deltaTime);

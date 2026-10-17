@@ -520,6 +520,29 @@ public class AssetBundleManager
     }
 
     /// <summary>
+    /// 按运行时类型加载资源。编辑器 Development / Debug 模式走资源路径，不加载真实 AB。
+    /// </summary>
+    public int LoadAsset(string bundleName, string assetName, Type assetType, AssetLoadCallback callback, LoadPriority priority = LoadPriority.Medium)
+    {
+#if UNITY_EDITOR
+        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        {
+            AssetBaseLoadInfo info = new AssetBaseLoadInfo()
+            {
+                bundleName = bundleName,
+                assetName = assetName,
+                expectedType = assetType,
+                _callback = callback,
+            };
+            assetBaseLoadInfos.Add(info);
+            return -1;
+        }
+#endif
+
+        return LoadAsset(bundleName, assetName, callback, priority, assetType);
+    }
+
+    /// <summary>
     /// 仅加载 AB 包（含依赖），不加载包内具体资源；用于预热磁盘/解压，后续 <see cref="LoadAsset{T}"/> 会更快。
     /// 编辑器 Development / Debug 模式下不加载真实 AB，直接视为成功。
     /// </summary>
@@ -958,6 +981,50 @@ public class AssetBundleManager
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 卸载引用计数已归零、且当前不在加载中的 AB 包。单次最多处理 <paramref name="maxCount"/> 个。
+    /// </summary>
+    public int UnloadUnreferencedBundles(int maxCount)
+    {
+        if (maxCount <= 0 || _loadedBundles.Count == 0)
+        {
+            return 0;
+        }
+
+        List<string> toUnload = null;
+        foreach (KeyValuePair<string, BundleInfo> pair in _loadedBundles)
+        {
+            BundleInfo bundleInfo = pair.Value;
+            if (bundleInfo == null || bundleInfo.referenceCount > 0 || bundleInfo.isLoading)
+            {
+                continue;
+            }
+
+            if (toUnload == null)
+            {
+                toUnload = new List<string>();
+            }
+
+            toUnload.Add(pair.Key);
+            if (toUnload.Count >= maxCount)
+            {
+                break;
+            }
+        }
+
+        if (toUnload == null)
+        {
+            return 0;
+        }
+
+        for (int i = 0; i < toUnload.Count; i++)
+        {
+            UnloadBundle(toUnload[i], true);
+        }
+
+        return toUnload.Count;
     }
 
     // 卸载AB包
