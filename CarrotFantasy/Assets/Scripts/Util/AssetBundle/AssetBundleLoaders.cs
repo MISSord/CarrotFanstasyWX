@@ -17,6 +17,7 @@ namespace CarrotFantasy
         {
             _ = PrefabLoader.Instance;
             _ = ImageLoader.Instance;
+            _ = AtlasLoader.Instance;
             _ = AudioLoader.Instance;
             _ = TextLoader.Instance;
         }

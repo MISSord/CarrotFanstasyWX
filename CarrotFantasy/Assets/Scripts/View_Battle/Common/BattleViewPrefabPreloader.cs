@@ -7,7 +7,7 @@ namespace CarrotFantasy
     /// <summary>
     /// 战斗视图预制体异步预加载。
     /// 公共包（fightpart_prefab、fightview）跨局保留；塔/子弹/道具按关加载并在离关时释放。
-    /// 模板经 <see cref="PrefabResourceManager"/> Load/Unload 成对管理。
+    /// 模板经 <see cref="PrefabLoader"/> 的句柄持有，离关时 Release。
     /// </summary>
     public static class BattleViewPrefabPreloader
     {
@@ -20,7 +20,7 @@ namespace CarrotFantasy
         struct TrackedHandle
         {
             public string Bundle;
-            public int HandleId;
+            public AssetBundleHandle<GameObject> Handle;
         }
 
         static readonly Dictionary<string, GameObject> Templates = new Dictionary<string, GameObject>(StringComparer.Ordinal);
@@ -31,7 +31,7 @@ namespace CarrotFantasy
 
         public static string MakeKey(string bundleName, string assetName)
         {
-            return PrefabResourceManager.MakeKey(bundleName, assetName);
+            return bundleName + "|" + assetName;
         }
 
         static bool IsTemplateAlive(GameObject template)
@@ -101,37 +101,26 @@ namespace CarrotFantasy
                 wait.Track(req.Bundle, req.Asset);
                 trackedCount++;
 
-                int handleId = PrefabResourceManager.Instance.Load(
-                    req.Bundle,
-                    req.Asset,
-                    go =>
-                    {
-                        if (generation != preloadGeneration)
-                        {
-                            return;
-                        }
-
-                        if (go != null)
-                        {
-                            Templates[key] = go;
-                        }
-
-                        wait.NotifyFinished(req.Bundle, req.Asset, go != null);
-                    },
-                    LoadPriority.Medium);
-
-                if (handleId != PrefabResourceManager.InvalidHandle)
+                AssetBundleHandle<GameObject> handle = PrefabLoader.Instance.Load(req.Bundle, req.Asset, LoadPriority.Medium);
+                Handles.Add(new TrackedHandle
                 {
-                    Handles.Add(new TrackedHandle
-                    {
-                        Bundle = req.Bundle,
-                        HandleId = handleId,
-                    });
-                }
-                else
+                    Bundle = req.Bundle,
+                    Handle = handle,
+                });
+                handle.Completed += go =>
                 {
-                    wait.NotifyFinished(req.Bundle, req.Asset, false);
-                }
+                    if (generation != preloadGeneration)
+                    {
+                        return;
+                    }
+
+                    if (go != null)
+                    {
+                        Templates[key] = go;
+                    }
+
+                    wait.NotifyFinished(req.Bundle, req.Asset, go != null);
+                };
             }
 
             if (trackedCount <= 0)
@@ -175,7 +164,7 @@ namespace CarrotFantasy
                     continue;
                 }
 
-                PrefabResourceManager.Instance.Unload(tracked.HandleId);
+                tracked.Handle?.Release();
                 Handles.RemoveAt(i);
             }
 

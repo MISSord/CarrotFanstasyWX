@@ -8,12 +8,9 @@ namespace CarrotFantasy
     /// <para>
     /// 选用约定：
     /// <list type="bullet">
-    /// <item><see cref="PrefabResourceManager"/>：有感 Load/Unload 模板（面板 ViewLoader、预加载、长驻 Tip）</item>
-    /// <item><see cref="GameObjectResourceManager"/>：有感 Load/Unload 实例（特效、临时物；内部走 PrefabRM）</item>
-    /// <item><see cref="AtlasResourceManager"/> + UIImageLoader/SpriteLoader：图集 Sprite（无感引用，整图集进内存后卸 AB）</item>
-    /// <item><see cref="SpriteResourceManager"/> / <see cref="TextureResourceManager"/>：非图集零散资源</item>
+    /// <item><see cref="PrefabLoader"/> / <see cref="ImageLoader"/>：单资源句柄，调用方 Release 归还。</item>
+    /// <item><see cref="AtlasLoader"/>：图集整包加载与精灵引用计数。</item>
     /// </list>
-    /// Atlas 与 Prefab 加载模型不同（整图集 vs 单模板），故不抽共用 RefCounted 缓存，只统一诊断形态。
     /// </para>
     /// </summary>
     public static class ResourceManagerDiagnostics
@@ -27,9 +24,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            AtlasResourceManager.Instance.CollectSnapshots(into);
-            PrefabResourceManager.Instance.CollectSnapshots(into);
-            GameObjectResourceManager.Instance.CollectSnapshots(into);
+            AtlasLoader.Instance.CollectSnapshots(into);
         }
 
         public static List<ResourceUsageSnapshot> CaptureAll()
@@ -60,15 +55,6 @@ namespace CarrotFantasy
                         LogModule);
                 }
             }
-
-            PrefabResourceManager.Instance.DumpAliveHandles(reason);
-            GameObjectResourceManager.Instance.DumpAliveHandles(reason);
-        }
-
-        public static void WarnLeaks()
-        {
-            PrefabResourceManager.Instance.WarnLeakedHandles();
-            GameObjectResourceManager.Instance.WarnLeakedHandles();
         }
     }
 }

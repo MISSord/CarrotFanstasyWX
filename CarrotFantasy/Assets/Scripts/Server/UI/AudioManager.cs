@@ -53,7 +53,8 @@ namespace CarrotFantasy
         private const float RESET_PLAYING_EFFECT_INTERVAL = 0.1f;
         private readonly Dictionary<string, float> effectLastPlayTime = new Dictionary<string, float>(StringComparer.Ordinal);
 
-        private readonly Dictionary<string, AudioClip> clipCacheAb = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
+        private readonly Dictionary<string, AssetBundleHandle<AudioClip>> clipHandlesAb =
+            new Dictionary<string, AssetBundleHandle<AudioClip>>(StringComparer.Ordinal);
         private readonly Dictionary<string, AudioClip> clipCacheResources = new Dictionary<string, AudioClip>(StringComparer.Ordinal);
 
         public void Init()
@@ -135,31 +136,26 @@ namespace CarrotFantasy
             }
 
             string cacheKey = BuildAbCacheKey(bundleName, assetName);
-            if (this.clipCacheAb.TryGetValue(cacheKey, out AudioClip cached) && cached != null)
+            if (this.clipHandlesAb.TryGetValue(cacheKey, out AssetBundleHandle<AudioClip> existing))
             {
-                onLoaded?.Invoke(cached);
+                existing.Completed += onLoaded;
                 return;
             }
 
-            if (AssetBundleManager.Instance == null)
+            string bundle = bundleName.Trim().Replace('\\', '/').ToLowerInvariant();
+            string asset = assetName.Trim();
+            AssetBundleHandle<AudioClip> handle = AudioLoader.Instance.Load(bundle, asset);
+            this.clipHandlesAb[cacheKey] = handle;
+            handle.Completed += loaded =>
             {
-                onLoaded?.Invoke(null);
-                return;
-            }
-
-            AssetBundleManager.Instance.LoadAsset<AudioClip>(
-                bundleName.Trim().Replace('\\', '/').ToLowerInvariant(),
-                assetName.Trim(),
-                loaded =>
+                if (loaded == null)
                 {
-                    if (loaded != null)
-                    {
-                        this.clipCacheAb[cacheKey] = loaded;
-                    }
+                    this.clipHandlesAb.Remove(cacheKey);
+                    handle.Release();
+                }
 
-                    onLoaded?.Invoke(loaded);
-                },
-                LoadPriority.Medium);
+                onLoaded?.Invoke(loaded);
+            };
         }
 
         /// <summary>
@@ -180,7 +176,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            AudioClip clip = ResourceLoader.Instance.loadRes<AudioClip>(key);
+            AudioClip clip = Resources.Load<AudioClip>(key);
             if (clip != null)
             {
                 this.clipCacheResources[key] = clip;
@@ -538,7 +534,12 @@ namespace CarrotFantasy
             this.audioSourceMusic?.Stop();
             this.audioSourceEffect?.Stop();
             this.effectLastPlayTime.Clear();
-            this.clipCacheAb.Clear();
+            foreach (KeyValuePair<string, AssetBundleHandle<AudioClip>> pair in this.clipHandlesAb)
+            {
+                pair.Value?.Release();
+            }
+
+            this.clipHandlesAb.Clear();
             this.clipCacheResources.Clear();
             this.currentMusicUid = 0;
             this.currentMusicKey = null;

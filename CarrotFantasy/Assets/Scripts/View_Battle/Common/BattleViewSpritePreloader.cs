@@ -6,7 +6,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 战斗视图图集预加载。
-    /// 只预加载图集（<see cref="AtlasResourceManager"/>，整图集进内存后卸 AB）；
+    /// 只预加载图集（<see cref="AtlasLoader"/>，整图集进内存后卸 AB）；
     /// 单 Sprite/Texture（小地图、怪物头像等）不预加载，由对应模块（SpriteLoader/UIImageLoader）
     /// 在战斗准备期提前发起标准加载，底层 asset 缓存保证二次 Load 同步命中。
     /// </summary>
@@ -18,13 +18,7 @@ namespace CarrotFantasy
             public string Asset;
         }
 
-        struct AtlasTokenHold
-        {
-            public string BundleName;
-            public int Token;
-        }
-
-        static readonly List<AtlasTokenHold> AtlasTokens = new List<AtlasTokenHold>();
+        static readonly List<AtlasHandle> AtlasHandles = new List<AtlasHandle>();
         static int preloadGeneration;
 
         public static bool IsReady { get; private set; }
@@ -102,37 +96,23 @@ namespace CarrotFantasy
                     continue;
                 }
 
-                AtlasResourceManager.Instance.SetResident(bundle, true);
+                AtlasLoader.Instance.SetResident(bundle, true);
             }
         }
 
         static void BeginAtlasAcquire(int generation, BattleViewPreloadWait wait, AtlasRequest req)
         {
-            int token = AtlasResourceManager.Instance.AcquireSprite(
-                req.Bundle,
-                req.Asset,
-                sprite =>
+            AtlasHandle handle = AtlasLoader.Instance.Load(req.Bundle, req.Asset, LoadPriority.Medium);
+            AtlasHandles.Add(handle);
+            handle.Completed += sprite =>
+            {
+                if (generation != preloadGeneration)
                 {
-                    if (generation != preloadGeneration)
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
-                },
-                LoadPriority.Medium);
-
-            if (token == AtlasResourceManager.InvalidToken)
-            {
-                wait.NotifyFinished(req.Bundle, req.Asset, false);
-                return;
-            }
-
-            AtlasTokens.Add(new AtlasTokenHold
-            {
-                BundleName = req.Bundle,
-                Token = token,
-            });
+                wait.NotifyFinished(req.Bundle, req.Asset, sprite != null);
+            };
         }
 
         /// <summary>图集 Sprite 同步就绪查询（整图集已进内存时命中）。单 Sprite 不缓存，调用方应走 loader 异步加载。</summary>
@@ -144,8 +124,8 @@ namespace CarrotFantasy
                 return false;
             }
 
-            return AtlasResourceManager.Instance.IsAtlasBundle(bundleName) &&
-                   AtlasResourceManager.Instance.TryPeekSprite(bundleName, assetName, out sprite);
+            return AtlasLoader.Instance.IsAtlasBundle(bundleName) &&
+                   AtlasLoader.Instance.TryPeekSprite(bundleName, assetName, out sprite);
         }
 
         public static void Clear()
@@ -153,13 +133,11 @@ namespace CarrotFantasy
             IsReady = false;
             preloadGeneration++;
 
-            for (int i = AtlasTokens.Count - 1; i >= 0; i--)
+            for (int i = AtlasHandles.Count - 1; i >= 0; i--)
             {
-                AtlasTokenHold hold = AtlasTokens[i];
-                // persistent 图集内存由 SetResident 保活，token 仍须 Release 归还计数，
-                // 否则每局 Run() 都会对同一图集新增持有，导致 _tokens/RefCount 跨局累积。
-                AtlasResourceManager.Instance.Release(hold.Token);
-                AtlasTokens.RemoveAt(i);
+                // 常驻图集由 SetResident 留在内存，句柄仍要 Release，避免每局把引用加上去。
+                AtlasHandles[i]?.Release();
+                AtlasHandles.RemoveAt(i);
             }
         }
 

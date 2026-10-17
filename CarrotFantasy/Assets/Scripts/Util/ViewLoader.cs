@@ -19,10 +19,10 @@ class ViewLoadEntry
     public GameObject gameObject;
     public ViewLoadState state;
     public int order;
-    public int prefabHandle = PrefabResourceManager.InvalidHandle;
+    public AssetBundleHandle<GameObject> prefabHandle;
 }
 
-/// <summary>BaseView 的 AB 子资源加载、实例化与 index 级加载状态。</summary>
+/// <summary>BaseView 的 AB 子资源加载、实例化与 index 级加载状态。预制体走 PrefabLoader。</summary>
 class ViewLoader
 {
     private readonly Func<bool> _isViewOpen;
@@ -208,16 +208,10 @@ class ViewLoader
                 if (entry.useResources)
                 {
                     entry.state = ViewLoadState.None;
-                    entry.prefabHandle = PrefabResourceManager.InvalidHandle;
                     continue;
                 }
 
-                if (entry.prefabHandle != PrefabResourceManager.InvalidHandle)
-                {
-                    PrefabResourceManager.Instance.Unload(entry.prefabHandle);
-                    entry.prefabHandle = PrefabResourceManager.InvalidHandle;
-                }
-
+                ReleasePrefabHandle(entry);
                 entry.state = ViewLoadState.None;
             }
         }
@@ -241,12 +235,7 @@ class ViewLoader
                     continue;
                 }
 
-                if (entry.prefabHandle != PrefabResourceManager.InvalidHandle)
-                {
-                    PrefabResourceManager.Instance.Unload(entry.prefabHandle);
-                    entry.prefabHandle = PrefabResourceManager.InvalidHandle;
-                }
-
+                ReleasePrefabHandle(entry);
                 entry.state = ViewLoadState.None;
                 affectedIndices.Add(pair.Key);
             }
@@ -307,10 +296,17 @@ class ViewLoader
                 continue;
             }
 
-            entry.prefabHandle = PrefabResourceManager.Instance.Load(
-                entry.bundleName,
-                entry.assetName,
-                prefab => OnAssetLoaded(prefab, entry, index));
+            AssetBundleHandle<GameObject> handle = PrefabLoader.Instance.Load(entry.bundleName, entry.assetName);
+            entry.prefabHandle = handle;
+            handle.Completed += prefab =>
+            {
+                if (entry.prefabHandle != handle)
+                {
+                    return;
+                }
+
+                OnAssetLoaded(prefab, entry, index);
+            };
         }
 
         if (!anyRequested)
@@ -331,12 +327,7 @@ class ViewLoader
 
         if (prefab == null)
         {
-            if (entry.prefabHandle != PrefabResourceManager.InvalidHandle)
-            {
-                PrefabResourceManager.Instance.Unload(entry.prefabHandle);
-                entry.prefabHandle = PrefabResourceManager.InvalidHandle;
-            }
-
+            ReleasePrefabHandle(entry);
             entry.state = ViewLoadState.None;
             Debug.LogError("[ViewLoader] AB 资源加载失败: " + entry.bundleName + " / " + entry.assetName);
             RefreshIndexState(targetIndex);
@@ -388,12 +379,24 @@ class ViewLoader
         ProcessQueue();
     }
 
+    private static void ReleasePrefabHandle(ViewLoadEntry entry)
+    {
+        AssetBundleHandle<GameObject> handle = entry.prefabHandle;
+        if (handle == null)
+        {
+            return;
+        }
+
+        // 先摘掉再 Release。未完成的句柄会同步回调 null，避免回调里再次释放。
+        entry.prefabHandle = null;
+        handle.Release();
+    }
+
     private void AbandonAssetLoad(ViewLoadEntry entry)
     {
-        if (!entry.useResources && entry.prefabHandle != PrefabResourceManager.InvalidHandle)
+        if (!entry.useResources)
         {
-            PrefabResourceManager.Instance.Unload(entry.prefabHandle);
-            entry.prefabHandle = PrefabResourceManager.InvalidHandle;
+            ReleasePrefabHandle(entry);
         }
 
         entry.state = ViewLoadState.None;

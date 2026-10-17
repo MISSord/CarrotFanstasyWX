@@ -252,7 +252,7 @@ public abstract class BaseView
         }
 
         ViewManager.Instance.AddOpenViewToOpenList(this);
-        // 须在 ChangeIndex 之前置 true：Testing 模式 CACHE_HIT 会同步 ExecuteCallbacks，
+        // 须在 ChangeIndex 之前置 true：缓存命中时 PrefabLoader 会在 Load 返回前回调，
         // 否则加载回调见 isOpen=false 会丢弃已加载资源。
         bool wasClosed = !this.isOpen;
         this.isOpen = true;

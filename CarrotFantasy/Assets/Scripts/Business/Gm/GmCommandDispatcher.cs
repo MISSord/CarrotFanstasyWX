@@ -166,11 +166,7 @@ namespace CarrotFantasy
         static GmCommandResult HandleResDump(GmCommandContext ctx, string[] args)
         {
             ResourceManagerDiagnostics.DumpAll("gm resdump");
-            return GmCommandResult.Ok(
-                "已输出资源快照到日志。alive Prefab=" +
-                PrefabResourceManager.Instance.AliveHandleCount +
-                " GameObject=" +
-                GameObjectResourceManager.Instance.AliveHandleCount);
+            return GmCommandResult.Ok("已输出资源快照到日志。");
         }
 
         static GmCommandResult HandleHelp(GmCommandContext ctx, string[] args)

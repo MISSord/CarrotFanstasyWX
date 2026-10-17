@@ -10,9 +10,6 @@ namespace CarrotFantasy
     {
         private GameMain gameMain;
         private GameStateMachine gameStateMachine;
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-        private float resourceLeakCheckTimer;
-#endif
 
         public bool IsQuitRequested =>
             BusinessProvision.Instance != null && BusinessProvision.Instance.IsGameQuit;
@@ -59,15 +56,6 @@ namespace CarrotFantasy
             Sche.Tick(new Fix64(deltaTime));
             ServerProvision.battleSessionHost?.Tick(deltaTime);
             ServerProvision.connectionLifecycle?.Tick(deltaTime);
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            this.resourceLeakCheckTimer += deltaTime;
-            if (this.resourceLeakCheckTimer >= 30f)
-            {
-                this.resourceLeakCheckTimer = 0f;
-                ResourceManagerDiagnostics.WarnLeaks();
-            }
-#endif
         }
 
         public void ChangeState(GameState state)

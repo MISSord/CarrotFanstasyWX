@@ -43,7 +43,7 @@ namespace CarrotFantasy
                 this.carrotSprites = new Sprite[3];
                 for (int i = 0; i < 3; i++)
                 {
-                    this.carrotSprites[i] = ResourceLoader.Instance.loadRes<Sprite>(
+                    this.carrotSprites[i] = Resources.Load<Sprite>(
                         "Pictures/GameOption/Normal/Level/Carrot_" + (i + 1));
                 }
             }

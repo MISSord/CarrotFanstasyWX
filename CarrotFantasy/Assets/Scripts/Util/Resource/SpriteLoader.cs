@@ -7,7 +7,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 绑定到 <see cref="SpriteRenderer"/>，负责世界空间精灵请求、替换与释放。
-    /// 图集走 <see cref="AtlasResourceManager"/>；普通 Sprite 走 <see cref="SpriteResourceManager"/>。
+    /// 图集走 <see cref="AtlasLoader"/>；普通 Sprite 走 <see cref="ImageLoader"/>。
     /// rawimages 包（Texture）不允许经此组件加载。
     /// </summary>
     [DisallowMultipleComponent]
@@ -22,8 +22,8 @@ namespace CarrotFantasy
         private LoadPriority defaultLoadPriority = LoadPriority.Medium;
         private bool clearSpriteOnRelease = true;
 
-        private AssetLoadHandle _currentHandle = AssetLoadHandle.Invalid;
-        private int _atlasToken = AtlasResourceManager.InvalidToken;
+        private AssetBundleHandle<Sprite> _spriteHandle;
+        private AtlasHandle _atlasHandle;
         private int _requestVersion;
         [SerializeField, HideInInspector]
         private int _lastRecordedSpriteInstanceId;
@@ -132,7 +132,7 @@ namespace CarrotFantasy
 
         private void OnEnable()
         {
-            if (_currentHandle.IsValid || _atlasToken != AtlasResourceManager.InvalidToken)
+            if (_spriteHandle != null || _atlasHandle != null)
             {
                 return;
             }
@@ -165,19 +165,16 @@ namespace CarrotFantasy
                 return;
             }
 
-            _atlasToken = AtlasResourceManager.Instance.AcquireSprite(
-                bundleName,
-                spriteName,
-                sprite =>
+            _atlasHandle = AtlasLoader.Instance.Load(bundleName, spriteName, priority);
+            _atlasHandle.Completed += sprite =>
+            {
+                if (currentVersion != _requestVersion || targetRenderer == null)
                 {
-                    if (currentVersion != _requestVersion || targetRenderer == null)
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    targetRenderer.sprite = sprite;
-                },
-                priority);
+                targetRenderer.sprite = sprite;
+            };
         }
 
         /// <summary>
@@ -187,7 +184,7 @@ namespace CarrotFantasy
         {
             EnsureRendererBinding();
 
-            if (AtlasResourceManager.Instance.IsAtlasBundle(bundleName))
+            if (AtlasLoader.Instance.IsAtlasBundle(bundleName))
             {
                 SetAtlasSprite(bundleName, assetName, priority);
                 return;
@@ -217,33 +214,30 @@ namespace CarrotFantasy
                 return;
             }
 
-            _currentHandle = SpriteResourceManager.Instance.Load(
-                bundleName,
-                assetName,
-                sprite =>
+            _spriteHandle = ImageLoader.Instance.LoadSprite(bundleName, assetName, priority);
+            _spriteHandle.Completed += sprite =>
+            {
+                if (currentVersion != _requestVersion || targetRenderer == null)
                 {
-                    if (currentVersion != _requestVersion || targetRenderer == null)
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    targetRenderer.sprite = sprite;
-                },
-                priority);
+                targetRenderer.sprite = sprite;
+            };
         }
 
         public void ReleaseCurrent()
         {
-            if (_atlasToken != AtlasResourceManager.InvalidToken)
+            if (_atlasHandle != null)
             {
-                AtlasResourceManager.Instance.Release(_atlasToken);
-                _atlasToken = AtlasResourceManager.InvalidToken;
+                _atlasHandle.Release();
+                _atlasHandle = null;
             }
 
-            if (_currentHandle.IsValid)
+            if (_spriteHandle != null)
             {
-                _currentHandle.Dispose();
-                _currentHandle = AssetLoadHandle.Invalid;
+                _spriteHandle.Release();
+                _spriteHandle = null;
             }
 
             if (clearSpriteOnRelease && targetRenderer != null)

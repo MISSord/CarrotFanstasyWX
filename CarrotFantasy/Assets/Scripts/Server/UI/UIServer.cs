@@ -20,7 +20,7 @@ namespace CarrotFantasy
         private TipView tipPanel;
         private bool tipPanelLoadRequested;
         private string pendingTip;
-        private int tipPrefabHandle = PrefabResourceManager.InvalidHandle;
+        private AssetBundleHandle<GameObject> tipPrefabHandle;
         public Vector2 curSetScreenSize = new Vector2(1920, 1440);
 
         public override void LoadModule()
@@ -96,11 +96,11 @@ namespace CarrotFantasy
 
         private void AddTipPanel()
         {
-            this.tipPrefabHandle = PrefabResourceManager.Instance.Load(
+            this.tipPrefabHandle = PrefabLoader.Instance.Load(
                 UiViewAbPaths.TipViewPrefab,
                 UiViewAbPaths.TipPanelAsset,
-                this.OnTipPanelLoaded,
                 LoadPriority.High);
+            this.tipPrefabHandle.Completed += this.OnTipPanelLoaded;
         }
 
         void OnTipPanelLoaded(GameObject template)
@@ -108,10 +108,10 @@ namespace CarrotFantasy
             if (template == null)
             {
                 Debug.LogError("[UIServer] TipPanel 加载失败");
-                if (this.tipPrefabHandle != PrefabResourceManager.InvalidHandle)
+                if (this.tipPrefabHandle != null)
                 {
-                    PrefabResourceManager.Instance.Unload(this.tipPrefabHandle);
-                    this.tipPrefabHandle = PrefabResourceManager.InvalidHandle;
+                    this.tipPrefabHandle.Release();
+                    this.tipPrefabHandle = null;
                 }
 
                 this.tipPanelLoadRequested = false;
@@ -169,10 +169,10 @@ namespace CarrotFantasy
                 this.nodeObject = null;
             }
 
-            if (this.tipPrefabHandle != PrefabResourceManager.InvalidHandle)
+            if (this.tipPrefabHandle != null)
             {
-                PrefabResourceManager.Instance.Unload(this.tipPrefabHandle);
-                this.tipPrefabHandle = PrefabResourceManager.InvalidHandle;
+                this.tipPrefabHandle.Release();
+                this.tipPrefabHandle = null;
             }
 
             this.tipPanel = null;

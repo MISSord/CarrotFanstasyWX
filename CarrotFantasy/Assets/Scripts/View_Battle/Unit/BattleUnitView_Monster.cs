@@ -80,8 +80,8 @@ namespace CarrotFantasy
                 this.spriteRender.sprite = null;
             }
 
-            this.animator.runtimeAnimatorController = ResourceLoader.Instance.loadRes<RuntimeAnimatorController>(
-                String.Format(this.animatorUrl, monster.curLevel, monster.monsterId));
+            this.animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(
+                string.Format(this.animatorUrl, monster.curLevel, monster.monsterId));
             this.animator.Play(monster.monsterId.ToString());
         }
 

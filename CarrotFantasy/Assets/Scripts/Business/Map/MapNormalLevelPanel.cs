@@ -18,7 +18,7 @@ namespace CarrotFantasy
 
         private List<GameObject> towerContentImageGos;
 
-        private int _towerPrefabHandle = PrefabResourceManager.InvalidHandle;
+        private AssetBundleHandle<GameObject> _towerPrefabHandle;
         private GameObject _tplNodeTower;
         private bool _isLoadTower = false;
 
@@ -57,10 +57,10 @@ namespace CarrotFantasy
                 towerContentImageGos.Clear();
             }
 
-            if (_towerPrefabHandle != PrefabResourceManager.InvalidHandle)
+            if (_towerPrefabHandle != null)
             {
-                PrefabResourceManager.Instance.Unload(_towerPrefabHandle);
-                _towerPrefabHandle = PrefabResourceManager.InvalidHandle;
+                _towerPrefabHandle.Release();
+                _towerPrefabHandle = null;
             }
 
             _tplNodeTower = null;
@@ -177,17 +177,17 @@ namespace CarrotFantasy
         {
             towerContentImageGos = new List<GameObject>();
 
-            _towerPrefabHandle = PrefabResourceManager.Instance.Load(
+            _towerPrefabHandle = PrefabLoader.Instance.Load(
                 UiViewAbPaths.MapViewPrefab,
-                UiViewAbPaths.MapNodeTowerAsset,
-                obj =>
+                UiViewAbPaths.MapNodeTowerAsset);
+            _towerPrefabHandle.Completed += obj =>
                 {
                     if (obj == null)
                     {
-                        if (_towerPrefabHandle != PrefabResourceManager.InvalidHandle)
+                        if (_towerPrefabHandle != null)
                         {
-                            PrefabResourceManager.Instance.Unload(_towerPrefabHandle);
-                            _towerPrefabHandle = PrefabResourceManager.InvalidHandle;
+                            _towerPrefabHandle.Release();
+                            _towerPrefabHandle = null;
                         }
 
                         return;
@@ -201,7 +201,7 @@ namespace CarrotFantasy
 
                     _isLoadTower = true;
                     UpdateTowerUI();
-                });
+                };
         }
 
         private GameObject InstantiateUiUnderParent(GameObject tpl, Transform parentTrans)
