@@ -22,6 +22,11 @@ public class CustomAssetBundleInfo
     public string Version = "1.0.0";
     public long Size;
     public string[] Dependencies;
+
+    /// <summary>LZMA 转 LZ4 之后落盘文件的大小；只有本地清单会填。</summary>
+    public long ConvertedSize;
+    /// <summary>LZMA 转 LZ4 之后落盘文件的 MD5；只有本地清单会填。</summary>
+    public string ConvertedHash;
 }
 
 /// <summary>
@@ -55,6 +60,8 @@ public class DownloadPackInfo
     public long PackSize;
     public string PackHash;
     public string[] BundleNames;
+    /// <summary>关键包：失败则整次更新失败；非关键包失败可降级进游戏，缺的资源走按需下载。</summary>
+    public bool Critical;
 }
 
 /// <summary>
@@ -104,11 +111,9 @@ public enum CheckerState
 /// </summary>
 public class AssetBundleUpdateChecker
 {
-    [Header("性能配置")]
     public int bundlesPerFrame = 5;           // 每帧处理的AB包数量
     public float timeSlicePerFrame = 0.005f;  // 每帧最大处理时间(秒)
 
-    [Header("校验配置")]
     public VerifyMethod verifyMethod = VerifyMethod.HashOnly;
 
     public enum VerifyMethod
@@ -151,6 +156,17 @@ public class AssetBundleUpdateChecker
         if (IsRunning)
         {
             Debug.LogWarning("检查器正在运行，请等待完成");
+            return;
+        }
+
+        if (!ManifestSignature.IsAllowedServerUrl(remoteManifestUrl, out string urlError))
+        {
+            Debug.LogError(urlError);
+            onComplete?.Invoke(new UpdateCheckResult
+            {
+                isSuccess = false,
+                currentOperation = urlError,
+            });
             return;
         }
 
@@ -228,39 +244,174 @@ public class AssetBundleUpdateChecker
     private IEnumerator DownloadRemoteManifestCoroutine()
     {
         m_CurrentOperation = "下载远程清单...";
+        const int maxAttempts = 3;
+        CheckerState state = CheckerState.Error;
 
-        using (UnityWebRequest www = UnityWebRequest.Get(m_RemoteManifestUrl))
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            www.timeout = 10;
-            var operation = www.SendWebRequest();
+            bool needRetry = false;
 
-            while (!operation.isDone)
+            using (UnityWebRequest www = UnityWebRequest.Get(BuildCacheBustedUrl(m_RemoteManifestUrl)))
             {
-                m_Progress = operation.progress * 0.3f; // 下载占30%进度
-                yield return null;
+                www.timeout = 15;
+                var operation = www.SendWebRequest();
+
+                while (!operation.isDone)
+                {
+                    m_Progress = operation.progress * 0.3f; // 下载占30%进度
+                    yield return null;
+                }
+
+                if (www.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning($"下载远程清单失败({attempt}/{maxAttempts}): {www.error}");
+                    needRetry = true;
+                }
+                else
+                {
+                    byte[] manifestBytes = www.downloadHandler.data;
+                    bool signatureOk = false;
+                    string signatureError = null;
+                    yield return DownloadAndVerifySignature(manifestBytes, (ok, error) =>
+                    {
+                        signatureOk = ok;
+                        signatureError = error;
+                    });
+
+                    if (!signatureOk)
+                    {
+                        Debug.LogError(signatureError);
+                        // 签名文件没下下来算网络问题，可重试；验签不通过重试也没意义。
+                        needRetry = signatureError != null
+                                    && signatureError.StartsWith("下载清单签名失败", StringComparison.Ordinal);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            string json = www.downloadHandler.text;
+                            CustomManifest remote = JsonUtility.FromJson<CustomManifest>(json);
+                            if (remote == null)
+                            {
+                                Debug.LogError("解析远程清单失败: 结果为空");
+                            }
+                            else if (!AcceptManifestVersion(remote, out string versionError))
+                            {
+                                Debug.LogError(versionError);
+                            }
+                            else
+                            {
+                                m_RemoteManifest = remote;
+                                Debug.Log($"远程清单加载成功，包含 {m_RemoteManifest.AssetBundles?.Count} 个AB包");
+                                state = CheckerState.LoadingLocalManifest;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debug.LogError($"解析远程清单失败: {e.Message}");
+                        }
+                    }
+                }
             }
 
-            CheckerState state;
-            if (www.result == UnityWebRequest.Result.Success)
+            if (state == CheckerState.LoadingLocalManifest)
             {
-                try
-                {
-                    m_RemoteManifest = JsonUtility.FromJson<CustomManifest>(www.downloadHandler.text);
-                    Debug.Log($"远程清单加载成功，包含 {m_RemoteManifest.AssetBundles?.Count} 个AB包");
-                    state = CheckerState.LoadingLocalManifest;
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError($"解析远程清单失败: {e.Message}");
-                    state = CheckerState.Error;
-                }
+                break;
             }
-            else
+
+            if (!needRetry)
             {
-                Debug.LogError($"下载远程清单失败: {www.error}");
-                state = CheckerState.Error;
+                // 下载成功但内容/版本不合法，重试没有意义。
+                break;
             }
-            ChangeState(state);
+
+            if (attempt < maxAttempts)
+            {
+                yield return new WaitForSecondsRealtime(attempt);
+            }
+        }
+
+        ChangeState(state);
+    }
+
+    /// <summary>给清单/签名请求加时间戳，绕开 CDN 缓存；file:// 不加（会变成文件名的一部分）。</summary>
+    static string BuildCacheBustedUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url)
+            || url.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+        {
+            return url;
+        }
+
+        string separator = url.IndexOf('?') >= 0 ? "&" : "?";
+        return url + separator + "t=" + DateTime.UtcNow.Ticks;
+    }
+
+    private delegate void SignatureResult(bool ok, string error);
+
+    /// <summary>
+    /// 下载与清单原文配套的 .sig。编辑器 file:// 且没有签名文件时只警告，方便本地未签名目录调试。
+    /// </summary>
+    private IEnumerator DownloadAndVerifySignature(byte[] manifestBytes, SignatureResult onResult)
+    {
+        string signatureUrl = m_RemoteManifestUrl + ".sig";
+        using (UnityWebRequest sigRequest = UnityWebRequest.Get(BuildCacheBustedUrl(signatureUrl)))
+        {
+            sigRequest.timeout = 10;
+            yield return sigRequest.SendWebRequest();
+
+            bool downloaded = sigRequest.result == UnityWebRequest.Result.Success
+                && sigRequest.downloadHandler.data != null
+                && sigRequest.downloadHandler.data.Length > 0;
+            if (downloaded && ManifestSignature.Verify(manifestBytes, sigRequest.downloadHandler.data))
+            {
+                onResult(true, null);
+                yield break;
+            }
+
+#if UNITY_EDITOR
+            if (m_RemoteManifestUrl.StartsWith("file:", StringComparison.OrdinalIgnoreCase) && !downloaded)
+            {
+                Debug.LogWarning("[AssetBundleUpdateChecker] 编辑器 file 清单没有签名，跳过验签: " + signatureUrl);
+                onResult(true, null);
+                yield break;
+            }
+#endif
+            onResult(false, downloaded ? "清单签名校验失败" : "下载清单签名失败: " + sigRequest.error);
+        }
+    }
+
+    /// <summary>拒绝比本地已接受版本更旧的清单。相等仍允许，以便同一版本里单个包更新。</summary>
+    private static bool AcceptManifestVersion(CustomManifest remote, out string error)
+    {
+        int accepted = ReadAcceptedManifestVersion();
+        if (remote.ManifestVersion < accepted)
+        {
+            error = "拒绝回滚清单: remote=" + remote.ManifestVersion + " local=" + accepted;
+            return false;
+        }
+
+        error = null;
+        return true;
+    }
+
+    private static int ReadAcceptedManifestVersion()
+    {
+        string manifestPath = Path.Combine(Application.persistentDataPath, "custom_manifest.json");
+        if (!File.Exists(manifestPath))
+        {
+            return 0;
+        }
+
+        try
+        {
+            CustomManifest local = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(manifestPath));
+            return local != null ? local.ManifestVersion : 0;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("读取本地清单版本失败，按 0 处理: " + e.Message);
+            return 0;
         }
     }
 
@@ -278,7 +429,21 @@ public class AssetBundleUpdateChecker
             {
                 string localJson = File.ReadAllText(m_LocalManifestPath);
                 m_LocalManifest = JsonUtility.FromJson<CustomManifest>(localJson);
-                Debug.Log($"本地清单加载成功，包含 {m_LocalManifest.AssetBundles?.Count} 个AB包");
+
+                // 客户端整包升级后，旧缓存里的热更 DLL / AB 可能与新 AOT 不兼容。
+                // 直接丢弃并按全量重新校验，StreamingAssets 里的基线内容会被重新识别为"已有"。
+                if (IsLocalManifestFromOtherAppVersion(m_LocalManifest))
+                {
+                    Debug.LogWarning(
+                        "本地清单来自其它客户端版本(AppVersion=" + m_LocalManifest.AppVersion
+                        + ", 当前=" + Application.version + ")，清空持久化缓存后重新校验。");
+                    AssetBundleCacheCleaner.ResetDownloadedAssetsForAppVersionChange();
+                    m_LocalManifest = new CustomManifest { AssetBundles = new List<CustomAssetBundleInfo>() };
+                }
+                else
+                {
+                    Debug.Log($"本地清单加载成功，包含 {m_LocalManifest.AssetBundles?.Count} 个AB包");
+                }
             }
             else
             {
@@ -294,6 +459,13 @@ public class AssetBundleUpdateChecker
 
         m_Progress = 0.4f; // 本地加载完成，进度到40%
         ChangeState(CheckerState.ComparingManifests);
+    }
+
+    private static bool IsLocalManifestFromOtherAppVersion(CustomManifest local)
+    {
+        return local != null
+               && !string.IsNullOrEmpty(local.AppVersion)
+               && !string.Equals(local.AppVersion, Application.version, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -571,6 +743,28 @@ public class AssetBundleUpdateChecker
         }
 
         FileInfo fileInfo = new FileInfo(localFilePath);
+
+        // 有"转换后记录"时按转换后的 Size + MD5 校验落盘文件；
+        // 旧清单没有该字段，退化为"存在且非空"（下次转换后会自动补上）。
+        if (!string.IsNullOrEmpty(localBundle.ConvertedHash) && localBundle.ConvertedSize > 0)
+        {
+            if (fileInfo.Length != localBundle.ConvertedSize)
+            {
+                return false;
+            }
+
+            string actual = ComputeFileMD5(localFilePath);
+            return string.Equals(actual, localBundle.ConvertedHash, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // HybridCLR 的原始 DLL 不走转换，内容应与清单里的源 Hash 一致。
+        if (CarrotFantasy.HybridCLRPaths.IsHybridClrRawFile(remoteBundle.BundleName))
+        {
+            return fileInfo.Length == remoteBundle.Size
+                   && (string.IsNullOrEmpty(remoteBundle.Hash)
+                       || string.Equals(ComputeFileMD5(localFilePath), remoteBundle.Hash, StringComparison.OrdinalIgnoreCase));
+        }
+
         return fileInfo.Length > 0;
     }
 
@@ -697,18 +891,95 @@ public class AssetBundleUpdateChecker
 
     public static void SaveLocalManifest(CustomManifest generatedManifest)
     {
-        // 保存清单文件
-        string manifestJson = JsonUtility.ToJson(generatedManifest, true);
         string manifestPath = Path.Combine(Application.persistentDataPath, "custom_manifest.json");
-        File.WriteAllText(manifestPath, manifestJson);
-        Debug.Log("完成服务器清单本地保存");
+        try
+        {
+            WriteManifestAtomically(manifestPath, generatedManifest);
+            ClearPendingLocalBundles();
+            Debug.Log("完成服务器清单本地保存");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("保存本地清单失败: " + e.Message);
+        }
+    }
+
+    /// <summary>先写 .tmp 再原子替换，避免写到一半崩溃把本地清单写坏。</summary>
+    static void WriteManifestAtomically(string manifestPath, CustomManifest manifest)
+    {
+        string json = JsonUtility.ToJson(manifest, true);
+        string tempPath = manifestPath + ".tmp";
+        string directory = Path.GetDirectoryName(manifestPath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        File.WriteAllText(tempPath, json);
+        AtomicFile.Replace(tempPath, manifestPath);
+    }
+
+    private static readonly Dictionary<string, CustomAssetBundleInfo> s_PendingBundles =
+        new Dictionary<string, CustomAssetBundleInfo>(StringComparer.OrdinalIgnoreCase);
+    private static CustomManifest s_PendingTemplate;
+    private static float s_LastFlushTime = -999f;
+    private const int PendingFlushCount = 32;
+    private const float PendingFlushIntervalSeconds = 2f;
+
+    /// <summary>
+    /// 增量记录已落盘的 AB（带缓冲）。满 32 个或距上次落盘 2 秒才真正写文件，
+    /// 避免"每完成一个包就整份重写 JSON"的 O(n²) 开销；崩溃最多丢这一小批记录，下次按 Hash 重校即可。
+    /// </summary>
+    public static void UpsertLocalBundles(CustomManifest remoteTemplate, IEnumerable<CustomAssetBundleInfo> completedBundles)
+    {
+        if (completedBundles == null)
+        {
+            return;
+        }
+
+        s_PendingTemplate = remoteTemplate;
+        foreach (CustomAssetBundleInfo bundle in completedBundles)
+        {
+            if (bundle == null || string.IsNullOrEmpty(bundle.BundleName))
+            {
+                continue;
+            }
+
+            s_PendingBundles[bundle.BundleName] = CloneBundleInfo(bundle);
+        }
+
+        if (s_PendingBundles.Count >= PendingFlushCount
+            || Time.realtimeSinceStartup - s_LastFlushTime >= PendingFlushIntervalSeconds)
+        {
+            FlushPendingLocalBundles();
+        }
+    }
+
+    /// <summary>把缓冲中的已完成 AB 一次性合并进本地清单（原子写）。</summary>
+    public static void FlushPendingLocalBundles()
+    {
+        s_LastFlushTime = Time.realtimeSinceStartup;
+        if (s_PendingBundles.Count == 0)
+        {
+            return;
+        }
+
+        var completed = new List<CustomAssetBundleInfo>(s_PendingBundles.Values);
+        s_PendingBundles.Clear();
+        WriteLocalBundlesNow(s_PendingTemplate, completed);
+    }
+
+    public static void ClearPendingLocalBundles()
+    {
+        s_PendingBundles.Clear();
+        s_PendingTemplate = null;
     }
 
     /// <summary>
     /// 增量写入本地清单：仅把「已成功落盘」的 AB 记入本地。
     /// 用于下载中断后续传——下次启动可识别已完成的包，又不会把未下载的包误判为最新。
     /// </summary>
-    public static void UpsertLocalBundles(CustomManifest remoteTemplate, IEnumerable<CustomAssetBundleInfo> completedBundles)
+    static void WriteLocalBundlesNow(CustomManifest remoteTemplate, IEnumerable<CustomAssetBundleInfo> completedBundles)
     {
         if (completedBundles == null)
         {
@@ -742,11 +1013,10 @@ public class AssetBundleUpdateChecker
             local.AssetBundles = new List<CustomAssetBundleInfo>();
         }
 
-        // 同步远程版本头，便于后续对比；DownloadPacks 不在此写入（仅完整成功时全量保存）。
+        // 半次下载只补已落盘的包。ManifestVersion 留到整次成功后的 SaveLocalManifest，避免把本地版本提前抬高。
         if (remoteTemplate != null)
         {
             local.AppVersion = remoteTemplate.AppVersion;
-            local.ManifestVersion = remoteTemplate.ManifestVersion;
             local.BuildTime = remoteTemplate.BuildTime;
             local.buildTime = remoteTemplate.buildTime;
             local.CompressedFormat = remoteTemplate.CompressedFormat;
@@ -789,7 +1059,7 @@ public class AssetBundleUpdateChecker
             return;
         }
 
-        File.WriteAllText(manifestPath, JsonUtility.ToJson(local, true));
+        WriteManifestAtomically(manifestPath, local);
         Debug.Log(string.Format("本地清单增量更新：写入/覆盖 {0} 个已完成 AB", upsertCount));
     }
 
@@ -802,6 +1072,8 @@ public class AssetBundleUpdateChecker
             Hash = source.Hash,
             Version = source.Version,
             Size = source.Size,
+            ConvertedSize = source.ConvertedSize,
+            ConvertedHash = source.ConvertedHash,
             Dependencies = source.Dependencies != null
                 ? (string[])source.Dependencies.Clone()
                 : null,

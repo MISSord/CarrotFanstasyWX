@@ -48,6 +48,12 @@ public static class AssetBundleCloudUploader
             return result;
         }
 
+        if (!HasManifestSignature(files, out string signatureError))
+        {
+            result.Message = signatureError;
+            return result;
+        }
+
         long totalBytes = 0;
         for (int i = 0; i < files.Count; i++)
         {
@@ -91,8 +97,7 @@ public static class AssetBundleCloudUploader
                 string remoteDirectory = GetRemoteDirectory(remoteFilePath);
                 EnsureRemoteDirectory(client, remoteDirectory);
 
-                using FileStream stream = File.OpenRead(file.FullPath);
-                client.UploadFile(stream, remoteFilePath, true);
+                UploadFileAtomic(client, file.FullPath, remoteFilePath, IsManifestFile(file.RelativePath));
 
                 uploadedCount++;
                 uploadedBytes += file.Size;
@@ -132,7 +137,9 @@ public static class AssetBundleCloudUploader
         }
 
         string path = relativePath.Replace('\\', '/').ToLowerInvariant();
-        if (path == "custom_manifest.json" || path == "version.txt")
+        if (path == "custom_manifest.json"
+            || path == "custom_manifest.json.sig"
+            || path == "version.txt")
         {
             return true;
         }
@@ -208,8 +215,119 @@ public static class AssetBundleCloudUploader
             });
         }
 
-        files.Sort((a, b) => string.Compare(a.RelativePath, b.RelativePath, StringComparison.OrdinalIgnoreCase));
+        files.Sort(CompareUploadOrder);
         return files;
+    }
+
+    /// <summary>内容先传。清单、签名和 version 放在最后，避免线上清单指向还没传完的文件。</summary>
+    static int CompareUploadOrder(LocalUploadFile a, LocalUploadFile b)
+    {
+        int rankA = ManifestUploadRank(a.RelativePath);
+        int rankB = ManifestUploadRank(b.RelativePath);
+        if (rankA != rankB)
+        {
+            return rankA.CompareTo(rankB);
+        }
+
+        return string.Compare(a.RelativePath, b.RelativePath, StringComparison.OrdinalIgnoreCase);
+    }
+
+    static int ManifestUploadRank(string relativePath)
+    {
+        string path = string.IsNullOrEmpty(relativePath) ? string.Empty : relativePath.Replace('\\', '/');
+        if (string.Equals(path, "version.txt", StringComparison.OrdinalIgnoreCase))
+        {
+            return 1;
+        }
+
+        if (string.Equals(path, ManifestSignature.SignatureFileName, StringComparison.OrdinalIgnoreCase))
+        {
+            return 2;
+        }
+
+        if (string.Equals(path, "custom_manifest.json", StringComparison.OrdinalIgnoreCase))
+        {
+            return 3;
+        }
+
+        return 0;
+    }
+
+    static bool IsManifestFile(string relativePath)
+    {
+        string path = string.IsNullOrEmpty(relativePath) ? string.Empty : relativePath.Replace('\\', '/');
+        return string.Equals(path, "custom_manifest.json", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(path, ManifestSignature.SignatureFileName, StringComparison.OrdinalIgnoreCase)
+               || string.Equals(path, "version.txt", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>清单必须和 .sig 成对上传，否则客户端验签失败会拒绝更新。</summary>
+    static bool HasManifestSignature(List<LocalUploadFile> files, out string error)
+    {
+        error = null;
+        bool hasManifest = false;
+        bool hasSignature = false;
+        for (int i = 0; i < files.Count; i++)
+        {
+            string path = files[i].RelativePath.Replace('\\', '/');
+            if (string.Equals(path, "custom_manifest.json", StringComparison.OrdinalIgnoreCase))
+            {
+                hasManifest = true;
+            }
+            else if (string.Equals(path, ManifestSignature.SignatureFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                hasSignature = true;
+            }
+        }
+
+        if (hasManifest && !hasSignature)
+        {
+            error = "清单缺少签名文件 " + ManifestSignature.SignatureFileName
+                    + "：客户端验签会失败。请先执行 AB 打包（GenerateManifest 会自动签名）。";
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 先传成 .uploading 再改名，避免客户端读到写了一半的文件。
+    /// 清单/签名切换失败时保留旧文件不动，避免出现"没有清单可用"的窗口。
+    /// </summary>
+    static void UploadFileAtomic(SftpClient client, string localPath, string remotePath, bool keepRemoteOnFailure)
+    {
+        string tempRemotePath = remotePath + ".uploading";
+        using (FileStream stream = File.OpenRead(localPath))
+        {
+            client.UploadFile(stream, tempRemotePath, true);
+        }
+
+        try
+        {
+            // OpenSSH 默认支持 posix-rename，可覆盖式原子改名。
+            client.RenameFile(tempRemotePath, remotePath, true);
+            return;
+        }
+        catch (Exception renameError)
+        {
+            if (keepRemoteOnFailure)
+            {
+                throw new IOException(
+                    "内容已上传但清单切换失败，旧清单保持不动。请确认服务器支持 posix-rename，"
+                    + "或手动把 " + tempRemotePath + " 改名为 " + remotePath
+                    + "。原始错误: " + renameError.Message,
+                    renameError);
+            }
+
+            Debug.LogWarning("[AB Upload] posix-rename 失败，回退为删除+改名: " + remotePath + " (" + renameError.Message + ")");
+        }
+
+        if (client.Exists(remotePath))
+        {
+            client.DeleteFile(remotePath);
+        }
+
+        client.RenameFile(tempRemotePath, remotePath);
     }
 
     static void EnsureRemoteDirectory(SftpClient client, string remoteDirectory)

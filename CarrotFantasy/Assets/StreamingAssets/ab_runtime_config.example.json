@@ -1,4 +1,6 @@
 {
-    "serverDownloadUrlTemplate": "http://YOUR_CDN_HOST/ab/{0}",
-    "localSavePath": "DownloadedAssetBundles"
+    "env": "dev",
+    "serverDownloadUrlTemplate": "https://YOUR_CDN_HOST/ab/{0}",
+    "localSavePath": "DownloadedAssetBundles",
+    "allowInsecureHttp": false
 }

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -137,6 +138,32 @@ public static class AssetBundleBuildSettings
         return BuildDefaultCdnUrlTemplate(GetFullOutputRoot());
     }
 
+    /// <summary>按环境取模板：优先 AB_CdnUrlTemplate_{env}，没有配置时回退到全局模板。</summary>
+    public static string GetCdnUrlTemplate(string env)
+    {
+        if (!string.IsNullOrEmpty(env))
+        {
+            string perEnv = EditorPrefs.GetString(PrefsCdnUrlTemplate + "_" + env.ToLowerInvariant(), string.Empty);
+            if (!string.IsNullOrEmpty(perEnv))
+            {
+                return perEnv;
+            }
+        }
+
+        return GetCdnUrlTemplate();
+    }
+
+    public static void SetCdnUrlTemplate(string env, string template)
+    {
+        if (string.IsNullOrEmpty(env))
+        {
+            SetCdnUrlTemplate(template);
+            return;
+        }
+
+        EditorPrefs.SetString(PrefsCdnUrlTemplate + "_" + env.ToLowerInvariant(), template ?? string.Empty);
+    }
+
     public static void SetCdnUrlTemplate(string template)
     {
         EditorPrefs.SetString(PrefsCdnUrlTemplate, template ?? string.Empty);
@@ -162,15 +189,32 @@ public static class AssetBundleBuildSettings
     /// <summary>写入 StreamingAssets；env 为 dev/staging/prod。</summary>
     public static void WriteRuntimeConfig(BuildTarget target, string env)
     {
-        string template = GetCdnUrlTemplate();
+        if (string.IsNullOrEmpty(env))
+        {
+            env = CarrotFantasy.BuildChannelDefines.EnvDev;
+        }
+
+        string template = GetCdnUrlTemplate(env);
         if (string.IsNullOrEmpty(template))
         {
             template = BuildDefaultCdnUrlTemplate(GetFullOutputRoot());
         }
 
-        if (string.IsNullOrEmpty(env))
+        bool isProd = string.Equals(env, CarrotFantasy.BuildChannelDefines.EnvProd, StringComparison.OrdinalIgnoreCase);
+        bool isHttps = template.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        bool isInsecureHttp = template.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
+
+        // 正式包必须走 https：下载的清单与热更 DLL 会被执行，明文链路等于把代码执行权交出去。
+        if (isProd && !isHttps)
         {
-            env = CarrotFantasy.BuildChannelDefines.EnvDev;
+            Debug.LogError(
+                "[AB Build] prod 环境必须使用 https:// 的 CDN 模板，已拒绝写入运行配置。当前: " + template);
+            return;
+        }
+
+        if (isInsecureHttp)
+        {
+            Debug.LogWarning("[AB Build] 正在写入明文 HTTP 的 CDN 模板，仅限调试: " + template);
         }
 
         var config = new AssetBundleRuntimeConfig
@@ -178,6 +222,7 @@ public static class AssetBundleBuildSettings
             env = env,
             serverDownloadUrlTemplate = template,
             localSavePath = AssetBundlePathHelper.localSavePath,
+            allowInsecureHttp = isInsecureHttp,
         };
 
         string json = JsonUtility.ToJson(config, true);

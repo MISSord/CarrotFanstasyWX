@@ -490,10 +490,30 @@ public class AssetBundleManager
         {
             _bundleManifests[abInfo.BundleName] = abInfo;
         }
+
+        // 让下载器拿到完整清单：运行期按需下载也要能校验 Size/MD5 并写入本地记录。
+        AssetBundleDownloader.Instance?.SetManifest(manifests);
+
         GameLogController.Log($"AB包清单设置完成，共 {manifests.AssetBundles.Count} 个AB包信息", "AssetBundleManager");
     }
 
     public bool HasManifest => _bundleManifests.Count > 0;
+
+    /// <summary>已注入清单里该包的 Hash。热更加载 DLL 前用来核对磁盘文件。</summary>
+    public bool TryGetBundleHash(string bundleName, out string hash)
+    {
+        hash = null;
+        if (string.IsNullOrEmpty(bundleName)
+            || !_bundleManifests.TryGetValue(bundleName, out CustomAssetBundleInfo info)
+            || info == null
+            || string.IsNullOrEmpty(info.Hash))
+        {
+            return false;
+        }
+
+        hash = info.Hash;
+        return true;
+    }
 
     /// <summary>
     /// 泛型版本
@@ -1542,15 +1562,17 @@ public class AssetBundleManager
     // 更新AB包加载状态
     private void UpdateBundleLoading()
     {
-        int currentLoading = _loadingBundles.Count;
-
-        if (currentLoading < maxConcurrentLoads)
+        // 并发槽有空位就尽量填满（以前每帧只启动一个，首屏按"包数=帧数"排队）。
+        int guard = 0;
+        while (_loadingBundles.Count < maxConcurrentLoads && guard++ < maxConcurrentLoads * 2)
         {
             BundleInfo nextBundle = GetNextBundleToLoad();
-            if (nextBundle != null)
+            if (nextBundle == null)
             {
-                StartLoadingBundle(nextBundle);
+                break;
             }
+
+            StartLoadingBundle(nextBundle);
         }
 
         for (int i = _loadingBundles.Count - 1; i >= 0; i--)

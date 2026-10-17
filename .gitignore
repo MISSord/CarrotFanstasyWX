@@ -47,7 +47,11 @@ Thumbs.db
 /CarrotFantasy/Library/Il2cppBuildCache/
 
 # =============== Local secrets / machine-specific ===============
+# 热更清单签名私钥，只留在发布机。
+/CarrotFantasy/Keys/
 # 由 AB 打包窗口写入；含 CDN 地址，勿提交真实环境配置。
 # 参考模板：Assets/StreamingAssets/ab_runtime_config.example.json
 /CarrotFantasy/Assets/StreamingAssets/ab_runtime_config.json
 /CarrotFantasy/Assets/StreamingAssets/ab_runtime_config.json.meta
+# 构建时由 HybridCLR 设置导出（运行时读取）
+/CarrotFantasy/Assets/StreamingAssets/HybridCLR/AOT/aot_meta_list.txt

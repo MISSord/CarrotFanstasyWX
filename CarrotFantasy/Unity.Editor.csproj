@@ -52,6 +52,7 @@
     <Compile Include="Assets\Editor\UINameEntryDrawer.cs" />
     <Compile Include="Assets\Editor\BuildEditor\PcPlayerRebuildAdvisor.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleDeploySettings.cs" />
+    <Compile Include="Assets\Editor\BuildEditor\ManifestSigner.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundleBuildSettings.cs" />
     <Compile Include="Assets\Editor\BuildEditor\AssetBundlePackMerger.cs" />
     <Compile Include="Assets\Editor\ToggleSelectedActiveEditor.cs" />
