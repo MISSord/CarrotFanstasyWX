@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PrefabReferenceFinderWindow : EditorWindow
 {
-    private const string MenuPath = "Tools/资源/Prefab 引用查找";
+    private const string MenuPath = "Tools/编辑器/Prefab 引用查找";
 
     private Object _targetAsset;
     private readonly List<string> _matchedPrefabPaths = new List<string>();

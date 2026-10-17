@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -248,48 +248,5 @@ public class LoadModeToolbarEditor : EditorWindow
     //    Debug.Log($"======================");
     //}
 
-    ///// <summary>
-    ///// 添加菜单项快速切换模式
-    ///// </summary>
-    //[MenuItem("Tools/加载模式/切换到开发模式 %&1")]
-    //private static void SwitchToDevelopment() => SwitchMode(GameLoadMode.Development);
-
-    //[MenuItem("Tools/加载模式/切换到生产模式 %&2")]
-    //private static void SwitchToProduction() => SwitchMode(GameLoadMode.Production);
-
-    //[MenuItem("Tools/加载模式/切换到测试模式 %&3")]
-    //private static void SwitchToTesting() => SwitchMode(GameLoadMode.Testing);
-
-    //[MenuItem("Tools/加载模式/切换到演示模式 %&4")]
-    //private static void SwitchToDemo() => SwitchMode(GameLoadMode.Demo);
-
-    //[MenuItem("Tools/加载模式/切换到调试模式 %&5")]
-    //private static void SwitchToDebug() => SwitchMode(GameLoadMode.DebugMode);
-
-    //private static void SwitchMode(GameLoadMode mode)
-    //{
-    //    EditorPrefs.SetInt(PREFS_KEY, (int)mode);
-    //    Debug.Log($"已快速切换到: {mode}");
-
-    //    // 刷新所有打开的窗口
-    //    LoadModeToolbarEditor[] windows = Resources.FindObjectsOfTypeAll<LoadModeToolbarEditor>();
-    //    foreach (var window in windows)
-    //    {
-    //        window.Repaint();
-    //    }
-    //}
-
-    ///// <summary>
-    ///// 验证菜单项状态
-    ///// </summary>
-    //[MenuItem("Tools/加载模式/切换到开发模式", true)]
-    //[MenuItem("Tools/加载模式/切换到生产模式", true)]
-    //[MenuItem("Tools/加载模式/切换到测试模式", true)]
-    //[MenuItem("Tools/加载模式/切换到演示模式", true)]
-    //[MenuItem("Tools/加载模式/切换到调试模式", true)]
-    //private static bool ValidateSwitchMode()
-    //{
-    //    return true;
-    //}
 }
 #endif

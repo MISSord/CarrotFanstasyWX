@@ -35,7 +35,7 @@ namespace CarrotFantasy
             {
                 Debug.LogError(
                     "[AotResourcesView] Resources 未找到预制体: " + this.ResourcesPath +
-                    "\n请执行菜单 Tools/AOT UI/生成启动界面预制体");
+                    "\n请确认 Assets/Resources/AotUI 下存在对应预制体（随包体分发，缺失通常是构建时 Resources 被裁掉了）");
                 return false;
             }
 

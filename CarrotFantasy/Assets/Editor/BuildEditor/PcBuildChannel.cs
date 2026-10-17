@@ -12,10 +12,12 @@ using UnityEngine;
 /// </summary>
 public static class PcBuildChannel
 {
-    const string MenuRoot = "Tools/Build Channel/";
+    // 7 项手动步骤收在子菜单里；「Tools/Build Channel/」顶层只保留
+    // PcPlayerBuildPipeline 里的两个「一键打包」，避免顶层菜单过长。
+    const string ManualMenuRoot = "Tools/Build Channel/手动步骤/";
     static readonly NamedBuildTarget StandaloneTarget = NamedBuildTarget.Standalone;
 
-    [MenuItem(MenuRoot + "准备开发 PC 包（启用 CF_DEV_TOOLS + env=dev）", priority = 10)]
+    [MenuItem(ManualMenuRoot + "准备开发 PC 包（启用 CF_DEV_TOOLS + env=dev）", priority = 10)]
     public static void PrepareDevPcBuild()
     {
         ApplyChannel(
@@ -24,7 +26,7 @@ public static class PcBuildChannel
             developmentBuildHint: true);
     }
 
-    [MenuItem(MenuRoot + "准备正式 PC 包（禁用 CF_DEV_TOOLS + env=prod）", priority = 11)]
+    [MenuItem(ManualMenuRoot + "准备正式 PC 包（禁用 CF_DEV_TOOLS + env=prod）", priority = 11)]
     public static void PrepareReleasePcBuild()
     {
         ApplyChannel(
@@ -45,7 +47,7 @@ public static class PcBuildChannel
         return defineChanged;
     }
 
-    [MenuItem(MenuRoot + "仅启用 CF_DEV_TOOLS", priority = 50)]
+    [MenuItem(ManualMenuRoot + "仅启用 CF_DEV_TOOLS", priority = 50)]
     public static void EnableDevToolsOnly()
     {
         SetDevToolsDefine(true);
@@ -57,7 +59,7 @@ public static class PcBuildChannel
             "确定");
     }
 
-    [MenuItem(MenuRoot + "仅禁用 CF_DEV_TOOLS", priority = 51)]
+    [MenuItem(ManualMenuRoot + "仅禁用 CF_DEV_TOOLS", priority = 51)]
     public static void DisableDevToolsOnly()
     {
         SetDevToolsDefine(false);
@@ -69,7 +71,7 @@ public static class PcBuildChannel
             "确定");
     }
 
-    [MenuItem(MenuRoot + "写入运行配置 env=dev", priority = 70)]
+    [MenuItem(ManualMenuRoot + "写入运行配置 env=dev", priority = 70)]
     public static void WriteEnvDev()
     {
         AssetBundleBuildSettings.WriteRuntimeConfig(
@@ -77,7 +79,7 @@ public static class PcBuildChannel
             BuildChannelDefines.EnvDev);
     }
 
-    [MenuItem(MenuRoot + "写入运行配置 env=prod", priority = 71)]
+    [MenuItem(ManualMenuRoot + "写入运行配置 env=prod", priority = 71)]
     public static void WriteEnvProd()
     {
         AssetBundleBuildSettings.WriteRuntimeConfig(
@@ -85,7 +87,7 @@ public static class PcBuildChannel
             BuildChannelDefines.EnvProd);
     }
 
-    [MenuItem(MenuRoot + "查看当前通道状态", priority = 100)]
+    [MenuItem(ManualMenuRoot + "查看当前通道状态", priority = 100)]
     public static void ShowStatus()
     {
         bool hasDevTools = HasDevToolsDefine();
