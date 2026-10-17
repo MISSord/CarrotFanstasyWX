@@ -27,10 +27,19 @@ namespace CarrotFantasy
         public static void Tick()
         {
             AbAssetSources.Pump();
+            PrefabLoader.Instance.FlushPending();
+            ImageLoader.Instance.FlushPending();
+            AudioLoader.Instance.FlushPending();
+            TextLoader.Instance.FlushPending();
             PrefabLoader.Instance.Tick();
             ImageLoader.Instance.Tick();
             AudioLoader.Instance.Tick();
             TextLoader.Instance.Tick();
+            if (AssetBundleManager.Instance != null)
+            {
+                AssetBundleManager.Instance.UnloadUnreferencedBundles(1);
+            }
+
             if (!_sweepPending || Time.frameCount < _sweepFrame)
             {
                 return;
@@ -83,6 +92,11 @@ namespace CarrotFantasy
             return _cache.Load(bundleName, assetName, priority);
         }
 
+        public void FlushPending()
+        {
+            _cache.FlushPending();
+        }
+
         public void Tick()
         {
             _cache.ReleaseIdle(false);
@@ -122,6 +136,12 @@ namespace CarrotFantasy
             return _textures.Load(bundleName, assetName, priority);
         }
 
+        public void FlushPending()
+        {
+            _sprites.FlushPending();
+            _textures.FlushPending();
+        }
+
         public void Tick()
         {
             _sprites.ReleaseIdle(false);
@@ -155,6 +175,11 @@ namespace CarrotFantasy
             return _cache.Load(bundleName, assetName, priority);
         }
 
+        public void FlushPending()
+        {
+            _cache.FlushPending();
+        }
+
         public void Tick()
         {
             _cache.ReleaseIdle(false);
@@ -185,6 +210,11 @@ namespace CarrotFantasy
         public AssetBundleHandle<TextAsset> Load(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
             return _cache.Load(bundleName, assetName, priority);
+        }
+
+        public void FlushPending()
+        {
+            _cache.FlushPending();
         }
 
         public void Tick()

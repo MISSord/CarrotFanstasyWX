@@ -145,7 +145,12 @@ namespace CarrotFantasy
             }
 
             _disposed = true;
+            UseWait[] pendingUses = _useWaiters.ToArray();
             _useWaiters.Clear();
+            for (int i = 0; i < pendingUses.Length; i++)
+            {
+                pendingUses[i].Invoke(null);
+            }
 
             foreach (KeyValuePair<AbProviderKey, KeepRecord> pair in _keeps)
             {

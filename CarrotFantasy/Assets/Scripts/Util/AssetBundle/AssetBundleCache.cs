@@ -96,7 +96,7 @@ namespace CarrotFantasy
         {
             return new AssetBundleCachePolicy
             {
-                IdleSeconds = float.MaxValue,
+                IdleSeconds = 120f,
                 RememberFailure = true,
                 FailureRememberSeconds = 5f
             };
@@ -320,9 +320,16 @@ namespace CarrotFantasy
     /// </summary>
     internal sealed class AssetBundleCache<T> : IAbCacheHost where T : UnityEngine.Object
     {
+        private struct PendingResult
+        {
+            public AbProviderKey Key;
+            public UnityEngine.Object Asset;
+        }
+
         private readonly string _name;
         private readonly AssetBundleCachePolicy _policy;
         private readonly Dictionary<AbProviderKey, AbAssetProvider> _providers = new Dictionary<AbProviderKey, AbAssetProvider>();
+        private readonly List<PendingResult> _pending = new List<PendingResult>();
 
         public AssetBundleCache(string name, AssetBundleCachePolicy policy)
         {
@@ -369,10 +376,29 @@ namespace CarrotFantasy
             {
                 provider.SourceStarted = true;
                 provider.SourceHeld = true;
-                AbAssetSources.Shared.Load(key, priority, asset => OnSourceLoaded(key, asset));
+                AbAssetSources.Shared.Load(key, priority, asset => QueueSourceLoaded(key, asset));
             }
 
             return handle;
+        }
+
+        /// <summary>
+        /// 第一次加载的完成统一留到这里。编辑器本来就在 Pump 里回调，真机命中已加载资源时也会先排队，避免两端 IsDone 不一致。
+        /// 缓存里已经成功的资源仍在 Load 里当场完成。
+        /// </summary>
+        public void FlushPending()
+        {
+            if (_pending.Count == 0)
+            {
+                return;
+            }
+
+            PendingResult[] batch = _pending.ToArray();
+            _pending.Clear();
+            for (int i = 0; i < batch.Length; i++)
+            {
+                ApplySourceLoaded(batch[i].Key, batch[i].Asset);
+            }
         }
 
         public int ReleaseIdle(bool ignoreDelay)
@@ -463,7 +489,12 @@ namespace CarrotFantasy
             }
         }
 
-        private void OnSourceLoaded(AbProviderKey key, UnityEngine.Object asset)
+        private void QueueSourceLoaded(AbProviderKey key, UnityEngine.Object asset)
+        {
+            _pending.Add(new PendingResult { Key = key, Asset = asset });
+        }
+
+        private void ApplySourceLoaded(AbProviderKey key, UnityEngine.Object asset)
         {
             if (!_providers.TryGetValue(key, out AbAssetProvider provider))
             {

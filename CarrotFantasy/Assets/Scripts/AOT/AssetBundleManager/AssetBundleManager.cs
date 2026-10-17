@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -387,8 +386,6 @@ public class AssetBundleManager
 
     public int maxConcurrentLoads = 3;
     public int maxConcurrentAssetLoads = 5; // 最大同时加载资源数量
-    public float unloadCheckInterval = 60f;
-    public int unloadReferenceThreshold = 60;
 
     // 事件
     public System.Action<string> OnBundleLoaded;
@@ -405,8 +402,6 @@ public class AssetBundleManager
 
     public void Init()
     {
-        SRPScheduler.Instance.StartCoroutine(UnloadCheckCoroutine());
-
 #if UNITY_EDITOR
         loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
 #endif
@@ -1771,11 +1766,8 @@ public class AssetBundleManager
                 _mediumPriorityQueue.Enqueue(bundleInfo);
                 break;
             case LoadPriority.High:
-                _highPriorityQueue.Enqueue(bundleInfo);
-                break;
             case LoadPriority.Sync:
-                // 同步加载立即执行
-                StartLoadingBundle(bundleInfo);
+                _highPriorityQueue.Enqueue(bundleInfo);
                 break;
         }
     }
@@ -1801,47 +1793,6 @@ public class AssetBundleManager
         bool needConvert = _currentManifest != null && _currentManifest.CompressedFormat == 0;
         GameLogController.Log($"开始下载AB包: {bundleName}, needConvert={needConvert}", "AssetBundleManager");
         AssetBundleDownloader.Instance.DownloadBundle(bundleName, needConvert, onDownloadComplete);
-    }
-
-    // 卸载检查协程
-    private IEnumerator UnloadCheckCoroutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(unloadCheckInterval);
-            CheckAndUnloadUnusedBundles();
-        }
-    }
-
-    // 检查并卸载未使用的AB包
-    private void CheckAndUnloadUnusedBundles()
-    {
-        int unloadedCount = 0;
-        List<string> toUnload = new List<string>();
-
-        foreach (var kvp in _loadedBundles)
-        {
-            var bundleInfo = kvp.Value;
-            if (bundleInfo.referenceCount <= 0)
-            {
-                TimeSpan timeSinceLastUse = DateTime.Now - bundleInfo.lastUseTime;
-                if (timeSinceLastUse.TotalSeconds > unloadReferenceThreshold)
-                {
-                    toUnload.Add(kvp.Key);
-                }
-            }
-        }
-
-        foreach (string bundleName in toUnload)
-        {
-            UnloadBundle(bundleName, true);
-            unloadedCount++;
-        }
-
-        if (unloadedCount > 0)
-        {
-            GameLogController.Log($"自动卸载了 {unloadedCount} 个未使用的AB包", "AssetBundleManager");
-        }
     }
 
     #endregion

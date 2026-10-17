@@ -25,6 +25,7 @@ namespace CarrotFantasy
         {
             base.Init();
             this.RestoreMainSceneUi();
+            AssetBundleLoaders.RequestSweep();
         }
 
         /// <summary>
