@@ -32,22 +32,43 @@ namespace CarrotFantasy.Editor
                 $"patchAOT=[{string.Join(", ", settings.patchAOTAssemblies)}]");
         }
 
-        [MenuItem("Tools/HybridCLR/同步 DLL 到 StreamingAssets", priority = 101)]
-        public static void SyncDllsToStreamingAssets()
+        /// <summary>代码热更当前是否启用（即 HybridCLR 的 enable 开关）。</summary>
+        public static bool IsCodeHotUpdateEnabled()
         {
-            int copied = SyncDlls(EditorUserBuildSettings.activeBuildTarget, toStreamingAssets: true, toBuildOutput: false);
-            Debug.Log($"[HybridCLRProjectSetup] StreamingAssets 同步完成，成功 {copied} 个文件");
+            HybridCLRSettings settings = HybridCLRSettings.Instance;
+            return settings != null && settings.enable;
         }
 
-        [MenuItem("Tools/HybridCLR/同步 DLL 到 AB 输出目录（热更用）", priority = 102)]
-        public static void SyncDllsToBuildOutput()
+        [MenuItem("Tools/HybridCLR/关闭代码热更（改用 AOT 程序集）", priority = 104)]
+        public static void DisableCodeHotUpdate()
         {
-            int copied = SyncDlls(EditorUserBuildSettings.activeBuildTarget, toStreamingAssets: false, toBuildOutput: true);
-            Debug.Log($"[HybridCLRProjectSetup] AB 输出目录同步完成，成功 {copied} 个文件。" +
-                      "请再执行「生成清单」，使 hybridclr/* 进入 custom_manifest。");
+            HybridCLRSettings settings = HybridCLRSettings.Instance;
+            settings.enable = false;
+            HybridCLRSettings.Save();
+
+            Debug.LogWarning(
+                "[HybridCLRProjectSetup] 已关闭代码热更（enable=false）：\n" +
+                "  - 构建改用 Unity 原生 il2cpp（不再使用 HybridCLR 那份补丁源码）\n" +
+                "  - CarrotFantasy.HotUpdate 会随主包正常编译\n" +
+                "  - 运行时找不到热更 DLL 时自动退回 AOT 里已编译的同名程序集\n" +
+                "  - 资源热更（AB 打包 / 下载 / 清单）不受任何影响");
         }
 
-        [MenuItem("Tools/HybridCLR/同步 DLL（StreamingAssets + AB 输出）", priority = 103)]
+        [MenuItem("Tools/HybridCLR/启用代码热更", priority = 105)]
+        public static void EnableCodeHotUpdate()
+        {
+            HybridCLRSettings settings = HybridCLRSettings.Instance;
+            settings.enable = true;
+            HybridCLRSettings.Save();
+
+            Debug.Log(
+                "[HybridCLRProjectSetup] 已启用代码热更（enable=true）。\n" +
+                "  注意：HybridCLR 的 2023 分支要求 Unity ≥ 2023.2，" +
+                "当前 2023.1 会导致 il2cpp 编译失败。");
+        }
+
+        // 原「同步到 StreamingAssets」「同步到 AB 输出目录」两个菜单已被这一项完全覆盖，合并为一个入口。
+        [MenuItem("Tools/HybridCLR/同步 DLL（StreamingAssets + AB 输出）", priority = 101)]
         public static void SyncDllsAll()
         {
             int copied = SyncDlls(EditorUserBuildSettings.activeBuildTarget, toStreamingAssets: true, toBuildOutput: true);
@@ -63,9 +84,13 @@ namespace CarrotFantasy.Editor
         /// <summary>
         /// AB 打包清空输出目录后调用：把 HybridCLR DLL 拷进平台 AB 目录，供 GenerateManifest 扫描入库。
         /// </summary>
-        public static int EnsureDllsInAbOutput(BuildTarget target)
+        public static int EnsureDllsInAbOutput(BuildTarget target, string platformOutputPath = null)
         {
-            int copied = SyncDlls(target, toStreamingAssets: false, toBuildOutput: true);
+            int copied = SyncDlls(
+                target,
+                toStreamingAssets: false,
+                toBuildOutput: true,
+                platformOutputPath: platformOutputPath);
             Debug.Log($"[HybridCLRProjectSetup] 已确保 HybridCLR DLL 位于 AB 输出目录，复制 {copied} 个文件（平台 {target}）");
             return copied;
         }
@@ -82,7 +107,11 @@ namespace CarrotFantasy.Editor
             EditorApplication.ExecuteMenuItem("HybridCLR/Generate/All");
         }
 
-        private static int SyncDlls(BuildTarget target, bool toStreamingAssets, bool toBuildOutput)
+        private static int SyncDlls(
+            BuildTarget target,
+            bool toStreamingAssets,
+            bool toBuildOutput,
+            string platformOutputPath = null)
         {
             string projectRoot = Directory.GetParent(Application.dataPath)?.FullName;
             if (string.IsNullOrEmpty(projectRoot))
@@ -127,8 +156,19 @@ namespace CarrotFantasy.Editor
 
             if (toBuildOutput)
             {
-                string platformFolder = AssetBundlePackager.GetPlatformFolder(target);
-                string buildRoot = Path.Combine(projectRoot, "Build", "AssetBundles", platformFolder);
+                // 优先用调用方传入的平台输出目录（支持自定义 AB_OutputRoot）；
+                // 未传时才回落到默认布局，避免把 DLL 拷到与实际构建无关的目录。
+                string buildRoot;
+                if (!string.IsNullOrEmpty(platformOutputPath))
+                {
+                    buildRoot = platformOutputPath;
+                }
+                else
+                {
+                    string platformFolder = AssetBundlePackager.GetPlatformFolder(target);
+                    buildRoot = Path.Combine(projectRoot, "Build", "AssetBundles", platformFolder);
+                }
+
                 Directory.CreateDirectory(buildRoot);
 
                 string hotUpdateOut = Path.Combine(buildRoot, "hybridclr", "hotupdate");

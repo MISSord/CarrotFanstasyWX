@@ -48,23 +48,36 @@ namespace CarrotFantasy
                 return;
             }
 
-#if UNITY_EDITOR
+            // 1) 程序集里已经存在就直接用。
+            //    - Editor：热更程序集随工程编译；
+            //    - Player：关闭代码热更后（HybridCLRSettings.enable=false）该程序集会随主包编译进 AOT。
+            //    开启热更时它会被 FilterHotFixAssemblies 从主包剔除，这里必然找不到，才会走到第 2 步。
             s_hotUpdateAssembly = FindLoadedAssembly(HotUpdateAssemblyName);
             if (s_hotUpdateAssembly != null)
             {
+#if !UNITY_EDITOR
+                Debug.Log("[HybridCLRBootstrap] " + HotUpdateAssemblyName
+                    + " 已随主包编译进 AOT，跳过热更 DLL 加载（代码热更未生效）。");
+#endif
                 return;
             }
-#endif
 
-            LoadAotMetadataAssemblies();
-            s_hotUpdateAssembly = LoadHotUpdateAssemblyFromDisk(HotUpdateAssemblyName);
-            if (s_hotUpdateAssembly == null)
+            // 2) 从 AB 热更目录 / StreamingAssets 基线读 DLL。
+            //    只有真的要用热更 DLL 时才需要加载 AOT 补充元数据。
+            byte[] hotUpdateBytes = ReadDllBytes(isHotUpdate: true, HotUpdateAssemblyName);
+            if (hotUpdateBytes != null && hotUpdateBytes.Length > 0)
             {
-                throw new InvalidOperationException(
-                    $"[HybridCLRBootstrap] 未能加载热更程序集 {HotUpdateAssemblyName}。" +
-                    $"请确认已下载或内置 {HybridCLRPaths.HotUpdateBundleName}，" +
-                    "并执行 HybridCLR/Generate/All 与 Tools/HybridCLR/同步 DLL。");
+                LoadAotMetadataAssemblies();
+                s_hotUpdateAssembly = LoadHotUpdateAssembly(hotUpdateBytes);
+                Debug.Log($"[HybridCLRBootstrap] 热更程序集已加载: {HotUpdateAssemblyName}, size={hotUpdateBytes.Length}");
+                return;
             }
+
+            throw new InvalidOperationException(
+                $"[HybridCLRBootstrap] 未能加载热更程序集 {HotUpdateAssemblyName}。" +
+                $"既不在主包 AOT 里，也没找到热更 DLL（{HybridCLRPaths.HotUpdateBundleName}）。" +
+                "请执行 HybridCLR/Generate/All 与 Tools/HybridCLR/同步 DLL；" +
+                "或关闭代码热更（Tools/HybridCLR/关闭代码热更）让该程序集随主包编译。");
         }
 
         public static void LoadAotMetadataAssemblies(IEnumerable<string> assemblyNames = null)
@@ -113,19 +126,6 @@ namespace CarrotFantasy
             return Assembly.Load(dllBytes);
         }
 
-        private static Assembly LoadHotUpdateAssemblyFromDisk(string assemblyName)
-        {
-            byte[] dllBytes = ReadDllBytes(isHotUpdate: true, assemblyName);
-            if (dllBytes == null || dllBytes.Length == 0)
-            {
-                return null;
-            }
-
-            Assembly assembly = LoadHotUpdateAssembly(dllBytes);
-            Debug.Log($"[HybridCLRBootstrap] 热更程序集已加载: {assemblyName}, size={dllBytes.Length}");
-            return assembly;
-        }
-
         /// <summary>
         /// 读取优先级：
         /// 1. AB 热更目录 DownloadedAssetBundles/hybridclr/...
@@ -147,7 +147,12 @@ namespace CarrotFantasy
                     return downloaded;
                 }
 
-                Debug.LogError("[HybridCLRBootstrap] 热更文件与已签名清单不一致，拒绝加载: " + bundleName);
+                Debug.LogError("[HybridCLRBootstrap] 热更文件与已签名清单不一致，拒绝加载并降级到基线: " + bundleName);
+
+                // 必须把这份坏缓存删掉：否则下次启动仍会命中它、继续被拒，
+                // 客户端会长期静默地跑基线旧代码（表现为黑屏 / UI 为空，且日志只在首次出现）。
+                // 删除后更新检查会认为该包缺失并重新下载，从而自愈。
+                TryDeleteCorruptFile(abPath);
             }
 
             string streamingRelative = HybridCLRPaths.GetStreamingBaselineRelativePath(isHotUpdate, assemblyName);
@@ -170,6 +175,23 @@ namespace CarrotFantasy
             }
 
             return null;
+        }
+
+        /// <summary>删除校验失败的缓存文件，让更新流程下次重新下载它。</summary>
+        private static void TryDeleteCorruptFile(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                    Debug.Log("[HybridCLRBootstrap] 已删除校验失败的缓存文件: " + path);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[HybridCLRBootstrap] 删除校验失败的缓存文件时出错: " + path + " : " + e.Message);
+            }
         }
 
         private static bool IsPersistedHotUpdateFile(string filePath)

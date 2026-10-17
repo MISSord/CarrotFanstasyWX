@@ -292,7 +292,25 @@ public static class AssetBundlePackager
 
         // HybridCLR 的 .dll.bytes 不是 Unity AB：需在扫描清单前拷入输出目录。
         // 完整打 AB 若勾选清空输出，会删掉此前手动同步的 hybridclr/，必须在此补回。
-        CarrotFantasy.Editor.HybridCLRProjectSetup.EnsureDllsInAbOutput(target);
+        int hybridClrCopied = CarrotFantasy.Editor.HybridCLRProjectSetup.EnsureDllsInAbOutput(target, bundlePath);
+        if (hybridClrCopied <= 0)
+        {
+            if (CarrotFantasy.Editor.HybridCLRProjectSetup.IsCodeHotUpdateEnabled())
+            {
+                // 不中止：资源 AB 本身是好的，缺的只是热更 DLL。
+                // 但必须报错——否则清单里会静默缺少 hybridclr/* 条目，代码热更永远不生效且难以发现。
+                Debug.LogError(
+                    "[AB Build] HybridCLR DLL 一个都没拷进 AB 输出目录，本次清单将缺少 hybridclr/* 条目，"
+                    + "代码热更不会生效、热更程序集也永远读不到新版本。"
+                    + "请先执行 Tools/HybridCLR/Generate All（需要 il2cpp 构建产出 HybridCLRData），"
+                    + "确认 HybridCLRData 目录已生成后再重新打包。");
+            }
+            else
+            {
+                // 代码热更被主动关闭时，hybridclr/* 本来就不该进清单，不是错误。
+                Debug.Log("[AB Build] 代码热更已关闭，本次清单不含 hybridclr/* 条目（资源热更不受影响）。");
+            }
+        }
 
         // 把「需要补充元数据的 AOT 程序集」从 HybridCLR 设置导出给运行时，避免两边各维护一份硬编码。
         WriteAotMetaListFile();
@@ -457,7 +475,10 @@ public static class AssetBundlePackager
             : string.Join("\n", missingOnDisk.GetRange(0, maxLines))
               + string.Format("\n... 还有 {0} 个未列出", missingOnDisk.Count - maxLines);
 
-        Debug.LogWarning(string.Format(
+        // 这些包「有资源登记但没构建出文件」，会被排除在清单之外。
+        // 用 LogError 而不是 LogWarning：否则打包仍显示"成功"，运行时才以
+        // "bundle not found" 的形式暴露，极难定位。
+        Debug.LogError(string.Format(
             "[AB Build] {0} 个「有资源登记但未构建出文件」的 AB 未写入清单（missingOnDisk 诊断）：\n{1}",
             missingOnDisk.Count,
             preview));
@@ -555,7 +576,41 @@ public static class AssetBundlePackager
             return false;
         }
 
+        // 必须位于工程目录内：防止 AB_OutputRoot 填成工程外路径后 Directory.Delete 误删。
+        if (!IsSameOrUnder(fullPath, projectRoot))
+        {
+            return false;
+        }
+
+        // Assets 下只允许动 StreamingAssets/AssetBundles（CopyToStreamingAssets 的目标）；
+        // Assets 本身、资源目录、Library 等一律拒绝。
+        string assetsRoot = Path.GetFullPath(Application.dataPath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        if (IsSameOrUnder(fullPath, assetsRoot))
+        {
+            string streamingBundleRoot = Path.GetFullPath(Path.Combine(Application.streamingAssetsPath, "AssetBundles"))
+                .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return IsSameOrUnder(fullPath, streamingBundleRoot);
+        }
+
         return true;
+    }
+
+    /// <summary>child 是否等于 parent 或位于其下；按目录边界比较，避免 CarrotFantasy2 命中 CarrotFantasy。</summary>
+    private static bool IsSameOrUnder(string child, string parent)
+    {
+        if (string.IsNullOrEmpty(child) || string.IsNullOrEmpty(parent))
+        {
+            return false;
+        }
+
+        if (string.Equals(child, parent, System.StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return child.StartsWith(parent + Path.DirectorySeparatorChar, System.StringComparison.OrdinalIgnoreCase)
+               || child.StartsWith(parent + Path.AltDirectorySeparatorChar, System.StringComparison.OrdinalIgnoreCase);
     }
 }
 

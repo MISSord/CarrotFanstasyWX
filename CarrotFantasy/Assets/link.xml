@@ -4,4 +4,9 @@
   <assembly fullname="UnityEngine" preserve="all"/>
   <assembly fullname="System" preserve="all"/>
   <assembly fullname="System.Runtime.CompilerServices.Unsafe" preserve="all"/>
+  <!-- 关闭代码热更时（HybridCLRSettings.enable=false），CarrotFantasy.HotUpdate 会随主包编译，
+       但 CarrotFantasy.AOT 不能反向引用它（会循环），因此没有任何静态引用。
+       不在这里显式保留的话，UnityLinker 会把它整段裁掉，运行时反射就找不到 HotUpdateEntry。
+       开启热更时该程序集被 FilterHotFixAssemblies 从主包剔除，这条配置自然不生效。 -->
+  <assembly fullname="CarrotFantasy.HotUpdate" preserve="all"/>
 </linker>

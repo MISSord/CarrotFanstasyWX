@@ -50,7 +50,11 @@ public static class AssetBundlePackMerger
                 string bootName = PackGroupingDefaults.BootBundles[i];
                 if (!string.IsNullOrEmpty(bootName) && !bundleMap.ContainsKey(bootName))
                 {
-                    Debug.LogWarning("[PackMerger] BootBundles 中配置的包不在本次清单里（改名了？）: " + bootName);
+                    // 代码热更关闭时 hybridclr/* 本来就不会进清单，这条警告没有意义。
+                    if (CarrotFantasy.Editor.HybridCLRProjectSetup.IsCodeHotUpdateEnabled())
+                    {
+                        Debug.LogWarning("[PackMerger] BootBundles 中配置的包不在本次清单里（改名了？）: " + bootName);
+                    }
                 }
             }
         }
