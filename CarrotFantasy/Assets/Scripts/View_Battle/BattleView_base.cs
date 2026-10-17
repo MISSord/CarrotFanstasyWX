@@ -156,7 +156,8 @@ namespace CarrotFantasy
                 }
                 catch (Exception ex)
                 {
-                    BattleFlowLog.Abort("InitContentComponents", component.componentType + " -> " + ex.Message);
+                    // 记录完整异常（含堆栈与行号）：只记 Message 会丢失抛出位置，无法定位。
+                    BattleFlowLog.Abort("InitContentComponents", component.componentType + " -> " + ex);
                     return false;
                 }
             }

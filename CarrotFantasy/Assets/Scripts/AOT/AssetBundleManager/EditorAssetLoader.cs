@@ -131,6 +131,24 @@ public static class EditorAssetLoader
     }
 
 #if UNITY_EDITOR
+    /// <summary>
+    /// 该类型是否会作为"子资源"出现（预制体的子 GameObject、组件等）。
+    /// 对这类类型必须禁用"任意同类型"回退，否则名称对不上时会返回子节点。
+    /// </summary>
+    private static bool IsSubObjectType(System.Type expectedType)
+    {
+        return expectedType == typeof(GameObject) || typeof(Component).IsAssignableFrom(expectedType);
+    }
+
+    /// <summary>
+    /// 在 <paramref name="fullAssetPath"/> 内挑选最合适的资源。
+    /// <para>
+    /// ⚠️ <c>AssetDatabase.LoadAllAssetsAtPath</c> 对预制体会返回【根节点 + 所有子 GameObject + 全部组件】。
+    /// 因此"任意同类型"这条回退对 GameObject / Component 只会命中子节点，
+    /// 实例化出来是个没有子节点的空壳，后续 <c>Find("子节点")</c> 就会抛 NullReference，
+    /// 而报错位置离真正的"名字写错"很远，极难定位。故此类类型直接跳过该回退，改为回退主资源并告警。
+    /// </para>
+    /// </summary>
     private static UnityEngine.Object TryLoadBestMatch(string fullAssetPath, string assetName, System.Type expectedType)
     {
         if (string.IsNullOrEmpty(fullAssetPath) || string.IsNullOrEmpty(assetName))
@@ -140,6 +158,7 @@ public static class EditorAssetLoader
 
         UnityEngine.Object[] allAssets = AssetDatabase.LoadAllAssetsAtPath(fullAssetPath);
         bool hasExpectedType = expectedType != null;
+        bool allowAnyNameFallback = hasExpectedType && !IsSubObjectType(expectedType);
 
         // 1) 优先匹配同名且类型正确的资源
         if (hasExpectedType)
@@ -154,14 +173,17 @@ public static class EditorAssetLoader
             }
         }
 
-        // 2) 其次匹配任意名称但类型正确的资源
-        if (hasExpectedType)
+        // 2) 其次匹配任意名称但类型正确的资源（GameObject/Component 除外，见方法注释）
+        if (allowAnyNameFallback)
         {
             for (int i = 0; i < allAssets.Length; i++)
             {
                 UnityEngine.Object obj = allAssets[i];
                 if (obj != null && expectedType.IsAssignableFrom(obj.GetType()))
                 {
+                    Debug.LogWarning(
+                        "[EditorAssetLoader] 资源名与文件内资源不匹配，退化为「任意同类型」：请求=" + assetName
+                        + " 实际=" + obj.name + " 类型=" + expectedType.Name + " 文件=" + fullAssetPath);
                     return obj;
                 }
             }
@@ -177,8 +199,17 @@ public static class EditorAssetLoader
             }
         }
 
-        // 4) 最后回退主资源（例如 Texture2D、AudioClip、Prefab）
-        return AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(fullAssetPath);
+        // 4) 最后回退主资源（例如 Texture2D、AudioClip、Prefab 根节点）
+        UnityEngine.Object mainAsset = AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(fullAssetPath);
+        if (mainAsset != null)
+        {
+            Debug.LogWarning(
+                "[EditorAssetLoader] 文件内没有名为 " + assetName + " 的资源，已回退主资源 "
+                + mainAsset.name + "（" + mainAsset.GetType().Name + "）文件=" + fullAssetPath
+                + "。请核对资源名是否与预制体/文件内的名称完全一致（含大小写）。");
+        }
+
+        return mainAsset;
     }
 #endif
 }

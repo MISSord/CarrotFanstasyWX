@@ -26,9 +26,12 @@ namespace CarrotFantasy
         public const string TowerList = "TowerList";
         public const string BtnTowerBuild = "BtnTowerBuild";
         public const string HandleTowerCanvas = "HandleTowerCanvas";
-        public const string NodeMap = "NodeMap";
+        // 资源名必须与预制体文件名一字不差（含大小写）：
+        // Editor 下经 AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName 查找，
+        // 名称对不上会落到 EditorAssetLoader 的"任意同类型"回退，可能返回子节点而非根节点。
+        public const string NodeMap = "nodeMap";
         public const string NodeTargetSignal = "NodeTargetSign";
-        public const string StartPoint = "StartPoint";
+        public const string StartPoint = "startPoint";
         public const string Carrot = "Carrot";
         public const string MonsterPrefab = "MonsterPrefab";
         public const string HpSlider = "HPSlider";

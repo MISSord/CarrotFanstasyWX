@@ -238,12 +238,22 @@ namespace CarrotFantasy
             int level = this.pveDataComponent.level;
 
             string bgAsset = FightViewSpriteAb.MapBgAssetName(bigLevel, level);
-            SpriteRenderer mapBg = this.nodeMap.transform.Find("img_bg").GetComponent<SpriteRenderer>();
+            SpriteRenderer mapBg = FindMapSpriteRenderer("img_bg", bgAsset);
+            if (mapBg == null)
+            {
+                return;
+            }
+
             mapBg.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel, bgAsset), bgAsset);
             mapBg.sortingOrder = 0;
 
             string roadAsset = FightViewSpriteAb.MapRoadAssetName(bigLevel, level);
-            SpriteRenderer mapRoad = this.nodeMap.transform.Find("img_road").GetComponent<SpriteRenderer>();
+            SpriteRenderer mapRoad = FindMapSpriteRenderer("img_road", roadAsset);
+            if (mapRoad == null)
+            {
+                return;
+            }
+
             mapRoad.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel, roadAsset), roadAsset);
             mapRoad.sortingOrder = 1;
 
@@ -412,6 +422,39 @@ namespace CarrotFantasy
 
             this.carrot.Init(this.battleView.battle);
             this.RefreshCarrotPosition();
+        }
+
+        /// <summary>取小地图子节点上的 SpriteRenderer；缺失时打印实例的真实节点树，避免裸链式调用抛 NRE。</summary>
+        private SpriteRenderer FindMapSpriteRenderer(string childName, string assetName)
+        {
+            Transform parent = this.nodeMap != null ? this.nodeMap.transform : null;
+            Transform child = parent != null ? parent.Find(childName) : null;
+            if (child == null)
+            {
+                string tree = parent == null
+                    ? "<nodeMap 为 null>"
+                    : parent.name + "（子节点 " + parent.childCount + " 个）";
+
+                if (parent != null)
+                {
+                    for (int i = 0; i < parent.childCount; i++)
+                    {
+                        tree += " / " + parent.GetChild(i).name;
+                    }
+                }
+
+                Debug.LogError("[BVUIComponent] 小地图实例缺少子节点 " + childName
+                    + "（asset=" + assetName + "），实际节点树: " + tree);
+                return null;
+            }
+
+            SpriteRenderer renderer = child.GetComponent<SpriteRenderer>();
+            if (renderer == null)
+            {
+                Debug.LogError("[BVUIComponent] 子节点 " + childName + " 上缺少 SpriteRenderer");
+            }
+
+            return renderer;
         }
 
         private void LoadInfo()
