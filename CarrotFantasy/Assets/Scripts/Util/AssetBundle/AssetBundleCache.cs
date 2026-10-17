@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace CarrotFantasy
 {
+    /// <summary>
+    /// 加载资源名字拼接，形成唯一的ID
+    /// </summary>
     internal readonly struct AbProviderKey : IEquatable<AbProviderKey>
     {
         public readonly string Bundle;
@@ -72,17 +72,109 @@ namespace CarrotFantasy
         void NotifyHandleReleased(IAbWaiter waiter, AbAssetProvider provider);
     }
 
+    /// <summary>
+    /// 单个资源的最小管理器，用来管理加载完成后的资源状态。
+    /// 用完后放回对象池。仍在缓存字典里，或还有句柄指着它时，不能回池。
+    /// </summary>
     internal sealed class AbAssetProvider
     {
+        private static readonly ObjectPool<AbAssetProvider> Pool = new ObjectPool<AbAssetProvider>(16, 256, Reset);
+
+        /// <summary>从池里取出并写成一次新的加载。调用方放入缓存字典后把 <see cref="InCache"/> 设为 true。</summary>
+        internal static AbAssetProvider Rent(AbProviderKey key, IAbCacheHost host)
+        {
+            AbAssetProvider provider = Pool.Get();
+            provider._pooled = false;
+            provider.Key = key;
+            provider.State = AbProviderState.Loading;
+            provider.Asset = null;
+            provider.RefCount = 0;
+            provider.SourceStarted = false;
+            provider.SourceHeld = false;
+            provider.CallbackId = -1;
+            provider.LoadFinished = false;
+            provider.HoldsAssetRef = false;
+            provider.IdleSince = -1f;
+            provider.FailUntil = -1f;
+            provider.Host = host;
+            provider.InCache = false;
+            provider.Waiters.Clear();
+            return provider;
+        }
+
+        /// <summary>字典和句柄都不再使用时放回池。重复调用无操作。</summary>
+        internal void RecycleIfUnused()
+        {
+            if (_pooled || InCache || RefCount > 0)
+            {
+                return;
+            }
+
+            _pooled = true;
+            Pool.Release(this);
+        }
+
+        private static void Reset(AbAssetProvider provider)
+        {
+            provider.Key = default;
+            provider.State = AbProviderState.Loading;
+            provider.Asset = null;
+            provider.RefCount = 0;
+            provider.SourceStarted = false;
+            provider.SourceHeld = false;
+            provider.CallbackId = -1;
+            provider.LoadFinished = false;
+            provider.HoldsAssetRef = false;
+            provider.IdleSince = -1f;
+            provider.FailUntil = -1f;
+            provider.Host = null;
+            provider.InCache = false;
+            provider.Waiters.Clear();
+            provider._pooled = true;
+        }
+
+        private bool _pooled;
+
+        /// <summary>包名、资源名、类型。同一个 Key 在一个缓存里只有这一条记录。</summary>
         public AbProviderKey Key;
+
+        /// <summary>Loading 还在等管理器；Succeeded 已拿到资源；Failed 这次失败。</summary>
         public AbProviderState State;
+
+        /// <summary>加载成功后的资源对象。失败或尚未完成时为 null。</summary>
         public UnityEngine.Object Asset;
+
+        /// <summary>还没 Release 的句柄数量。降到 0 后才能进入空闲，等待 ReleaseIdle 归还。</summary>
         public int RefCount;
+
+        /// <summary>是否已经向 AssetBundleManager 发起过这次加载。防止同一个 Key 重复 LoadAsset。</summary>
         public bool SourceStarted;
+
+        /// <summary>缓存是否还持有这次加载。为 false 时回调到来只卸引用，不再通知句柄。</summary>
         public bool SourceHeld;
+
+        /// <summary>管理器返回的回调编号。-1 表示没有可取消的回调。</summary>
+        public int CallbackId = -1;
+
+        /// <summary>管理器回调是否已经到达。到达前取消走 CancelAssetLoad，到达后归还走 UnloadAsset。</summary>
+        public bool LoadFinished;
+
+        /// <summary>回调带回了非空资源，释放时需要 UnloadAsset。失败时管理器已经减过引用，这里为 false。</summary>
+        public bool HoldsAssetRef;
+
+        /// <summary>引用降到 0 的时刻（unscaledTime）。-1 表示当前不在空闲计时。</summary>
         public float IdleSince = -1f;
+
+        /// <summary>失败结果保留到这个时刻。未到之前再次 Load 直接失败，不再向管理器请求。</summary>
         public float FailUntil = -1f;
+
+        /// <summary>持有这条记录的缓存。句柄 Release 时通过它减引用。</summary>
         public IAbCacheHost Host;
+
+        /// <summary>是否还在缓存字典里。移出字典且引用计数为 0 后才能回池。</summary>
+        public bool InCache;
+
+        /// <summary>第一次加载尚未完成时，正在等待结果的句柄。</summary>
         public readonly List<IAbWaiter> Waiters = new List<IAbWaiter>();
     }
 
@@ -91,228 +183,6 @@ namespace CarrotFantasy
         public float IdleSeconds;
         public bool RememberFailure;
         public float FailureRememberSeconds;
-
-        public static AssetBundleCachePolicy Prefab()
-        {
-            return new AssetBundleCachePolicy
-            {
-                IdleSeconds = 120f,
-                RememberFailure = true,
-                FailureRememberSeconds = 5f
-            };
-        }
-
-        public static AssetBundleCachePolicy Image()
-        {
-            return new AssetBundleCachePolicy
-            {
-                IdleSeconds = 15f,
-                RememberFailure = false,
-                FailureRememberSeconds = 0f
-            };
-        }
-
-        public static AssetBundleCachePolicy Audio()
-        {
-            return new AssetBundleCachePolicy
-            {
-                IdleSeconds = 30f,
-                RememberFailure = false,
-                FailureRememberSeconds = 0f
-            };
-        }
-
-        public static AssetBundleCachePolicy Text()
-        {
-            return new AssetBundleCachePolicy
-            {
-                IdleSeconds = 0f,
-                RememberFailure = false,
-                FailureRememberSeconds = 0f
-            };
-        }
-    }
-
-    internal interface IAbAssetSource
-    {
-        void Load(AbProviderKey key, LoadPriority priority, Action<UnityEngine.Object> onLoaded);
-
-        void Release(AbProviderKey key);
-
-        void Pump();
-    }
-
-    /// <summary>
-    /// 真机与编辑器生产模式。加载失败时 AssetBundleManager 已经减过引用，这里不能再 UnloadAsset。
-    /// </summary>
-    internal sealed class LegacyAbAssetSource : IAbAssetSource
-    {
-        private sealed class LoadReq
-        {
-            public int CallbackId = -1;
-            public bool Finished;
-            public bool Released;
-            public bool HoldRef;
-        }
-
-        private readonly Dictionary<AbProviderKey, LoadReq> _loads = new Dictionary<AbProviderKey, LoadReq>();
-
-        public void Load(AbProviderKey key, LoadPriority priority, Action<UnityEngine.Object> onLoaded)
-        {
-            AssetBundleManager manager = AssetBundleManager.Instance;
-            if (manager == null)
-            {
-                onLoaded?.Invoke(null);
-                return;
-            }
-
-            LoadReq req = new LoadReq();
-            _loads[key] = req;
-            req.CallbackId = manager.LoadAsset(key.Bundle, key.Asset, key.AssetType, asset =>
-            {
-                req.Finished = true;
-                req.HoldRef = asset != null;
-                if (req.Released)
-                {
-                    if (req.HoldRef)
-                    {
-                        manager.UnloadAsset(key.Bundle, key.Asset);
-                    }
-
-                    return;
-                }
-
-                onLoaded?.Invoke(asset);
-            }, priority);
-        }
-
-        public void Release(AbProviderKey key)
-        {
-            if (!_loads.TryGetValue(key, out LoadReq req))
-            {
-                return;
-            }
-
-            _loads.Remove(key);
-            req.Released = true;
-            AssetBundleManager manager = AssetBundleManager.Instance;
-            if (manager == null)
-            {
-                return;
-            }
-
-            if (req.Finished)
-            {
-                if (req.HoldRef)
-                {
-                    manager.UnloadAsset(key.Bundle, key.Asset);
-                }
-            }
-            else if (req.CallbackId >= 0)
-            {
-                manager.CancelAssetLoad(key.Bundle, key.Asset, req.CallbackId);
-            }
-        }
-
-        public void Pump()
-        {
-        }
-    }
-
-#if UNITY_EDITOR
-    /// <summary>
-    /// 编辑器 Development / DebugMode。第一次加载在 Pump 里回调。
-    /// </summary>
-    internal sealed class EditorAbAssetSource : IAbAssetSource
-    {
-        private struct Pending
-        {
-            public AbProviderKey Key;
-            public Action<UnityEngine.Object> Callback;
-        }
-
-        private readonly List<Pending> _queue = new List<Pending>();
-        private readonly HashSet<AbProviderKey> _alive = new HashSet<AbProviderKey>();
-
-        public void Load(AbProviderKey key, LoadPriority priority, Action<UnityEngine.Object> onLoaded)
-        {
-            _alive.Add(key);
-            _queue.Add(new Pending { Key = key, Callback = onLoaded });
-        }
-
-        public void Release(AbProviderKey key)
-        {
-            _alive.Remove(key);
-        }
-
-        public void Pump()
-        {
-            if (_queue.Count == 0)
-            {
-                return;
-            }
-
-            Pending[] batch = _queue.ToArray();
-            _queue.Clear();
-            for (int i = 0; i < batch.Length; i++)
-            {
-                Pending item = batch[i];
-                if (!_alive.Contains(item.Key))
-                {
-                    continue;
-                }
-
-                UnityEngine.Object asset = EditorAssetLoader.LoadAssetAtPath(item.Key.Bundle, item.Key.Asset, item.Key.AssetType);
-                item.Callback?.Invoke(asset);
-            }
-        }
-    }
-#endif
-
-    internal static class AbAssetSources
-    {
-        private static IAbAssetSource _shared;
-        private static bool _inited;
-
-        public static IAbAssetSource Shared
-        {
-            get
-            {
-                Init();
-                return _shared;
-            }
-        }
-
-        public static void Init()
-        {
-            if (_inited)
-            {
-                return;
-            }
-
-            _shared = Create();
-            _inited = true;
-        }
-
-        public static void Pump()
-        {
-            if (_inited)
-            {
-                _shared.Pump();
-            }
-        }
-
-        private static IAbAssetSource Create()
-        {
-#if UNITY_EDITOR
-            LoadMode mode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-            if (mode == LoadMode.Development || mode == LoadMode.DebugMode)
-            {
-                return new EditorAbAssetSource();
-            }
-#endif
-            return new LegacyAbAssetSource();
-        }
     }
 
     /// <summary>
@@ -320,16 +190,9 @@ namespace CarrotFantasy
     /// </summary>
     internal sealed class AssetBundleCache<T> : IAbCacheHost where T : UnityEngine.Object
     {
-        private struct PendingResult
-        {
-            public AbProviderKey Key;
-            public UnityEngine.Object Asset;
-        }
-
         private readonly string _name;
         private readonly AssetBundleCachePolicy _policy;
         private readonly Dictionary<AbProviderKey, AbAssetProvider> _providers = new Dictionary<AbProviderKey, AbAssetProvider>();
-        private readonly List<PendingResult> _pending = new List<PendingResult>();
 
         public AssetBundleCache(string name, AssetBundleCachePolicy policy)
         {
@@ -339,9 +202,8 @@ namespace CarrotFantasy
 
         public AssetBundleHandle<T> Load(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
-            AbAssetSources.Init();
             AbProviderKey key = AbProviderKey.Create(bundleName, assetName, typeof(T));
-            AssetBundleHandle<T> handle = new AssetBundleHandle<T>();
+            AssetBundleHandle<T> handle = AssetBundleHandle<T>.Rent();
             if (key.IsEmpty)
             {
                 GameLogController.Error(_name + " Load 失败，包名或资源名为空", AssetBundleLoaders.LogTag);
@@ -358,6 +220,8 @@ namespace CarrotFantasy
                 }
 
                 _providers.Remove(key);
+                failed.InCache = false;
+                failed.RecycleIfUnused();
             }
 
             AbAssetProvider provider = GetOrCreateProvider(key);
@@ -376,29 +240,10 @@ namespace CarrotFantasy
             {
                 provider.SourceStarted = true;
                 provider.SourceHeld = true;
-                AbAssetSources.Shared.Load(key, priority, asset => QueueSourceLoaded(key, asset));
+                StartLoad(key, priority);
             }
 
             return handle;
-        }
-
-        /// <summary>
-        /// 第一次加载的完成统一留到这里。编辑器本来就在 Pump 里回调，真机命中已加载资源时也会先排队，避免两端 IsDone 不一致。
-        /// 缓存里已经成功的资源仍在 Load 里当场完成。
-        /// </summary>
-        public void FlushPending()
-        {
-            if (_pending.Count == 0)
-            {
-                return;
-            }
-
-            PendingResult[] batch = _pending.ToArray();
-            _pending.Clear();
-            for (int i = 0; i < batch.Length; i++)
-            {
-                ApplySourceLoaded(batch[i].Key, batch[i].Asset);
-            }
         }
 
         public int ReleaseIdle(bool ignoreDelay)
@@ -487,11 +332,41 @@ namespace CarrotFantasy
             {
                 provider.IdleSince = Time.unscaledTime;
             }
+
+            provider.RecycleIfUnused();
         }
 
-        private void QueueSourceLoaded(AbProviderKey key, UnityEngine.Object asset)
+        private void StartLoad(AbProviderKey key, LoadPriority priority)
         {
-            _pending.Add(new PendingResult { Key = key, Asset = asset });
+            AssetBundleManager manager = AssetBundleManager.Instance;
+            if (manager == null || !_providers.TryGetValue(key, out AbAssetProvider provider))
+            {
+                ApplySourceLoaded(key, null);
+                return;
+            }
+
+            // 管理器不会在 LoadAsset 返回前调用这个回调。已在内存中的资源也要等下一帧 Update。
+            provider.CallbackId = manager.LoadAsset(key.Bundle, key.Asset, key.AssetType, asset =>
+            {
+                OnManagerLoaded(key, manager, asset);
+            }, priority);
+        }
+
+        private void OnManagerLoaded(AbProviderKey key, AssetBundleManager manager, UnityEngine.Object asset)
+        {
+            if (!_providers.TryGetValue(key, out AbAssetProvider provider) || !provider.SourceHeld)
+            {
+                if (asset != null)
+                {
+                    manager.UnloadAsset(key.Bundle, key.Asset);
+                }
+
+                return;
+            }
+
+            provider.LoadFinished = true;
+            provider.HoldsAssetRef = asset != null;
+            ApplySourceLoaded(key, asset);
         }
 
         private void ApplySourceLoaded(AbProviderKey key, UnityEngine.Object asset)
@@ -520,15 +395,8 @@ namespace CarrotFantasy
 
             provider.State = AbProviderState.Succeeded;
             provider.Asset = asset;
-            IAbWaiter[] waiters = provider.Waiters.ToArray();
-            provider.Waiters.Clear();
-            for (int i = 0; i < waiters.Length; i++)
-            {
-                if (!waiters[i].IsReleased)
-                {
-                    waiters[i].Complete(asset);
-                }
-            }
+            SnapshotWaiters(provider.Waiters, out IAbWaiter[] waiters, out int[] leases);
+            DeliverWaiters(waiters, leases, asset);
         }
 
         private void FailProvider(AbProviderKey key, AbAssetProvider provider)
@@ -538,21 +406,45 @@ namespace CarrotFantasy
             provider.FailUntil = _policy.RememberFailure
                 ? Time.unscaledTime + _policy.FailureRememberSeconds
                 : 0f;
-            IAbWaiter[] waiters = provider.Waiters.ToArray();
-            provider.Waiters.Clear();
+            SnapshotWaiters(provider.Waiters, out IAbWaiter[] waiters, out int[] leases);
             ReleaseSource(provider);
             provider.SourceStarted = false;
             if (!_policy.RememberFailure)
             {
                 _providers.Remove(key);
+                provider.InCache = false;
             }
 
+            DeliverWaiters(waiters, leases, null);
+            provider.RecycleIfUnused();
+        }
+
+        /// <summary>
+        /// 先记下每个句柄的租用编号再清空列表。回调里 Release 会把句柄放回池，编号变了就不能再 Complete。
+        /// </summary>
+        private static void SnapshotWaiters(List<IAbWaiter> source, out IAbWaiter[] waiters, out int[] leases)
+        {
+            waiters = source.ToArray();
+            leases = new int[waiters.Length];
             for (int i = 0; i < waiters.Length; i++)
             {
-                if (!waiters[i].IsReleased)
+                leases[i] = waiters[i].LeaseId;
+            }
+
+            source.Clear();
+        }
+
+        private static void DeliverWaiters(IAbWaiter[] waiters, int[] leases, UnityEngine.Object asset)
+        {
+            for (int i = 0; i < waiters.Length; i++)
+            {
+                IAbWaiter waiter = waiters[i];
+                if (waiter.LeaseId != leases[i] || waiter.IsReleased)
                 {
-                    waiters[i].Complete(null);
+                    continue;
                 }
+
+                waiter.Complete(asset);
             }
         }
 
@@ -560,7 +452,9 @@ namespace CarrotFantasy
         {
             provider.Waiters.Clear();
             _providers.Remove(key);
+            provider.InCache = false;
             ReleaseSource(provider);
+            provider.RecycleIfUnused();
         }
 
         private void ReleaseSource(AbAssetProvider provider)
@@ -571,7 +465,24 @@ namespace CarrotFantasy
             }
 
             provider.SourceHeld = false;
-            AbAssetSources.Shared.Release(provider.Key);
+            AssetBundleManager manager = AssetBundleManager.Instance;
+            if (manager == null)
+            {
+                return;
+            }
+
+            if (provider.LoadFinished)
+            {
+                // 加载失败时管理器已经减过引用，这里只归还真正拿到的资源。
+                if (provider.HoldsAssetRef)
+                {
+                    manager.UnloadAsset(provider.Key.Bundle, provider.Key.Asset);
+                }
+            }
+            else if (provider.CallbackId >= 0)
+            {
+                manager.CancelAssetLoad(provider.Key.Bundle, provider.Key.Asset, provider.CallbackId);
+            }
         }
 
         private AbAssetProvider GetOrCreateProvider(AbProviderKey key)
@@ -581,12 +492,8 @@ namespace CarrotFantasy
                 return existing;
             }
 
-            AbAssetProvider created = new AbAssetProvider
-            {
-                Key = key,
-                State = AbProviderState.Loading,
-                Host = this
-            };
+            AbAssetProvider created = AbAssetProvider.Rent(key, this);
+            created.InCache = true;
             _providers[key] = created;
             return created;
         }

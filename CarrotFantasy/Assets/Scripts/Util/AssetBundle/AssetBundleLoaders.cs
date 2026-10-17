@@ -9,32 +9,25 @@ namespace CarrotFantasy
     {
         public const string LogTag = "AssetBundleLoader";
         private const int BundlesPerFrame = 8;
-
         private static bool _sweepPending;
         private static int _sweepFrame = -1;
         private static bool _idleReleased;
 
         public static void Init()
         {
-            AbAssetSources.Init();
-            if (PrefabLoader.Instance == null || ImageLoader.Instance == null
-                || AudioLoader.Instance == null || TextLoader.Instance == null)
-            {
-                return;
-            }
+            _ = PrefabLoader.Instance;
+            _ = ImageLoader.Instance;
+            _ = AudioLoader.Instance;
+            _ = TextLoader.Instance;
         }
 
         public static void Tick()
         {
-            AbAssetSources.Pump();
-            PrefabLoader.Instance.FlushPending();
-            ImageLoader.Instance.FlushPending();
-            AudioLoader.Instance.FlushPending();
-            TextLoader.Instance.FlushPending();
             PrefabLoader.Instance.Tick();
             ImageLoader.Instance.Tick();
             AudioLoader.Instance.Tick();
             TextLoader.Instance.Tick();
+
             if (AssetBundleManager.Instance != null)
             {
                 AssetBundleManager.Instance.UnloadUnreferencedBundles(1);
@@ -84,17 +77,17 @@ namespace CarrotFantasy
 
         private PrefabLoader()
         {
-            _cache = new AssetBundleCache<GameObject>("PrefabLoader", AssetBundleCachePolicy.Prefab());
+            _cache = new AssetBundleCache<GameObject>("PrefabLoader", new AssetBundleCachePolicy
+            {
+                IdleSeconds = 120f,
+                RememberFailure = true,
+                FailureRememberSeconds = 5f
+            });
         }
 
         public AssetBundleHandle<GameObject> Load(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
             return _cache.Load(bundleName, assetName, priority);
-        }
-
-        public void FlushPending()
-        {
-            _cache.FlushPending();
         }
 
         public void Tick()
@@ -122,8 +115,14 @@ namespace CarrotFantasy
 
         private ImageLoader()
         {
-            _sprites = new AssetBundleCache<Sprite>("ImageLoader.Sprite", AssetBundleCachePolicy.Image());
-            _textures = new AssetBundleCache<Texture>("ImageLoader.Texture", AssetBundleCachePolicy.Image());
+            AssetBundleCachePolicy imagePolicy = new AssetBundleCachePolicy
+            {
+                IdleSeconds = 15f,
+                RememberFailure = false,
+                FailureRememberSeconds = 0f
+            };
+            _sprites = new AssetBundleCache<Sprite>("ImageLoader.Sprite", imagePolicy);
+            _textures = new AssetBundleCache<Texture>("ImageLoader.Texture", imagePolicy);
         }
 
         public AssetBundleHandle<Sprite> LoadSprite(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
@@ -134,12 +133,6 @@ namespace CarrotFantasy
         public AssetBundleHandle<Texture> LoadTexture(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
             return _textures.Load(bundleName, assetName, priority);
-        }
-
-        public void FlushPending()
-        {
-            _sprites.FlushPending();
-            _textures.FlushPending();
         }
 
         public void Tick()
@@ -167,17 +160,17 @@ namespace CarrotFantasy
 
         private AudioLoader()
         {
-            _cache = new AssetBundleCache<AudioClip>("AudioLoader", AssetBundleCachePolicy.Audio());
+            _cache = new AssetBundleCache<AudioClip>("AudioLoader", new AssetBundleCachePolicy
+            {
+                IdleSeconds = 30f,
+                RememberFailure = false,
+                FailureRememberSeconds = 0f
+            });
         }
 
         public AssetBundleHandle<AudioClip> Load(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
             return _cache.Load(bundleName, assetName, priority);
-        }
-
-        public void FlushPending()
-        {
-            _cache.FlushPending();
         }
 
         public void Tick()
@@ -204,17 +197,17 @@ namespace CarrotFantasy
 
         private TextLoader()
         {
-            _cache = new AssetBundleCache<TextAsset>("TextLoader", AssetBundleCachePolicy.Text());
+            _cache = new AssetBundleCache<TextAsset>("TextLoader", new AssetBundleCachePolicy
+            {
+                IdleSeconds = 0f,
+                RememberFailure = false,
+                FailureRememberSeconds = 0f
+            });
         }
 
         public AssetBundleHandle<TextAsset> Load(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
             return _cache.Load(bundleName, assetName, priority);
-        }
-
-        public void FlushPending()
-        {
-            _cache.FlushPending();
         }
 
         public void Tick()

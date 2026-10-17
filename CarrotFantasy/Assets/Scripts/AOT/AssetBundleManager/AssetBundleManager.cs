@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -135,20 +134,26 @@ public class AssetItem
 
     public void ExecuteCallbacks()
     {
-        foreach (var callback in _callbacks)
+        if (_callbacks.Count == 0)
+        {
+            return;
+        }
+
+        // 先摘下来再调用。回调里可能再次 Load，不能边遍历边改列表。
+        AssetLoadCallback[] batch = _callbacks.ToArray();
+        _callbacks.Clear();
+        _callbackWithIds.Clear();
+        for (int i = 0; i < batch.Length; i++)
         {
             try
             {
-                callback?.Invoke(assetObject);
+                batch[i]?.Invoke(assetObject);
             }
             catch (Exception e)
             {
                 GameLogController.Error($"执行资源回调失败: {assetName}, 错误: {e.Message}", "AssetBundleManager");
             }
         }
-
-        _callbacks.Clear();
-        _callbackWithIds.Clear();
     }
 
     // 新增：获取回调数量
@@ -384,6 +389,22 @@ public class AssetBundleManager
     private HashSet<string> _loadingAssetKeys = new HashSet<string>();
     private HashSet<string> _cancelledAssetKeys = new HashSet<string>();
 
+    /// <summary>
+    /// 资源已在内存中，回调留到下一帧 Update 再发，避免在 LoadAsset 返回前执行。
+    /// </summary>
+    private readonly List<AssetItem> _readyCallbackItems = new List<AssetItem>();
+
+    private struct DirectCallback
+    {
+        public int CallbackId;
+        public AssetLoadCallback Callback;
+        public UnityEngine.Object Asset;
+    }
+
+    /// <summary>没有资源项可挂的回调，例如包名或资源名为空。同样等到下一帧再发。</summary>
+    private readonly List<DirectCallback> _directCallbacks = new List<DirectCallback>();
+    private int _directCallbackId = 1;
+
     public int maxConcurrentLoads = 3;
     public int maxConcurrentAssetLoads = 5; // 最大同时加载资源数量
 
@@ -437,10 +458,13 @@ public class AssetBundleManager
         _loadingAssetKeys.Clear();
         _cancelledAssetKeys.Clear();
         _loadedBundles.Clear();
+        _readyCallbackItems.Clear();
+        _directCallbacks.Clear();
     }
 
     public void Update()
     {
+        FlushScheduledCallbacks();
         UpdateBundleLoading();
         UpdateAssetLoading();
 #if UNITY_EDITOR
@@ -768,8 +792,7 @@ public class AssetBundleManager
         if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetName))
         {
             GameLogController.Error("AB包名或资源名为空", "AssetBundleManager");
-            callback?.Invoke(null);
-            return -1;
+            return ScheduleDirectCallback(callback, null);
         }
 
         GameLogController.Log($"开始尝试加载{bundleName}和{assetName}", "AssetBundleManager");
@@ -795,12 +818,12 @@ public class AssetBundleManager
         string assetKey = GetAssetLoadKey(bundleName, assetName);
         _cancelledAssetKeys.Remove(assetKey);
 
-        // 如果资源已经加载，直接返回
+        // 资源已在内存中。引用已经加上，回调留到下一帧，调用方先拿到本次的 callbackId。
         if (assetItem.assetObject != null)
         {
             if (expectedType == null || expectedType.IsInstanceOfType(assetItem.assetObject))
             {
-                assetItem.ExecuteCallbacks();
+                ScheduleReadyCallbacks(assetItem);
                 return callbackId;
             }
 
@@ -844,9 +867,93 @@ public class AssetBundleManager
         return callbackId;
     }
 
+    /// <summary>
+    /// 下一帧 Update 再通知。同一帧取消时，回调还在资源项上，CancelAssetLoad 会把它摘掉。
+    /// </summary>
+    private void ScheduleReadyCallbacks(AssetItem assetItem)
+    {
+        if (assetItem == null || _readyCallbackItems.Contains(assetItem))
+        {
+            return;
+        }
+
+        _readyCallbackItems.Add(assetItem);
+    }
+
+    private int ScheduleDirectCallback(AssetLoadCallback callback, UnityEngine.Object asset)
+    {
+        if (callback == null)
+        {
+            return -1;
+        }
+
+        int callbackId = _directCallbackId++;
+        _directCallbacks.Add(new DirectCallback
+        {
+            CallbackId = callbackId,
+            Callback = callback,
+            Asset = asset
+        });
+        return callbackId;
+    }
+
+    private void FlushScheduledCallbacks()
+    {
+        if (_readyCallbackItems.Count > 0)
+        {
+            AssetItem[] items = _readyCallbackItems.ToArray();
+            _readyCallbackItems.Clear();
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i].ExecuteCallbacks();
+            }
+        }
+
+        if (_directCallbacks.Count == 0)
+        {
+            return;
+        }
+
+        DirectCallback[] callbacks = _directCallbacks.ToArray();
+        _directCallbacks.Clear();
+        for (int i = 0; i < callbacks.Length; i++)
+        {
+            try
+            {
+                callbacks[i].Callback?.Invoke(callbacks[i].Asset);
+            }
+            catch (Exception e)
+            {
+                GameLogController.Error($"执行延迟资源回调失败: {e.Message}", "AssetBundleManager");
+            }
+        }
+    }
+
+    private bool CancelDirectCallback(int callbackId)
+    {
+        for (int i = 0; i < _directCallbacks.Count; i++)
+        {
+            if (_directCallbacks[i].CallbackId != callbackId)
+            {
+                continue;
+            }
+
+            _directCallbacks.RemoveAt(i);
+            return true;
+        }
+
+        return false;
+    }
+
     // 新增：取消特定资源的加载回调
     public void CancelAssetLoad(string bundleName, string assetName, int callbackId)
     {
+        if (string.IsNullOrEmpty(bundleName) || string.IsNullOrEmpty(assetName))
+        {
+            CancelDirectCallback(callbackId);
+            return;
+        }
+
 #if UNITY_EDITOR
         if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
         {

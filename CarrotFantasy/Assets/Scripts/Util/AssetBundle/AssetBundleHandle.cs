@@ -1,5 +1,4 @@
 using System;
-using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -7,35 +6,69 @@ namespace CarrotFantasy
     {
         bool IsReleased { get; }
 
+        /// <summary>每次取出或释放都会变。通知完成时用来认出已经回池、又被下一次 Load 取走的实例。</summary>
+        int LeaseId { get; }
+
         void Complete(UnityEngine.Object asset);
     }
 
     /// <summary>
-    /// 一份 AB 资源引用。Release 归还一次 Provider 计数，重复调用无操作。
+    /// 一份 AB 资源引用。Release 归还一次 Provider 计数，并把句柄放回对象池。
+    /// 重复 Release 无操作。Release 之后不要再使用这个实例，它可能被下一次 Load 取走。
     /// 缓存命中时，Load 返回前 IsDone 已经为 true。
     /// </summary>
     public sealed class AssetBundleHandle<T> : IDisposable, IAbWaiter where T : UnityEngine.Object
     {
         private const string LogTag = "AssetBundleLoader";
+        private static readonly ObjectPool<AssetBundleHandle<T>> Pool =
+            new ObjectPool<AssetBundleHandle<T>>(16, 256, Reset);
 
         internal AbAssetProvider Provider;
         private Action<T> _completed;
         private bool _done;
         private bool _succeeded;
         private bool _released;
+        private bool _pooled;
         private bool _warned;
+        private int _lease;
 
-        public bool IsValid => !_released;
+        /// <summary>从池里取一个空白句柄。Load 以外不要自己 new。</summary>
+        internal static AssetBundleHandle<T> Rent()
+        {
+            AssetBundleHandle<T> handle = Pool.Get();
+            handle._pooled = false;
+            handle._released = false;
+            handle._done = false;
+            handle._succeeded = false;
+            handle._warned = false;
+            handle._completed = null;
+            handle.Provider = null;
+            return handle;
+        }
 
-        public bool IsDone => _done;
+        /// <summary>放回池之前断开资源、回调和完成状态，避免下次取出时还指着上一份引用。</summary>
+        private static void Reset(AssetBundleHandle<T> handle)
+        {
+            handle.Provider = null;
+            handle._completed = null;
+            handle._done = false;
+            handle._succeeded = false;
+            handle._released = false;
+            handle._warned = false;
+            handle._pooled = true;
+        }
 
-        public bool Succeeded => _succeeded && !_released;
+        public bool IsValid => !_released && !_pooled;
+
+        public bool IsDone => _done && !_pooled;
+
+        public bool Succeeded => _succeeded && IsValid;
 
         public T Asset
         {
             get
             {
-                if (_released)
+                if (_released || _pooled)
                 {
                     if (!_warned)
                     {
@@ -68,6 +101,12 @@ namespace CarrotFantasy
                     return;
                 }
 
+                if (_pooled)
+                {
+                    value(null);
+                    return;
+                }
+
                 if (_done)
                 {
                     value(_released || !_succeeded ? null : Provider.Asset as T);
@@ -79,11 +118,13 @@ namespace CarrotFantasy
             remove { _completed -= value; }
         }
 
-        bool IAbWaiter.IsReleased => _released;
+        bool IAbWaiter.IsReleased => _released || _pooled;
+
+        int IAbWaiter.LeaseId => _lease;
 
         internal void Complete(UnityEngine.Object asset)
         {
-            if (_done)
+            if (_done || _released || _pooled)
             {
                 return;
             }
@@ -102,12 +143,13 @@ namespace CarrotFantasy
 
         public void Release()
         {
-            if (_released)
+            if (_released || _pooled)
             {
                 return;
             }
 
             _released = true;
+            _lease++;
             AbAssetProvider provider = Provider;
             Provider = null;
             if (provider != null && provider.Host != null)
@@ -119,6 +161,8 @@ namespace CarrotFantasy
             {
                 Complete(null);
             }
+
+            Pool.Release(this);
         }
 
         public void Dispose()
