@@ -1,0 +1,1360 @@
+# 资源加载分层 + GameObjectSpawnManager 设计文档（v2）
+
+> 状态：**设计稿**（仅接口与契约，尚未实现）
+> v1 → v2 变更：**在句柄层与业务层之间引入"按资源种类分层"的加载管理器**，`GameObjectSpawnManager` 的模板缓存/引用计数**下移**到 `PrefabLoadManager`。
+> 关联模块：`AssetBundleManager` / `AssetLoadManager` / `PrefabLoadManager` / `ImageLoadManager` / `AudioLoadManager` / `TextLoadManager` / `GameObjectSpawnManager`
+
+---
+
+## 0. 先读这一节
+
+### 0.1 必须先接受的硬约束
+
+| # | 决策 | 后果 |
+|---|---|---|
+| **D1** | `Spawn` **只提供异步回调** | **无法 `return` 实例**，实例只能从 `onReady(GameObject)` 获得。"单一回收入口"（`Destroy`）成立，"单一获取入口"是回调。 |
+| **D2** | 模板**共享 + 引用计数**，最后一个实例销毁才释放 | 引用计数职责从调用方收归 `PrefabLoadManager`（v1 里它暂放在 SpawnManager，v2 下移）。 |
+| **D3** | **不做 marker 自动兜底**，只靠显式回收 | 绕过回收的销毁路径（直接 `GameObject.Destroy`、父节点销毁、**场景卸载**）会让注册表留下僵尸条目 → 模板引用永不归零 → **AB 常驻**。见 §8.2。**缓解方案**：`ResourceLifecycleSafety_Design.md`（对账扫描 + owner 归属）。 |
+| **D4** | ~~提供 `DestroyByParent`~~ → **v3 移除** | 它是"用层级结构猜归属"的劣质代理（过度销毁 / re-parent 失效 / parent 先死即废），被 `ReleaseAll(owner)` 完全替代。见 §0.3。 |
+
+**关于 D3 的现状（已缓解）**：切场景是唯一会**批量**触发该漏洞的时刻——Unity 卸载场景时直接销毁实例，不经过回收入口，托管注册表收不到通知。两个互补机制兜底：
+
+- **机制 A｜实例对账扫描**：定时 + 场景切换后扫描注册表，发现 `rec.Instance == null`（Unity 重载）即归还模板引用并告警。覆盖面最广、不改任何调用签名。
+- **机制 B｜owner 归属作用域**：Spawn 时登记归属者，owner 消失（显式 `ReleaseAll` / Unity `== null` / 弱引用 GC）时统一回收，并把一个 owner 的清理收敛为一行调用。
+
+分工与覆盖矩阵见 `ResourceLifecycleSafety_Design.md` §2。**注意：它们只是兜底，不消除 D3**——owner 与实例双双存活且忘记清理时仍会泄漏，只能靠 §8.3 的诊断发现。
+
+### 0.2 v3 的核心变化一句话
+
+**归属（owner）成为贯穿全层的生命周期主键**：一个 owner 的实例、资源句柄、预热钉住，全部由 `ReleaseAll(owner)` 一次释放；`DestroyByParent` 因此被移除。同时把"实例存活 ⟹ 包不被卸载"这条安全链提升为**第一不变量**（§7.3）并给出配套的 pin 机制。
+
+### 0.3 v1 → v2 → v3 变更摘要
+
+| 版本 | 变更 |
+|---|---|
+| v1 | `GameObjectSpawnManager` 自带模板缓存 + 引用计数 |
+| **v2** | 引入按资源种类分层的加载管理器（`Prefab`/`Image`/`Audio`/`Text`）；模板缓存与引用计数**下移**到 `PrefabLoadManager`；抽出 `ResourceCache<T>` 作为共用内核 |
+| **v3** | ① 移除 `DestroyByParent`（§0.3.1）② owner 归属改为显式重载 `SpawnOwned`/`SpawnGlobal`（§6）③ **pin 纳入 owner 作用域**（§5.1、§6.6）④ owner 注册表抽为共享组件 `OwnerRegistry`（§6.5）⑤ "实例 ⟹ 包"安全链升为第一不变量（§7.3）⑥ 新增 `ExplainBundle` 诊断（§8.4）⑦ 迁移须连 `Instantiate` 站点一起改（§10.3）⑧ `ResourceHandle` 加代际号（§3.2） |
+
+#### 0.3.1 为什么移除 `DestroyByParent`
+
+| 失败模式 | 说明 |
+|---|---|
+| **过度销毁** | 同一容器下可能挂着多个 owner 生成的对象；销毁整个 parent 会连带干掉**仍存活 owner** 的实例 |
+| **re-parent 即失效** | 实例生成后被移出 → 清理漏掉（泄漏）；被移入 → 被误杀 |
+| **parent 先死即废** | `parent == null` 直接 no-op。而这是最常见场景：`BaseView.Release()` 里 `GameObject.Destroy(rootObject)` 已把子树连实例一起销毁，真正该干活的是 `ReconcileNow()` |
+
+各用例的替代关系：
+
+| 原用例 | 替代 |
+|---|---|
+| 面板关闭清场 | `ReleaseAll(this)`（`BaseView` 自身即 owner） |
+| 战斗组件 `ClearGameInfo` | `ReleaseAll(this)` |
+| 父节点 / 子树被销毁 | `ReconcileNow()` |
+| 调试时清空某节点 | 保留为**调试工具**并显式标注"非生命周期路径"，或直接删除 |
+
+---
+
+## 1. 为什么需要"按资源种类分层"（含证据）
+
+### 1.1 现状：句柄层是"类型无关"的，导致类型化职责全部泄漏到消费者
+
+当前结构：
+
+```
+业务层
+  └─ GameObjectResourceManager / ImageResourceManager   ← 只做泛型转发 + 日志名，几乎是空壳
+       └─ AssetLoadManager (AssetLoadHandle)            ← 类型无关的句柄记账
+            └─ AssetBundleManager                       ← 包/依赖/下载/优先级
+```
+
+`GameObjectResourceManager.LoadPrefab` 与 `ImageResourceManager.LoadSprite` 除了给日志起个名，**没有任何类型化逻辑**——真正按类型区分的职责全被推到了业务层：
+
+| 类型化职责 | 现在落到了哪里 | 问题 |
+|---|---|---|
+| Sprite 共享/去重 | `UIImageLoader` 每个实例各自 `LoadAsset` 各持一个 handle | 50 个图标显示同一张图 = **50 份引用**，无去重 |
+| AudioClip 缓存 | `AudioManager.clipCacheAb`（业务层单例做资源层的事） | **只增不减**，从不释放 |
+| AudioClip 预热 | `AudioClipPreloader`（静态工具类，只预热包体不加载 clip） | 预热与加载分家 |
+| Prefab 模板引用计数 | 即将落到 `GameObjectSpawnManager`（v1 方案） | 职责错位：实例管理器不该管资源生命周期 |
+
+**结论**：这个提案的实质不是"多一层"，而是**把已经泄漏到上层的类型化职责收回成一个显式层**。
+
+### 1.2 一个更大的实际缺口：24 处失效的 `Resources` 调用
+
+`Assets/Resources/` 实际只有 5 个文件：
+
+```
+Assets/Resources/
+  BaseView.prefab          ← 唯一真正被用到的（ViewManager 加载 UI 根壳）
+  BillingMode.json
+  DOTweenSettings.asset
+  StartLoadBG.png
+  StartLoadPanel.prefab
+```
+
+**没有 `Pictures/`，也没有 `AudioClips/`。** 但全项目有 **24 处**调用走的是 `ResourceLoader.Instance.loadRes<T>("Pictures/...")` / `("AudioClips/...")`，全部**静默返回 null**：
+
+| 文件 | 失效调用 |
+|---|---|
+| `BattleUnitView_Monster.cs:61,63` | Sprite + RuntimeAnimatorController |
+| `BVMapComponent.cs:30-32` | 3× Sprite（格子三态） |
+| `BVUIComponent.cs:169-171` | 3× Sprite（升级按钮三态） |
+| `ButtonTower.cs:23,24` | 2× Sprite |
+| `Carrot.cs:31` | Sprite 数组 |
+| `NormalModelPanel.cs:138,139`、`GameWinView.cs:23` | Sprite |
+| `SetPanel.cs:112-115`、`MapNormalLevelPanel.cs:84-160`、`NormalLevelScrollerCellView.cs:41,74` | Sprite |
+| `AudioManager.cs:179` | `AudioClips/NormalMordel/BGMusic` → **背景音乐也是 null** |
+
+项目正处在 `Resources` → `AssetBundle` 迁移的半途。缺的正是"按资源种类分层的加载层"——`ImageLoadManager` 一旦存在，这 24 处就有了明确的迁移目标。
+
+### 1.3 还发现两处"已打包但没人用"的资源
+
+| 资源 | 状态 |
+|---|---|
+| `Assets/Game/Json/**`（`json_prefab`、`json/level_prefab` 包） | **已打进 AB，但没有任何代码读它**。`MapConfigReader` / `BattleParamServer` 仍用 `File`/`StreamReader` 直读 `Application.streamingAssetsPath`——这在 Android（APK 内不可 File IO）和微信小游戏下必然失败。 |
+| `Assets/Game/Animator/**`（479 个 `.anim`/`.controller`） | **不在任何 AB 里**。`PrefabABPathPostprocessor` 的扩展名过滤显式排除了 `.anim`/`.controller`，它们只能作为隐式依赖被拉进引用它们的包。 |
+
+---
+
+## 2. 目标分层
+
+```
+业务 / 表现层
+ ├─ BaseView(面板)      ├─ BV*Component(战斗表现)
+ ├─ UIImageLoader       ├─ AudioManager
+ └─ MapConfigReader / BattleParamServer (配置读取)
+        │
+        │  ① GameObjectSpawnManager            实例生命周期（Instantiate / Destroy / ReleaseAll）
+        │        │  AcquireTemplate / ReleaseTemplate
+        │        ▼
+        │  ② PrefabLoadManager                 ┐
+        │     ImageLoadManager                 │  资源生命周期（按资源种类）
+        │     AudioLoadManager                 │  每个管理器持 1..N 个 ResourceCache<T>
+        │     TextLoadManager                  ┘
+        │        │
+        │        ▼
+        │  ③ ResourceCache<T>                  通用：缓存 + 引用计数 + 在途合并 + 取消
+        │        │
+        │        ▼
+        │  ④ AssetLoadManager  (internal)      句柄记账（已加载 / 加载中 / 取消）
+        │        │
+        │        ▼
+        │  ⑤ AssetBundleManager                包 / 依赖 / 下载 / 优先级 / 空闲卸载
+```
+
+### 2.1 建哪几个？——按证据，不按想象
+
+| 资源种类 | 现有实现 | 决定 | 依据 |
+|---|---|---|---|
+| **Prefab** (`GameObject`) | `GameObjectResourceManager` + `LoadPrefabBlocking` | ✅ `PrefabLoadManager` | 面板/战斗大量使用；模板需共享引用计数与预热 |
+| **Image** (`Sprite`/`Texture`) | `ImageResourceManager` + `UIImageLoader`；另有 24 处失效 `Resources.Load` | ✅ `ImageLoadManager` — **收益最大** | 去重收益最高（大量图标复用同一图集）；§1.2 的迁移目标 |
+| **AudioClip** | `AudioManager.clipCacheAb`（只增不减）+ `AudioClipPreloader` | ✅ `AudioLoadManager` | 把缓存从业务层收回资源层；预热与加载合并 |
+| **Text / JSON** | `File`/`StreamReader` 直读 StreamingAssets；AB 里那份是死的 | ✅ `TextLoadManager` | 修复 Android/微信下的必然失败；让 `json_prefab` 真正派上用场 |
+| **RuntimeAnimatorController / AnimationClip** | `ResourceLoader.loadRes<RuntimeAnimatorController>("Pictures/...")` → null | ⚠️ **待定** | 需先决定是否把 `.anim`/`.controller` 纳入 AB（当前被 Postprocessor 排除）。见 §10 Q6 |
+| Material / Shader | 未发现运行时加载 | ❌ 不建 | — |
+| Scene | `SceneManager.LoadScene` 原生加载（`scenes_prefab` 包未被使用） | ❌ 不建 | — |
+
+**只建这 4 个。** 新增一个管理器的准入条件：它必须有**类型特有的策略**（缓存 / 去重 / 引用计数 / 预热 / 平台适配），而不只是"泛型转发的类型别名"——否则就是纯间接层。
+
+### 2.2 命名
+
+| 旧 | 新 | 说明 |
+|---|---|---|
+| `GameObjectResourceManager` | `PrefabLoadManager` | 语义更准：它加载的是 prefab 模板，不是任意 GameObject |
+| `ImageResourceManager` | `ImageLoadManager` | |
+| — | `AudioLoadManager` | 吸收 `AudioManager.clipCacheAb` 与 `AudioClipPreloader` 的职责 |
+| — | `TextLoadManager` | 配置文本 |
+| `ResourceLoader` | **建议删除** | 只剩 `Resources.Load` 包装，其调用点 24/25 已失效；唯一有效的 `BaseView` 可走 `Resources.Load` 或纳入 prefab 层 |
+
+命名动机：`GameObjectResourceManager`（资源）与 `GameObjectSpawnManager`（实例）都带 "GameObject"，容易混。改成 `PrefabLoadManager` 后，"Prefab 资源层 / 实例层"的边界从名字上就分得开。
+
+---
+
+## 3. `ResourceCache<T>` —— 通用缓存内核（★ 本方案的技术核心）
+
+### 3.1 为什么是"组合"而不是"继承"
+
+若用抽象基类 `ResourceLoadManagerBase<T>`，会立刻碰到一个问题：**`ImageLoadManager` 需要同时服务 `Sprite` 和 `Texture`**（`Image` 用 Sprite，`RawImage` 用 Texture），单继承无法表达。而若把 `T` 放宽成 `UnityEngine.Object`，`EditorAssetLoader.TryLoadBestMatch` 在 `expectedType = typeof(Object)` 时会退化成"任意类型都匹配"，可能取到错误的子资源（图集的主资源是 Texture2D，Sprite 是子资源）。
+
+因此把缓存/引用计数/合并/取消做成一个**可复用的泛型组件**，由管理器**持有**（组合），而不是继承：
+
+```csharp
+PrefabLoadManager  : 持有 ResourceCache<GameObject>
+AudioLoadManager   : 持有 ResourceCache<AudioClip>
+ImageLoadManager   : 持有 ResourceCache<Sprite> + ResourceCache<Texture>   ← 组合解决多类型
+TextLoadManager    : 持有 ResourceCache<TextAsset>
+```
+
+好处：**§3.3 的两个坑只在 `ResourceCache<T>` 里实现一次**，4 个管理器全部受益，而不是各写一遍。
+
+### 3.2 接口
+
+```csharp
+namespace CarrotFantasy
+{
+    /// <summary>
+    /// 一份资源引用。Dispose 归还一次引用；引用归零时资源才真正从缓存移除并归还 AB 引用。
+    /// 重复 Dispose 安全（幂等）。
+    /// </summary>
+    public readonly struct ResourceHandle<T> : IDisposable where T : UnityEngine.Object
+    {
+        public bool IsValid { get; }
+        public bool IsLoaded { get; }
+
+        /// <summary>
+        /// 已交付时的资源；未交付、已释放或失败时为 null。
+        /// ⚠️ 释放后（含被 ReleaseAll(owner) 释放）再读返回 null 并告警（代际号校验，见下）。
+        /// </summary>
+        public T Asset { get; }
+
+        /// <summary>归属者（可为 null）。ReleaseAll(owner) 会释放该 owner 名下所有句柄。</summary>
+        public object Owner { get; }
+
+        public void Dispose();
+    }
+```
+
+> **代际号（Q16）**：句柄内部携带 `(cacheId, requestId, generation)`。`ResourceCache<T>` 每次复用一个 requestId 槽位时递增 generation。句柄被释放后再 `Dispose()` 或读 `Asset` 时若 generation 不匹配，**告警并返回 null/空操作**。这把"用了已释放的句柄"这类静默 bug 变成一行日志——分层 + owner 化之后这种误用概率会明显上升，值得这点成本。
+
+```csharp
+    /// <summary>
+    /// 按 (bundle, asset) 去重的资源缓存内核：
+    /// 缓存 + 引用计数 + 在途请求合并 + 取消语义。
+    /// 由各 *LoadManager 持有，不直接暴露给业务层。
+    /// </summary>
+    public sealed class ResourceCache<T> where T : UnityEngine.Object
+    {
+        /// <summary>
+        /// 获取一份引用。若已缓存则【本帧内联】回调；若在途则挂入等待列表；
+        /// 否则发起底层加载。失败时 onReady(null)。
+        /// </summary>
+        public ResourceHandle<T> Acquire(string bundleName, string assetName,
+                                        Action<T> onReady,
+                                        LoadPriority priority = LoadPriority.Medium);
+
+        /// <summary>
+        /// 钉住一个 key，使其引用计数不因活跃引用归零而释放。
+        /// 【归属化】pin 记在 owner 名下，无需手动配对（见 §5.1）。
+        /// </summary>
+        public void Pin(string bundleName, string assetName, object owner);
+
+        /// <summary>解除某 owner 对某 key 的钉住；引用计数为 0 且无 pin 时立即释放。</summary>
+        public void Unpin(string bundleName, string assetName, object owner);
+
+        /// <summary>解除某 owner 在该缓存上的所有 pin（供 ResourceReleaser.ReleaseAll 调用）。</summary>
+        public void UnpinAll(object owner);
+
+        // ---- 诊断 ----
+        public int EntryCount { get; }
+        public int TotalRefCount { get; }
+        public int PinCount { get; }
+        public string Dump();
+    }
+}
+```
+
+### 3.3 两个必须在这里解决的坑
+
+#### 坑 A：handle 赋值竞态
+
+`AssetBundleManager.LoadAsset` 在资源已驻留时会**同步**触发回调（走 `assetItem.assetObject != null` 分支直接 `ExecuteCallbacks()`）。而 `AssetLoadManager.LoadAsset` 返回的 `AssetLoadHandle` 是在**调用返回后**才拿到的——所以回调可能早于赋值：
+
+```csharp
+// ✗ 回调可能先于赋值触发，此时 entry.Handle 仍是 Invalid
+entry.Handle = AssetLoadManager.Instance.LoadAsset<T>(bundle, asset, OnLoaded, priority);
+```
+
+解法：把"回调到达"与"handle 就位"拆成两个门闩，统一收口。
+
+```csharp
+// ✓
+entry.Pending.Add(request);
+OnLoaded(key, asset);        // 只设 LoadCompleted / LoadSucceeded / Asset，不碰 Handle
+entry.Handle = AssetLoadManager.Instance.LoadAsset<T>(bundle, asset, a => OnLoaded(key, a), priority);
+entry.HandleAssigned = true;
+TryFinalizeEntry(key);       // 第二次尝试收口
+```
+
+`TryFinalizeEntry` 门闩：
+
+```
+if (!entry.LoadCompleted || !entry.HandleAssigned) return;   // 任一未就绪则等待
+if (!entry.LoadSucceeded) → 失败收口（§4.3）
+else                       → 逐个交付 Pending（§4.4）
+```
+
+#### 坑 B：取消不能依赖底层
+
+两条路径都不可靠：
+
+- **非编辑器模式**：`AssetLoadManager.Release` 会调 `AssetBundleManager.CancelAssetLoad`，但存在"回调已入队、取消晚一步"的竞态。
+- **编辑器 Development / DebugMode**：`AssetBundleManager.LoadAsset<T>` 直接 `return -1`，而 `CancelAssetLoad` 开头就 `return`，**完全不生效**，回调必定到达。
+
+因此必须用自己的 `Cancelled` 标记在回调侧做最终拦截：**回调到达时若已取消就不交付**。这样无论底层能否取消，结论都正确。
+
+同时注意：**取消后不能立即删缓存条目**。若此时底层仍在加载，条目一旦删除，那个 handle 就再也没人 `Dispose` → 引用泄漏。正确做法是保留条目，等 `OnLoaded` 回来后在 `TryFinalizeEntry` 里按"引用数为 0 且未钉住"释放。
+
+### 3.4 key 归一化
+
+`AssetBundleManager` 的 `_allBundleDic` / `_bundleManifests` **以原始字符串为键**，而清单里的 `BundleName` 由打包流程 `ToLower()` 生成。所以调用方必须传小写包名，否则报 `AB包不在清单中`——这正是 `AudioManager` 与 `UIImageLoader` 里都手写了 `.ToLowerInvariant()` 的原因。
+
+`ResourceCache<T>` 在入口统一归一化，业务层不再需要关心：
+
+- `bundleName` → `Replace('\\','/')` + `ToLowerInvariant()`
+- `assetName` → **原样传递，不做大小写转换**（与 `AssetItem` 字典键及 `LoadAssetAsync` 的既有行为一致）
+
+### 3.5 `AssetLoadManager` 的定位变化
+
+`AssetLoadManager` 保留，但**降级为内部实现细节**（`ResourceCache<T>` 是它唯一的调用者）：它负责"请求 → (bundle, asset)"的映射，以决定 `Dispose` 时走 `UnloadAsset`（已加载）还是 `CancelAssetLoad`（加载中）。业务代码不再直接调用它。
+
+> 不把它删掉的理由：否则每个 `ResourceCache<T>` 都要重写这段"已加载/加载中/取消"的分支逻辑，等于把坑 A/B 复制到 4 个地方。
+
+### 3.6 ★★ 零引用淘汰策略：冷却期 + 积分（而非归零即清）
+
+> 本节修订 §4.5 的 `ReleaseEntry`：**`RefCount == 0 && !Pinned` 不再立即释放**，而是进入冷却期，由老化积分决定何时真正释放。
+
+#### 3.6.1 问题：asset churn（Unity 官方命名的性能陷阱）
+
+Unity 官方在 Addressables 文档里专门写了一节 **"Avoid asset churn"**：
+
+> "Asset churn happens if you release an object that's the last item in an AssetBundle, and then immediately reload either that asset or another asset in the AssetBundle. **Asset churn can affect the performance of your application negatively if you unload and reload assets in succession. You should keep assets for as long as possible before unloading them.**"
+
+它给的例子与本项目高度同构：
+
+> "you have two materials, `boat` and `plane` that share a texture, `cammo`, which is in its own AssetBundle. Level 1 uses `boat` and level 2 uses `plane`. As you exit level 1 Unity releases `boat`, and immediately loads `plane`. When Unity releases `boat`, Addressables unloads texture `cammo`. Then, when Unity load `plane`, Addressables immediately reloads `cammo`."
+
+对应到本项目：`ui/images/tower/1/images_atlas`、`fightpart_prefab`、`audioclips/normalmordel_prefab` 都是被多个消费者共享的包。**关面板 → 释放 → 再开面板**，或**一波怪清完 → 释放 → 下一波**，都会触发同样的 churn。
+
+同一页还有一条结构性事实，说明"归零即清"本来就是错觉：
+
+> "Unity doesn't unload released assets from memory immediately, because the memory that an asset uses isn't freed until the AssetBundle it belongs to is also unloaded."
+> "you can load an AssetBundle, or its partial contents, but **you can't unload part of an AssetBundle**."
+
+即：**归零释放只减少引用计数，真正的内存要等包卸载才回来**。既然如此，急着清缓存条目只是把"下次 acquire 要重做异步加载"这个代价提前付出，收益却为零。
+
+#### 3.6.2 三条业界做法
+
+| 来源 | 做法 |
+|---|---|
+| **Addressables** | 官方结论就是"**keep assets for as long as possible before unloading them**"；提供 Profiler 模块检测 churn，而不是提供即时卸载 |
+| **YooAsset** | **不做逐资源即时卸载**。引用计数归零只是"可卸载"，真正释放由独立的 sweep API 完成：`UnloadUnusedAssetsAsync()`（"**可以在切换场景之后调用资源释放方法或者写定时器间隔时间去释放**"）、`TryUnloadUnusedAsset(location)`、`UnloadAllAssetsAsync()` |
+| **Unity 自身的 `Cache.expirationDelay`** | 磁盘缓存的自动删除延迟，**默认 150 天**（12,960,000 秒）。"The number of seconds that an AssetBundle may remain unused in the cache before it is automatically deleted." —— Unity 自己的默认姿态就是**极度懒惰地淘汰** |
+
+**三者一致：零引用 ≠ 立即释放；释放应由一个受控的、延迟的、可批量化的策略决定。** 这就是你说的"积分"机制，它是成熟做法而非自创。
+
+#### 3.6.3 本设计的方案：冷却期 + 老化积分
+
+```
+条目状态机：
+  Active      RefCount > 0 或 Pinned
+              → age 归零（"第二次机会"），handle 必须持有
+  Cooling     RefCount == 0 且未 Pinned，age < threshold
+              → ★ 仍然持有 handle（这是关键），Acquire 命中即本帧内联交付
+  Evictable   age >= threshold
+              → 交给扫描器释放：handle.Dispose() + 移出 _entries
+
+积分（age）累加规则：
+  · 每帧 +deltaTime（用 Time.unscaledDeltaTime，避免暂停/慢动作时冻住回收）
+  · 任一 Acquire 命中 → age 归零，回到 Active
+  · Pin 期间不累加（等价于无限冷却期）
+
+淘汰判定（两级）：
+  ① age >= EvictThreshold(kind)                    → 单条淘汰
+  ② 缓存条目总数 > CacheEntryCap                   → 按 age 降序批量淘汰（age 最大 = 最久未用 = LRU）
+```
+
+**为什么是"冷却期"而不是"再等一次扫描"**：扫描轮转的快慢取决于 `_records.Count / scanBudget`（实例数、预算），用它当时间单位会让冷却时长随战斗规模漂移，无法调参。用秒做单位则可以稳定地按资源种类配置。
+
+**真·加权积分（可选进阶）**：若后续需要更精细的策略，可把 `age` 升级为加权分（即缓存理论里的 **GreedyDual-Size-Frequency (GDSF)** 家族）：
+
+```
+score = idleSeconds
+      + reloadCostWeight(kind)     // prefab 重载最贵 → 加分，倾向保留
+      + sizeWeight                 // 大资源更占内存 → 减分，倾向淘汰
+      - hitCountBonus              // 命中越多越值得留（LFU）
+淘汰 score 最高者
+```
+
+建议**先只做冷却期 + LRU 上限**；加权积分留好字段与 hook，等有真机内存数据再启用——否则参数无从调起。
+
+#### 3.6.4 接口变化
+
+```csharp
+public sealed class ResourceCache<T> where T : UnityEngine.Object
+{
+    // …既有成员
+
+    /// <summary>
+    /// 零引用后的冷却时长（秒）。期间条目仍持有 handle，Acquire 可本帧内联命中。
+    /// 0 表示退化为"归零即清"（不推荐，会触发 asset churn）。
+    /// </summary>
+    public float CooldownSeconds { get; set; }        // 默认见 §3.6.6
+
+    /// <summary>缓存条目数上限；超限时按 age 降序淘汰（LRU）。0 表示不限。</summary>
+    public int EntryCap { get; set; }
+
+    /// <summary>跳过冷却期，立即释放全部零引用条目。用于内存告急 / 场景切换。</summary>
+    public int EvictCoolingNow();
+
+    /// <summary>每帧驱动老化。由各 *LoadManager 的 Update() 调用。</summary>
+    public void TickCooldown(float unscaledDeltaTime);
+
+    // 诊断
+    public int ActiveCount { get; }
+    public int CoolingCount { get; }
+    public int PinnedCount { get; }
+}
+```
+
+#### 3.6.5 ★ 对第一不变量与诊断的影响（必须同步更新）
+
+冷却期**改变了 §7.3 第一不变量的时间语义**，因为冷却中的条目**仍然持有 handle**：
+
+```
+冷却中的条目
+  ⟹ AssetLoadHandle 未释放
+  ⟹ AssetItem.referenceCount ≥ 1 且 BundleInfo.referenceCount ≥ 1
+  ⟹ 该包【在冷却期内不会被空闲卸载】
+```
+
+这是**刻意的**——正是它阻止了 churn。但必须接受并记录三个后果：
+
+| 后果 | 说明 | 缓解 |
+|---|---|---|
+| **内存占用上升** | 包驻留时间 = 缓存冷却期 + 该包的 60s 空闲期，两者叠乘而非取其一 | 冷却期默认值要保守（§3.6.6）；提供 `EvictCoolingNow()` |
+| **"为什么这个包没卸载"更难排查** | 可能只是被一个零引用条目钉在冷却期 | `ExplainBundle` **必须**区分显示 `Active / Cooling / Pinned` 三种钉住原因（§8.4） |
+| **需要强制清场手段** | 内存告急、切场景、低端机降级时需要立刻回收 | `EvictCoolingNow()` + `ClearAll()`（`ResourceLifecycleSafety_Design.md` §3.6.2） |
+
+> **口径统一**：从"最后一次 `Release`"到"内存真正归还"的总时长 ≈ `CooldownSeconds` + 最多 60s（`AssetBundleManager.unloadCheckInterval` / `unloadReferenceThreshold`）。文档与诊断输出都应使用这个口径，避免误解。
+
+#### 3.6.6 参数建议（按资源种类差异化）
+
+| 资源种类 | `CooldownSeconds` | 理由 |
+|---|---|---|
+| **Prefab 模板**（`PrefabLoadManager`） | **较长（建议 30–60s）** | 重载最贵（要碰包），且战斗波次间隔天然在这个量级 |
+| **Sprite / Texture**（`ImageLoadManager`） | 中等（10–30s） | 面板开关频繁；图集通常与模板同包 |
+| **AudioClip**（`AudioLoadManager`） | 中等（30s+） | 音效会被反复播放，churn 代价明显 |
+| **TextAsset**（`TextLoadManager`） | 短（0–5s） | 配置类通常一次读完即弃 |
+
+**战斗场景的特殊性**：战斗内其实**不需要靠冷却期**——`PinTemplate` 已经把本局模板钉住了，零引用只发生在"塔卖了/怪死了"的实例层面，模板条目在 Pin 期间根本不进入冷却。所以冷却期的真正价值在 **UI 面板开关** 与 **战斗之间/关卡之间的过渡**。
+
+---
+
+## 4. `ResourceCache<T>` 关键流程
+
+### 4.1 Acquire
+
+```
+Acquire(bundle, asset, onReady, priority)
+ ├─ 归一化 key = lower(bundle) + "|" + asset
+ ├─ entry = _entries[key]
+ ├─ entry == null
+ │   ├─ entry = { Key, RefCount = 1, IsLoading = true, Pending = [req] }
+ │   ├─ _entries[key] = entry
+ │   └─ 发起底层加载（注意坑 A 的两段式赋值）
+ ├─ entry.LoadSucceeded（缓存命中）
+ │   ├─ entry.RefCount++
+ │   └─ DeliverOrCancel(req)          ← 本帧内联
+ ├─ entry.IsLoading（在途）
+ │   └─ entry.RefCount++；entry.Pending.Add(req)
+ └─ entry 已失败
+     └─ onReady(null)（不建条目，下次重新尝试）
+ └─ 返回 ResourceHandle<T>(this, req.Id)
+```
+
+**RefCount 在请求时乐观递增**，使资源在整条在途期间不被释放；失败/取消时回滚。
+
+### 4.2 OnLoaded
+
+```
+OnLoaded(key, asset)
+  entry = _entries[key]; if (entry == null) return       // 已被移除
+  entry.IsLoading = false
+  entry.LoadCompleted = true
+  entry.LoadSucceeded = (asset != null)
+  entry.Asset = asset
+  TryFinalizeEntry(key)
+```
+
+收口成功后：
+
+```
+  var pending = entry.Pending.ToArray();   // 先摘快照，避免交付中回调修改集合
+  entry.Pending.Clear()
+  foreach (req in pending) DeliverOrCancel(req)
+  if (entry.RefCount <= 0 && !entry.Pinned) StartCooldown(key)   // 关闭坑 B 的悬空；§3.6
+```
+
+### 4.3 失败收口
+
+```
+- 每个 Pending：标记 Completed、onReady(null)、移出请求表
+- entry.Pending.Clear()；entry.RefCount = 0
+- _entries.Remove(key)        // 不留残条目，下次 Acquire 会重新尝试
+```
+
+### 4.4 交付（含重入保护）
+
+```
+DeliverOrCancel(req)
+  entry = _entries[req.Key]
+  ├─ req.Cancelled        → entry.RefCount--；Completed；移出请求表；return
+  ├─ entry.Asset == null  → onReady(null)；Completed；移出请求表；return
+  └─ 正常：
+       _dispatchDepth++
+       req.Callback(entry.Asset)      ← 回调内可能再调 Acquire/Release
+       req.Completed = true
+       移出请求表
+       _dispatchDepth--
+       if (_dispatchDepth == 0) FlushDeferredRelease()
+```
+
+### 4.5 Release / 冷却 / 淘汰（**v3 修订：归零不再立即释放**）
+
+```
+Release(handle)
+  if (!handle.IsValid) return
+  req = _requests[handle.Id]; if (req == null) return    // 幂等
+  _requests.Remove(handle.Id)
+  entry = _entries[req.Key]; if (entry == null) return
+  entry.RefCount = Max(0, entry.RefCount - 1)
+  if (entry.RefCount <= 0 && !entry.Pinned) StartCooldown(req.Key)   // ★ 不再直接 ReleaseEntry
+
+StartCooldown(key)                        // §3.6
+  entry = _entries[key]; if (entry == null) return
+  entry.State = Cooling
+  entry.Age   = 0
+  // ★ 仍然持有 entry.Handle —— 这正是防止 asset churn 的关键
+
+TickCooldown(unscaledDeltaTime)           // 每帧由各 *LoadManager.Update() 驱动
+  foreach (entry in _entries where entry.State == Cooling)
+      entry.Age += unscaledDeltaTime
+      if (entry.Age >= CooldownSeconds) MarkEvictable(entry.Key)
+  if (EntryCap > 0 && EvictableCount > EntryCap)
+      MarkEvictable(按 Age 降序的前 N 条)   // LRU 批量淘汰
+
+Evict(key)                                // 真正的释放，只在这里发生
+  entry = _entries[key]; if (entry == null) return
+  if (entry.RefCount > 0 || entry.Pinned) { entry.Age = 0; entry.State = Active; return }  // 防御：又有人用了
+  if (_dispatchDepth > 0) { _deferredRelease.Add(key); return }   // 重入保护
+  _entries.Remove(key)
+  if (entry.Handle.IsValid) entry.Handle.Dispose()        // → UnloadAsset 或 CancelAssetLoad
+
+EvictCoolingNow()                         // 强制回收：跳过冷却期
+  foreach (key in _entries where State == Cooling) Evict(key)
+```
+
+**Acquire 命中冷却中的条目**时：`entry.Age = 0; entry.State = Active; entry.RefCount++` —— 即"第二次机会"，并**本帧内联交付**（无需重新加载，handle 还在）。
+
+**`Unpin` 后归零**同样走 `StartCooldown`，而不是立即释放。
+
+**编辑器 Development/DebugMode 说明**：该模式下 `AssetBundleManager` 从不递增引用计数，`AssetLoadHandle.Dispose()` 经 `AssetLoadManager.Release` 后两个分支都不命中，等价空操作，**无副作用，可安全保留**。
+
+> ⚠️ **冷却期会延长包驻留**，总口径 ≈ `CooldownSeconds` + 最多 60s。这是拿内存换延迟的**刻意取舍**，必须在 `ExplainBundle` 里可见（§3.6.5、§8.4）。
+
+---
+
+## 5. 各类型加载管理器接口
+
+### 5.1 `PrefabLoadManager`
+
+```csharp
+namespace CarrotFantasy
+{
+    /// <summary>
+    /// Prefab 模板的资源层：负责模板的加载、共享引用计数与预热。
+    /// 【不负责实例化】——实例化由 GameObjectSpawnManager 承担。
+    /// </summary>
+    public sealed class PrefabLoadManager
+    {
+        public static PrefabLoadManager Instance { get; }
+
+        /// <summary>获取一份 prefab 模板引用。onReady 收到的是模板，不是实例。</summary>
+        /// <remarks>
+        /// ⚠️ 返回的句柄【必须存活到所有由该模板克隆出的实例销毁之后】。
+        /// 过早 Dispose 会让包在空闲巡检时被卸载，已克隆实例的材质/贴图随之销毁（变粉）。
+        /// 详见 §7.3 第一不变量。实例化请优先走 GameObjectSpawnManager。
+        /// </remarks>
+        public ResourceHandle<GameObject> AcquireTemplate(string bundleName, string assetName,
+                                                          Action<GameObject> onReady,
+                                                          LoadPriority priority = LoadPriority.Medium);
+
+        /// <summary>
+        /// 钉住模板：使其引用计数不因实例销毁而归零，避免反复加载/卸载。
+        /// 【归属化】pin 记在 owner 名下，ReleaseAll(owner) 会一并解除，无需手动配对。
+        /// 用途：战斗开局预热、池化容器保活。
+        /// </summary>
+        public void PinTemplate(string bundleName, string assetName, object owner,
+                                LoadPriority priority = LoadPriority.Medium,
+                                Action<bool> onComplete = null);
+
+        /// <summary>
+        /// 解除某个 owner 对某模板的钉住。
+        /// 若引用计数已为 0，条目不立即释放，而是进入冷却期（§3.6）。
+        /// </summary>
+        public void UnpinTemplate(string bundleName, string assetName, object owner);
+
+        /// <summary>解除某 owner 在模板上的全部 pin（供 ResourceReleaser.ReleaseAll 调用）。</summary>
+        public void UnpinAll(object owner);
+
+        // ⛔【v3 已移除】AcquireTemplateBlocking / LoadPrefabBlocking
+        //    原因见 §7.4：在 WebGL / 微信小游戏上"同帧空转泵"会让异步回调永不触发，
+        //    必然静默返回 null；在桌面端也只是"卡帧换写法"（主流框架的 sync 同样是 async + 阻塞等待）。
+        //    战斗层的同步需求改由 PinTemplate 预热 + 缓存命中本帧内联交付满足。
+    }
+}
+```
+
+> **pin 与句柄的关系**：`RefCount = 活跃实例数 + 在途请求数 + pin 数`。pin 不做引用计数配对，只按 owner 记账——`ReleaseAll(owner)` 一次性解除该 owner 的所有 pin，避免"只 Pin 忘 Unpin"。
+
+### 5.2 `ImageLoadManager`
+
+```csharp
+    /// <summary>图片资源层：Sprite（Image）与 Texture（RawImage）的共享缓存与去重。</summary>
+    public sealed class ImageLoadManager
+    {
+        public static ImageLoadManager Instance { get; }
+
+        public ResourceHandle<Sprite>  AcquireSprite (string bundleName, string assetName,
+                                                      Action<Sprite> onReady,
+                                                      LoadPriority priority = LoadPriority.Medium);
+        public ResourceHandle<Texture> AcquireTexture(string bundleName, string assetName,
+                                                      Action<Texture> onReady,
+                                                      LoadPriority priority = LoadPriority.Medium);
+    }
+```
+
+**这一类收益最大**：当前 `UIImageLoader` 每个实例各持一个 handle，50 个图标指向同一张图会产生 50 份引用；改走 `ImageLoadManager` 后同一 `(bundle, asset)` 只占 1 份引用、1 次加载。
+
+### 5.3 `AudioLoadManager`
+
+```csharp
+    /// <summary>音频资源层：吸收 AudioManager.clipCacheAb 与 AudioClipPreloader 的职责。</summary>
+    public sealed class AudioLoadManager
+    {
+        public static AudioLoadManager Instance { get; }
+
+        public ResourceHandle<AudioClip> AcquireClip(string bundleName, string assetName,
+                                                     Action<AudioClip> onReady,
+                                                     LoadPriority priority = LoadPriority.Medium);
+
+        /// <summary>预热若干 AB 包体（不加载 clip），替代 AudioClipPreloader.RunBundles。</summary>
+        public void PreloadBundles(IReadOnlyCollection<string> bundleNames, Action onComplete = null);
+
+        /// <summary>预热战斗常用音频包，替代 AudioClipPreloader.RunBattleDefaults。</summary>
+        public void PreloadBattleDefaults(Action onComplete = null);
+    }
+```
+
+迁移要点：`AudioManager.clipCacheAb` 是**只增不减**的字典，迁移后由 `ResourceHandle` 的引用计数接管，`AudioManager` 退化为"播放器"而不再管资源。
+
+### 5.4 `TextLoadManager`
+
+```csharp
+    /// <summary>配置文本资源层：把 StreamingAssets 直读改为走 AB，修复 Android / 微信下的必然失败。</summary>
+    public sealed class TextLoadManager
+    {
+        public static TextLoadManager Instance { get; }
+
+        public ResourceHandle<TextAsset> AcquireText(string bundleName, string assetName,
+                                                     Action<TextAsset> onReady,
+                                                     LoadPriority priority = LoadPriority.Medium);
+
+        /// <summary>便捷方法：加载并解析 JSON 后立即归还引用（配置类资源通常不需要常驻）。</summary>
+        public void AcquireJson<T>(string bundleName, string assetName,
+                                   Action<T> onParsed,
+                                   LoadPriority priority = LoadPriority.Medium) where T : class;
+    }
+}
+```
+
+迁移要点：`MapConfigReader:16` 与 `BattleParamServer:123` 目前用 `Application.streamingAssetsPath + "/Json/..."` + `File`/`StreamReader`。这在 Android（StreamingAssets 位于 APK 内）和微信小游戏下**必然失败**。AB 里的 `json_prefab` / `json/level_prefab` 已经准备好了（`Assets/Game/Json/**`），只差这一层去读。
+
+---
+
+## 6. `GameObjectSpawnManager`（v3）
+
+模板缓存与引用计数已下移到 `PrefabLoadManager`，本类只剩**实例生命周期 + 归属登记**。
+
+```csharp
+namespace CarrotFantasy
+{
+    public struct SpawnOptions
+    {
+        public Transform Parent;
+        public bool WorldPositionStays;       // 默认 false
+        public Vector3? LocalPosition;        // null = 不改
+        public Vector3? LocalScale;           // null = 不改
+        public string NameOverride;           // null = 沿用 prefab 名
+        public LoadPriority Priority;         // 默认 Medium
+        public bool SetActiveAfterSpawn;      // 默认 true
+        public static SpawnOptions Default { get; }
+    }
+
+    /// <summary>
+    /// 一次 Spawn 请求的凭据。
+    /// 契约：本结构【只用于取消】，不承担实例回收职责。
+    /// onReady 交付成功即视为所有权转移给调用方，此后本请求失效；
+    /// 回收实例只能通过 GameObjectSpawnManager.Destroy(instance) 或归属化 ReleaseAll(owner)。
+    /// </summary>
+    public readonly struct SpawnRequest : IDisposable
+    {
+        public bool IsValid { get; }
+        public bool IsCompleted { get; }
+        public bool IsCancelled { get; }
+        public GameObject Instance { get; }
+        public void Cancel();
+        public void Dispose();      // 等价 Cancel()
+    }
+
+    /// <summary>
+    /// GameObject 实例层。调用方只持有实例本身：
+    ///     SpawnOwned(this, bundle, asset, go => {...}, options);
+    ///     ReleaseAll(this);       // 或 Destroy(go) 单独回收
+    /// </summary>
+    public sealed class GameObjectSpawnManager
+    {
+        public static GameObjectSpawnManager Instance { get; }
+
+        // ---- 生成（v3：归属为显式参数，不再是可选字段） ----
+
+        /// <summary>
+        /// 生成一个【有归属】的实例。owner 通常是 this。
+        /// ReleaseAll(owner) 会一次销毁该 owner 名下所有实例，无需逐个 Destroy。
+        /// </summary>
+        public SpawnRequest SpawnOwned(object owner, string bundleName, string assetName,
+                                       Action<GameObject> onReady,
+                                       SpawnOptions options = default);
+
+        /// <summary>
+        /// 生成一个【无归属】的实例。用于单例 / 静态上下文（AudioManager、MapConfigReader 等），
+        /// 其资源视为进程级，不参与自动回收。
+        /// ⚠️ 无归属实例只能靠 Destroy(instance) 或 Reconcile() 回收，不要再传 owner 语义。
+        /// </summary>
+        public SpawnRequest SpawnGlobal(string bundleName, string assetName,
+                                        Action<GameObject> onReady,
+                                        SpawnOptions options = default);
+
+        // ---- 回收 ----
+
+        /// <summary>
+        /// 销毁实例并归还模板引用。返回 false 表示非托管实例（记 Warning，退化为 GameObject.Destroy）。
+        /// 对 null / 已销毁实例调用返回 false 且不报错（幂等）。
+        /// </summary>
+        public bool Destroy(GameObject instance);
+
+        /// <summary>
+        /// 销毁该 owner 名下的所有托管实例并归还模板引用。
+        /// 返回回收的实例数。owner 为 null 时返回 0。
+        /// 这是【首选】的批量回收入口，替代 v2 的 DestroyByParent。
+        /// </summary>
+        public int ReleaseAll(object owner);
+
+        /// <summary>该 owner 当前名下还有多少活跃实例。</summary>
+        public int GetOwnedCount(object owner);
+
+        // ---- 对账（机制 A，详见 ResourceLifecycleSafety_Design.md §3） ----
+
+        /// <summary>
+        /// 分帧增量对账。由 Update() 每帧调用，无需外部驱动。
+        /// 双预算封顶（扫描 ~256 条 / 回收 2 条）+ 续扫游标，单帧成本有上界，
+        /// 连续轮转，stale 窗口 ≈ N/scanBudget 帧。
+        /// </summary>
+        public void TickReconcile();
+
+        /// <summary>
+        /// 立即做一次【不分帧】的完整对账（预算视为无限、游标复位）。
+        /// 用于场景切换后与调试。返回本次回收的条目数。
+        /// </summary>
+        public int ReconcileNow(string contextName = null);
+
+        /// <summary>场景切换后调用，等价 ReconcileNow()，额外附带 sceneName 告警上下文。</summary>
+        public int ReconcileAfterSceneChange(string sceneName);
+
+        // ---- 全局清理（详见 ResourceLifecycleSafety_Design.md §3.6.2） ----
+
+        /// <summary>
+        /// 释放本管理器登记的全部资源（实例 / pin / 句柄）并清空所有容器。
+        /// 【顺序不可调换】：先释放、再清空。只清容器 = 直接泄漏 AB 引用。
+        /// 用于场景整体清场、编辑器 Domain Reload 重置、测试起点。
+        /// </summary>
+        public void ClearAll(bool destroyInstances = true);
+
+        /// <summary>只清空闲置的记录池，不动任何存活登记。</summary>
+        public void ClearPool();
+
+        // ---- 诊断 ----
+
+        public int TrackedInstanceCount { get; }
+        public int PooledRecordCount { get; }
+        public void DumpTracked();
+    }
+}
+```
+
+> **记录池**：`InstanceRecord` / `RequestRecord` 每帧可能分配数十~数百个，实现上从 `InstanceRecordPool` 租借（`Reset()` 后归还），以消除低端机 GC 尖刺。细节与陷阱见 `ResourceLifecycleSafety_Design.md` §3.6.1。
+>
+> ⚠️ **注意术语**：本文档中"**记录池**"指 `InstanceRecord` 的对象池；"**实例池**"指 `GameViewObjectPool` 那类复用 GameObject 的池（§9.2）。两者无关。
+
+> **`SpawnOwned` / `SpawnGlobal` 为什么不合并成一个可选参数**：可选字段等于"可以忘"。两个命名方法强迫每个调用点做一次自觉选择，代码审查时也能一眼看出哪些资源是进程级的（`SpawnGlobal`）。
+>
+> **`DestroyByParent` 已移除**，理由与替代方案见 §0.3.1。
+
+内部状态（比 v1 简单得多——没有 `TemplateEntry`）：
+
+```csharp
+internal sealed class InstanceRecord
+{
+    public string Key;                                  // 模板的 bundle|asset
+    public GameObject Instance;
+    public ResourceHandle<GameObject> TemplateHandle;   // 每实例持一份模板引用
+    public int OwnerToken;                              // 0 = 无归属
+    public int Index;                                   // 自己在 _records 中的下标
+}
+
+// 唯一权威存储。可续游标要求按下标访问 → 必须 List（Dictionary 枚举顺序不可索引）
+private readonly List<InstanceRecord> _records;
+
+// instanceID -> _records 下标。Destroy(go) 在热路径上，需要 O(1)
+private readonly Dictionary<int, int> _indexById;
+
+// 分帧扫描器状态（详见 ResourceLifecycleSafety_Design.md §3.2）
+private int _scanCursor;
+private int _reclaimsThisFrame;
+```
+
+> **下文流程伪代码中的 `_instances` 是简写**，实际对应 `_records`（下标访问）+ `_indexById`（O(1) 查找）这一对结构。改用 list + index 的原因、`swap-remove` 的下标维护、以及分帧续扫的游标三条规则，见 `ResourceLifecycleSafety_Design.md` §3。
+
+`Key` 只用 `bundle|asset` 的归一化字符串（重复字符串在 .NET 中会被驻留，内存可接受）；若担心量级可改为内部 `int keyId`。
+
+### 6.1 Spawn
+
+```
+SpawnOwned(owner, bundle, asset, onReady, options)        // SpawnGlobal 走同一路径，ownerToken = 0
+ ├─ 校验参数；空 → onReady(null)，返回 Invalid
+ ├─ requestId = _nextRequestId++
+ ├─ handle = PrefabLoadManager.Instance.AcquireTemplate(bundle, asset,
+ │              template => OnTemplateReady(requestId, template), options.Priority)
+ ├─ _requests[requestId] = { Callback = onReady, Options = options, TemplateHandle = handle }
+ └─ return SpawnRequest(this, requestId)
+```
+
+注意：`AcquireTemplate` 的回调**可能内联同步触发**（缓存命中时），因此 `_requests[requestId]` 的写入必须发生在调用之前，且回调侧要能容忍"记录已存在"。
+
+```
+OnTemplateReady(requestId, template)
+  req = _requests[requestId]; if (req == null) return      // 已取消
+ ├─ template == null
+ │   → req.Callback(null)；req.TemplateHandle.Dispose()；_requests.Remove
+ └─ 正常
+      _dispatchDepth++
+      go = GameObject.Instantiate(template, options.Parent, options.WorldPositionStays)
+      应用 NameOverride / LocalPosition / LocalScale / SetActiveAfterSpawn
+
+      id = go.GetInstanceID()
+      if (_instances.TryGetValue(id, out old))             // instanceID 复用碰撞（坑 3-②）
+          Warn("instanceID 碰撞，先回收陈旧条目"); DetachFromOwner(old); old.TemplateHandle.Dispose()
+
+      ownerToken = _owners.ResolveToken(req.Owner)          // 0 = 无归属
+      _instances[id] = new InstanceRecord { Key, Instance = go,
+                                            TemplateHandle = req.TemplateHandle,
+                                            OwnerToken = ownerToken }
+      if (ownerToken != 0) _owners.Get(ownerToken).InstanceIds.Add(id)
+
+      req.Instance = go；req.Completed = true
+      _requests.Remove(requestId)
+      req.Callback(go)            ← 回调内可能再调 Spawn / Destroy / ReleaseAll / Cancel
+      _dispatchDepth--
+      if (_dispatchDepth == 0) FlushDeferred()
+```
+
+> **失败路径不登记归属**：`template == null` 时直接返回，不创建 `OwnerEntry`——否则失败请求会让 owner 表无谓膨胀。
+
+### 6.2 Destroy（单实例回收入口）
+
+```
+Destroy(instance)
+  if (instance == null) return false                       // Unity 重载 ==，幂等
+  id = instance.GetInstanceID()
+  if (!_instances.TryGetValue(id, out rec))
+  {
+      GameLogController.Warning($"Destroy: 非托管实例 {instance.name}，退化为 GameObject.Destroy", LogModule)
+      GameObject.Destroy(instance); return false
+  }
+
+  // ★ 身份校验（坑 3-①）：instanceID 会被 Unity 复用，
+  //   若 rec 指向的是另一个（已销毁的）对象，说明这是陈旧条目，不能放它的引用
+  if (!ReferenceEquals(rec.Instance, instance))
+  {
+      GameLogController.Warning($"Destroy: instanceID {id} 已被复用，先回收陈旧条目 {rec.Key}", LogModule)
+      DetachFromOwner(rec); _instances.Remove(id)
+      if (rec.TemplateHandle.IsValid) rec.TemplateHandle.Dispose()
+      GameObject.Destroy(instance); return false
+  }
+
+  // ★ 必须立即移除，不能等帧末：
+  //   Unity 的 GameObject.Destroy 是延迟销毁，本帧内 instance == null 仍为 false
+  _instances.Remove(id)
+  GameObject.Destroy(instance)
+
+  DetachFromOwner(rec)                                            // 从 _owners[token].InstanceIds 摘除
+  if (rec.TemplateHandle.IsValid) rec.TemplateHandle.Dispose()    // → PrefabLoadManager 引用计数 --
+  return true
+```
+
+> 三个 Unity 实现坑（判空用重载 `==`、`Destroy` 立即出表、instanceID 复用需身份校验）的完整推演见 `ResourceLifecycleSafety_Design.md` §3.4。
+>
+> **为什么统一写 `GameObject.Destroy` 而不是 `Object.Destroy`（重要）**
+>
+> `Destroy` / `Instantiate` 都**只声明在 `UnityEngine.Object` 上**（`public static void Destroy(Object obj, float t = 0.0F)`），`GameObject` 并未声明自己的版本，只是继承——Unity 官方文档在 `Object.Destroy` 页尾专门加了一句 *"Destroy is inherited from the UnityEngine.Object base class."* 因此 `GameObject.Destroy(x)` 与 `Object.Destroy(x)` **解析到同一个方法**，行为完全一致，不存在"哪个更对"的运行时差异。
+>
+> 但在**本项目**里 `Object.Destroy` 是编译陷阱：只要文件里有 `using System;`，标识符 `Object` 就在 `System.Object` 与 `UnityEngine.Object` 之间产生二义性，报 **CS0104**。本项目大量文件带 `using System;`（如 `BVTowerComponent.cs:1`、`BaseBattle.cs:1`），而 `GameObject` 只存在于 `UnityEngine`，**永远不会二义**。
+>
+> 项目现状也印证了这个约定：
+>
+> | 写法 | 出现次数 |
+> |---|---|
+> | `GameObject.Destroy` | **21** |
+> | `UnityEngine.Object.Destroy`（全限定，同样安全） | 4 |
+> | 裸 `Object.Destroy` | 0 |
+> | `GameObject.Instantiate` | **24** |
+> | 裸 `Object.Instantiate` | 0 |
+>
+> 全项目唯一一处裸 `Object.` 是 `PrefabUIImageLoaderAutoBinder.cs:247` 的 `Object.DestroyImmediate`，而该文件**刻意没有** `using System;`——只要有人给它加一行 `using System;` 就会立刻编译失败。
+>
+> **约定**：本文档一律用 `GameObject.Destroy` / `GameObject.Instantiate`；需要强调"可销毁任意 Object"语义时用全限定的 `UnityEngine.Object.Destroy`。**禁止裸写 `Object.`**。
+
+### 6.3 `ReleaseAll(owner)`（取代 v2 的 DestroyByParent）
+
+```
+ReleaseAll(owner)
+  if (owner == null) return 0
+  token = _owners.ResolveToken(owner); if (token == 0) return 0
+  oe = _owners[token]
+
+  // ① 快照后逐个销毁实例（走正常 Destroy 流程，保证引用计数与 owner 表一致）
+  ids = oe.InstanceIds.ToArray()
+  destroyed = 0
+  foreach (id in ids) { if (_instances.TryGetValue(id, out rec)) { Destroy(rec.Instance); destroyed++ } }
+
+  // ② 解除该 owner 的所有 pin（PrefabLoadManager 侧按 owner 记账）
+  PrefabLoadManager.Instance.UnpinAll(owner)
+
+  // ③ 释放该 owner 的所有资源句柄（跨层，见 §8）
+  ResourceReleaser.ReleaseHandles(owner)
+
+  _owners.Remove(token)          // _ownerTokens 由 ConditionalWeakTable 自动清理
+  return destroyed
+```
+
+**释放顺序**：先销毁实例，再解 pin，最后释放句柄——保证中间过程引用计数不会出现"实例还在但引用已归零"的假 0。
+
+### 6.4 为什么有 owner 就不再需要 `DestroyByParent`
+
+见 §0.3.1。核心理由：`DestroyByParent` 是**用层级结构猜归属**，owner 是**真实归属**。
+
+### 6.5 `OwnerRegistry`（共享组件）
+
+`PrefabLoadManager`（管 pin）与 `GameObjectSpawnManager`（管实例）都需要 owner 查询，因此把归属做成**共享基础设施**，而不是各自实现：
+
+```csharp
+/// <summary>
+/// 归属注册表：owner → token 的弱映射 + 存活判定。
+/// 由 GameObjectSpawnManager / PrefabLoadManager / 各 ResourceCache 共用。
+/// </summary>
+public sealed class OwnerRegistry
+{
+    /// owner → token（ConditionalWeakTable 弱键，不阻止 owner 被 GC）
+    private readonly ConditionalWeakTable<object, TokenBox> _tokens = new();
+    /// token → 可回收数据（我们自己持有，owner 死后仍能据以回收）
+    private readonly Dictionary<int, OwnerEntry> _entries = new();
+
+    public int ResolveToken(object owner);      // owner 为 null / 值类型 → 0
+    public bool IsAlive(int token);
+    public OwnerEntry Get(int token);
+    public void Remove(int token);
+    public IReadOnlyCollection<int> CollectDeadTokens();   // 供 Reconcile 使用
+    public void PruneEmpty();                              // 剔除名下无实例的条目
+    public IEnumerable<int> EnumerateTokens();
+}
+```
+
+细节（弱引用必要性、三层存活判定、`ConditionalWeakTable` 用法、空条目剔除）见 `ResourceLifecycleSafety_Design.md` §4。
+
+### 6.6 预热与保活策略
+
+有了 owner 化的 pin，"什么该常驻、什么时候解除"变得可表达：
+
+| 时机 | 动作 | owner |
+|---|---|---|
+| 启动 / Loading 界面 | `SpawnManager` 无关；只做清单校验与下载 | — |
+| 进入 MainPanel | `ImageLoadManager` 按需加载即可，无需预热 | — |
+| **进入战斗** | `PrefabLoadManager.PinTemplate(...)` 钉住本局用到的塔/怪/子弹模板与常用音效包；`AudioLoadManager.PreloadBattleDefaults()` | `BattleManager` 实例 |
+| 战斗中的高频单位 | 由 `GameViewObjectPool` 复用；池首次缓存某模板实例时 `PinTemplate(..., pool)` | 池 |
+| **退出战斗** | `ReleaseAll(battleManager)` 一次解除全部 pin / 实例 / 句柄 | — |
+| 场景切换 | `ReconcileNow()` | — |
+
+**收益**：pin 让"模板在两次 spawn 之间不被释放"，避免反复加载造成的异步延迟抖动；同时因为 pin 归属化，退出战斗时一次调用即可全部解除，不会漏。
+
+---
+
+## 7. 契约与不变量
+
+### 7.1 调用方必须遵守
+
+| # | 契约 |
+|---|---|
+| C1 | **`onReady` 必须判空**。失败时收到 `null`，不判空会 NRE。 |
+| C2 | **只有 `Destroy` / `ReleaseAll` 能回收托管实例**。不要直接 `GameObject.Destroy(go)`（D3）。 |
+| C3 | `SpawnRequest` / `ResourceHandle<T>` 都**不做长期凭据**；交付后即失效。 |
+| C4 | 不要依赖 `onReady` 一定异步；缓存命中时**本帧内联**触发。 |
+| C5 | 同一实例不要在 `Destroy` 与 `ReleaseAll(owner)` 之间重复回收（第二次走"非托管"分支并告警，语义混乱）。二选一。 |
+| C6 | `ResourceHandle<T>` 必须 `Dispose`；重复 `Dispose` 安全。 |
+| C7 | 业务代码**不要**再直接调用 `AssetLoadManager` / `GameObjectResourceManager` / `ImageResourceManager` / `ResourceLoader`。 |
+| C8 | **`AcquireTemplate` 返回的句柄必须存活到所有克隆实例销毁之后**。过早 `Dispose` 会让包被空闲卸载，克隆实例变粉（见 §7.3）。实例化请优先走 `GameObjectSpawnManager`。 |
+| C9 | 池化对象归还池时**必须**显式 `ReleaseAll(this)`；池若缓存实例，须先 `PinTemplate(..., poolOwner)`。 |
+| C10 | 单例 / 静态上下文用 `SpawnGlobal`，其资源为进程级，不参与自动回收。 |
+| C11 | 传了 owner 的实例由 `ReleaseAll(owner)` 统一回收；不要再对该实例单独 `Destroy`。 |
+
+### 7.2 不变量
+
+| # | 不变量 |
+|---|---|
+| I1 | 任一时刻，一个 `(bundle, asset)` 在某类缓存中至多对应 **1 个** `AssetLoadHandle`。 |
+| I2 | `entry.RefCount == 活跃 handle 数 + 在途未取消请求数 + pin 数`。 |
+| I3 | `RefCount == 0 && pin 数 == 0` 的条目进入 **Cooling**（冷却期，仍持有 handle）；只有 `Age >= CooldownSeconds` 或触发 `EntryCap` LRU 淘汰后才真正释放（在途加载除外，§3.3 坑 B；冷却策略见 §3.6）。 |
+| I4 | `onReady` 要么不被调用（已取消），要么被调用**恰好一次**。 |
+| I5 | 交付给调用方的实例已挂载到 `options.Parent` 且已完成变换设置。 |
+| I6 | `GameObjectSpawnManager` 内 `活跃实例数 == PrefabLoadManager 中这些模板的引用数之和`。 |
+| I7 | 全部逻辑在主线程（由 `AssetBundleManager.Update` 驱动），无锁。 |
+
+### 7.3 ★★★ 第一不变量：实例存活 ⟹ 包不被卸载
+
+**这是整套设计里最重要的一条**，也是所谓"管理实例后的资源"的全部内容。它不是新增机制，而是把现有实现里**隐式成立**的安全链明确写下来——因为链上任一环断掉，实例就会变粉，而目前没有任何地方记录过这条链。
+
+```
+托管实例存活
+  ⟹ ResourceCache 条目 RefCount ≥ 1                      （SpawnManager 持有一份模板引用）
+  ⟹ 该 (bundle, asset) 唯一的 AssetLoadHandle 未释放      （§I1：一个 key 一个 handle）
+  ⟹ AssetItem.referenceCount ≥ 1
+     且 BundleInfo.referenceCount ≥ 1                    （AssetLoadManager.Dispose 才递减）
+  ⟹ AssetBundleManager.CheckAndUnloadUnusedBundles 不会选中它
+     （条件为 referenceCount <= 0 且空闲 > 60s）
+  ⟹ 该包【及其依赖包】保持加载
+     （依赖包的引用由父包在 UnloadBundle 时才释放）
+  ⟹ 实例引用的材质 / 贴图 / 网格 / 动画控制器全部有效
+```
+
+#### 7.3.1 两个会踩断这条链的写法
+
+| 写法 | 断在哪一环 | 后果 |
+|---|---|---|
+| **过早释放模板句柄**：`AcquireTemplate` → `Instantiate` → 立即 `Dispose` | 第 2 环 | 包空闲卸载 → **克隆实例变粉** |
+| **池化实例未 pin**：`Destroy` 归还了模板引用，池里仍留着克隆 | 第 2 环 | 同上 |
+
+第二条正是 **pin 机制**存在的理由（§5.1、§6.6）：pin 让 `RefCount` 在"没有活跃实例"时仍 ≥ 1，从而在池化场景下维持整条链。
+
+#### 7.3.2 重要推论：迁移必须连 `Instantiate` 站点一起改
+
+这条不变量要求**模板句柄的存活期覆盖克隆的存活期**。因此不能只迁移"加载点"而保留旧的 `Instantiate` 写法。
+
+反例——`BaseView.NeedToLoadIndex`（`BaseView.cs:400`）当前的混合写法：
+
+```csharp
+info.loadIndex = AssetBundleManager.Instance.LoadAsset<GameObject>(
+    info.bundleName, info.assetName,
+    (GameObject obj) => { AssetBundleLoadCallBack(obj, info, index); });   // 回调里自己 Instantiate
+```
+
+若改成"新层 Acquire → 自己 Instantiate → 立刻归还句柄"，就会出现"新层管着释放、旧代码的克隆还在用"的危险中间态。**正确做法**：句柄随克隆一起保存（`BaseView` 已有 `UIDownInfo` 可以承载），或在 `Release()` 里才归还——迁移时两者必须同时改。
+
+#### 7.3.3 这条链的已知脆弱点
+
+链条的第 4 环依赖 `AssetBundleManager` 的引用计数正确。而该层存在**既有**脆弱点（本次不修，但需知悉）：
+
+- `_loadedBundles` 与 `_allBundleDic` 双字典，卸载后 `BundleInfo` 仍留在 `_allBundleDic`（`isLoaded=false`），状态可能与 `_loadedBundles` 不一致。
+- `UnloadBundle(force: true)` 会调用 `RemoveBundleAndDependenciesReferences`，对已经是 0 的引用再递减一次（被 `Mathf.Max(0, …)` 夹住，通常无害，但依赖包的引用可能被提前释放）。
+- `bundle.Unload(true)` 会销毁该包**所有**已加载对象；只要引用计数正确就不会误伤存活消费者，但一旦上面两点出问题，破坏面是整包。
+
+**建议**：`ExplainBundle`（§8.4）应能直接暴露这些计数，作为验证手段。
+
+### 7.4 ★★ 同步还是异步：**必须全异步**（平台约束，非偏好）
+
+> 本节结论直接关闭 **Q1 / Q2 / Q3**，并使 `AcquireTemplateBlocking` 与 `LoadPrefabBlocking` **必须移除**。
+
+#### 7.4.1 三条外部证据
+
+**① Unity 官方（Addressables）明确说 WebGL 不支持同步等待**
+
+> "WebGL doesn't support `WaitForCompletion`. On WebGL, a web request loads all files. … Because WebGL is single-threaded, **the tight loop blocks the web request and the operation is never allowed to finish**."
+> —— [Addressables: Synchronous loading](https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/SynchronousAddressables.html)
+
+同一页还有两条对本设计至关重要的警告：
+
+> "All active asset load operations are completed when `WaitForCompletion` is called on **any** asset load operation … To avoid unexpected stalls…"
+
+即：对**任意一个** operation 调 `WaitForCompletion`，会连带完成**所有**活跃的加载操作——停顿范围不可控。
+
+**② YooAsset 明确说小游戏/WebGL 无法支持同步加载，并给出折中方案**
+
+> "因为 WebGL 平台的特殊性，**无法支持同步加载方法**，只能走边玩边下的方式（全部实现异步加载）。但对于已经上线的项目，在功能业务逻辑里会存在大量的同步加载。要适配微信小游戏平台，要修改大量的业务代码是十分痛苦的事情。"
+> —— [YooAsset: 关于同步加载](https://www.yooasset.com/docs/minigame/SyncLoading)
+
+YooAsset 给的折中方案，**正是本项目已有的 `EnsureBundleLoaded` 思路**：
+
+```csharp
+_bundleHandle = package.LoadBundleFileAsync("prefab_location");   // ① 异步只加载【包体】并持有
+yield return _bundleHandle;
+GameLogic();                                                     // ② 业务层再用同步方法取【包内资源】
+_assetHandle = package.LoadAssetSync("prefab_location");
+var go = _assetHandle.InstantiateSync();
+```
+
+**③ 主流框架的 "sync" 本质就是 async + 阻塞等待**
+
+> "All `Load*Sync` calls internally call `handle.WaitForAsyncComplete()` after starting **the same async provider**."
+> —— [YooAsset Loading 源码说明](https://github.com/Besty0728/Unity-Skills/blob/3382be60/SkillsForUnity/unity-skills~/skills/yooasset-design/LOADING.md)
+
+**这条最关键**：所谓同步 API 并不是独立的加载路径，而是"发起异步 + 原地阻塞等它完成"。因此同步**不减少工作量**，只是把"等一帧"换成"卡住当前帧"。既然代价一样，就没有理由为了写法方便而承担卡帧与死锁风险。
+
+#### 7.4.2 本项目最危险的一处：`LoadPrefabBlocking` 在小游戏上必然静默失败
+
+[GameObjectResourceManager.cs:47-59](E:/Work/CarrotFanstasyWX/CarrotFantasy/Assets/Scripts/Util/Resource/GameObjectResourceManager.cs:47)：
+
+```csharp
+private static void PumpLoadsUntil(ref GameObject result, int maxTicks)
+{
+    ...
+    for (int i = 0; i < maxTicks && result == null; i++)
+    {
+        abm.Update();          // ★ 同一帧内空转泵
+    }
+}
+```
+
+**在 WebGL / 微信小游戏上这段一定失败**：`AssetBundle.LoadFromFileAsync` 与 `LoadAssetAsync` 的完成回调依赖 Unity 主循环继续推进，而这里在**同一帧内**空转，主循环拿不到执行机会 → 回调永不触发 → 空转满 `maxTicks`(480) 后返回 `null`。
+
+而它被战斗表现层大量依赖：`BVMapComponent:38`、`BVTowerComponent:33-34,63`、`BVMonsterComponent:30,36,122`、`BVBullComponent:57`、`BVItemComponent:61,107`、`BVUIComponent:90`、`MapNormalLevelPanel:195`。
+
+更糟的是它是**静默失败**——返回 `null`，调用方多半只 `Debug.LogError` 后 `return`，战斗表现为"少了些东西"而不是报错崩溃。
+
+#### 7.4.3 "提高加载优先级就好了"——只对一半
+
+优先级是**排序**手段，不是**消除延迟**手段：
+
+| 优先级能解决 | 优先级不能解决 |
+|---|---|
+| 多个请求同时排队时，谁先被 pump（YooAsset 的 `uint priority`） | 单个请求的最短完成时间——`LoadFromFileAsync` + `LoadAssetAsync` 至少要跨帧 |
+| 下载阶段谁先（本项目 `LoadPriority` 已在包级实现） | "我这一帧就要拿到实例" |
+
+真正让"我现在就要"成立的，是这四件事的组合：
+
+| 手段 | 作用 | 本设计中的对应 |
+|---|---|---|
+| **① 预热 + 钉住（Pin）** | 进战斗前把本局要用的模板/包加载好并保持，spawn 时只做缓存命中的字典查找 | `PrefabLoadManager.PinTemplate`（§5.1、§6.6） |
+| **② 缓存命中时本帧内联交付** | 预热之后 `onReady` 同步回调，战斗代码可保持"看起来同步"的写法 | 原 Q1 → **必须内联**（§4.4） |
+| **③ 实例池** | 高频单位（怪/子弹）复用，压根不加载 | `GameViewObjectPool` + `IInstanceRecycler`（§9.2.1） |
+| **④ 资源级优先级** | 同帧多请求的排序 | 建议把 priority 下沉到资源队列（§7.4.4） |
+
+#### 7.4.4 对本设计的五条落地要求
+
+1. **移除 `AcquireTemplateBlocking` / `LoadPrefabBlocking`**。它们在小游戏上不可用，在桌面端也只是"卡帧换写法"。`PrefabLoadManager` 只保留异步 `AcquireTemplate`（+ `PinTemplate` 预热）。
+2. **战斗开局改为显式预热阶段**：
+   ```
+   进入战斗 → loading → 异步 PinTemplate(本局塔/怪/子弹模板) + AudioLoadManager.PreloadBattleDefaults()
+            → 预热完成 → 开始战斗
+   ```
+   等价于 YooAsset 推荐的 `LoadBundleFileAsync` + `yield return` 模式，也复用本项目已有的 `EnsureBundleLoaded`。
+3. **`onReady` 缓存命中必须本帧内联**（原 Q1 从"建议"升级为"必须"）——否则预热的价值大打折扣，战斗代码仍要跨帧等待。
+4. **资源级优先级**：本项目 `LoadPriority` 目前只在 `AssetBundleManager` 的**包队列**生效；`maxConcurrentAssetLoads = 5` 的资源队列是纯 FIFO。建议 `ResourceCache<T>.Acquire` 的 priority 参与资源队列排序（YooAsset 是**每次** `LoadAssetAsync` 都带 priority）。
+5. **`LoadPriority.Sync` 要处理**：它在 `AddBundleToQueue` 里直接走 `AssetBundle.LoadFromFile`（**真同步**），WebGL 上同样不可用。建议要么删除该枚举值，要么明确标注"仅非 WebGL 平台可用"，并禁止业务层使用。
+
+---
+
+## 8. 风险与失败模式
+
+### 8.1 失败模式总表
+
+| 场景 | 结果 | 缓解 |
+|---|---|---|
+| 调用方忘记 `Destroy` | 模板引用不归零 → AB 常驻 | 契约 C2 + `DumpTracked` |
+| 调用方忘记 `Dispose` 资源句柄 | 同上 | 契约 C6 + 统一诊断 |
+| 直接 `GameObject.Destroy(go)` | 僵尸条目 → 模板引用永久钉住 | `TickReconcile()` / `DumpTracked` 剔除并告警 |
+| **场景卸载**（实例随场景销毁） | 僵尸条目**批量**产生 | §8.2 |
+| 父节点被销毁（连带子实例） | 同上 | 同上 |
+| **过早释放模板句柄**（Acquire → Instantiate → 立即 Dispose） | 包可能空闲卸载 → **克隆实例变粉** | 契约 C8 + §7.3；优先走 `GameObjectSpawnManager` 而非手工 Instantiate |
+| **池化实例未 pin** | 同上（实例在池中，模板引用已归零） | 契约 C9 + `PinTemplate(..., poolOwner)` |
+| `onReady` 内调用 `Destroy`/`Acquire` | 重入 | `_dispatchDepth` + `_deferredRelease` |
+| AB 加载失败 | `onReady(null)` + 引用回滚 + 条目移除 | C1 判空 |
+| 取消后底层仍回调（编辑器模式） | 由 `Cancelled` 标记拦截 | 已覆盖（§3.3 坑 B） |
+| 同一资源被两个管理器缓存（如 Sprite 与 Texture 同名） | 各自持一份 AB 引用 | 无害；AB 层是引用计数的唯一真相 |
+
+### 8.2 ★ 场景切换的处理（D3 下必须做）
+
+Unity 卸载场景时直接销毁实例，**不经过**回收入口，托管注册表收不到通知。因此每次切场景都会把该场景内所有托管 prefab 的引用**批量**永久钉住。
+
+**完整方案见 `ResourceLifecycleSafety_Design.md` §3**，要点：
+
+- **机制 A｜分帧增量对账**（必须做）：`TickReconcile()` 由 `GameObjectSpawnManager.Update()` **每帧**驱动，双预算封顶（扫描 ~256 条 / 回收 2 条）+ 续扫游标，连续轮转，单帧成本有上界。场景切换后额外调用一次 `ReconcileNow()`（不分帧）在 `SceneServer.LoadSceneProgress` 的 `InitSceneObject()` 之后（`SceneServer.cs:107`）把上一场景批量产生的僵尸条目一次扫干净。
+  - ⚠️ 四个实现要点：判空必须用 Unity 重载的 `==`（`ReferenceEquals` 会漏判）；`Destroy` 必须**立即**从记录表移除（`GameObject.Destroy` 帧末才生效）；`Destroy` 需用 `ReferenceEquals(rec.Instance, go)` 做身份校验以防 **instanceID 复用**误放他人引用；`swap-remove` 打乱下标，游标必须遵守 `ResourceLifecycleSafety_Design.md` §3.2 的三条规则。
+- **机制 B｜owner 归属作用域**（推荐）：`SpawnOwned(owner, ...)` 登记归属，owner 消失时一次 `ReleaseAll` 回收，并让 `ClearGameInfo` 之类的拆除方法收敛为一行。
+- **可选兜底**：`ClearAll()`（`ResourceLifecycleSafety_Design.md` §3.6.2），在场景卸载前调用。
+
+> 机制 A 不做，D3 的代价会从"偶发遗漏"升级为"每次切场景必然发生"。
+
+### 8.3 新引入的风险：包被更多层钉住
+
+分层之后，**4 个缓存 + pin + 冷却期 + owner 各自都可能钉住包**，"这个 AB 为什么卸载不掉"会比现在更难排查。因此：
+
+- `ResourceCache<T>` 必须暴露 `ActiveCount` / `CoolingCount` / `PinnedCount` / `EntryCount` / `Dump()`。
+- 必须提供 §8.4 的 `ExplainBundle`，直接回答"这个包为什么还在"，并**区分 `Active / Cooling / Pinned` 三种钉住原因**。
+- 这是本方案**必须配套**的能力，不是可选项。
+
+### 8.4 ★ 诊断：`ExplainBundle(bundleName)`
+
+有了分层 + owner + pin + 冷却期，这个 API 会是排查资源问题的第一入口，**建议早做**（排在 `ImageLoadManager` 之前），因为它同时是验证整套引用计数与冷却策略是否正确的工具。
+
+```csharp
+public static class ResourceDiagnostics
+{
+    /// 回答"这个包为什么还在内存里"：把整条引用链打出来
+    public static string ExplainBundle(string bundleName);
+
+    /// 全量快照，供日志或编辑器窗口消费
+    public static ResourceDiagnosticsSnapshot Snapshot();
+
+    /// 打印全部托管状态（实例 / 模板 / pin / owner / 各缓存 / 包引用计数）
+    public static void DumpAll();
+}
+```
+
+`ExplainBundle` 输出应包含**完整链条**，并**区分三种钉住原因**（`Active` / `Cooling` / `Pinned`），例如：
+
+```
+bundle: ui/view/fightview/tower/id1/towerset_prefab   (BundleInfo.referenceCount = 3)
+├─ AssetItem "1"  referenceCount=2
+│   ├─ PrefabLoadManager  cache[...|1]  RefCount=2
+│   │   ├─ [Pinned]  ← BattleManager (pin×1)
+│   │   └─ [Active]  handle ← GameObjectSpawnManager (1 个实例: TowerContainer/Tower(Clone))
+│   └─ (无其它持有者)
+└─ AssetItem "2"  referenceCount=1
+    └─ PrefabLoadManager  cache[...|2]  RefCount=0  [Cooling 8.3s / 30s]   ← ★ 零引用但仍在冷却
+        └─ handle 未释放 → 本包因此在冷却期内不会被空闲卸载
+```
+
+最后一行是新增的关键信息：**"这个包没卸载，只是被一个零引用条目钉在冷却期"** —— 没有它，排查者会误以为有泄漏。冷却期总口径 ≈ `CooldownSeconds` + 最多 60s（§3.6.5）。
+
+这样"是谁钉住了它"一眼可见，而不是靠猜。
+
+### 8.5 既有风险（非本方案引入）
+
+`AssetBundleManager.CheckAndUnloadUnusedBundles` 会在一段时间空闲后 `bundle.Unload(true)`，销毁从该包加载的**所有对象**，包括共享材质/贴图。本方案让"有引用就不为 0"，间接阻止了有托管引用时的卸载；但**保护不了托管之外的克隆**（例如旧代码里 `GameObject.Instantiate` 直接拷贝、已脱离管理的实例）。属既有架构问题，另见 §7.3.3 列出的引用计数脆弱点。
+
+---
+
+## 9. 与现有模块的边界
+
+### 9.1 分层职责表
+
+| 层 | 职责 | 知道什么 | **不知道**什么 |
+|---|---|---|---|
+| `AssetBundleManager` | 包加载、依赖、下载、优先级队列、空闲卸载 | bundle 名、依赖、清单、文件路径 | 资源种类、实例、缓存策略 |
+| `AssetLoadManager` (internal) | 请求→(bundle,asset) 映射；已加载/加载中/取消 | bundle+asset 名、handle | 资源种类语义 |
+| `ResourceCache<T>` | 按 key 去重、引用计数、在途合并、取消、预热钉住 | key、`T` | 具体是 prefab 还是图 |
+| `*LoadManager` | 资源种类语义与平台适配 | 资源种类 | 实例 |
+| `GameObjectSpawnManager` | 实例创建/回收/批量回收 | 实例、模板 key | AB、handle 细节 |
+
+**关键约束**：类型管理器**不得**重复 `AssetBundleManager` 已有的能力（下载、依赖、优先级调度）——它们只增加**类型特有的缓存/引用/预热策略**。
+
+### 9.2 与 `GameViewObjectPool`
+
+| | `GameViewObjectPool` | `GameObjectSpawnManager` |
+|---|---|---|
+| 解决的问题 | **复用**已实例化的对象，避免频繁 Instantiate/Destroy | **首次**实例化 + 模板引用生命周期 |
+| 回收语义 | `PushViewObjectToPool`（归还池，不销毁） | `Destroy`（销毁 + 归还模板引用） |
+| 适用 | 战斗高频单位（怪/子弹/塔视图） | 低频、一次性、非池化对象 |
+
+两者可组合（池未命中时委托本模块生成），但**本期不做**。若打通，预留 `IInstanceRecycler` 扩展点；此时 `Destroy` 语义需改为"归还池"，会改变契约，需单独设计。
+
+#### 9.2.1 池化桥接的预留接口（本期不实现，但契约不改）
+
+```csharp
+/// <summary>实例复用出口。注册后 Destroy 与 Instantiate 会先问它。</summary>
+public interface IInstanceRecycler
+{
+    /// <summary>尝试借出一个已回收实例；返回 null 表示无可用（则走 GameObject.Instantiate）。</summary>
+    GameObject TryRent(string templateKey, Transform parent);
+
+    /// <summary>尝试接管一个待回收实例；返回 true 表示已接管（则不再 GameObject.Destroy）。</summary>
+    bool TryRecycle(GameObject instance, string templateKey);
+}
+```
+
+**关键配套**：池一旦开始缓存某 `templateKey` 的实例，**必须** `PinTemplate(key, poolOwner)`。原因见 §7.3——池里的实例不是"活跃实例"，若模板引用归零，包会空闲卸载，池中对象全部变粉。
+
+### 9.3 与 `BaseView`
+
+`BaseView` 的 `SetUILoadInfo(index, bundle, asset)` 是**按子页索引**的模型，`Release()` 时按 `LoadState` 区分 `UnloadAsset`（已加载）与 `CancelAssetLoad`（加载中）——见 `BaseView.cs:99-114`。
+
+`SpawnRequest.Cancel()` + `Destroy()` 恰好能覆盖这两种状态，因此后续**可以**把 `UIDownInfo` 收敛成 `SpawnRequest` + `GameObject` + owner。但 `BaseView` 还有"根节点 index 0 优先加载"、"5s 延迟释放"、"`isFirstOpenDic` 首次打开回调"等独立语义，**不在本期**。
+
+短期建议：`BaseView.NeedToLoadIndex` 改为调用 `PrefabLoadManager.AcquireTemplate`，**并且把返回的句柄随 `UIDownInfo` 一起保存到 `Release()` 时才归还**——只改加载点而立刻归还句柄会踩断 §7.3 的安全链。
+
+---
+
+## 10. 迁移影响与落地顺序
+
+### 10.1 受影响调用点
+
+| 现有 | 迁移目标 | 优先级 |
+|---|---|---|
+| **`GameObjectResourceManager.LoadPrefabBlocking` + 全部 `PumpLoadsUntil` 调用点**（`BVMapComponent`、`BVTowerComponent`、`BVMonsterComponent`、`BVBullComponent`、`BVItemComponent`、`BVUIComponent`、`MapNormalLevelPanel`） | **删除**，改 `GameObjectSpawnManager.SpawnOwned` + `PinTemplate` 预热 | **最高**（§7.4.2：在小游戏上必然静默失败） |
+| `GameObjectResourceManager` 其余调用 | `PrefabLoadManager` | 中 |
+| `UIImageLoader` | `ImageLoadManager` | **高**（去重收益 + 24 处失效调用的归口） |
+| 24 处 `ResourceLoader.loadRes<Sprite>("Pictures/...")` | `ImageLoadManager`（需先确认这些图在哪个包） | **高** |
+| `AudioManager.clipCacheAb` + `AudioClipPreloader` | `AudioLoadManager` | 中 |
+| `MapConfigReader:16`、`BattleParamServer:123`（`File` 直读 StreamingAssets） | `TextLoadManager` | **高**（Android/微信下必然失败） |
+| `ResourceLoader` | 删除 | 低 |
+| `ViewManager:72` `Resources.Load<GameObject>("BaseView")` | 暂留（该资源确实存在于 Resources） | 低 |
+
+### 10.2 建议落地顺序
+
+1. **`OwnerRegistry`**（共享组件）+ **`ResourceCache<T>`**：把归属、坑 A / 坑 B 与引用计数一次做对（这是全部收益的地基）。**缓存命中本帧内联交付必须在此实现**（§7.4.4 第 3 条）。
+2. **`PrefabLoadManager`**：含 `PinTemplate` / `UnpinAll`。**不提供** `AcquireTemplateBlocking`（§7.4.4 第 1 条）。
+3. **`GameObjectSpawnManager`**：接入 `PrefabLoadManager` + `OwnerRegistry`，选 1 个典型点试点（建议 `MapNormalLevelPanel:195` 的 `tplField`）。
+4. **`ResourceDiagnostics.ExplainBundle`**（§8.4）——**早做**，它是验证 1–3 引用计数是否正确的工具。
+5. **战斗层预热改造**（§7.4.4 第 2 条）：战斗开局加显式预热阶段，`BV*Component` 全部改异步 + owner 化 pin，删除所有 `LoadPrefabBlocking` 调用。
+6. **`ImageLoadManager`**：迁移 `UIImageLoader`，再逐个清理 24 处失效调用。
+7. **`TextLoadManager`**：迁移两个 JSON 读取点。
+8. **`AudioLoadManager`**：迁移音频缓存与预热。
+9. **场景切换接入 `ReconcileNow()`**（`SceneServer.LoadSceneProgress`）——**不能省**。
+10. **`GameViewObjectPool` 接入 `IInstanceRecycler`** + `PinTemplate(..., poolOwner)`（§9.2.1）——战斗高频单位保活。
+
+### 10.3 ★ 迁移的硬性约束
+
+1. **加载点与 `Instantiate` 站点必须一起迁移。** 只改加载点、保留旧的"回调里自己 Instantiate"写法，会产生"新层管释放、旧克隆还在用"的危险中间态（§7.3.2）。每个迁移点都要回答：**这个模板句柄活到什么时候？是否覆盖了所有克隆的存活期？**
+2. **不得引入任何新的阻塞式加载。** 全项目禁止再出现"同帧空转泵"或 `LoadPriority.Sync` 的用法（§7.4）。
+
+---
+
+## 11. 待确认问题
+
+| # | 问题 | 建议 |
+|---|---|---|
+| ~~Q1~~ | ~~缓存命中时 `onReady` 本帧内联还是延后一帧~~ | **§7.4 定案：必须内联**。预热（Pin）之后要靠它让战斗代码保持"看起来同步"的写法，否则预热价值大打折扣 |
+| ~~Q2~~ | ~~`PinTemplate` 是否纳入第一期~~ | **§7.4 定案：必须纳入**。它是替代同步阻塞的唯一手段（小游戏上无法同步加载） |
+| ~~Q3~~ | ~~战斗表现层本期是否迁移~~ | **§7.4 定案：必须迁移**。`LoadPrefabBlocking` 在小游戏上必然静默失败，不是"要不要改"而是"必须改" |
+| Q4 | 是否补 `DestroyAll()`？ | 已被 `ClearAll()`（`ResourceLifecycleSafety_Design.md` §3.6.2）取代，无需单独实现 |
+| Q5 | 类名 `GameObjectSpawnManager` 是否接受（与 `PrefabLoadManager` 已能区分）？备选 `PrefabInstanceManager`。 | 待定 |
+| Q6 | `.anim` / `.controller` 是否纳入 AB？当前被 Postprocessor 扩展名过滤排除，`BattleUnitView_Monster` 却在找 `RuntimeAnimatorController`。 | 需先决策；若纳入，考虑增设 `AnimatorLoadManager`。 |
+| Q7 | 24 处 `Pictures/...` 失效调用对应的图，现在在哪个包？（多半在 `ui/images/*/images_atlas` 或 `ui/rawimages/*`）需要逐个比对给出映射表。 | 建议单独做一次映射盘点。 |
+| **Q13** | **v3 移除 `DestroyByParent` 是否同意**（§0.3.1）？ | 建议**同意**；其用例由 `ReleaseAll(owner)` 与 `ReconcileNow()` 完整覆盖 |
+| **Q14** | 是否改为**单一入口 facade** `ResourceManager.Instance.Prefabs/.Sprites/.Audio/.Texts`（内部仍是各类型管理器）？可少 3 个单例与 3 处初始化 | 建议**采用**，类型分层语义不变，样板更少 |
+| **Q15** | `ResourceDiagnostics.ExplainBundle` 是否提前到第 4 步做（§10.2）？ | 建议**提前**，它是验证引用计数正确性的工具 |
+| **Q16** | `ResourceHandle<T>` 是否加**代际号**（释放后再用则告警并返回 null） | 建议**加**，把一类静默 bug 变响 |
+
+| **Q22** | **零引用淘汰策略**：冷却期（§3.6）的时长按资源种类怎么定？是否启用加权积分（GDSF）？ | 建议**先做冷却期 + LRU 上限**，prefab 30–60s / 图片 10–30s / 音频 30s+ / 文本 0–5s；加权积分留 hook，等真机内存数据再启用 |
+| **Q23** | 冷却期是否受 `Pin` 复用同一套老化字段，还是完全分开？ | 建议**分开**：`Pinned` 是永不过期，`Cooling` 是有限时长，两条语义混在一起会让 `ExplainBundle` 说不清 |
+| **Q24** | 是否需要"内存压力触发批量淘汰"（低端机降级）？ | 建议**预留接口**（`EvictCoolingNow()` 已足够起步），暂不自动触发 |
+
+> **Q8–Q12**（生命周期兜底相关：扫描频率、owner 死亡回收策略、跨层推广、销毁回调）见 `ResourceLifecycleSafety_Design.md` §11。其中 **Q10（`Owner` 是否必填）已被 v3 的 `SpawnOwned`/`SpawnGlobal` 方案取代**——不再需要该问题。

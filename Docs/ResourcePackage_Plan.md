@@ -1,0 +1,568 @@
+# 资源加载落地计划
+
+> 状态：**阶段 1～3 已按本文件落地**（类名用 AB，不用 Resource）。阶段 4 未做。图片 `Resources.Load` 地址未确认的行、JSON 直读、动画控制器未改。
+>
+> 实现类名：
+>
+> | 文档里的名字 | 代码 |
+> |---|---|
+> | `ResourcePackage` | `AssetBundlePackage` |
+> | `ResourceScope` | `AssetBundleScope` |
+> | `ScopeBatch` | `AssetBundleBatch` |
+> | `AssetHandle<T>` | `AssetBundleHandle<T>` |
+>
+> 代码在 `Assets/Scripts/Util/AssetBundle/`。
+> 问题背景仍见 `GameObjectSpawnManager_Design.md`、`ResourceLifecycleSafety_Design.md`。那两份里的分层、冷却期、owner、弱引用和对账扫描**不实现**。
+> 对照的是 Addressables 与 YooAsset：一个资源一个 Provider，句柄只加减引用，包要等显式 `UnloadUnused` 才卸。
+
+---
+
+## 1. 要做成什么样
+
+运行时只留两条引用链。
+
+```
+业务
+  ResourceScope                 一场战斗、一个界面、音频常驻，各持有自己的句柄
+       │
+       ▼
+  ResourcePackage
+       │  同一个 (bundle, asset, type) 只有一个 Provider
+       ▼
+  IAssetSource
+       ├─ EditorAssetSource     编辑器 Development / DebugMode，直接读工程资源
+       └─ LegacyBundleSource    真机与编辑器生产模式，转调现有 AssetBundleManager
+                │
+                ▼
+          （阶段 4 换成 BundleLoader，AssetBundleManager 不再记资源引用）
+```
+
+业务代码拿到的是 `AssetHandle<T>`。缓存命中时句柄在 `Load` 返回前就已经 `IsDone`。读盘、下载、依赖仍走现有 `AssetBundleManager`，这一期不重写下载器和清单。
+
+不引入 UniTask。项目里没有这套库，`IsDone` 加一次回调就够把现有调用迁走。
+
+---
+
+## 2. 引用规则
+
+这是实现时唯一要遵守的计数模型。
+
+| 对象 | 计数含义 | 谁加减 |
+|---|---|---|
+| `AssetHandle<T>` | 没有自己的计数 | `Release` 只通知 Provider 减一，重复 `Release` 无操作 |
+| `Provider` | 活着的句柄数 | 每次 `Load` / `Keep` 加一；句柄 `Release` 减一 |
+| 包 | **有多少个活着的 Provider 用到它**，不是有多少个句柄 | Provider **创建时**对主包和每个依赖包各加一；Provider **销毁时**各减一 |
+
+因此 50 个 `UIImageLoader` 加载同一张 Sprite：50 个句柄，1 个 Provider，主包引用为 1。这是相对现在“每个 handle 都让 `AssetBundleManager` 加一”的实际变化。
+
+Provider 引用到 0 **不立刻销毁**，只是变成可卸载。下一次 `UnloadUnused` 才销毁 Provider，并在包引用到 0 时 `AssetBundle.Unload(true)`。面板关掉再打开、一波怪清完再刷下一波，只要中间没有场景级的 `UnloadUnused`，就不会把包卸掉再装上。
+
+包引用到 0 之前禁止 `Unload(true)`。`Unload` 里面不再减引用。现在 `UnloadBundle(force: true)` 会再走一遍 `RemoveBundleAndDependenciesReferences`，阶段 4 删掉这条路径。
+
+---
+
+## 3. 对外接口
+
+命名空间 `CarrotFantasy`。新文件放在 `Assets/Scripts/Util/Resource/Runtime/`。
+
+### 3.1 `AssetHandle<T>`
+
+```csharp
+public sealed class AssetHandle<T> : IDisposable where T : UnityEngine.Object
+{
+    public bool IsValid { get; }      // 未释放
+    public bool IsDone { get; }       // 成功、失败或已取消都算结束
+    public bool Succeeded { get; }
+    public T Asset { get; }           // 未成功、已释放：返回 null。已释放再读，打一条 Warning
+
+    /// <summary>
+    /// 结束时调用一次。若订阅时已经 IsDone，立即调用。
+    /// 失败、取消时参数为 null。
+    /// </summary>
+    public event Action<T> Completed;
+
+    public void Release();            // 幂等
+    public void Dispose() => Release();
+}
+```
+
+`Load` 返回前，缓存命中必须已经 `IsDone == true`，并且如果当时已经订了 `Completed`，回调也已经跑完。调用方可以写成：
+
+```csharp
+AssetHandle<GameObject> handle = scope.Load<GameObject>(bundle, asset);
+if (handle.IsDone)
+{
+    Use(handle.Asset);
+}
+else
+{
+    handle.Completed += Use;
+}
+```
+
+### 3.2 `ResourceScope`
+
+```csharp
+public sealed class ResourceScope : IDisposable
+{
+    public string Name { get; }
+    public static ResourceScope Create(string name);
+
+    /// <summary>拿一份句柄。同一 scope 对同一键多次 Load，仍是多个句柄，底层只有一个 Provider。</summary>
+    public AssetHandle<T> Load<T>(string bundleName, string assetName,
+                                  LoadPriority priority = LoadPriority.Medium) where T : UnityEngine.Object;
+
+    /// <summary>
+    /// scope 自己持有一份句柄，Dispose 时释放。
+    /// 同一 scope、同一键多次 Keep 只保留一份。
+    /// </summary>
+    public void Keep<T>(string bundleName, string assetName,
+                        LoadPriority priority = LoadPriority.Medium) where T : UnityEngine.Object;
+
+    /// <summary>只把包体（含依赖）钉在本 scope 上，不加载具体资源。</summary>
+    public void KeepBundle(string bundleName, LoadPriority priority = LoadPriority.Medium);
+
+    /// <summary>
+    /// 取已经 Keep 成功的资源。未完成或失败返回 null 并 Error。
+    /// 只在对应 ScopeBatch 已经成功之后调用。
+    /// </summary>
+    public T Get<T>(string bundleName, string assetName) where T : UnityEngine.Object;
+
+    /// <summary>
+    /// 战斗进行中按需使用。内部就是一次 Keep。
+    /// 该键已经成功时，onReady 在返回前执行；还在加载时，完成后执行一次。
+    /// 失败时 onReady 收到 null。句柄归 scope 持有，调用方不要 Release。
+    /// </summary>
+    public void Use<T>(string bundleName, string assetName, Action<T> onReady,
+                       LoadPriority priority = LoadPriority.Medium) where T : UnityEngine.Object;
+
+    /// <summary>开一批 Keep。这一批何时完成，与之后再开的批次无关。</summary>
+    public ScopeBatch CreateBatch();
+
+    public void Dispose();
+}
+
+public sealed class ScopeBatch
+{
+    /// <summary>句柄记在所属 scope 上，批次只负责等待。</summary>
+    public void Keep<T>(string bundleName, string assetName,
+                        LoadPriority priority = LoadPriority.Medium) where T : UnityEngine.Object;
+
+    public void KeepBundle(string bundleName, LoadPriority priority = LoadPriority.Medium);
+
+    /// <summary>这一批全部结束时调用一次。已结束则当场调用。全部成功才为 true。</summary>
+    public void WhenReady(Action<bool> onReady);
+}
+```
+
+`Dispose` 只释放本 scope 的句柄和包钉住，**不销毁 GameObject**。实例由原来的 `ClearGameInfo` / `BaseView.Release` 销毁。顺序必须是：先销毁实例，再 `scope.Dispose()`，最后在场景切换时 `UnloadUnused`。倒过来会在实例还活着时 `Unload(true)`，材质变粉。
+
+`IsReady` / `WhenReady` 从 `ResourceScope` 上拿掉，改到 `ScopeBatch`。战斗至少有两批要等：进场景立刻要实例化的一批，和开打前要备好的一批。合成一个 `IsReady` 会让后一批把前一批的闸门重新堵住。
+
+`LoadPriority.Sync` 不出现在这些方法里。包内资源是否已经在内存中，由 `IsDone` / `Get` / `Use` 的当场回调表达，不再用同步读盘。
+
+### 3.3 `ResourcePackage`
+
+```csharp
+public sealed class ResourcePackage
+{
+    public static ResourcePackage Instance { get; }
+
+    public void Init();   // GameMain.Awake 里，AssetBundleManager.Init 之后调用
+    public void Tick();   // GameMain.Update 里，紧跟 AssetBundleManager.Update
+
+    public AssetHandle<T> Load<T>(string bundleName, string assetName,
+                                  LoadPriority priority = LoadPriority.Medium) where T : UnityEngine.Object;
+
+    /// <summary>
+    /// 销毁引用为 0 的 Provider；包引用随之到 0 的，Unload(true)。
+    /// maxBundles 为本次最多卸几个包，其余留到后续 Tick。0 表示这次只标记，由 Tick 每帧最多卸 1 个。
+    /// 返回本调用实际卸掉的包数。
+    /// </summary>
+    public int UnloadUnused(int maxBundles = int.MaxValue);
+
+    public string Explain(string bundleName);
+    public void DumpAll();
+}
+```
+
+键归一化只在 `ResourcePackage` 入口做一次：
+
+- `bundleName`：`Trim`，`\` 换成 `/`，`ToLowerInvariant()`
+- `assetName`：`Trim`，大小写保持原样
+- 类型使用 `typeof(T)`。`Sprite` 和 `Texture` 是两个 Provider
+
+`GameMain.Update`（`GameMain.cs`）现有顺序改成：
+
+```csharp
+ViewManager.Instance?.Update();
+AssetBundleManager.Instance.Update();
+ResourcePackage.Instance.Tick();
+```
+
+阶段 1 到阶段 3，`Tick` 只推进“延迟卸载队列”。加载完成仍由 `AssetBundleManager.Update` 驱动。
+
+---
+
+## 4. 内部对象
+
+### 4.1 Provider
+
+```csharp
+internal enum ProviderState
+{
+    Loading,
+    Succeeded,
+    Failed
+}
+
+internal sealed class AssetProvider
+{
+    public ProviderKey Key;
+    public ProviderState State;
+    public UnityEngine.Object Asset;
+    public int RefCount;
+    public bool BundlePinned;          // 已经向 IAssetSource 要过包
+}
+```
+
+流程：
+
+```
+Load(key)
+  provider = _providers[key]
+  ├─ 不存在
+  │    创建 Provider，RefCount = 1，State = Loading
+  │    向 IAssetSource 发起一次加载
+  ├─ State == Succeeded
+  │    RefCount++
+  │    句柄 IsDone = true，当场回调
+  ├─ State == Loading
+  │    RefCount++
+  │    句柄挂到等待列表，源只保留最初那一次请求
+  └─ State == Failed
+       删除旧 Provider，按“不存在”重新加载
+
+源回调成功
+  State = Succeeded，Asset = 结果
+  等待中的句柄逐个回调（先拷贝列表再回调，回调里允许再 Load / Release）
+
+源回调失败
+  每个等待句柄回调 null
+  释放这次加载占的包引用
+  从 _providers 删除          // 下次 Load 会重试
+
+句柄 Release
+  RefCount = max(0, RefCount - 1)
+  不销毁 Provider，不调用 Unload
+
+UnloadUnused
+  对 RefCount == 0 且 State != Loading 的 Provider：
+      通知 IAssetSource 释放这一次加载
+      从 _providers 删除
+  再让 IAssetSource 卸掉因此变成 0 引用的包
+```
+
+加载中的 Provider 即使句柄已经全部 `Release`（`RefCount == 0`）也不删除。等回调回来：若此时 `RefCount` 仍是 0，按失败同样的方式丢掉结果并释放包引用，**不**进入可复用缓存。这样取消不会留下无人 `Release` 的底层请求。
+
+编辑器源在回调时如果句柄已全部释放，直接丢弃，不要再把资源交给业务。
+
+### 4.2 `IAssetSource`
+
+```csharp
+internal interface IAssetSource
+{
+    void Load(ProviderKey key, LoadPriority priority, Action<UnityEngine.Object> onLoaded);
+    void Release(ProviderKey key);                 // 与一次成功或失败的 Load 配对
+    void PinBundle(string bundleName, Action<bool> onComplete);
+    void UnpinBundle(string bundleName);           // 与一次成功的 PinBundle 配对
+    int UnloadUnusedBundles(int maxBundles);       // 只卸“没有任何 Provider / Pin 引用”的包
+}
+```
+
+`ResourcePackage.Init` 选择实现：
+
+| 条件 | 实现 |
+|---|---|
+| 编辑器且 `EditorPrefs["GameLoadMode"]` 为 `Development` 或 `DebugMode` | `EditorAssetSource` |
+| 其他 | `LegacyBundleSource` |
+
+两种实现对外行为一致：都会回调，都可以取消，都不会返回 `-1`。现在 `AssetBundleManager.LoadAsset` 在编辑器开发模式下返回 `-1`，`CancelAssetLoad` 直接 return，新代码不要再走那条分支。
+
+#### `EditorAssetSource`
+
+- `Load` 调用现有 `EditorAssetLoader.LoadAssetAtPath`
+- 结果放进队列，`ResourcePackage.Tick` 里回调，避免在 `Load` 栈里重入太深；若调用方要求缓存命中当场完成，Provider 自己在 `Succeeded` 后同步回调，与源是否异步无关
+- `Release` / `UnloadUnusedBundles` 只丢掉托管引用，**不要**对工程资源调用 `Unload(true)`
+
+首次从编辑器源加载时，`Tick` 才回调，所以第一次 `IsDone` 为 false。这是为了和真机“至少异步一次”对齐。第二次起 Provider 已 `Succeeded`，`Load` 当场完成。
+
+#### `LegacyBundleSource`（阶段 1～3）
+
+包住现有 `AssetBundleManager`，让上层先变成“一个 Provider 一次底层加载”。
+
+- `Load`：调用一次 `AssetBundleManager.LoadAsset`。同一个 `ProviderKey` 在 `Release` 之前不得再调第二次
+- `Release`：已完成走 `UnloadAsset`，未完成走 `CancelAssetLoad`
+- `PinBundle`：调用现有 `EnsureBundleLoaded`
+- `UnpinBundle`：需要在 `AssetBundleManager` 增加一个对称方法 `ReleaseBundlePin(string bundleName)`，只对这个包 `RemoveReference` 一次。现在 `EnsureBundleLoaded` 成功后引用不还，`AudioClipPreloader` 会把包钉死
+- 暂不关闭 60 秒 `UnloadCheckCoroutine`。Provider 在 `UnloadUnused` 之前一直握着那一次 `LoadAsset` 引用，空闲卸载看不到 0，不会把还在缓存里的包卸掉
+
+`ReleaseBundlePin` 只给 `LegacyBundleSource` 用，业务不要调用。
+
+### 4.3 诊断
+
+`Explain(bundleName)` 打印这个包还在的原因，供阶段 1 结束时人工核对：
+
+```
+bundle: fightpart_prefab
+  loaderRef: 2
+  pin: Battle
+  provider: GameObject DestoryEffect  ref: 1  state: Succeeded
+    scope: Battle  (Keep)
+  provider: GameObject MonsterPrefab  ref: 1  state: Succeeded
+    scope: Battle  (Keep)
+```
+
+引用为 0 但还没扫到的 Provider 标成 `idle`。看到 `idle` 就说明要等下一次 `UnloadUnused`，不是泄漏。
+
+阶段 1 就做 `Explain` / `DumpAll`。后面每迁一块，用它看引用有没有多加。
+
+---
+
+## 5. 进入战斗
+
+资源什么时候要，按现在的调用点分成三档。键写在使用它的组件里，不另做一份总清单。`BattlePreload` 这种把全部塔等级提前 `Keep` 完才允许 `InitBattle` 的做法不采用：清单会和组件各自漂移，而且造塔、开火之前根本用不到那些预制体。
+
+| 档 | 何时必须在手里 | 现在谁在用 | 加载方式 |
+|---|---|---|---|
+| **Boot** | `Init` 返回之前，里面会马上 `Instantiate` | 地图格子；战斗 UI 壳（塔列表、建造按钮、操作面板、小地图、起点、萝卜）；本关已经摆在场上的道具 | `ScopeBatch.Keep`，这批成功后才 `InitComponents` |
+| **Warm** | `StartGame` 之前。逻辑一开始就会生成视图，但不能挡住地图和 UI 先出来 | 怪物预制体和血条；建造/销毁特效；本关 `canBuildTowerList` 里每座塔的 **1 级**塔身和 **1 级**子弹；战斗音频包体 | 与 Boot 同时开始的另一批。地图初始化不等它。开打要等它，也要等现有的 2 秒 |
+| **Use** | 第一次真正用到的那一帧 | 2 级、3 级塔身和子弹（升级、对应等级开火） | `scope.Use`。Warm 里已经成功的键，回调在返回前执行 |
+
+等级资源名沿用现在的规则：`tower.curLevel + 1`、`bullet.towerLevel + 1`，池子键是 `{塔id}_1/_2/_3`。所以 Warm 只 `Keep` 资源名 `"1"`。升级到 2 级时才 `Use` `"2"`。
+
+Boot 具体是这些（写在对应组件的 `CollectBoot` 里）：
+
+| 组件 | Keep |
+|---|---|
+| `BVMapComponent` | `fightpart_prefab` / `Grid` |
+| `BVUIComponent` | `ui/view/fightview_prefab` 的 `tower_list`、`btn_tower_build`、`handle_tower_canvas`；`fightpart_prefab` 的 `nodeMap`、`startPoint`、`Carrot` |
+| `BVItemComponent` | `ui/view/fightview/item/{bigLevel}_prefab` 下，`battleItemList` 里每个 `itemId` |
+
+Warm：
+
+| 组件 | Keep |
+|---|---|
+| `BVMonsterComponent` | `fightpart_prefab` / `MonsterPrefab`、`MonsterCanvas` |
+| `BVTowerComponent` | `fightpart_prefab` / `BuildEffect`、`DestoryEffect`；每个可建造塔 id 的 `towerset_prefab` / `"1"` |
+| `BVBulletComponent` | 每个 `curTowerIDList` id 的 `bullect_prefab` / `"1"` |
+| 战斗场景 | `KeepBundle` `AudioClipPreloader.DefaultBattleBundles`。这里只钉包体，不加载具体 AudioClip |
+
+`BVMonsterComponent.Init` 和 `BVTowerComponent.Init` 今天会阻塞把模板存下来，但要到刷怪、造塔才 `Instantiate`。这两类改到 Warm。`Init` 只建容器、注册对象池。
+
+道具不一样：`BVItemComponent.Init` 会立刻给 `battleItemList` 里已有的道具建视图，所以它们留在 Boot。逻辑层 `InitComponent` 之后这份列表才有数据，收集必须放在那之后。
+
+```
+BattleScene 创建 scope "Battle"
+
+BattleManager.InitBattle
+  baseBattle.Init + InitComponent          // 塔列表、道具列表到这里才有
+  baseBattleView.Init                      // 只 AddComponent，不加载
+  boot = scope.CreateBatch()
+  warm = scope.CreateBatch()
+  每个表现组件 CollectBoot(boot) / CollectWarm(warm)
+  warm.KeepBundle(战斗音频包)
+
+  boot.WhenReady
+    失败：停在 Loading，打出失败的键，不调用 InitComponents
+    成功：InitComponents（里面只 Get + Instantiate）、打开 NormalModelPanel
+
+  warm 完成 且 现有 2 秒延迟结束
+    StartGame
+    warm 里个别键失败只打日志，不拦住开打。轮到 Use 时回调收到 null，这一次不生成视图
+
+进行中
+  造 1 级塔、发 1 级子弹：Use 当场拿到模板
+  升级或更高等级子弹：Use 未命中则等回调再 Instantiate，不阻塞当前帧，也不读盘同步等待
+
+重开（RestartGame）
+  ClearGameInfo 销毁实例、清空池
+  不 Dispose 战斗 scope，不 UnloadUnused
+  再次 Collect 时 Keep 是去重，两批 WhenReady 当场成功，Get / Use 都是同步的
+
+离开战斗（BattleScene.Dispose）
+  先 BattleManager.Dispose，清掉实例和池
+  再 scope.Dispose
+  再 ResourcePackage.UnloadUnused
+
+回到主界面（MainScene.Init 末尾）
+  再 UnloadUnused 一次
+```
+
+现在 `BVTowerComponent.ClearGameInfo`、`BVMonsterComponent.ClearGameInfo`、`BVBulletComponent.ClearGameInfo`、`BVItemComponent.ClearGameInfo` 会 `Dispose` 模板句柄。重开等于卸掉再阻塞加载。这些 `Dispose` 删掉，句柄跟着战斗 scope 走。
+
+`SceneServer.LoadSceneProgress` 不要在 `Init` 末尾无条件 `UnloadUnused`。新场景自己的 `Keep` 可能还没加上，提前扫会把下一场还要用的包卸掉。卸载点就两个：战斗 scope 释放之后，以及 `MainScene.Init` 末尾。
+
+主界面自己的 AB 界面如果当时没有句柄，会在这次清扫里卸掉。下次打开界面再加载。这是预期行为。
+
+---
+
+## 6. 分阶段实现
+
+每阶段都可以单独合入，并且游戏仍能进主界面、进战斗。不要把四个阶段堆成一次提交。
+
+### 阶段 1：包一层，不改业务
+
+新增：
+
+| 文件 | 职责 |
+|---|---|
+| `Util/Resource/Runtime/AssetHandle.cs` | 句柄 |
+| `Util/Resource/Runtime/ProviderKey.cs` | 键与归一化 |
+| `Util/Resource/Runtime/AssetProvider.cs` | 引用计数、在途合并、失败重试 |
+| `Util/Resource/Runtime/IAssetSource.cs` | 源接口 |
+| `Util/Resource/Runtime/EditorAssetSource.cs` | 编辑器源 |
+| `Util/Resource/Runtime/LegacyBundleSource.cs` | 转调 `AssetBundleManager` |
+| `Util/Resource/Runtime/ResourcePackage.cs` | 入口、`Tick`、`UnloadUnused`、`Explain` |
+| `Util/Resource/Runtime/ResourceScope.cs` | `Load` / `Keep` / `Get` / `Dispose` |
+
+改动：
+
+- `AssetBundleManager` 增加 `ReleaseBundlePin(string bundleName)`
+- `GameMain.Awake` 在 `assetBundleManager.Init()` 之后 `ResourcePackage.Instance.Init()`
+- `GameMain.Update` 增加 `Tick()`
+
+业务仍走 `AssetLoadManager`、`GameObjectResourceManager`、`BaseView` 里的直接调用。阶段 1 不删任何旧 API。
+
+完成标准：
+
+- 编辑器 Development 下，对同一 Sprite 连续 `Load` 两次，第二次 `IsDone == true`，`Explain` 里只有 1 个 Provider
+- `Release` 两次不报异常
+- 全部句柄 `Release` 后、`UnloadUnused` 之前，`Explain` 显示 `idle`，包还在
+- `UnloadUnused` 之后该 Provider 消失；真机模式下对应包引用回到调用前
+- 加载失败时回调收到 `null`，再 `Load` 会重新请求，而不是一直返回失败缓存
+
+### 阶段 2：去掉 `LoadPrefabBlocking`
+
+不新增总清单文件。`BaseBattleViewComponent` 增加两个空方法，用到资源的组件自己填：
+
+```csharp
+public virtual void CollectBoot(ScopeBatch batch) { }
+public virtual void CollectWarm(ScopeBatch batch) { }
+```
+
+`BattleManager.InitBattle` 改成第 5 节的顺序。`PveBattleView.Init` 仍然只负责 `AddComponent`。`InitComponents` 放进 Boot 批次的成功回调。`ScheduleDelayedStartGame(2 秒)` 改成“延迟结束且 Warm 批次已结束”才 `StartGame`。
+
+组件改动：
+
+- 删掉各自的 `AssetLoadHandle` 字段、模板字典，以及 `ClearGameInfo` 里的 `Dispose`
+- Boot 组件的 `Init`：`Get` 之后照旧 `Instantiate`
+- 怪物、建造特效、销毁特效、1 级塔和 1 级子弹：放进 `CollectWarm`。`Init` 不再加载它们
+- `RegisterTowerView`、`ReloadTran`、`RegisterNewBulletView`、怪物死亡和道具移除处的特效：改成 `scope.Use`。回调里 `Instantiate`。1 级在 Warm 完成后是当场回调
+- `GameViewObjectPool` 仍只管实例复用。池里的对象活着时，战斗 scope 必须还活着。`PveBattleView.ClearGameInfo` 先清池，战斗结束再 `scope.Dispose`
+
+`AudioClipPreloader.RunBattleDefaults` 改成对 Warm 批次 `KeepBundle`。预热类留着清单常量，不再直接 `EnsureBundleLoaded`。
+
+`MapNormalLevelPanel`（约第 195 行）不属于战斗三档。面板自己建一个 scope，一批 `Keep` 完成后再使用 `tplField`，关闭时 `Dispose`。
+
+完成标准：
+
+- 工程里不再出现 `LoadPrefabBlocking` 和 `PumpLoadsUntil`
+- Boot 未完成时不调用 `InitComponents`；地图和战斗 UI 的出现不等待任何塔预制体
+- 只 Warm 了 `"1"`。升级到 2 级时才出现对 `towerset_prefab` 资源 `"2"` 的加载；该资源在 Provider 成功后，同一次战斗里再次升级当场拿到
+- 编辑器 Development 下进战斗、造 1 级塔、升级、重开、退回主界面，1 级模板不是 `null`
+- 重开前后 `Explain("fightpart_prefab")` 的 Provider 还在，引用不为 0
+- 退回主界面并 `UnloadUnused` 之后，战斗 scope 的 Provider 消失
+- 微信 / WebGL 构建下进战斗不再依赖同一帧空转 `Update`。Boot 未完成时停留在现有 Loading
+
+`AudioClipPreloader.RunBattleDefaults` 改成对战斗 scope `KeepBundle`。预热类可以留着清单常量，不再直接调用 `EnsureBundleLoaded`。
+
+### 阶段 3：其余调用改到 scope
+
+仍不要新写 `ImageLoadManager` 这类类型管理器。图片、音频、文本都是 `Load<T>` / `Keep<T>`。
+
+| 现调用 | 改法 |
+|---|---|
+| `BaseView.NeedToLoadIndex` 直接 `AssetBundleManager.LoadAsset`，`Release` 里 `UnloadAsset` / `CancelAssetLoad` | 每个打开的界面一个 scope。加载改 `scope.Load<GameObject>`。回调里的 `Instantiate` 不动，句柄留到 `BaseView.Release` 的 `scope.Dispose`。界面已关闭则 scope 已释放，回调不得再 `Instantiate` |
+| `UIImageLoader` 经 `ImageResourceManager` 各持一个 `AssetLoadHandle` | 改为 `Load<Sprite>` 或 `Load<Texture>`。去重发生在 Provider，加载器仍各自 `Release` |
+| `AudioManager.clipCacheAb` 只增不减，且直接 `LoadAsset` 不卸载 | 删掉这本字典。`AudioManager` 持有一个进程级 scope `"Audio"`，播放用的 clip 用 `Keep<AudioClip>`。常驻是这个 scope 的显式寿命，`Explain` 能看到 |
+| `AudioManager` 里 `ResourceLoader.loadRes<AudioClip>("AudioClips/...")` | 与上同一条 scope。资源地址按现有 AB 路径，不再走 `Resources` |
+| `MapConfigReader`、`BattleParamServer` 用 `streamingAssetsPath` + `StreamReader` | 改 `Load<TextAsset>` 读已经打进 AB 的 `json_prefab` / `json/level_prefab`。JSON 解析仍留在这两个类里。读取时机挪到清单就绪之后，回调里再进入依赖这份配置的初始化 |
+| 下表的 `ResourceLoader.loadRes` | 地址确认后再改。没确认的调用保持原样 |
+
+这些 `Resources.Load` 路径在工程里没有对应文件，现在是静默 `null`。阶段 3 单独做一张地址表，确认包名和资源名后再改调用。未确认的行不要顺手改成猜测地址。
+
+| 文件 | 现路径前缀 | AB 地址 |
+|---|---|---|
+| `BVMapComponent` | `Pictures/NormalMordel/Game/Grid` 等 3 张 | 待填 |
+| `BVUIComponent` | `Pictures/NormalMordel/Game/Tower/Btn_*`、地图 BG/Road | 待填 |
+| `ButtonTower` | `Pictures/NormalMordel/Game/Tower/{id}/CanClick*` | 待填 |
+| `Carrot` | `Pictures/NormalMordel/Game/Carrot/` | 待填 |
+| `NormalModelPanel` | `Pictures/NormalMordel/pause_*` | 待填 |
+| `GameWinView` | `Pictures/GameOption/Normal/Level/Carrot_` | 待填 |
+| `SetPanel` | `Pictures/Main/SetPanel/OptionPage/` | 待填 |
+| `MapNormalLevelPanel` | `BG_Left` / `BG_Right` 及关卡图 | 待填 |
+| `NormalLevelScrollerCellView` | `GetLevelSpritePath`、萝卜图 | 待填 |
+| `BattleUnitView_Monster` | Sprite 与 `RuntimeAnimatorController` | 待填。`.controller` 当前未被打进独立 AB，确认前不要改 |
+
+`ViewManager` 加载 `Resources` 里的 `BaseView` 预制体，文件确实存在，本阶段不动。
+
+完成标准：
+
+- `BaseView`、`UIImageLoader`、`AudioManager` 不再直接调用 `AssetBundleManager`
+- 同一张图被多个 `UIImageLoader` 显示时，`Explain` 只有 1 个 Sprite Provider
+- 关掉全部使用该图的界面，`UnloadUnused` 之前 Provider 为 `idle`，清扫之后消失
+- Android 与微信构建下，地图配置和关卡配置不再访问 `streamingAssetsPath` 做 `File` / `StreamReader` 读取
+
+### 阶段 4：包层只保留一份计数
+
+做完阶段 3，业务已经不再直接 `LoadAsset` / `UnloadAsset`。这时再动 `AssetBundleManager` 内部。
+
+- 用 `BundleLoader` 替换 `LegacyBundleSource` 里对资源引用计数的使用
+- `BundleLoader` 负责：本地文件是否存在、下载、依赖加载、包的 `LoadFromFileAsync`、按上表的包引用 `Unload(true)`
+- 删除 `AssetItem.referenceCount` 这一路。资源级“还有没有人用”只存在于 Provider
+- 删除 `UnloadCheckCoroutine` 和 `CheckAndUnloadUnusedBundles`。空闲卸载只来自 `UnloadUnused`
+- 删除 `LoadPriority.Sync` 分支里的 `AssetBundle.LoadFromFile`
+- `AssetLoadManager`、`GameObjectResourceManager`、`ImageResourceManager` 没有剩余调用方后删除
+- `ResourceLoader` 在失效调用清完后删除；`BaseView` 那一次 `Resources.Load` 直接写在 `ViewManager`
+
+`BundleLoader` 从现有 `AssetBundleManager` 搬这些能力，不要重写：`AssetBundleDownloader`、`AssetBundleUpdateChecker`、`AssetBundlePathHelper`、清单结构 `CustomManifest`。
+
+包卸载顺序：先销毁引用为 0 的 Provider（这会减包引用），再卸包引用为 0 且不在加载中的包。一次 `UnloadUnused(maxBundles)` 卸不完的，留在队列里由 `Tick` 继续，每帧最多 1 个包。依赖包的引用来自 Provider 创建时的那一次 `Pin`，不在 `Unload` 里补减。
+
+完成标准：
+
+- 战斗进退一场后，`DumpAll` 里没有战斗 scope，`fightpart_prefab` 不在已加载包列表中
+- 主界面来回开关同一个面板 10 次，中间不切场景，该面板的包不出现“卸载后又立刻加载”的日志
+- 切回主界面时如果包很多，单帧只卸 `maxBundles` 限定的数量，其余在后续帧卸完
+
+---
+
+## 7. 调用约定
+
+| # | 约定 |
+|---|---|
+| 1 | `Completed` 和 `WhenReady` 都可能在调用返回前执行。回调里可以 `Load`，不要在回调里 `Dispose` 当前正在返回的那个 scope |
+| 2 | 失败时资源为 `null`。Boot 批次失败停在 Loading，并打出失败的键。Warm 和 `Use` 失败只跳过这一次视图 |
+| 3 | 模板句柄的寿命覆盖所有用它 `Instantiate` 出来的实例。战斗里这句话等于：战斗 scope 比池和战斗实例活得更长 |
+| 4 | 销毁实例用现有的 `GameObject.Destroy`。不要为了回收再包一层 `Spawn` / `ReleaseAll` |
+| 5 | 重开战斗不 `Dispose` 战斗 scope，不调用 `UnloadUnused` |
+| 6 | 离开战斗或关闭界面：先销毁实例，再 `scope.Dispose()`，再在文档写明的卸载点调用 `UnloadUnused` |
+| 7 | 业务代码不调用 `AssetBundleManager`、`AssetLoadManager`、`ResourceLoader`。阶段 1 允许旧代码暂时还在，阶段 3 结束时战斗和 UI 主路径应当已经迁完 |
+| 8 | 不新增同帧循环调用 `AssetBundleManager.Update` 的等待，不新增 `LoadPriority.Sync` |
+
+---
+
+## 8. 这一期不实现
+
+下面这些出现在前两份设计稿里，写代码时不要加：
+
+- `PrefabLoadManager`、`ImageLoadManager`、`AudioLoadManager`、`TextLoadManager`、`ResourceCache<T>`
+- 按资源种类配置的冷却期、老化积分、LRU 容量淘汰
+- `GameObjectSpawnManager`、每实例一个模板句柄、`SpawnOwned` / `SpawnGlobal`
+- `OwnerRegistry`、`ConditionalWeakTable`、弱引用、`ReleaseAll(owner)`
+- 每帧对账扫描、`ReconcileNow`、`instanceID` 复用校验、记录对象池
+- 挂在实例上的自动释放组件。实例销毁不改变 Provider 计数；忘记 `Dispose` scope 时用 `Explain` 查，不用扫描去补
+- 把 `GameViewObjectPool` 改成资源系统的一部分。池继续复用实例，模板由战斗 scope `Keep`
+
+动画控制器是否单独打 AB，仍是内容管线的决定，不在这次运行时改造里做。`BattleUnitView_Monster` 那个 `RuntimeAnimatorController` 的 `Resources` 调用，等包策略定了再迁。

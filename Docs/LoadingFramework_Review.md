@@ -1,0 +1,351 @@
+# 加载框架改版评审（AssetBundle 栈 v2）
+
+> 评审对象：`Assets/Scripts/Util/AssetBundle/`（4 个新文件）+ `AssetBundleManager` 改动 + 调用方迁移
+> 评审基准：`GameObjectSpawnManager_Design.md`、`ResourceLifecycleSafety_Design.md`、`BattlePreload_Design.md`
+
+---
+
+## 0. 结论
+
+**方向正确，主体可用，但有 1 个契约缺陷、3 个设计冲突、4 项清理欠账。**
+
+这一版把"按资源种类分层的加载管理器 + 共享引用计数缓存 + owner 作用域 + 冷却期 + 场景切换批量卸载"这套骨架真正立起来了，而且**顺手解决了最危险的历史遗留**（`LoadPrefabBlocking` 的同帧空转泵已删除）。战斗预加载还做出了 boot/warm 两级分离，比设计文档里设想的更细。
+
+主要问题集中在：**新旧两套卸载策略并存导致保留期叠加**、**`Use` 回调在 Dispose 时被静默丢弃**、**`PrefabLoader` 实际没有空闲淘汰**。
+
+---
+
+## 0.1 复审状态（第二次评审）
+
+> 2026-10-17 复核：以下 6 项已修复，3 项未修，另发现 2 处新引入的小问题。
+
+| 编号 | 问题 | 状态 | 修复方式（证据） |
+|---|---|---|---|
+| **P0-1** | `Use` 待定回调在 Dispose 时被丢弃 | ✅ **已修** | `Dispose` 先快照 `_useWaiters` 并逐个 `Invoke(null)`，再清空（`AssetBundleScope.cs:148-153`） |
+| **P1-1** | 新旧两套卸载策略并存，保留期叠加 | ✅ **已修** | 删除 `UnloadCheckCoroutine`/`CheckAndUnloadUnusedBundles` 及两个阈值字段；`Init()` 不再起协程（`AssetBundleManager.cs:377-382`）；改为每帧 `UnloadUnreferencedBundles(1)` 兜底（`AssetBundleLoaders.cs:38-41`） |
+| **P1-2** | `PrefabLoader` 的 `IdleSeconds = float.MaxValue` | ✅ **已修** | 改为 `120f`（`AssetBundleCache.cs:99`） |
+| **P1-3** | `All` 强引用静态表，忘记 Dispose 即永久钉住 | ❌ **未修** | 仍是 `List<AssetBundleScope>`（`AssetBundleScope.cs:28`） |
+| **P2-1** | 编辑器与真机回调时序不一致 | ✅ **已修** | 新增 `FlushPending`：首次加载的完成统一排队到下一帧 `Tick`，两端一致（`AssetBundleCache.cs:385-402, 492-495`；`AssetBundleLoaders.cs:30-33`） |
+| **P2-2** | 失败记忆只对 Prefab 开启 | ❌ **未修** | `Image/Audio/Text` 仍为 `RememberFailure = false`（`AssetBundleCache.cs:105-133`） |
+| **P2-3** | `_loads` 只增不减 | ❌ **未修** | 仍是 `List<IDisposable>` 追加（`AssetBundleScope.cs:24, 55`） |
+| **P3-1** | `AssetLoadManager` 链成孤儿死代码 | ✅ **已修** | `AssetLoadManager.cs` / `GameObjectResourceManager.cs` / `ImageResourceManager.cs` **已删除**；全项目对这四个符号的引用数为 **0** |
+| **P3-2** | 24 处 `Pictures/...` 仍返回 null | ❌ **未修** | 仍为 24 处（独立工作项，预期内） |
+| **P3-3** | `LoadPriority.Sync` 是真同步地雷 | ✅ **已修** | `case LoadPriority.Sync` 已并入 `_highPriorityQueue`（`AssetBundleManager.cs:1315-1317`）；`AssetBundle.LoadFromFile` 同步路径已删除，只剩 `LoadFromFileAsync`（`:1179`） |
+
+### 复审新发现（修复引入的小问题）
+
+| 编号 | 问题 | 位置 | 影响 |
+|---|---|---|---|
+| **N-1** | `UnloadUnreferencedBundles` 每帧调用，每次 `new List<string>()` | `AssetBundleManager.cs:579` | 每帧一次小分配（~60/s）。量级可忽略，但属永久性垃圾。建议 `maxBundles == 1` 时直接找首个命中并卸，不建列表 |
+| **N-2** | `AssetBundleLoaders.Init()` 里的空判断是死代码 | `AssetBundleLoaders.cs:20-24` | `Instance` 是 `= new Xxx()` 的只读属性，永不为 null，判断恒不成立。可删 |
+
+### 复审总评
+
+**上一轮标记的 6 项（含唯一 P0）已全部修完，且修法都对。** 尤其 P1-1 和 P2-1 两处的处理比建议更干净：
+
+- P1-1 没有简单地"删掉旧协程"，而是同时补了**每帧 1 个包的低速兜底**（`UnloadUnreferencedBundles(1)`），这样既消除了保留期叠加，又避免了"一批包同时归零导致单帧集中卸载"的尖峰。
+- P2-1 的 `FlushPending` 只把**首次加载**的完成延后，**缓存命中仍在 `Load` 里当场完成**（`AssetBundleCache.cs:368-372`），既统一了双端时序，又没有牺牲热路径的即时性——这个取舍比"一律延后一帧"更精确。
+
+剩余 3 项中，**P1-3（`All` 强引用）** 是最值得修的一个：它是当前唯一的"静默永久泄漏"入口，而改成弱引用只需几行。
+
+---
+
+## 1. 做得好的地方
+
+### 1.1 四层预加载模型基本落地
+
+| 设计文档要求 | 本版实现 | 位置 |
+|---|---|---|
+| 按资源种类分层的加载管理器 | `PrefabLoader` / `ImageLoader` / `AudioLoader` / `TextLoader` | `AssetBundleLoaders.cs:70-204` |
+| 共享引用计数 + 在途请求合并 | `AbAssetProvider` + `Waiters` 列表 | `AssetBundleCache.cs:75-87, 367` |
+| 组合而非继承（Image 需服务 Sprite+Texture） | `ImageLoader` 持有两个 `AssetBundleCache<T>` | `AssetBundleLoaders.cs:106-107` |
+| key 归一化（bundle 小写、asset 原样） | `AbProviderKey.Create` | `AssetBundleCache.cs:24-31` |
+| owner 作用域 + 一次清理 | `AssetBundleScope` + `Keep` + `Dispose` | `AssetBundleScope.cs` |
+| 冷却期（零引用不立即释放） | `AssetBundleCachePolicy.IdleSeconds` | `AssetBundleCache.cs:89-134` |
+| 场景切换批量卸载 | `RequestSweep` → `UnloadUnreferencedBundles(8)` | `AssetBundleLoaders.cs:62-67` |
+| 诊断 | `Explain(bundleName)` 含 scope 归属 | `AssetBundleCache.cs:422-454` |
+| 释放顺序：先销毁实例再释放句柄 | `BaseView.Release` 与 `BattleScene.Dispose` 都正确 | `BaseView.cs:108-118`、`BattleScene.cs:53-66` |
+
+### 1.2 删掉了最危险的历史遗留 ★
+
+`GameObjectResourceManager.LoadPrefabBlocking` / `PumpLoadsUntil` **已完全移除**，全项目不再有同帧空转泵。这是 `BattlePreload_Design.md` §7 陷阱 #11 指出的、在 WebGL/微信小游戏上必然静默失败的那处。战斗层改用"预热 + 同步取"：
+
+```csharp
+// BVMonsterComponent.cs:21-22 预热
+public override void CollectWarm(AssetBundleBatch batch)
+{
+    batch.Keep<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab);
+    ...
+}
+// BVMonsterComponent.cs:60 同步取（预热完成后）
+GameObject monsterTpl = this.BundleScope.Get<GameObject>(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab);
+```
+
+这正是 YooAsset 在《关于同步加载》里给的折中方案（异步预热包体 → 业务层同步取资源）。5 个战斗组件都已迁移。
+
+### 1.3 战斗预加载做了 boot/warm 两级分离 ★
+
+`BattleManager.InitBattle`（`BattleManager.cs:133-188`）：
+
+- **boot 批次**：必需资源，失败则不开打（`if (!ok) return;`）
+- **warm 批次**：非必需，失败仅告警，`"开打继续，用到时跳过对应视图"`
+- `_loadEpoch` 防止重开战斗后陈旧回调生效
+- `TryStartGame` 用 `_bootReady && _warmReady && _delayElapsed` 三重门
+
+这个"必需 / 可降级"的划分比设计文档里笼统的"预加载清单"更实用——它把"哪些资源缺了可以继续"变成了代码里的显式契约。
+
+### 1.4 `AssetBundleHandle` 的误用告警
+
+`Asset` getter 在已释放时告警一次并返回 null（`AssetBundleHandle.cs:34-56`），相当于设计文档里"代际号让误用变响"的轻量实现。`Release` 幂等，`Completed` 支持"订阅时若已结束则立刻回调"。
+
+### 1.5 编辑器模式走独立的 source
+
+`EditorAbAssetSource` 把加载统一推到 `Pump()`，避免编辑器下直读 `AssetDatabase` 造成的时序错乱；`AbAssetSources.Create()` 按 `EditorPrefs GameLoadMode` 选择。分层清楚。
+
+---
+
+## 2. 问题清单
+
+### P0-1 `Use` 的待定回调在 `Dispose` 时被静默丢弃 —— 契约缺陷
+
+```csharp
+// AssetBundleScope.cs:140-165
+public void Dispose()
+{
+    ...
+    _useWaiters.Clear();   // ★ 待定回调直接丢弃，从未被调用
+    ...
+}
+```
+
+但同文件 `Use`（`AssetBundleScope.cs:106-127`）的语义、以及 `AssetBundleHandle.Completed` 的注释（`AssetBundleHandle.cs:58-61`：*"失败或取消时参数为 null"*）都承诺**回调一定会被调用**。这里破了契约。
+
+后果：调用方若在等回调推进状态机，`Dispose` 后**永久悬挂**。
+
+现状验证：唯一的 `Use` 调用点 `MapNormalLevelPanel.cs:127` 恰好被 `ReleaseCallBack()`（`MapNormalLevelPanel.cs:271,286`，在 `BaseView.Release()` 开头调用）重置了 `_towerTemplateRequested`，所以**当前不自爆**。但这是巧合式的自愈，不是设计保证。
+
+**修复**：`Dispose` 里改为逐个回调 `null`，与"失败 = null"的既有约定一致：
+
+```csharp
+for (int i = 0; i < _useWaiters.Count; i++) _useWaiters[i].Invoke(null);
+_useWaiters.Clear();
+```
+
+### P1-1 新旧两套卸载策略并存，导致保留期叠加 ★
+
+`AssetBundleManager.Init()` 仍然启动旧的 60s 巡检：
+
+```csharp
+// AssetBundleManager.cs:379-386
+public void Init()
+{
+    SRPScheduler.Instance.StartCoroutine(UnloadCheckCoroutine());   // ← 旧策略仍在跑
+```
+
+```csharp
+// AssetBundleManager.cs:1353-1392
+private void CheckAndUnloadUnusedBundles()
+{
+    // refcount<=0 且空闲 > unloadReferenceThreshold(60s) → UnloadBundle(force:true)
+}
+```
+
+而新策略是 `AssetBundleLoaders.Tick()` → `UnloadUnreferencedBundles(8)`，**仅在 `_sweepPending` 时执行**（即只在 `MainScene.Init` / `BattleScene.Dispose` 触发）。
+
+两者叠加的结果正是设计文档 §3.6.5 警告过的那种叠加，只不过发生在**包层**而不是缓存层：
+
+```
+缓存层冷却结束（图片 15s / 音频 30s）
+  → provider 释放 → 包 refcount 归零
+  → 但包要等下一个 sweep（场景切换）或旧协程的 60s 空闲判定
+  → 实际保留期 = 冷却期 + 最多 60s
+```
+
+在主场景里长时间不切场景时，这段时间就是纯白占内存，且"为什么这个包还在"会归因到旧的 60s 阈值上，与缓存层的 `IdleSeconds` 对不上。
+
+**修复**（二选一）：
+
+- **推荐**：把 `UnloadUnreferencedBundles` 从 `_sweepPending` 里解出来，改为**每帧（或每 N 帧）用一个小预算调用**。`_loadedBundles` 是几百量级的字典扫描，成本可忽略。然后彻底删除 `UnloadCheckCoroutine` / `CheckAndUnloadUnusedBundles` / `unloadCheckInterval` / `unloadReferenceThreshold`。
+- 保守：保留旧协程作为长尾兜底，但把它也改成调用 `UnloadUnreferencedBundles`，并把手写文档里的保留期口径统一为"冷却期 + 一个巡检周期"。
+
+### P1-2 `PrefabLoader` 实际没有空闲淘汰
+
+```csharp
+// AssetBundleCache.cs:95-103
+public static AssetBundleCachePolicy Prefab()
+{
+    return new AssetBundleCachePolicy
+    {
+        IdleSeconds = float.MaxValue,   // ★ 等价于"永不空闲释放"
+        ...
+    };
+}
+```
+
+`ReleaseIdle(false)`（每帧 `Tick` 调用）里判定 `now - provider.IdleSince >= float.MaxValue` **恒为 false**，所以 prefab provider 只能等 `ReleaseIdle(true)`——而那只在 `RequestSweep`（场景切换）时发生。
+
+后果：**两次场景切换之间，所有加载过的 prefab 模板永久驻留。** 主场景里反复开关不同面板，prefab provider 只增不减。实际量级有界（ui/view 约 15 个面板），但语义上这是"没有淘汰策略"，与整个冷却期设计的意图相矛盾。
+
+另外 `float.MaxValue` 作为哨兵值可读性差且脆弱。
+
+**修复**：改成有限大值（如 120s），或显式加 `KeepForever` 布尔字段。注意 `Keep()`（scope pin）已经负责"确实要长期留着"的场景，空闲 prefab 没有理由无限保留。
+
+### P1-3 `AssetBundleScope.All` 是强引用静态表 —— 忘记 `Dispose` 即永久钉住
+
+```csharp
+// AssetBundleScope.cs:28
+internal static readonly List<AssetBundleScope> All = new List<AssetBundleScope>();
+
+// AssetBundleScope.cs:37-42
+public static AssetBundleScope Create(string name)
+{
+    AssetBundleScope scope = new AssetBundleScope(name);
+    All.Add(scope);      // ★ 强引用
+    return scope;
+}
+```
+
+`All` 只被 `Explain`（`AssetBundleCache.cs:444-450`）用于诊断，但它**强引用每个 scope**。一个忘记 `Dispose` 的 scope 会：
+1. 永远留在 `All`；
+2. 永远持有它的 `_keeps` 句柄 → provider `RefCount > 0` → **资源与包永久钉住**。
+
+没有弱引用、没有对账扫描、没有泄漏检测。这与设计文档里"要么用弱引用，要么接受静默泄漏"的结论一致——但既然 `All` 已经存在，改成弱引用是**零成本的严格改进**。
+
+**修复**：`All` 改存 `WeakReference<AssetBundleScope>`；另加开发期泄漏报告（列出存活超过 N 秒且 `keeps>0` 的 scope 名字）。
+
+### P2-1 编辑器与真机的回调时序不一致
+
+| 路径 | 回调时机 |
+|---|---|
+| `EditorAbAssetSource` | 恒定推迟到下一次 `Pump()`（≥1 帧） |
+| `LegacyAbAssetSource` | **可能内联**——`AssetBundleManager.LoadAsset` 命中 `assetItem.assetObject != null` 时直接 `ExecuteCallbacks()`（`AssetBundleManager.cs:670-674`） |
+
+所以缓存命中时，`handle.IsDone` 在编辑器里是 `false`、在真机上是 `true`。依赖内联完成的代码"真机通过、编辑器失败"（或反向），属于典型的双端行为不一致。
+
+编辑器侧更严格这本身是好事（逼迫写异步正确的代码），但**必须统一或至少明确记录**。
+
+**修复建议**：在 `AssetBundleCache.Load` 里禁止内联完成——即使 provider 已 `Succeeded`，也把 `Complete` 挂到下一次 `Pump` 执行。这样两端都是"≥1 帧后完成"，语义统一；`BundleScope.Get`（读 `record.Asset`）不受影响，预热后的同步取仍然成立。
+
+### P2-2 失败记忆只对 Prefab 开启，其他类型可能重试风暴
+
+```csharp
+public static AssetBundleCachePolicy Image()   { RememberFailure = false; ... }
+public static AssetBundleCachePolicy Audio()   { RememberFailure = false; ... }
+public static AssetBundleCachePolicy Text()    { RememberFailure = false; ... }
+```
+
+`RememberFailure=false` → `FailProvider` 立刻 `_providers.Remove(key)`（`AssetBundleCache.cs:514-517`）→ 下次 `Load` 立即重试。
+
+若某 UI 元素每帧请求一个不存在的包（当前工程有 24 处 `Pictures/...` 就是这种形态），会变成**每帧一次完整清单查找 + 一条 Error 日志**。
+
+**修复**：`RememberFailure` 对所有类型开启，时长 1–2 秒即可；同时把 Error 日志改为"首次告警 + 后续静默计数"。
+
+### P2-3 `_loads` 只增不减，且让 `Explain` 的计数误导
+
+```csharp
+// AssetBundleScope.cs:44-57
+public AssetBundleHandle<T> Load<T>(...)
+{
+    AssetBundleHandle<T> handle = AssetBundleCaches.Load<T>(...);
+    _loads.Add(handle);      // ★ 只在 Dispose 时清空
+    return handle;
+}
+```
+
+同一 scope 内重复 `Load` 同一资源会累积多份句柄与引用计数。语义上是"引用计数正确"，但：
+- `Explain` 输出的 `loads=N` 会误导（看起来像 N 个不同资源）；
+- 长生命周期 scope（如 `AudioManager` 的 `"Audio"` scope，`AudioManager.cs:89`）会缓慢增长。
+
+**修复**：`_loads` 改为按 provider key 去重的集合，或在 `Explain` 里区分"去重后的 key 数 / 句柄总数"。
+
+### P3-1 死代码：整条 `AssetLoadManager` 链已成孤儿
+
+`AssetBundleScope` / `AssetBundleCache` **完全绕过了** `AssetLoadManager`，直接调 `AssetBundleManager.LoadAsset`（`AssetBundleCache.cs:171`）。现在：
+
+| 文件 | 状态 |
+|---|---|
+| `Util/Resource/AssetLoadManager.cs` | 仅自引用，无外部调用者 |
+| `Util/Resource/GameObjectResourceManager.cs` | 仅自引用（0.8 KB，`LoadPrefabBlocking` 已删） |
+| `Util/Resource/ImageResourceManager.cs` | 仅自引用 |
+
+保留它们的唯一理由是"怕还有隐藏引用"——已 grep 全项目确认没有。建议删除，避免下一个人误用（它们走的是**没有冷却期、没有 scope、没有批量卸载**的旧路径）。
+
+### P3-2 24 处 `ResourceLoader.loadRes("Pictures/...")` 仍未处理 —— 功能性缺口
+
+`Assets/Resources` 目前仍只有 5 个文件，**没有 `Pictures/` 也没有 `AudioClips/`**，所以这 24 处仍然全部静默返回 `null`：
+
+| 文件 | 影响 |
+|---|---|
+| `BattleUnitView_Monster.cs:61,63` | 怪物 Sprite + **RuntimeAnimatorController** |
+| `BVMapComponent.cs:34-36` | 格子三态 Sprite |
+| `BVUIComponent.cs:167-169,186-189` | 升级按钮三态 + 地图 BG/Road |
+| `ButtonTower.cs:23-24`、`Carrot.cs:31` | 建塔按钮、萝卜帧 |
+| `NormalModelPanel.cs:138-139`、`GameWinView.cs:23` | 暂停/胜利图标 |
+| `SetPanel.cs:112-115`、`MapNormalLevelPanel.cs:84-86,169`、`NormalLevelScrollerCellView.cs:41,74` | 面板与关卡图标 |
+| `AudioManager.cs:161` | Resources 音频链路 |
+
+这是**当前最大的实际功能缺口**，本次改版未触及（改版只动了加载框架，没做资源迁移）。
+
+注：`BattleUnitView_Monster` 找 `RuntimeAnimatorController` 还牵出 `PrefabABPathPostprocessor` 把 `.anim`/`.controller` 排除在 AB 之外的老问题（见设计文档 Q6）。
+
+### P3-3 `LoadPriority.Sync` 已成死枚举值但仍是地雷
+
+全项目除 `AssetBundleManager` 自身外**无任何调用者**使用 `LoadPriority.Sync`。但两条处理路径仍在：
+
+```csharp
+// AssetBundleManager.cs:1333-1336
+case LoadPriority.Sync:
+    StartLoadingBundle(bundleInfo);      // → 真同步 AssetBundle.LoadFromFile
+
+// AssetBundleManager.cs:1184
+if (bundleInfo.loadPriority == LoadPriority.Sync)
+    bundleInfo.bundle = AssetBundle.LoadFromFile(path);   // ← WebGL/小游戏不可用
+```
+
+一旦有人用上，就会在小游戏上踩到同步加载问题（见 `BattlePreload_Design.md` §7 陷阱 #11）。
+
+**修复**：删除该枚举值，或在 `AddBundleToQueue` 里把它降级为 `High` 并加 `#if !UNITY_WEBGL` 保护。
+
+---
+
+## 3. 与设计文档的对照
+
+| 设计文档条目 | 状态 |
+|---|---|
+| 按种类分层（Prefab/Image/Audio/Text） | ✅ 已实现 |
+| `ResourceCache<T>`：缓存 + 引用计数 + 在途合并 | ✅ 已实现（命中合并靠 `Waiters`） |
+| 坑 A：handle 赋值竞态 | ✅ **不再存在**——新版不再需要"调用后拿 handle"，`Provider` 在 `Load` 内直接赋值 |
+| 坑 B：取消不能依赖底层 | ✅ 已处理（`AssetBundleHandle.Release` 后 `_released` 拦截；`OnSourceLoaded` 里 `RefCount<=0 → DropProvider`） |
+| owner 归属 → 一次清理 | ✅ `AssetBundleScope`（显式，无弱引用） |
+| 冷却期（零引用不立即释放） | ⚠️ 部分——图片/音频/文本有了，**prefab 是 `float.MaxValue`** |
+| `ExplainBundle` 诊断 | ✅ `Explain(bundleName)`，且能报 scope 归属 |
+| 场景切换批量卸载 | ✅ `RequestSweep` + `UnloadUnreferencedBundles(8)` |
+| `GameObjectSpawnManager`（实例层） | ❌ 未做——`Instantiate`/`Destroy` 仍由调用方手工管理 |
+| 弱引用 owner 兜底 | ❌ 未做（设计文档中本就是可选项 Q18） |
+| 记录池 | ❌ 未做（Q20） |
+| `ClearAll` | ❌ 未做（Q21） |
+| 资源级优先级 | ❌ 未做——`priority` 只透传到包队列 |
+| 删除 `LoadPrefabBlocking` | ✅ **已完成，且是本次最大收益** |
+
+---
+
+## 4. 建议的修复顺序
+
+| 顺序 | 事项 | 理由 |
+|---|---|---|
+| 1 | 修 `Use` 回调丢弃（P0-1） | 契约缺陷，是潜在悬挂源；改动约 3 行 |
+| 2 | 统一回调时序（P2-1） | 避免"编辑器过、真机挂"的双端不一致，改动小 |
+| 3 | `PrefabLoader` 冷却期改有限值（P1-2） | 一行改动，消除"永不淘汰" |
+| 4 | 卸载策略收口（P1-1） | 需删旧协程 + 调整 `Tick`，中等改动，收益是内存与可解释性 |
+| 5 | 失败记忆统一 + 日志去重（P2-2） | 直接缓解 24 处失效调用造成的日志风暴 |
+| 6 | `All` 改弱引用 + 泄漏报告（P1-3） | 零成本严格改进 |
+| 7 | 删死代码（P3-1）、`LoadPriority.Sync`（P3-3） | 清理 |
+| 8 | 迁移 24 处 `Pictures/...`（P3-2） | **独立工作项**，功能缺口，与本次框架改动无耦合 |
+
+---
+
+## 5. 一句话总评
+
+这一版把加载框架从"没有分层、没有缓存、靠空转泵硬撑"推进到了**结构清晰、职责分层、有冷却期与批量卸载**的状态，并且清掉了 WebGL 上必然失败的那颗雷；战斗预加载的 boot/warm 分离甚至比原设计更细。
+
+剩下的问题里，只有 **P0-1（`Use` 回调丢弃）** 是必须马上修的契约缺陷，**P1-1（卸载策略叠加）** 是最影响内存表现的，其余属于打磨与清理。框架骨架不用再动。

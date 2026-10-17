@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,6 +39,7 @@ public enum LoadPriority
     Low = 0,
     Medium = 1,
     High = 2,
+    /// <summary>已禁用。传入后按 High 异步加载，不会同步读盘。</summary>
     Sync = 3,
     Max = 4
 }
@@ -364,8 +364,6 @@ public class AssetBundleManager
 
     public int maxConcurrentLoads = 3;
     public int maxConcurrentAssetLoads = 5; // 最大同时加载资源数量
-    public float unloadCheckInterval = 60f;
-    public int unloadReferenceThreshold = 60;
 
     // 事件
     public System.Action<string> OnBundleLoaded;
@@ -378,8 +376,6 @@ public class AssetBundleManager
 
     public void Init()
     {
-        SRPScheduler.Instance.StartCoroutine(UnloadCheckCoroutine());
-
 #if UNITY_EDITOR
         loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
 #endif
@@ -1180,18 +1176,7 @@ public class AssetBundleManager
         _loadingBundleNames.Add(bundleInfo.bundleName);
 
         string path = AssetBundlePathHelper.GetLocalLZ4Path(bundleInfo.bundleName);
-
-        if (bundleInfo.loadPriority == LoadPriority.Sync)
-        {
-            // 同步加载
-            bundleInfo.bundle = AssetBundle.LoadFromFile(path);
-            OnBundleLoadComplete(bundleInfo);
-        }
-        else
-        {
-            // 异步加载
-            bundleInfo.bundleRequest = AssetBundle.LoadFromFileAsync(path);
-        }
+        bundleInfo.bundleRequest = AssetBundle.LoadFromFileAsync(path);
 
         GameLogController.Log($"开始加载AB包: {bundleInfo.bundleName}, 优先级: {bundleInfo.loadPriority}, 依赖数: {bundleInfo.Dependencies.Count}", "AssetBundleManager");
     }
@@ -1328,11 +1313,8 @@ public class AssetBundleManager
                 _mediumPriorityQueue.Enqueue(bundleInfo);
                 break;
             case LoadPriority.High:
-                _highPriorityQueue.Enqueue(bundleInfo);
-                break;
             case LoadPriority.Sync:
-                // 同步加载立即执行
-                StartLoadingBundle(bundleInfo);
+                _highPriorityQueue.Enqueue(bundleInfo);
                 break;
         }
     }
@@ -1348,47 +1330,6 @@ public class AssetBundleManager
 
         GameLogController.Log($"开始下载AB包: {bundleName}", "AssetBundleManager");
         AssetBundleDownloader.Instance.DownloadBundle(bundleName, false, onDownloadComplete);
-    }
-
-    // 卸载检查协程
-    private IEnumerator UnloadCheckCoroutine()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(unloadCheckInterval);
-            CheckAndUnloadUnusedBundles();
-        }
-    }
-
-    // 检查并卸载未使用的AB包
-    private void CheckAndUnloadUnusedBundles()
-    {
-        int unloadedCount = 0;
-        List<string> toUnload = new List<string>();
-
-        foreach (var kvp in _loadedBundles)
-        {
-            var bundleInfo = kvp.Value;
-            if (bundleInfo.referenceCount <= 0)
-            {
-                TimeSpan timeSinceLastUse = DateTime.Now - bundleInfo.lastUseTime;
-                if (timeSinceLastUse.TotalSeconds > unloadReferenceThreshold)
-                {
-                    toUnload.Add(kvp.Key);
-                }
-            }
-        }
-
-        foreach (string bundleName in toUnload)
-        {
-            UnloadBundle(bundleName, true);
-            unloadedCount++;
-        }
-
-        if (unloadedCount > 0)
-        {
-            GameLogController.Log($"自动卸载了 {unloadedCount} 个未使用的AB包", "AssetBundleManager");
-        }
     }
 
     #endregion

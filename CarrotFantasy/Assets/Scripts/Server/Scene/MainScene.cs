@@ -25,23 +25,6 @@ namespace CarrotFantasy
         {
             base.Init();
             AssetBundleLoaders.RequestSweep();
-
-            // 示例：StartLoadPanel.Instance + UIViewService.OpenStartLoadPanel();
-            //Sche.DelayExeOnceTimes(() => {
-            //    panel.autoClose();
-            //    UIViewService.OpenMainPanel();
-            //    UIServer.Instance.FadeLoadingPanel();
-            //    if (AccountServer.Instance.userId == 0)
-            //    {
-            //        UIViewService.OpenLoginPanel();
-            //    }
-            //    if(MapServer.Instance.curBigLevel != 0)
-            //    {
-            //        UIViewService.OpenMapBigLevelPanel();
-            //        UIViewService.OpenMapNormalLevelPanel(MapServer.Instance.curBigLevel);
-            //    }
-            //}, 2f);
-
         }
     }
 }
