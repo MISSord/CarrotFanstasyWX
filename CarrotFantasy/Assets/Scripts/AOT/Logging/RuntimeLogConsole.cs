@@ -617,6 +617,18 @@ namespace CarrotFantasy
                 richText = false,
             };
 
+            // 内置 GUI.skin.font 不含中文字形，打包后日志面板的中文会全部变成方框，这里统一换字体。
+            ImGuiCjkFont.Apply(
+                this.openButtonStyle,
+                this.toolbarButtonStyle,
+                this.filterOnStyle,
+                this.filterOffStyle,
+                this.rowLabelStyle,
+                this.detailLabelStyle,
+                this.panelBoxStyle,
+                this.paneBoxStyle,
+                this.selectedRowStyle);
+
             this.stylesReady = true;
         }
 

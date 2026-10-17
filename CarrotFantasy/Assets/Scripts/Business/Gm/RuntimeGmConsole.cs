@@ -401,6 +401,14 @@ namespace CarrotFantasy
                 wordWrap = true,
             };
 
+            // 内置 GUI.skin.font 不含中文字形，打包后 GM 面板的中文会全部变成方框，这里统一换字体。
+            ImGuiCjkFont.Apply(
+                this.openButtonStyle,
+                this.toolbarButtonStyle,
+                this.panelBoxStyle,
+                this.textFieldStyle,
+                this.logLabelStyle);
+
             this.stylesReady = true;
         }
     }

@@ -68,6 +68,9 @@ namespace CarrotFantasy
                 return;
             }
 
+            // 内置 GUI.skin.font 不含中文字形，打包后这个面板的中文会全部变成方框。
+            ImGuiCjkFont.ApplyToCurrentSkin();
+
             if (this.phase == Phase.SelectMode && this.ShouldShowClearCacheButton())
             {
                 this.DrawClearCacheButton();
