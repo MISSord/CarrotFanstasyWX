@@ -52,6 +52,7 @@ public static class AssetBundlePackExtractor
         DownloadPackInfo packInfo,
         Dictionary<string, CustomAssetBundleInfo> bundleInfoDict,
         bool isNeedConvert,
+        CustomManifest manifest,
         Action<bool, string> onComplete)
     {
         string errorMessage = string.Empty;
@@ -70,6 +71,9 @@ public static class AssetBundlePackExtractor
         string extractRoot = Path.Combine(Application.temporaryCachePath, "pack_extract_" + packInfo.PackName);
         bool success = false;
         bool prepareFailed = false;
+
+        // 落盘成功的包（bundleName -> targetPath），循环结束后统一补记转换后 Size/MD5。
+        var written = new List<KeyValuePair<string, string>>();
 
         try
         {
@@ -151,6 +155,8 @@ public static class AssetBundlePackExtractor
                         : convertError;
                     break;
                 }
+
+                written.Add(new KeyValuePair<string, string>(bundleName, targetPath));
             }
             else
             {
@@ -159,6 +165,7 @@ public static class AssetBundlePackExtractor
                 {
                     File.Copy(sourcePath, stagedPath, true);
                     AtomicFile.Replace(stagedPath, targetPath);
+                    written.Add(new KeyValuePair<string, string>(bundleName, targetPath));
                 }
                 catch (Exception e)
                 {
@@ -178,9 +185,51 @@ public static class AssetBundlePackExtractor
         if (string.IsNullOrEmpty(errorMessage))
         {
             success = true;
+
+            // 补记转换后的 Size/MD5：否则下次启动的完整性校验会退化成"文件非空"。
+            // 一个 Pack 内可能有几十个包，逐个 MD5 会很慢，这里分帧进行。
+            for (int i = 0; i < written.Count; i++)
+            {
+                RecordSingleWrittenBundle(manifest, bundleInfoDict, written[i].Key, written[i].Value);
+                if ((i & 7) == 7)
+                {
+                    yield return null;
+                }
+            }
         }
 
         onComplete?.Invoke(success, errorMessage);
+    }
+
+    /// <summary>为单个已落盘的包记录转换后 Size/MD5；清单里找不到对应条目时跳过。</summary>
+    static void RecordSingleWrittenBundle(
+        CustomManifest manifest,
+        Dictionary<string, CustomAssetBundleInfo> bundleInfoDict,
+        string bundleName,
+        string targetPath)
+    {
+        CustomAssetBundleInfo info = null;
+        if (bundleInfoDict != null)
+        {
+            bundleInfoDict.TryGetValue(bundleName, out info);
+        }
+
+        // Pack 内"顺带下载"的包不在 bundleInfoDict 里，回清单里找。
+        if (info == null && manifest != null && manifest.AssetBundles != null)
+        {
+            for (int j = 0; j < manifest.AssetBundles.Count; j++)
+            {
+                CustomAssetBundleInfo candidate = manifest.AssetBundles[j];
+                if (candidate != null
+                    && string.Equals(candidate.BundleName, bundleName, StringComparison.OrdinalIgnoreCase))
+                {
+                    info = candidate;
+                    break;
+                }
+            }
+        }
+
+        AssetBundleUpdateChecker.RecordConvertedBundle(manifest, info, targetPath);
     }
 
     static void PrepareExtractDirectory(string extractRoot)

@@ -354,6 +354,15 @@ public class AssetBundleUpdateChecker
     /// </summary>
     private IEnumerator DownloadAndVerifySignature(byte[] manifestBytes, SignatureResult onResult)
     {
+        // 开发期跳过签名：连 .sig 都不去下载，省掉一次必然 404 的请求与重试。
+        if (ManifestSignature.IsVerificationBypassed)
+        {
+            Debug.LogWarning(
+                "[AssetBundleUpdateChecker] 开发宏 CF_DEV_SKIP_MANIFEST_SIGN 生效，跳过清单签名下载与校验。");
+            onResult(true, null);
+            yield break;
+        }
+
         string signatureUrl = m_RemoteManifestUrl + ".sig";
         using (UnityWebRequest sigRequest = UnityWebRequest.Get(BuildCacheBustedUrl(signatureUrl)))
         {
@@ -432,13 +441,16 @@ public class AssetBundleUpdateChecker
 
                 // 客户端整包升级后，旧缓存里的热更 DLL / AB 可能与新 AOT 不兼容。
                 // 直接丢弃并按全量重新校验，StreamingAssets 里的基线内容会被重新识别为"已有"。
-                if (IsLocalManifestFromOtherAppVersion(m_LocalManifest))
+                if (IsLocalManifestFromOtherAppVersion())
                 {
                     Debug.LogWarning(
-                        "本地清单来自其它客户端版本(AppVersion=" + m_LocalManifest.AppVersion
-                        + ", 当前=" + Application.version + ")，清空持久化缓存后重新校验。");
+                        "检测到客户端整包版本变化（标记=" + ReadClientVersionMarker()
+                        + ", 当前=" + Application.version + "），清空持久化缓存后重新校验。");
                     AssetBundleCacheCleaner.ResetDownloadedAssetsForAppVersionChange();
                     m_LocalManifest = new CustomManifest { AssetBundles = new List<CustomAssetBundleInfo>() };
+
+                    // 立刻更新标记：即使本次下载中途失败，下次启动也不会重复清库。
+                    WriteClientVersionMarker();
                 }
                 else
                 {
@@ -461,11 +473,63 @@ public class AssetBundleUpdateChecker
         ChangeState(CheckerState.ComparingManifests);
     }
 
-    private static bool IsLocalManifestFromOtherAppVersion(CustomManifest local)
+    /// <summary>
+    /// 判断"客户端是否换了个整包版本"，用于决定是否清空热更缓存。
+    /// <para>
+    /// 不能用清单里的 <c>AppVersion</c>：那是打包机写入、随 CDN 清单下发的服务端值，
+    /// 与客户端 <c>Application.version</c> 比较只要不一致就会清库 —— 而清库后又把服务端值
+    /// 存回本地，于是下次启动继续不一致，形成"每次启动清库并全量重下"的死循环。
+    /// 这里改为比较客户端自己写下的版本标记（ab_client_version.txt）。
+    /// </para>
+    /// </summary>
+    private static bool IsLocalManifestFromOtherAppVersion()
     {
-        return local != null
-               && !string.IsNullOrEmpty(local.AppVersion)
-               && !string.Equals(local.AppVersion, Application.version, StringComparison.Ordinal);
+        string marked = ReadClientVersionMarker();
+
+        // 标记缺失 = 首次运行（或从没有标记的旧版本升级上来）。不做清库，
+        // 宁可多留一份旧缓存，也不要陷入反复清库重下。
+        if (string.IsNullOrEmpty(marked))
+        {
+            return false;
+        }
+
+        return !string.Equals(marked, Application.version, StringComparison.Ordinal);
+    }
+
+    private static string GetClientVersionMarkerPath()
+    {
+        return Path.Combine(Application.persistentDataPath, "ab_client_version.txt");
+    }
+
+    private static void WriteClientVersionMarker()
+    {
+        try
+        {
+            File.WriteAllText(GetClientVersionMarkerPath(), Application.version ?? string.Empty);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[AssetBundleUpdateChecker] 写入客户端版本标记失败: " + e.Message);
+        }
+    }
+
+    private static string ReadClientVersionMarker()
+    {
+        try
+        {
+            string path = GetClientVersionMarkerPath();
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+
+            return File.ReadAllText(path).Trim();
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[AssetBundleUpdateChecker] 读取客户端版本标记失败: " + e.Message);
+            return null;
+        }
     }
 
     /// <summary>
@@ -517,10 +581,16 @@ public class AssetBundleUpdateChecker
 
             if (localBundle == null)
             {
-                // 本地清单无记录时，仍检查持久化目录是否已有完整文件（支持中断后续传）
+                // 本地清单无记录时，先看持久化目录是否已有完整文件（支持中断后续传），
+                // 再看包内 StreamingAssets 基线：首装时资源已随包分发，不应再全量下载一遍。
                 if (IsPersistentBundleValid(remoteBundle))
                 {
                     m_CurrentResult.upToDateBundles.Add(remoteBundle);
+                }
+                else if (AssetBundlePathHelper.IsBundleAvailableAtRuntime(remoteBundle.BundleName))
+                {
+                    // 文件在（基线或持久化目录），但清单里没记录，需按远端 Hash 校验后才算数。
+                    m_CurrentResult.bundlesToUpdate.Add(remoteBundle);
                 }
                 else
                 {
@@ -896,6 +966,7 @@ public class AssetBundleUpdateChecker
         {
             WriteManifestAtomically(manifestPath, generatedManifest);
             ClearPendingLocalBundles();
+            WriteClientVersionMarker();
             Debug.Log("完成服务器清单本地保存");
         }
         catch (Exception e)
@@ -909,13 +980,10 @@ public class AssetBundleUpdateChecker
     {
         string json = JsonUtility.ToJson(manifest, true);
         string tempPath = manifestPath + ".tmp";
-        string directory = Path.GetDirectoryName(manifestPath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
 
-        File.WriteAllText(tempPath, json);
+        // 用 AtomicFile 写入而非 File.WriteAllText：前者会 Flush(true) 落盘，
+        // 否则掉电后可能出现"清单文件名对、内容 0 字节"。
+        AtomicFile.WriteAllText(tempPath, json);
         AtomicFile.Replace(tempPath, manifestPath);
     }
 
@@ -930,6 +998,41 @@ public class AssetBundleUpdateChecker
     /// 增量记录已落盘的 AB（带缓冲）。满 32 个或距上次落盘 2 秒才真正写文件，
     /// 避免"每完成一个包就整份重写 JSON"的 O(n²) 开销；崩溃最多丢这一小批记录，下次按 Hash 重校即可。
     /// </summary>
+    /// <summary>
+    /// 落盘完成后记录"转换后"的 Size + MD5。
+    /// <para>
+    /// 没有这一步，启动校验会因为 <c>ConvertedHash</c> 为空而退化成
+    /// <see cref="IsPersistentBundleValid"/> 里的"文件非空"，完整性校验形同虚设。
+    /// 单包下载路径（<c>PersistConvertedBundle</c>）本来就会记，Pack 路径原先漏了。
+    /// </para>
+    /// </summary>
+    public static void RecordConvertedBundle(CustomManifest manifest, CustomAssetBundleInfo info, string finalPath)
+    {
+        if (info == null || string.IsNullOrEmpty(info.BundleName))
+        {
+            return;
+        }
+
+        try
+        {
+            if (string.IsNullOrEmpty(finalPath) || !File.Exists(finalPath))
+            {
+                return;
+            }
+
+            FileInfo fileInfo = new FileInfo(finalPath);
+            info.ConvertedSize = fileInfo.Length;
+            info.ConvertedHash = ComputeFileMD5(finalPath);
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[AssetBundleUpdateChecker] 记录转换后 Hash 失败: " + info.BundleName + ", " + e.Message);
+            return;
+        }
+
+        UpsertLocalBundles(manifest, new[] { info });
+    }
+
     public static void UpsertLocalBundles(CustomManifest remoteTemplate, IEnumerable<CustomAssetBundleInfo> completedBundles)
     {
         if (completedBundles == null)

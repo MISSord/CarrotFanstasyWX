@@ -275,7 +275,7 @@ namespace CarrotFantasy
             if (!downloadSuccess)
             {
                 Debug.LogError("[AotResourceUpdateRunner] 资源下载失败");
-                ShowErrorAndQuit();
+                yield return ShowFatalErrorDialog(host, "资源下载或校验失败，请检查网络后重试。");
                 onFinished?.Invoke(Result.Failed);
                 yield break;
             }
@@ -353,11 +353,34 @@ namespace CarrotFantasy
             QuitApp();
         }
 
-        private static void ShowErrorAndQuit()
+        /// <summary>
+        /// 致命错误提示：显示错误面板并等待用户点退出。
+        /// 面板故意不关闭——小程序 / WebGL 上 Application.Quit 无效，
+        /// 关掉面板就会留下"永久黑屏且没有任何提示"，所以这里保留错误信息。
+        /// </summary>
+        public static IEnumerator ShowFatalErrorDialog(MonoBehaviour host, string message)
         {
-#if UNITY_EDITOR
-            EditorUtility.DisplayDialog("资源更新失败", "资源下载或校验失败，请检查网络后重试。", "退出");
-#endif
+            AotBootUi.EnsureEventSystem();
+
+            bool exitChosen = false;
+            Transform parent = host != null ? host.transform : null;
+
+            var dialog = new AotUpdateListErrorView();
+
+            // onRestart 传 null：没有可靠的重启实现时，按钮会被隐藏而不是点了没反应。
+            if (!dialog.Open(message, () => exitChosen = true, null, parent))
+            {
+                // 连面板都开不出来时，至少留下日志并退出，避免静默卡住。
+                Debug.LogError("[AotResourceUpdateRunner] 无法显示错误面板: " + message);
+                QuitApp();
+                yield break;
+            }
+
+            while (!exitChosen)
+            {
+                yield return null;
+            }
+
             QuitApp();
         }
 

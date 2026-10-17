@@ -221,10 +221,20 @@ namespace CarrotFantasy
         Action onExit;
         Action onRestart;
 
+        /// <summary>本次提示的自定义文案；为空时用默认文案。</summary>
+        string messageText;
+
         public bool Open(Action onExit, Action onRestart, Transform parent = null)
+        {
+            return this.Open(null, onExit, onRestart, parent);
+        }
+
+        /// <summary>带自定义文案的打开重载，供通用致命错误提示复用同一个面板。</summary>
+        public bool Open(string message, Action onExit, Action onRestart, Transform parent = null)
         {
             this.onExit = onExit;
             this.onRestart = onRestart;
+            this.messageText = message;
             if (!base.Open(parent))
             {
                 return false;
@@ -249,7 +259,9 @@ namespace CarrotFantasy
             Text message = this.NameTable.GetComponentSafely<Text>("Message");
             if (message != null)
             {
-                message.text = "获取热更新列表有问题，请重启游戏。";
+                message.text = string.IsNullOrEmpty(this.messageText)
+                    ? "获取热更新列表有问题，请重启游戏。"
+                    : this.messageText;
             }
 
             Button exitBtn = this.NameTable.GetComponentSafely<Button>("Btn_Confirm");
@@ -268,6 +280,15 @@ namespace CarrotFantasy
             if (restartBtn != null)
             {
                 restartBtn.onClick.RemoveAllListeners();
+
+                // 没有重试/重启逻辑时，不要留一个点了没反应的按钮。
+                if (this.onRestart == null)
+                {
+                    restartBtn.gameObject.SetActive(false);
+                    return;
+                }
+
+                restartBtn.gameObject.SetActive(true);
                 restartBtn.onClick.AddListener(() => this.onRestart?.Invoke());
                 Text label = restartBtn.GetComponentInChildren<Text>();
                 if (label != null)

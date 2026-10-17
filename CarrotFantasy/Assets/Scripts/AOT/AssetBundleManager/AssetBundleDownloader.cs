@@ -1034,6 +1034,7 @@ public class AssetBundleDownloader
             task.packInfo,
             bundleInfoDict,
             isNeedConvert,
+            currentManifest,
             (success, error) =>
             {
                 extractSuccess = success;

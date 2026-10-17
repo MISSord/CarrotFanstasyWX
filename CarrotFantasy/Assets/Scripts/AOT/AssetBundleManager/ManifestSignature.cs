@@ -60,8 +60,41 @@ public static class ManifestSignature
 #endif
     }
 
+    /// <summary>
+    /// 开发期跳过清单签名的开关（编译期宏 <c>CF_DEV_SKIP_MANIFEST_SIGN</c>）。
+    /// <para>
+    /// 双重闸门：必须【同时】满足
+    ///   ① 编译时定义了 CF_DEV_SKIP_MANIFEST_SIGN
+    ///   ② 当前是 Editor / Development / CF_DEV_TOOLS 构建
+    /// 才会真正跳过。正式包即使误留了该宏，②也不成立，仍然强制验签。
+    /// </para>
+    /// <para>
+    /// 开关入口：菜单 Tools/AssetBundle/开发期跳过清单签名，或手工在
+    /// Project Settings → Player → Scripting Define Symbols 里增删该宏。
+    /// </para>
+    /// </summary>
+    public static bool IsVerificationBypassed
+    {
+        get
+        {
+#if CF_DEV_SKIP_MANIFEST_SIGN
+            return IsInsecureHttpBuildAllowed();
+#else
+            return false;
+#endif
+        }
+    }
+
     public static bool Verify(byte[] manifestBytes, byte[] signature)
     {
+        if (IsVerificationBypassed)
+        {
+            UnityEngine.Debug.LogWarning(
+                "[ManifestSignature] ⚠ 开发宏 CF_DEV_SKIP_MANIFEST_SIGN 生效，已跳过清单验签。"
+                + "正式包必须移除该宏并重新打包与上传。");
+            return true;
+        }
+
         if (manifestBytes == null || manifestBytes.Length == 0 || signature == null || signature.Length == 0)
         {
             return false;

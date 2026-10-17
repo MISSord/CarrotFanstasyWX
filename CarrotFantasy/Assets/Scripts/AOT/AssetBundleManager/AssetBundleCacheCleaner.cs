@@ -13,14 +13,18 @@ public static class AssetBundleCacheCleaner
     public static void ClearAll()
     {
         AssetBundleDownloader.Instance?.EndDownload();
-        ClearDownloadedFiles();
-        ClearLocalManifest();
-        ClearTempDownloadFiles();
 
+        // 必须先卸载再删文件。反过来做的话，AB 还持着文件句柄（LoadFromFile 映射中），
+        // Windows 上 Directory.Delete 会抛 IOException 并留下"半删"的目录，
+        // 而此时清单已经被删掉，状态就脏了。
         if (AssetBundleManager.Instance != null)
         {
             AssetBundleManager.Instance.ClearRuntimeCache();
         }
+
+        ClearDownloadedFiles();
+        ClearLocalManifest();
+        ClearTempDownloadFiles();
 
         Debug.Log($"[{LogTag}] 缓存已清理");
     }
@@ -148,24 +152,74 @@ public static class AssetBundleCacheCleaner
         }
     }
 
+    /// <summary>
+    /// 清理下载 / 解包过程中产生的临时文件。真实产物分布：
+    ///   &lt;persistent&gt;/&lt;bundle&gt;.download   下载暂存（与正式文件同目录）
+    ///   &lt;temp&gt;/&lt;bundle&gt;.pack.temp        单包解包暂存
+    ///   &lt;temp&gt;/pack_&lt;name&gt;.zip           Pack 压缩包
+    ///   &lt;temp&gt;/pack_extract_&lt;name&gt;/       Pack 解压根目录
+    /// 原实现只删顶层 <c>*.temp</c>，上面这些大件全在盲区
+    /// （一次中断的 Pack 更新可能残留几百 MB）。
+    /// </summary>
     static void ClearTempDownloadFiles()
     {
         string tempRoot = Application.temporaryCachePath;
+
+        // 解包暂存 / 下载暂存 / Pack 压缩包
+        ClearFilesByPattern(tempRoot, "*.pack.temp", SearchOption.AllDirectories);
+        ClearFilesByPattern(tempRoot, "*.temp", SearchOption.AllDirectories);
+        ClearFilesByPattern(tempRoot, "pack_*.zip", SearchOption.TopDirectoryOnly);
+
         if (!Directory.Exists(tempRoot))
         {
             return;
         }
 
-        foreach (string file in Directory.GetFiles(tempRoot, "*.temp"))
+        // 解压根目录整目录删除
+        try
         {
-            try
+            foreach (string dir in Directory.GetDirectories(tempRoot, "pack_extract_*", SearchOption.TopDirectoryOnly))
             {
-                File.Delete(file);
+                try
+                {
+                    Directory.Delete(dir, true);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[{LogTag}] 清理解压目录失败: {dir}, {e.Message}");
+                }
             }
-            catch (Exception e)
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[{LogTag}] 枚举解压目录失败: {e.Message}");
+        }
+    }
+
+    static void ClearFilesByPattern(string root, string pattern, SearchOption option)
+    {
+        if (string.IsNullOrEmpty(root) || !Directory.Exists(root))
+        {
+            return;
+        }
+
+        try
+        {
+            foreach (string file in Directory.GetFiles(root, pattern, option))
             {
-                Debug.LogWarning($"[{LogTag}] 清理临时文件失败: {file}, {e.Message}");
+                try
+                {
+                    File.Delete(file);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning($"[{LogTag}] 清理临时文件失败: {file}, {e.Message}");
+                }
             }
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning($"[{LogTag}] 枚举临时文件失败: {root} / {pattern}, {e.Message}");
         }
     }
 }

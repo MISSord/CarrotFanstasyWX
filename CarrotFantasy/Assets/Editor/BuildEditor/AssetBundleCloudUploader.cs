@@ -61,6 +61,12 @@ public static class AssetBundleCloudUploader
         }
 
         string remoteRoot = AssetBundleDeploySettings.NormalizeRemotePath(AssetBundleDeploySettings.RemotePath);
+        if (!ValidateRemotePathTail(remoteRoot, localDirectory, out string remotePathError))
+        {
+            result.Message = remotePathError;
+            return result;
+        }
+
         long uploadedBytes = 0;
         int uploadedCount = 0;
 
@@ -261,6 +267,42 @@ public static class AssetBundleCloudUploader
                || string.Equals(path, "version.txt", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// 客户端按 <c>{CDN模板}/{平台}/custom_manifest.json</c> 请求，所以远程目录的最后一段必须是平台名。
+    /// 填成 <c>/var/www/ab</c>（最自然的填法）会让所有请求 404，而上传本身却报成功 —— 必须提前拦住。
+    /// </summary>
+    static bool ValidateRemotePathTail(string remoteRoot, string localDirectory, out string error)
+    {
+        error = null;
+        if (string.IsNullOrEmpty(remoteRoot))
+        {
+            error = "远程目录为空。";
+            return false;
+        }
+
+        string trimmedLocal = (localDirectory ?? string.Empty)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string platformFolder = string.IsNullOrEmpty(trimmedLocal) ? string.Empty : Path.GetFileName(trimmedLocal);
+        if (string.IsNullOrEmpty(platformFolder))
+        {
+            // 无法从本地目录推断平台（例如直接传根目录），不做拦截。
+            return true;
+        }
+
+        int separator = remoteRoot.LastIndexOf('/');
+        string remoteTail = separator >= 0 ? remoteRoot.Substring(separator + 1) : remoteRoot;
+        if (string.Equals(remoteTail, platformFolder, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        error = "远程目录的最后一段必须是平台名「" + platformFolder + "」，当前为「" + remoteRoot + "」。"
+                + "客户端会按 {CDN模板}/" + platformFolder + "/custom_manifest.json 请求，"
+                + "填错会导致全量 404（但上传本身会成功，很难发现）。"
+                + "请把远程目录改成以 /" + platformFolder + " 结尾。";
+        return false;
+    }
+
     /// <summary>清单必须和 .sig 成对上传，否则客户端验签失败会拒绝更新。</summary>
     static bool HasManifestSignature(List<LocalUploadFile> files, out string error)
     {
@@ -280,6 +322,18 @@ public static class AssetBundleCloudUploader
             }
         }
 
+        if (ManifestSignature.IsVerificationBypassed)
+        {
+            if (!hasSignature)
+            {
+                Debug.LogWarning(
+                    "[AB Upload] 开发宏 CF_DEV_SKIP_MANIFEST_SIGN 生效，允许上传不带 "
+                    + ManifestSignature.SignatureFileName + " 的清单。发布前必须关闭该宏并重新打包。");
+            }
+
+            return true;
+        }
+
         if (hasManifest && !hasSignature)
         {
             error = "清单缺少签名文件 " + ManifestSignature.SignatureFileName
@@ -287,7 +341,62 @@ public static class AssetBundleCloudUploader
             return false;
         }
 
+        // 只查"两个文件都在"是不够的：必须确认是"这份清单配这份签名"。
+        // 这是发布链路上唯一的端到端守卫，能拦住「新清单 + 旧签名」。
+        if (hasManifest && hasSignature && !VerifyManifestSignature(files, out string verifyError))
+        {
+            error = verifyError;
+            return false;
+        }
+
         return true;
+    }
+
+    /// <summary>用客户端同一套内置公钥真实验签一次。</summary>
+    static bool VerifyManifestSignature(List<LocalUploadFile> files, out string error)
+    {
+        error = null;
+
+        LocalUploadFile manifestFile = null;
+        LocalUploadFile signatureFile = null;
+        for (int i = 0; i < files.Count; i++)
+        {
+            string path = files[i].RelativePath.Replace('\\', '/');
+            if (string.Equals(path, "custom_manifest.json", StringComparison.OrdinalIgnoreCase))
+            {
+                manifestFile = files[i];
+            }
+            else if (string.Equals(path, ManifestSignature.SignatureFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                signatureFile = files[i];
+            }
+        }
+
+        if (manifestFile == null || signatureFile == null)
+        {
+            error = "未在待上传列表中找到清单或签名文件。";
+            return false;
+        }
+
+        try
+        {
+            byte[] manifestBytes = File.ReadAllBytes(manifestFile.FullPath);
+            byte[] signature = File.ReadAllBytes(signatureFile.FullPath);
+            if (ManifestSignature.Verify(manifestBytes, signature))
+            {
+                return true;
+            }
+
+            error = "清单与签名不匹配（很可能是「新清单 + 旧签名」）。"
+                    + "请重新执行 AB 打包，生成与当前清单配套的 "
+                    + ManifestSignature.SignatureFileName + "。";
+            return false;
+        }
+        catch (Exception e)
+        {
+            error = "校验清单签名时出错: " + e.Message;
+            return false;
+        }
     }
 
     /// <summary>
