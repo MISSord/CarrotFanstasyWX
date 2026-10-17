@@ -7,7 +7,9 @@ namespace CarrotFantasy
     {
         public const string SettingViewPrefab = "ui/view/settingview_prefab";
         public const string MainViewViewPrefab = "ui/view/mainview_prefab";
-        public const string HelpPrefab = "ui/view/help_prefab";
+        // 规则是「目录名小写 + _prefab」，HelpPanel 目录 → ui/view/helppanel_prefab。
+        // 原先误写成 ui/view/help_prefab，导致清单里查不到包、帮助面板永远打不开。
+        public const string HelpPrefab = "ui/view/helppanel_prefab";
         public const string MapViewPrefab = "ui/view/mapview_prefab";
         public const string LoginPrefab = "ui/view/login_prefab";
         public const string ViewRootPrefab = "ui/view_prefab";

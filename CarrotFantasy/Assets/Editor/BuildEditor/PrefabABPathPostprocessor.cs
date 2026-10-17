@@ -10,6 +10,11 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         if (!assetPath.StartsWith("Assets/"))
             return;
 
+        // 目录也会触发本回调。一旦给目录写了包名，会在 GetAllAssetBundleNames() 里
+        // 留下永远清不掉的幽灵包名（如 ui/rawimages_prefab），并可能让子资源被两个包认领。
+        if (AssetDatabase.IsValidFolder(assetPath))
+            return;
+
         AssetImporter importer = AssetImporter.GetAtPath(assetPath);
         if (importer == null)
             return;
@@ -24,10 +29,17 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         if (string.IsNullOrEmpty(directory))
             return null;
 
+        // 注意要用 GameRoot + "/" 做前缀：只写 StartsWith("Assets/Game/") 会漏掉
+        // 直接放在 Assets/Game 下的资源（如 URP 管线资产），拼出 assets/game_prefab 这种怪名字。
+        const string GameRoot = "Assets/Game";
         string relativePath = directory.Replace('\\', '/');
-        if (relativePath.StartsWith("Assets/Game/"))
+        if (string.Equals(relativePath, GameRoot, System.StringComparison.OrdinalIgnoreCase))
         {
-            relativePath = relativePath.Substring(12);
+            relativePath = string.Empty;
+        }
+        else if (relativePath.StartsWith(GameRoot + "/", System.StringComparison.OrdinalIgnoreCase))
+        {
+            relativePath = relativePath.Substring(GameRoot.Length + 1);
         }
 
         if (string.IsNullOrEmpty(relativePath))
@@ -196,8 +208,11 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return false;
 
         // Skip source/metadata files that should not participate in AB naming.
+        // .unity 必须排除：场景要留在 Build Settings 里由 SceneManager.LoadScene 加载，
+        // 一旦被绑进 AB，既会与 Build Settings 冲突，AB 里的场景也永远加载不到。
         return extension != ".meta" &&
                extension != ".cs" &&
+               extension != ".unity" &&
                extension != ".anim" &&
                extension != ".controller" &&
                extension != ".asmdef" &&
