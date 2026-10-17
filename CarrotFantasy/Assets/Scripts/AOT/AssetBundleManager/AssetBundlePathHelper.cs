@@ -235,6 +235,8 @@ public static class AssetBundlePathHelper
                 localSavePath = config.localSavePath;
             }
 
+            ApplyInsecureHttpPolicy(config);
+
             Debug.Log(
                 "[AssetBundlePathHelper] 运行配置已加载 env="
                 + RuntimeEnv
@@ -246,5 +248,30 @@ public static class AssetBundlePathHelper
             Debug.LogWarning("[AssetBundlePathHelper] 读取运行时配置失败: " + ex.Message);
         }
 #endif
+    }
+
+    /// <summary>
+    /// http 只在「调试构建 + 配置显式开启 + 非 prod」三者同时满足时放行；
+    /// 正式包无论如何都只接受 https/file。
+    /// </summary>
+    static void ApplyInsecureHttpPolicy(AssetBundleRuntimeConfig config)
+    {
+        bool isProd = string.Equals(
+            config.env,
+            CarrotFantasy.BuildChannelDefines.EnvProd,
+            StringComparison.OrdinalIgnoreCase);
+
+        bool allow = config.allowInsecureHttp
+                     && !isProd
+                     && ManifestSignature.IsInsecureHttpBuildAllowed();
+
+        ManifestSignature.AllowInsecureHttp = allow;
+
+        if (allow && ServerDownloadURL.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            Debug.LogWarning(
+                "[AssetBundlePathHelper] 已按调试配置允许明文 HTTP 下载（仅限开发包，请勿用于正式环境）: "
+                + ServerDownloadURL);
+        }
     }
 }

@@ -19,23 +19,26 @@ using UnityEngine;
 /// </summary>
 public static class AssetBundlePackager
 {
+    // 运行时用的是 File.Exists + AssetBundle.LoadFromFile，只有 PC/macOS 的同步文件 IO 能这么干。
+    // Android/iOS/WebGL 需要先补 UnityWebRequestAssetBundle 分支再放开，否则等于默认出一个跑不起来的包。
     public static readonly BuildTarget[] availablePlatforms = {
         BuildTarget.StandaloneWindows,
         BuildTarget.StandaloneWindows64,
         BuildTarget.StandaloneOSX,
-        BuildTarget.Android,
-        BuildTarget.iOS,
-        BuildTarget.WebGL,
     };
 
     public static readonly string[] platformNames = {
         "Windows 32-bit",
         "Windows 64-bit",
         "macOS",
-        "Android",
-        "iOS",
-        "WebGL",
     };
+
+    public static bool IsSupportedRuntimePlatform(BuildTarget target)
+    {
+        return target == BuildTarget.StandaloneWindows
+               || target == BuildTarget.StandaloneWindows64
+               || target == BuildTarget.StandaloneOSX;
+    }
 
     /// <summary>
     /// 构建 AB 到指定平台输出目录（如 .../StandaloneWindows）。
@@ -49,6 +52,14 @@ public static class AssetBundlePackager
     {
         try
         {
+            if (!IsSupportedRuntimePlatform(buildTarget))
+            {
+                Debug.LogError(
+                    "当前 AssetBundle 运行时只支持 PC/macOS 的 File IO 加载，" + buildTarget
+                    + " 需要先补 UnityWebRequestAssetBundle 分支再打包。");
+                return false;
+            }
+
             if (string.IsNullOrEmpty(outputPath))
             {
                 Debug.LogError("输出路径不能为空！");
@@ -95,9 +106,91 @@ public static class AssetBundlePackager
         }
     }
 
+    /// <summary>把 HybridCLR 设置里的 patchAOTAssemblies 导出成运行时读取的清单文件。</summary>
+    static void WriteAotMetaListFile()
+    {
+        try
+        {
+            HybridCLR.Editor.Settings.HybridCLRSettings settings =
+                HybridCLR.Editor.Settings.HybridCLRSettings.Instance;
+            string[] names = settings != null
+                             && settings.patchAOTAssemblies != null
+                             && settings.patchAOTAssemblies.Length > 0
+                ? settings.patchAOTAssemblies
+                : CarrotFantasy.HybridCLRPaths.DefaultAotMetaAssemblies;
+
+            string directory = Path.Combine(Application.streamingAssetsPath, "HybridCLR", "AOT");
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.WriteAllLines(
+                Path.Combine(directory, CarrotFantasy.HybridCLRPaths.AotMetaListFileName),
+                names);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning("[AB Build] 导出 aot_meta_list.txt 失败（运行时会退回内置默认值）: " + e.Message);
+        }
+    }
+
+    /// <summary>
+    /// 把构建输出里的 AB 文件名统一成小写（与清单 / 运行时 GetBundleFileName 一致）。
+    /// Unity 按资源上登记的包名生成文件，大小写会原样保留；Windows 无感，iOS/Android 会找不到。
+    /// </summary>
+    public static void NormalizeBundleFileNames(string platformBundlePath, BuildTarget target)
+    {
+        if (!Directory.Exists(platformBundlePath))
+        {
+            return;
+        }
+
+        string platformManifestName = GetPlatformFolder(target).ToLowerInvariant();
+        foreach (string file in Directory.GetFiles(platformBundlePath, "*", SearchOption.AllDirectories))
+        {
+            string relative = file.Substring(platformBundlePath.Length)
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                .Replace('\\', '/');
+
+            if (relative.StartsWith(PackGroupingDefaults.PacksFolderName + "/", StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".sig", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string lower = relative.ToLowerInvariant();
+            if (lower == platformManifestName || string.Equals(relative, lower, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            string targetPath = Path.Combine(platformBundlePath, lower.Replace('/', Path.DirectorySeparatorChar));
+            if (File.Exists(targetPath))
+            {
+                Debug.LogError("[AB Build] 大小写冲突，已跳过: " + relative + " / " + lower);
+                continue;
+            }
+
+            string directory = Path.GetDirectoryName(targetPath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            File.Move(file, targetPath);
+        }
+    }
+
     /// <summary>拷贝到 StreamingAssets/AssetBundles/{平台}/，与运行时 GetRuntimeLoadPath 一致。</summary>
     public static void CopyToStreamingAssets(string platformBundlePath, BuildTarget buildTarget)
     {
+        // 保证源目录里的文件名已是小写，拷进 StreamingAssets 后与清单一致。
+        NormalizeBundleFileNames(platformBundlePath, buildTarget);
+
         string platformFolder = GetPlatformFolder(buildTarget);
         string destPath = Path.Combine(Application.streamingAssetsPath, "AssetBundles", platformFolder);
 
@@ -201,6 +294,12 @@ public static class AssetBundlePackager
         // 完整打 AB 若勾选清空输出，会删掉此前手动同步的 hybridclr/，必须在此补回。
         CarrotFantasy.Editor.HybridCLRProjectSetup.EnsureDllsInAbOutput(target);
 
+        // 把「需要补充元数据的 AOT 程序集」从 HybridCLR 设置导出给运行时，避免两边各维护一份硬编码。
+        WriteAotMetaListFile();
+
+        // 清单 / 运行时都按小写包名找文件，这里把构建产物统一成小写，避免大小写敏感平台找不到。
+        NormalizeBundleFileNames(bundlePath, target);
+
         // 清理 AssetDatabase 里已无资源引用的历史包名，避免 GetAllAssetBundleNames 虚高。
         AssetDatabase.RemoveUnusedAssetBundleNames();
 
@@ -282,6 +381,16 @@ public static class AssetBundlePackager
         string manifestJson = JsonUtility.ToJson(generatedManifest, true);
         string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");
         File.WriteAllText(manifestPath, manifestJson);
+        if (!ManifestSigner.TrySign(manifestPath, out string signError))
+        {
+            Debug.LogError("[AB Build] " + signError);
+            if (showSuccessDialog)
+            {
+                EditorUtility.DisplayDialog("清单签名失败", signError, "确定");
+            }
+
+            return null;
+        }
 
         string versionPath = Path.Combine(bundlePath, "version.txt");
         File.WriteAllText(versionPath, generatedManifest.BuildTime);
@@ -401,7 +510,8 @@ public static class AssetBundlePackager
         return file.EndsWith(".meta")
             || file.EndsWith(".manifest")
             || file.EndsWith(".json")
-            || file.EndsWith(".txt");
+            || file.EndsWith(".txt")
+            || file.EndsWith(".sig");
     }
 
     private static void GenerateFlatDependencyList(string abName, int depth, HashSet<string> processedBundles)

@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
+using UnityEngine;
 
 namespace CarrotFantasy
 {
@@ -15,6 +18,8 @@ namespace CarrotFantasy
             "hybridclr/hotupdate/carrotfantasy.hotupdate.dll.bytes";
 
         public const string ManifestFolder = "hybridclr";
+    /// <summary>构建时按 HybridCLR 设置写出的补充元数据清单（每行一个程序集名）。</summary>
+    public const string AotMetaListFileName = "aot_meta_list.txt";
         public const string HotUpdateFolder = "hybridclr/hotupdate";
         public const string AotFolder = "hybridclr/aot";
 
@@ -25,6 +30,40 @@ namespace CarrotFantasy
             "System.Core",
             "UnityEngine.CoreModule",
         };
+
+        /// <summary>
+        /// 优先读构建时生成的 aot_meta_list.txt（来自 HybridCLR 设置），没有时退回内置默认值。
+        /// </summary>
+        public static string[] LoadAotMetaAssemblyNames()
+        {
+            try
+            {
+                string path = Path.Combine(Application.streamingAssetsPath, "HybridCLR", "AOT", AotMetaListFileName);
+                if (File.Exists(path))
+                {
+                    var names = new List<string>();
+                    foreach (string line in File.ReadAllLines(path))
+                    {
+                        string trimmed = line.Trim();
+                        if (trimmed.Length > 0 && !trimmed.StartsWith("#", StringComparison.Ordinal))
+                        {
+                            names.Add(trimmed);
+                        }
+                    }
+
+                    if (names.Count > 0)
+                    {
+                        return names.ToArray();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[HybridCLRPaths] 读取 aot_meta_list.txt 失败，使用内置默认值: " + e.Message);
+            }
+
+            return DefaultAotMetaAssemblies;
+        }
 
         public static string GetAotMetaBundleName(string assemblyName)
         {

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using CarrotFantasy.Editor;
 using UnityEditor;
@@ -9,6 +10,9 @@ using UnityEngine;
 /// </summary>
 public static class HybridCLRCodeHotUpdatePipeline
 {
+    /// <summary>本次需要上传的 Pack 文件名；null 表示全传（旧行为）。</summary>
+    static HashSet<string> s_ChangedPacks;
+
     public struct Result
     {
         public bool Success;
@@ -53,6 +57,7 @@ public static class HybridCLRCodeHotUpdatePipeline
         bool interactive)
     {
         var result = new Result();
+        s_ChangedPacks = null;
         if (EditorUserBuildSettings.activeBuildTarget != target)
         {
             result.Message = string.Format(
@@ -119,6 +124,26 @@ public static class HybridCLRCodeHotUpdatePipeline
                 EditorUtility.DisplayProgressBar("代码热更", "刷新 custom_manifest / Packs…", 0.75f);
             }
 
+            // 先统一文件名大小写，再和现有清单比对：如果线上还是旧的大小写命名，
+            // 这里会直接报"与清单不一致"，强制走一次完整 AB 打包 + 全量上传。
+            AssetBundlePackager.NormalizeBundleFileNames(platformPath, target);
+
+            // 生成新清单前先确认：除了 hybridclr 之外，本地 AB 输出必须和现有清单完全一致。
+            // 否则新清单会指向从未上传过的字节（线上表现为全量重下或大面积 404）。
+            if (!TryLoadManifest(platformPath, out CustomManifest previousManifest, out string manifestError))
+            {
+                result.Message = manifestError;
+                Fail(result, interactive);
+                return result;
+            }
+
+            if (!VerifyAbOutputMatchesManifest(platformPath, target, previousManifest, out string driftError))
+            {
+                result.Message = driftError;
+                Fail(result, interactive);
+                return result;
+            }
+
             int version = AssetBundleBuildSettings.SuggestNextManifestVersion(outputRoot, target);
             CompressionType compression = AssetBundleBuildSettings.GetCompressionType();
             string fullOutputRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "..", outputRoot));
@@ -136,6 +161,9 @@ public static class HybridCLRCodeHotUpdatePipeline
                 Fail(result, interactive);
                 return result;
             }
+
+            // 固定时间戳后，内容没变的 Pack 字节也一致；只上传哈希变化的 Pack。
+            s_ChangedPacks = ComputeChangedPacks(previousManifest, manifest);
 
             AssetBundleBuildSettings.WriteRuntimeConfig(target);
 
@@ -196,6 +224,167 @@ public static class HybridCLRCodeHotUpdatePipeline
         }
     }
 
+    static bool TryLoadManifest(string platformPath, out CustomManifest manifest, out string error)
+    {
+        manifest = null;
+        error = null;
+        string manifestPath = Path.Combine(platformPath, "custom_manifest.json");
+        if (!File.Exists(manifestPath))
+        {
+            return true;
+        }
+
+        try
+        {
+            manifest = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(manifestPath));
+            return true;
+        }
+        catch (System.Exception e)
+        {
+            error = "读取现有 custom_manifest.json 失败: " + e.Message;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 代码热更只允许 hybridclr 目录变化：其余 AB 必须与现有清单逐字节一致。
+    /// </summary>
+    static bool VerifyAbOutputMatchesManifest(string platformPath, BuildTarget target, CustomManifest manifest, out string error)
+    {
+        error = null;
+        if (manifest?.AssetBundles == null || manifest.AssetBundles.Count == 0)
+        {
+            return true;
+        }
+
+        // BuildPipeline 会在输出目录生成"平台名"总清单 AB 和 .manifest 文本，它们不在 custom_manifest 里。
+        string platformManifestName = AssetBundlePackager.GetPlatformFolder(target).ToLowerInvariant();
+
+        var known = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < manifest.AssetBundles.Count; i++)
+        {
+            CustomAssetBundleInfo bundle = manifest.AssetBundles[i];
+            if (bundle == null || string.IsNullOrEmpty(bundle.BundleName))
+            {
+                continue;
+            }
+
+            string relative = bundle.BundleName.Replace('\\', '/');
+            known.Add(relative);
+
+            if (CarrotFantasy.HybridCLRPaths.IsHybridClrRawFile(relative))
+            {
+                continue;
+            }
+
+            string filePath = Path.Combine(platformPath, relative.Replace('/', Path.DirectorySeparatorChar));
+            if (!File.Exists(filePath))
+            {
+                error = "本地 AB 输出缺少清单中的文件: " + relative
+                        + "（文件名大小写改过也会走到这里），请先完整打一次 AB 再热更代码。";
+                return false;
+            }
+
+            FileInfo info = new FileInfo(filePath);
+            if (info.Length != bundle.Size
+                || (!string.IsNullOrEmpty(bundle.Hash)
+                    && !string.Equals(MD5Checker.ComputeFileMD5(filePath), bundle.Hash, System.StringComparison.OrdinalIgnoreCase)))
+            {
+                error = "本地 AB 与清单不一致: " + relative + "，请先完整打一次 AB 再热更代码。";
+                return false;
+            }
+        }
+
+        foreach (string file in Directory.GetFiles(platformPath, "*", SearchOption.AllDirectories))
+        {
+            string relative = file.Substring(platformPath.Length)
+                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                .Replace('\\', '/');
+
+            if (relative.StartsWith(PackGroupingDefaults.PacksFolderName + "/", System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.Equals(relative, platformManifestName, System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (relative.EndsWith(".manifest", System.StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".json", System.StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".txt", System.StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".sig", System.StringComparison.OrdinalIgnoreCase)
+                || relative.EndsWith(".meta", System.StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (!known.Contains(relative))
+            {
+                error = "AB 输出目录里有清单未登记的新文件: " + relative + "，请先完整打一次 AB。";
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static HashSet<string> ComputeChangedPacks(CustomManifest previous, CustomManifest current)
+    {
+        var changed = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
+        if (current?.DownloadPacks == null)
+        {
+            return changed;
+        }
+
+        var previousHashes = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+        if (previous?.DownloadPacks != null)
+        {
+            for (int i = 0; i < previous.DownloadPacks.Count; i++)
+            {
+                DownloadPackInfo pack = previous.DownloadPacks[i];
+                if (pack != null && !string.IsNullOrEmpty(pack.PackFileName))
+                {
+                    previousHashes[pack.PackFileName] = pack.PackHash;
+                }
+            }
+        }
+
+        for (int i = 0; i < current.DownloadPacks.Count; i++)
+        {
+            DownloadPackInfo pack = current.DownloadPacks[i];
+            if (pack == null || string.IsNullOrEmpty(pack.PackFileName))
+            {
+                continue;
+            }
+
+            if (!previousHashes.TryGetValue(pack.PackFileName, out string oldHash)
+                || !string.Equals(oldHash, pack.PackHash, System.StringComparison.OrdinalIgnoreCase))
+            {
+                changed.Add(Path.GetFileName(pack.PackFileName));
+            }
+        }
+
+        return changed;
+    }
+
+    static bool IsCodeHotUpdateFileToUpload(string relativePath, HashSet<string> changedPacks)
+    {
+        if (!AssetBundleCloudUploader.IsCodeHotUpdateUploadPath(relativePath))
+        {
+            return false;
+        }
+
+        string path = relativePath.Replace('\\', '/');
+        if (path.StartsWith(PackGroupingDefaults.PacksFolderName + "/", System.StringComparison.OrdinalIgnoreCase))
+        {
+            return changedPacks == null || changedPacks.Contains(Path.GetFileName(path));
+        }
+
+        return true;
+    }
+
     static void Fail(Result result, bool interactive)
     {
         Debug.LogError("[HybridCLRCodeHotUpdate] " + result.Message);
@@ -225,7 +414,7 @@ public static class HybridCLRCodeHotUpdatePipeline
 
         AssetBundleCloudUploadResult uploadResult = AssetBundleCloudUploader.UploadDirectory(
             platformBundlePath,
-            AssetBundleCloudUploader.IsCodeHotUpdateUploadPath);
+            relativePath => IsCodeHotUpdateFileToUpload(relativePath, s_ChangedPacks));
 
         if (uploadResult.Cancelled)
         {

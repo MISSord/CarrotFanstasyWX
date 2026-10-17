@@ -82,10 +82,10 @@ namespace CarrotFantasy
 
             if (checkFailed)
             {
-                if (TryInjectCachedLocalManifest())
+                if (TryInjectCachedLocalManifest() || TryInjectBundledManifest())
                 {
                     Debug.LogWarning(
-                        "[AotResourceUpdateRunner] 远程清单检查失败，已回退到本地缓存 custom_manifest.json");
+                        "[AotResourceUpdateRunner] 远程清单检查失败，已回退到本地缓存/内置基线清单");
                     yield return ShowUpdateListFallbackDialog(host, onFinished);
                     yield break;
                 }
@@ -100,10 +100,10 @@ namespace CarrotFantasy
                 || checkResult.customManifest.AssetBundles == null
                 || checkResult.customManifest.AssetBundles.Count == 0)
             {
-                if (TryInjectCachedLocalManifest())
+                if (TryInjectCachedLocalManifest() || TryInjectBundledManifest())
                 {
                     Debug.LogWarning(
-                        "[AotResourceUpdateRunner] 远程清单为空，已回退到本地缓存 custom_manifest.json");
+                        "[AotResourceUpdateRunner] 远程清单为空，已回退到本地缓存/内置基线清单");
                     yield return ShowUpdateListFallbackDialog(host, onFinished);
                     yield break;
                 }
@@ -122,6 +122,48 @@ namespace CarrotFantasy
             }
 
             yield return RunDownloadFlow(host, checkResult, onFinished);
+        }
+
+        /// <summary>远程不可用且本地无清单时，用包里内置的基线清单兜底（断网首启）。</summary>
+        private static bool TryInjectBundledManifest()
+        {
+            string path = AssetBundlePathHelper.GetStreamingAssetsManifestPath();
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                return false;
+            }
+
+            try
+            {
+                CustomManifest manifest = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(path));
+                if (manifest?.AssetBundles == null || manifest.AssetBundles.Count == 0)
+                {
+                    return false;
+                }
+
+                // 内置清单存在但包体没拷进 StreamingAssets 时，注入也没用，直接放弃。
+                bool anyAvailable = false;
+                for (int i = 0; i < manifest.AssetBundles.Count && !anyAvailable; i++)
+                {
+                    CustomAssetBundleInfo info = manifest.AssetBundles[i];
+                    anyAvailable = info != null && AssetBundlePathHelper.IsBundleAvailableAtRuntime(info.BundleName);
+                }
+
+                if (!anyAvailable)
+                {
+                    Debug.LogWarning("[AotResourceUpdateRunner] 内置清单存在，但 StreamingAssets 中没有可用 AB，忽略");
+                    return false;
+                }
+
+                AssetBundleManager.Instance.SetAssetBundleItem(manifest);
+                Debug.LogWarning($"[AotResourceUpdateRunner] 已注入 StreamingAssets 基线清单，共 {manifest.AssetBundles.Count} 个 AB");
+                return true;
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("[AotResourceUpdateRunner] 读取内置清单失败: " + e.Message);
+                return false;
+            }
         }
 
         /// <summary>远程失败时尝试使用 persistentDataPath 中上次成功保存的清单。</summary>
@@ -214,12 +256,14 @@ namespace CarrotFantasy
                     {
                         AssetBundleUpdateChecker.SaveLocalManifest(checkResult.customManifest);
                         AssetBundleManager.Instance.SetAssetBundleItem(checkResult.customManifest);
+                        // 清掉远端清单里已经不存在的旧 AB / 旧热更 DLL。
+                        AssetBundleCacheCleaner.CleanObsoleteBundles(checkResult.customManifest);
                     }
                 });
 
+            // 下载器由 GameMain.Update -> AssetBundleManager.Update 统一驱动，这里只刷新 UI。
             while (!downloadFinished || downloader.GetLoaderState() != LoaderState.Idle)
             {
-                downloader.Update();
                 progressView.Refresh();
                 yield return null;
             }

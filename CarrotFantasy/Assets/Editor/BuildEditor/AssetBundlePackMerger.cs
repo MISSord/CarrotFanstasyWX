@@ -42,6 +42,19 @@ public static class AssetBundlePackMerger
             bundleMap[bundle.BundleName] = bundle;
         }
 
+        // BootBundles 是硬编码列表：改名后要能立刻发现，而不是静默落进普通目录桶。
+        if (PackGroupingDefaults.BootBundles != null)
+        {
+            for (int i = 0; i < PackGroupingDefaults.BootBundles.Length; i++)
+            {
+                string bootName = PackGroupingDefaults.BootBundles[i];
+                if (!string.IsNullOrEmpty(bootName) && !bundleMap.ContainsKey(bootName))
+                {
+                    Debug.LogWarning("[PackMerger] BootBundles 中配置的包不在本次清单里（改名了？）: " + bootName);
+                }
+            }
+        }
+
         List<PackBuildGroup> groups = CreateGroups(manifest.AssetBundles);
         manifest.DownloadPacks = new List<DownloadPackInfo>();
 
@@ -68,6 +81,8 @@ public static class AssetBundlePackMerger
                     PackSize = zipInfo.Length,
                     PackHash = MD5Checker.ComputeFileMD5(zipPath),
                     BundleNames = binBundles.Select(b => b.BundleName).ToArray(),
+                    // boot 包缺失就进不了游戏，属于关键包；其余包失败可降级。
+                    Critical = group.IsCritical,
                 };
                 manifest.DownloadPacks.Add(packInfo);
             }
@@ -118,6 +133,7 @@ public static class AssetBundlePackMerger
             {
                 PackNamePrefix = PackGroupingDefaults.BootPackName,
                 Bundles = bootBundles,
+                IsCritical = true,
             });
         }
 
@@ -237,6 +253,8 @@ public static class AssetBundlePackMerger
                 }
 
                 ZipArchiveEntry entry = archive.CreateEntry(bundle.BundleName.Replace('\\', '/'), System.IO.Compression.CompressionLevel.Optimal);
+                // 固定时间戳：同样内容打出同样的字节，PackHash 才稳定（代码热更时不必重传全部 Pack）。
+                entry.LastWriteTime = new System.DateTimeOffset(2000, 1, 1, 0, 0, 0, System.TimeSpan.Zero);
                 using (Stream entryStream = entry.Open())
                 using (FileStream sourceStream = File.OpenRead(sourcePath))
                 {
@@ -268,6 +286,7 @@ public static class AssetBundlePackMerger
     {
         public string PackNamePrefix;
         public List<CustomAssetBundleInfo> Bundles;
+        public bool IsCritical;
     }
 
     class PackBin

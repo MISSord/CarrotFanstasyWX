@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 using HybridCLR;
 using UnityEngine;
 
@@ -77,7 +78,7 @@ namespace CarrotFantasy
             s_metadataLoaded = true;
             return;
 #else
-            IEnumerable<string> names = assemblyNames ?? HybridCLRPaths.DefaultAotMetaAssemblies;
+            IEnumerable<string> names = assemblyNames ?? HybridCLRPaths.LoadAotMetaAssemblyNames();
             foreach (string name in names)
             {
                 byte[] dllBytes = ReadDllBytes(isHotUpdate: false, name);
@@ -140,7 +141,13 @@ namespace CarrotFantasy
             string abPath = AssetBundlePathHelper.GetRuntimeLoadPath(bundleName);
             if (!string.IsNullOrEmpty(abPath) && File.Exists(abPath))
             {
-                return File.ReadAllBytes(abPath);
+                byte[] downloaded = File.ReadAllBytes(abPath);
+                if (!IsPersistedHotUpdateFile(abPath) || MatchesSignedManifest(bundleName, downloaded))
+                {
+                    return downloaded;
+                }
+
+                Debug.LogError("[HybridCLRBootstrap] 热更文件与已签名清单不一致，拒绝加载: " + bundleName);
             }
 
             string streamingRelative = HybridCLRPaths.GetStreamingBaselineRelativePath(isHotUpdate, assemblyName);
@@ -153,10 +160,57 @@ namespace CarrotFantasy
             string persistentHybrid = Path.Combine(Application.persistentDataPath, streamingRelative);
             if (File.Exists(persistentHybrid))
             {
-                return File.ReadAllBytes(persistentHybrid);
+                byte[] persisted = File.ReadAllBytes(persistentHybrid);
+                if (!isHotUpdate || MatchesSignedManifest(bundleName, persisted))
+                {
+                    return persisted;
+                }
+
+                Debug.LogError("[HybridCLRBootstrap] 持久化热更文件与已签名清单不一致，拒绝加载: " + bundleName);
             }
 
             return null;
+        }
+
+        private static bool IsPersistedHotUpdateFile(string filePath)
+        {
+            string root = AssetBundlePathHelper.GetPersistentDownloadDirectory();
+            if (string.IsNullOrEmpty(root) || string.IsNullOrEmpty(filePath))
+            {
+                return false;
+            }
+
+            string fullFile = Path.GetFullPath(filePath);
+            string fullRoot = Path.GetFullPath(root);
+            if (!fullRoot.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                fullRoot += Path.DirectorySeparatorChar;
+            }
+
+            return fullFile.StartsWith(fullRoot, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>持久化目录里的热更 DLL 必须对上已注入清单的 Hash。清单本身须先通过签名。</summary>
+        private static bool MatchesSignedManifest(string bundleName, byte[] dllBytes)
+        {
+            if (AssetBundleManager.Instance == null
+                || !AssetBundleManager.Instance.TryGetBundleHash(bundleName, out string expectedHash))
+            {
+                Debug.LogError("[HybridCLRBootstrap] 没有已签名清单中的 Hash: " + bundleName);
+                return false;
+            }
+
+            string actual = ComputeMd5(dllBytes);
+            return string.Equals(actual, expectedHash, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string ComputeMd5(byte[] data)
+        {
+            using (MD5 md5 = MD5.Create())
+            {
+                byte[] hash = md5.ComputeHash(data);
+                return BitConverter.ToString(hash).Replace("-", string.Empty).ToLowerInvariant();
+            }
         }
 
         private static Assembly FindLoadedAssembly(string assemblyName)

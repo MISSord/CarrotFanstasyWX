@@ -11,10 +11,8 @@ using UnityEngine;
 /// 校验层次：
 /// 1. Pack 级：ZIP Size + MD5（VerifyPackFile）
 /// 2. Entry 级：每个 BundleNames 对应文件的 Size + MD5（与清单 AB 信息比对）
-/// 3. 落盘：直接拷贝，或 CompressedFormat==0 时 Recompress 为 LZ4 后再 LoadFromFile 验加载
-///
-/// 注意：当前未做 Zip Slip 路径穿越防护；entry.FullName 应始终为相对 BundleName。
-/// Pack 内「本地已最新」的 AB 仍会覆盖写入，无跳过逻辑。
+/// 3. 落盘：写到正式路径旁边的临时文件，校验通过后再替换。失败保留旧文件。
+/// ZIP 条目必须落在解压目录内，并且名字在 Pack 的 BundleNames 白名单里。
 /// </summary>
 public static class AssetBundlePackExtractor
 {
@@ -76,7 +74,7 @@ public static class AssetBundlePackExtractor
         try
         {
             PrepareExtractDirectory(extractRoot);
-            ExtractZipToDirectory(zipPath, extractRoot);
+            ExtractZipToDirectory(zipPath, extractRoot, packInfo);
         }
         catch (Exception e)
         {
@@ -156,12 +154,19 @@ public static class AssetBundlePackExtractor
             }
             else
             {
+                string stagedPath = targetPath + ".new";
                 try
                 {
-                    File.Copy(sourcePath, targetPath, true);
+                    File.Copy(sourcePath, stagedPath, true);
+                    AtomicFile.Replace(stagedPath, targetPath);
                 }
                 catch (Exception e)
                 {
+                    if (File.Exists(stagedPath))
+                    {
+                        File.Delete(stagedPath);
+                    }
+
                     errorMessage = $"Pack 内 AB 写入失败: {bundleName}, {e.Message}";
                     break;
                 }
@@ -205,8 +210,23 @@ public static class AssetBundlePackExtractor
         }
     }
 
-    static void ExtractZipToDirectory(string zipPath, string extractRoot)
+    static void ExtractZipToDirectory(string zipPath, string extractRoot, DownloadPackInfo packInfo)
     {
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < packInfo.BundleNames.Length; i++)
+        {
+            if (!string.IsNullOrEmpty(packInfo.BundleNames[i]))
+            {
+                allowed.Add(packInfo.BundleNames[i].Replace('\\', '/'));
+            }
+        }
+
+        string rootFull = Path.GetFullPath(extractRoot);
+        if (!rootFull.EndsWith(Path.DirectorySeparatorChar.ToString()))
+        {
+            rootFull += Path.DirectorySeparatorChar;
+        }
+
         using (FileStream stream = File.OpenRead(zipPath))
         using (ZipArchive archive = new ZipArchive(stream, ZipArchiveMode.Read))
         {
@@ -217,8 +237,17 @@ public static class AssetBundlePackExtractor
                     continue;
                 }
 
-                // entry.FullName 应为相对 BundleName；未校验是否逃出 extractRoot（Zip Slip）。
-                string destinationPath = Path.Combine(extractRoot, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+                if (!TryGetSafeEntryPath(rootFull, entry.FullName, out string destinationPath, out string pathError))
+                {
+                    throw new InvalidDataException(pathError);
+                }
+
+                string relative = entry.FullName.Replace('\\', '/').TrimStart('/');
+                if (!allowed.Contains(relative))
+                {
+                    throw new InvalidDataException("Pack 包含白名单之外的文件: " + entry.FullName);
+                }
+
                 string destinationDir = Path.GetDirectoryName(destinationPath);
                 if (!string.IsNullOrEmpty(destinationDir) && !Directory.Exists(destinationDir))
                 {
@@ -232,6 +261,44 @@ public static class AssetBundlePackExtractor
                 }
             }
         }
+    }
+
+    static bool TryGetSafeEntryPath(string rootFull, string entryFullName, out string destinationPath, out string error)
+    {
+        destinationPath = null;
+        error = null;
+        if (string.IsNullOrEmpty(entryFullName))
+        {
+            error = "ZIP 条目名为空";
+            return false;
+        }
+
+        string normalized = entryFullName.Replace('\\', '/').Trim();
+        if (normalized.StartsWith("/") || normalized.IndexOf(':') >= 0)
+        {
+            error = "ZIP 条目不能是绝对路径: " + entryFullName;
+            return false;
+        }
+
+        string[] parts = normalized.Split('/');
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (parts[i] == "..")
+            {
+                error = "ZIP 条目包含路径穿越: " + entryFullName;
+                return false;
+            }
+        }
+
+        string combined = Path.GetFullPath(Path.Combine(rootFull, normalized.Replace('/', Path.DirectorySeparatorChar)));
+        if (!combined.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase))
+        {
+            error = "ZIP 条目逃出解压目录: " + entryFullName;
+            return false;
+        }
+
+        destinationPath = combined;
+        return true;
     }
 
     static bool VerifyBundleFile(string filePath, CustomAssetBundleInfo bundleInfo)
@@ -261,10 +328,16 @@ public static class AssetBundlePackExtractor
             Directory.CreateDirectory(targetDir);
         }
 
+        string stagedPath = targetPath + ".new";
+        if (File.Exists(stagedPath))
+        {
+            File.Delete(stagedPath);
+        }
+
         var compression = BuildCompression.LZ4Runtime;
         var operation = AssetBundle.RecompressAssetBundleAsync(
             sourcePath,
-            targetPath,
+            stagedPath,
             compression,
             0,
             ThreadPriority.Normal);
@@ -281,18 +354,39 @@ public static class AssetBundlePackExtractor
 
         if (!operation.success)
         {
+            if (File.Exists(stagedPath))
+            {
+                File.Delete(stagedPath);
+            }
+
             onComplete?.Invoke(false, "格式转换失败");
             yield break;
         }
 
-        AssetBundle bundle = AssetBundle.LoadFromFile(targetPath);
+        AssetBundle bundle = AssetBundle.LoadFromFile(stagedPath);
         if (bundle == null)
         {
+            File.Delete(stagedPath);
             onComplete?.Invoke(false, "转换后的 AB 包加载失败");
             yield break;
         }
 
         bundle.Unload(false);
+        try
+        {
+            AtomicFile.Replace(stagedPath, targetPath);
+        }
+        catch (Exception e)
+        {
+            if (File.Exists(stagedPath))
+            {
+                File.Delete(stagedPath);
+            }
+
+            onComplete?.Invoke(false, "替换正式文件失败: " + e.Message);
+            yield break;
+        }
+
         onComplete?.Invoke(true, string.Empty);
     }
 }
