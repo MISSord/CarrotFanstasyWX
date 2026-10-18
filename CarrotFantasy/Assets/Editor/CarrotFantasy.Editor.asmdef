@@ -4,7 +4,8 @@
     "references": [
         "CarrotFantasy",
         "Unity.ThirdParty",
-        "CfNet.Generated"
+        "CfNet.Generated",
+        "XLua.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

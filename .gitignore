@@ -53,8 +53,12 @@ Thumbs.db
 # 参考模板：Assets/StreamingAssets/ab_runtime_config.example.json
 /CarrotFantasy/Assets/StreamingAssets/ab_runtime_config.json
 /CarrotFantasy/Assets/StreamingAssets/ab_runtime_config.json.meta
-# 构建时由 HybridCLR 设置导出（运行时读取）
-/CarrotFantasy/Assets/StreamingAssets/HybridCLR/AOT/aot_meta_list.txt
 
 # 图片改名工具的回滚清单：含本机绝对路径，仅对生成它的机器有效，不入库。
 /Tools/lowercase-image-names.manifest.json
+
+# =============== Lua 构建产物 ===============
+# 由 Tools/Lua/打包 Lua Bundle 生成；源码在 Assets/Game/LuaScripts/**/*.lua。
+# 不入库：避免源码改了却忘记重打，运行时静默用了旧脚本。
+/CarrotFantasy/Assets/Game/LuaScripts/lua_bundle.bytes
+/CarrotFantasy/Assets/Game/LuaScripts/lua_bundle.bytes.meta

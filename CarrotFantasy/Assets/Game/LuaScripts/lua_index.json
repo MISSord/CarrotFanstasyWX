@@ -1,5 +1,0 @@
-{
-  "modules": [
-    { "module": "gm.demo", "asset": "gm_demo.lua" }
-  ]
-}

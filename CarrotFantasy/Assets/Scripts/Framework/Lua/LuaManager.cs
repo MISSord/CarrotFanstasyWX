@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using UnityEngine;
 using XLua;
@@ -10,35 +11,44 @@ namespace CarrotFantasy
     /// <summary>
     /// Lua 环境管理。
     /// <para>
-    /// 职责：LuaEnv 生命周期、从 AssetBundle 预加载 Lua 脚本、为 require 提供自定义 loader、GM 执行入口。
+    /// 两种运行模式，模块命名空间不同但各自自洽：
     /// </para>
     /// <para>
-    /// 这里直接用 <see cref="AssetBundleManager"/> 而不是 <c>TextLoader</c>：脚本在初始化时已全量预载进
-    /// 内存字典（xLua 的 loader 必须是同步的），不需要再经过一层 loader 缓存与引用计数。
+    /// <b>① 编辑器 Development / Debug（直读工程源码）</b><br/>
+    ///   模块名 = 相对路径（<c>framework.class</c>），文件 = <c>Assets/Game/LuaScripts/framework/class.lua</c>。
+    ///   源码里的 require 保持原样，改完 .lua 立刻生效，不需要打包。
+    /// </para>
+    /// <para>
+    /// <b>② 打包后 Production（读解包目录）</b><br/>
+    ///   打包时已把 require 扁平化（<c>framework.view_manager</c> → <c>view_manager</c>），
+    ///   运行时先从 AB 取 <c>lua_bundle</c>，按 buildId 解包成散文件到 persistentDataPath，
+    ///   之后 <c>require</c> 只读单个几 KB 的文件，避免全量加载的 IO 尖峰与常驻内存。
     /// </para>
     /// </summary>
     public static class LuaManager
     {
-        /// <summary>Lua 脚本所在的 AB 包名（由 PrefabABPathPostprocessor 按 Assets/Game/LuaScripts 规则分配）。</summary>
-        public const string ScriptBundleName = "lua_scripts";
+        /// <summary>Lua Bundle 所在 AB 包名。</summary>
+        public const string ScriptBundleName = LuaBundleReader.BundleName;
 
-        /// <summary>脚本索引资产名，内容形如 {"modules":[{"module":"gm.demo","asset":"gm_demo"}]}。</summary>
-        public const string IndexAssetName = "lua_index";
+        /// <summary>包内唯一资产名。</summary>
+        public const string BundleAssetName = LuaBundleReader.AssetName;
 
-        /// <summary>单个脚本加载超时。AB 异常时不能让启动流程无限等待。</summary>
+        /// <summary>编辑器直读模式下的源码目录（相对 Assets）。</summary>
+        public const string ProjectSourceRelative = "Game/LuaScripts";
+
+        /// <summary>加载超时，避免 AB 异常时把启动流程卡死。</summary>
         private const float LoadTimeoutSeconds = 5f;
 
-        /// <summary>模块名（gm.demo）→ Lua 源码。</summary>
-        private static readonly Dictionary<string, string> ModuleScripts =
-            new Dictionary<string, string>(StringComparer.Ordinal);
+        /// <summary>当前可用的模块名集合（仅名字，不存源码）。</summary>
+        private static readonly HashSet<string> Modules = new HashSet<string>(StringComparer.Ordinal);
 
-        /// <summary>资产名（gm_demo）→ 模块名（gm.demo），用于直接按资产名 require。</summary>
-        private static readonly Dictionary<string, string> AssetToModule =
-            new Dictionary<string, string>(StringComparer.Ordinal);
+        private static readonly List<string> ModuleList = new List<string>();
 
         private static LuaEnv s_env;
         private static bool s_initializing;
         private static string s_error;
+        private static bool s_useProjectSource;
+        private static string s_projectSourceDir;
 
         /// <summary>初始化时传入的宿主，用于 GM 触发脚本重载（需要跑协程）。</summary>
         private static MonoBehaviour s_host;
@@ -55,25 +65,17 @@ namespace CarrotFantasy
 
         public static int ModuleCount
         {
-            get { return ModuleScripts.Count; }
+            get { return ModuleList.Count; }
         }
 
-        [Serializable]
-        private class LuaIndex
+        /// <summary>编辑器 Development / Debug 模式直接读工程源码。</summary>
+        public static bool UseProjectSource
         {
-            public List<LuaModuleEntry> modules;
-        }
-
-        [Serializable]
-        private class LuaModuleEntry
-        {
-            public string module;
-            public string asset;
+            get { return s_useProjectSource; }
         }
 
         /// <summary>
-        /// 初始化 Lua 环境：读索引 → 预载脚本 → 建 LuaEnv。
-        /// 失败不会中断启动流程（Lua 只影响 GM / 热更逻辑，不应阻断进游戏）。
+        /// 初始化 Lua 环境。失败不会中断启动流程（Lua 只影响 GM / 热更逻辑，不应阻断进游戏）。
         /// </summary>
         public static IEnumerator InitializeRoutine(MonoBehaviour host)
         {
@@ -85,50 +87,16 @@ namespace CarrotFantasy
             s_host = host;
             s_initializing = true;
             s_error = null;
+            s_useProjectSource = DetectProjectSourceMode();
 
-            string indexJson = null;
-            yield return LoadTextRoutine(IndexAssetName, text => indexJson = text);
+            yield return LoadModulesRoutine();
 
-            if (string.IsNullOrEmpty(indexJson))
+            if (ModuleList.Count == 0)
             {
-                s_error = "索引 " + ScriptBundleName + "/" + IndexAssetName + " 未加载到";
-                Debug.LogWarning("[LuaManager] " + s_error + "，Lua 热更不可用");
+                s_error = string.IsNullOrEmpty(s_error) ? "未加载到任何 Lua 模块" : s_error;
+                Debug.LogWarning("[LuaManager] Lua 不可用：" + s_error);
                 s_initializing = false;
                 yield break;
-            }
-
-            LuaIndex index = null;
-            try
-            {
-                index = JsonUtility.FromJson<LuaIndex>(indexJson);
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("[LuaManager] 解析 " + IndexAssetName + " 失败: " + e.Message);
-            }
-
-            if (index != null && index.modules != null)
-            {
-                for (int i = 0; i < index.modules.Count; i++)
-                {
-                    LuaModuleEntry entry = index.modules[i];
-                    if (entry == null || string.IsNullOrEmpty(entry.module) || string.IsNullOrEmpty(entry.asset))
-                    {
-                        continue;
-                    }
-
-                    string text = null;
-                    yield return LoadTextRoutine(entry.asset, loaded => text = loaded);
-
-                    if (string.IsNullOrEmpty(text))
-                    {
-                        Debug.LogWarning("[LuaManager] 模块加载失败: " + entry.module + " (asset=" + entry.asset + ")");
-                        continue;
-                    }
-
-                    ModuleScripts[entry.module] = text;
-                    AssetToModule[entry.asset] = entry.module;
-                }
             }
 
             try
@@ -136,10 +104,11 @@ namespace CarrotFantasy
                 s_env = new LuaEnv();
                 s_env.AddLoader(CustomLoader);
 
-                // 预热内置库，尽早暴露 xLua/Resources 缺失这类问题。
+                // 预热内置库，尽早暴露 xLua Resources 缺失这类问题。
                 s_env.DoString("local ok, err = pcall(require, 'xlua.util') if not ok then error(err) end", "lua_bootstrap");
 
-                Debug.Log("[LuaManager] Lua 环境就绪，已预载模块 " + ModuleScripts.Count + " 个，包 " + ScriptBundleName);
+                Debug.Log("[LuaManager] Lua 环境就绪，模块 " + ModuleList.Count + " 个，模式="
+                          + (s_useProjectSource ? "编辑器直读源码" : "解包散文件"));
             }
             catch (Exception e)
             {
@@ -196,7 +165,6 @@ namespace CarrotFantasy
             }
 
             // 先按「表达式」编译，等价于 lua REPL 的 return <line> 尝试。
-            // 这样 /gm lua require('gm.demo').ping() 也能看到返回值，不必逼调用方记得写 return。
             LuaFunction fn = null;
             try
             {
@@ -204,7 +172,6 @@ namespace CarrotFantasy
             }
             catch (Exception)
             {
-                // 编译失败说明它是语句（如 a = 1），走下面的 DoString。
                 fn = null;
             }
 
@@ -216,7 +183,6 @@ namespace CarrotFantasy
                 }
                 catch (Exception e)
                 {
-                    // 已编译通过，这里是运行时异常，不能再回退重跑，否则副作用会执行两次。
                     return LuaExecResult.Fail(e.Message);
                 }
                 finally
@@ -257,8 +223,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// 重新从 AB 拉取全部 Lua 脚本，并清掉 package.loaded，
-        /// 从而做到「改脚本 → 重打 lua_scripts → /gm lua reload 即可生效」，不用重启进程。
+        /// 重新加载脚本：重新扫描源码 / 重新取 bundle 并按需解包，然后清 package.loaded。
         /// </summary>
         public static IEnumerator ReloadScriptsRoutine(Action<int> onDone)
         {
@@ -272,42 +237,16 @@ namespace CarrotFantasy
                 yield break;
             }
 
-            string[] modules = new string[ModuleScripts.Count];
-            ModuleScripts.Keys.CopyTo(modules, 0);
+            string[] previous = ModuleList.ToArray();
 
-            Dictionary<string, string> moduleToAsset = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (KeyValuePair<string, string> pair in AssetToModule)
-            {
-                moduleToAsset[pair.Value] = pair.Key;
-            }
+            yield return LoadModulesRoutine();
 
-            int reloaded = 0;
-            for (int i = 0; i < modules.Length; i++)
-            {
-                string asset;
-                if (!moduleToAsset.TryGetValue(modules[i], out asset))
-                {
-                    continue;
-                }
-
-                string text = null;
-                yield return LoadTextRoutine(asset, loaded => text = loaded);
-                if (string.IsNullOrEmpty(text))
-                {
-                    continue;
-                }
-
-                ModuleScripts[modules[i]] = text;
-                reloaded++;
-            }
-
-            // 清 package.loaded，下次 require 才会重新走自定义 loader 取到新源码。
             try
             {
                 StringBuilder sb = new StringBuilder("local loaded = package.loaded; ");
-                for (int i = 0; i < modules.Length; i++)
+                for (int i = 0; i < previous.Length; i++)
                 {
-                    sb.Append("loaded['").Append(modules[i]).Append("'] = nil; ");
+                    sb.Append("loaded['").Append(previous[i]).Append("'] = nil; ");
                 }
 
                 s_env.DoString(sb.ToString(), "lua_reload");
@@ -317,14 +256,15 @@ namespace CarrotFantasy
                 Debug.LogWarning("[LuaManager] 清理 package.loaded 失败: " + e.Message);
             }
 
-            Debug.Log("[LuaManager] Lua 脚本已重新加载 " + reloaded + "/" + modules.Length + " 个");
+            int count = ModuleList.Count;
+            Debug.Log("[LuaManager] Lua 脚本已重新加载，当前模块 " + count + " 个");
             if (onDone != null)
             {
-                onDone(reloaded);
+                onDone(count);
             }
         }
 
-        /// <summary>供 GM 触发脚本重载：重新从 AB 拉源码并清 package.loaded。</summary>
+        /// <summary>供 GM 触发脚本重载。</summary>
         public static bool RequestReload(Action<int> onDone = null)
         {
             if (s_env == null || s_host == null)
@@ -345,24 +285,179 @@ namespace CarrotFantasy
             }
 
             StringBuilder sb = new StringBuilder();
-            sb.Append("Lua 就绪，包 ").Append(ScriptBundleName).Append("，模块 ").Append(ModuleScripts.Count).Append(" 个：");
+            sb.Append(s_useProjectSource ? "Lua 就绪（编辑器直读源码）" : "Lua 就绪（解包散文件）");
+            sb.Append("，模块 ").Append(ModuleList.Count).Append(" 个：");
 
-            bool first = true;
-            foreach (string module in ModuleScripts.Keys)
+            for (int i = 0; i < ModuleList.Count; i++)
             {
-                if (!first)
+                if (i > 0)
                 {
                     sb.Append(", ");
                 }
 
-                sb.Append(module);
-                first = false;
+                sb.Append(ModuleList[i]);
             }
 
             return sb.ToString();
         }
 
-        /// <summary>xLua 自定义 loader：require 时从预载的脚本字典取源码。</summary>
+        // ---------------------------------------------------------------- 加载
+
+        private static IEnumerator LoadModulesRoutine()
+        {
+            Modules.Clear();
+            ModuleList.Clear();
+
+            if (s_useProjectSource)
+            {
+                LoadModuleListFromProjectSource();
+                yield break;
+            }
+
+            yield return LoadFromBundleRoutine();
+        }
+
+        /// <summary>编辑器直读：扫描 Assets/Game/LuaScripts/**/*.lua，模块名用路径形式。</summary>
+        private static void LoadModuleListFromProjectSource()
+        {
+            s_projectSourceDir = Path.Combine(Application.dataPath, ProjectSourceRelative);
+
+            if (!Directory.Exists(s_projectSourceDir))
+            {
+                s_error = "源码目录不存在: " + s_projectSourceDir;
+                Debug.LogWarning("[LuaManager] " + s_error);
+                return;
+            }
+
+            string[] files = Directory.GetFiles(s_projectSourceDir, "*.lua", SearchOption.AllDirectories);
+            Array.Sort(files, StringComparer.Ordinal);
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                string rel = files[i].Substring(s_projectSourceDir.Length).TrimStart('\\', '/');
+                if (rel.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
+                {
+                    rel = rel.Substring(0, rel.Length - 4);
+                }
+
+                AddModule(LuaBundleReader.ToModuleName(rel));
+            }
+
+            Debug.Log("[LuaManager] 扫描工程源码 " + ModuleList.Count + " 个模块: " + s_projectSourceDir);
+        }
+
+        /// <summary>打包后：取 AB 里的 bundle → 按 buildId 解包 → 从解包目录读模块名（扁平）。</summary>
+        private static IEnumerator LoadFromBundleRoutine()
+        {
+            AssetBundleManager manager = AssetBundleManager.Instance;
+            if (manager == null)
+            {
+                s_error = "AssetBundleManager 未初始化";
+                Debug.LogWarning("[LuaManager] " + s_error);
+                yield break;
+            }
+
+            TextAsset bundleAsset = null;
+            try
+            {
+                manager.LoadAsset(
+                    ScriptBundleName,
+                    BundleAssetName,
+                    typeof(TextAsset),
+                    obj => bundleAsset = obj as TextAsset);
+            }
+            catch (Exception e)
+            {
+                s_error = "请求加载 Lua Bundle 失败: " + e.Message;
+                Debug.LogError("[LuaManager] " + s_error);
+                yield break;
+            }
+
+            float elapsed = 0f;
+            while (bundleAsset == null && elapsed < LoadTimeoutSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                yield return null;
+            }
+
+            if (bundleAsset == null)
+            {
+                s_error = "加载超时 " + LoadTimeoutSeconds + "s: "
+                          + ScriptBundleName + "/" + BundleAssetName
+                          + "（检查是否已执行 Tools/Lua/打包 Lua Bundle）";
+                Debug.LogWarning("[LuaManager] " + s_error);
+                yield break;
+            }
+
+            byte[] bundleBytes = bundleAsset.bytes;
+
+            string buildId;
+            int expectedCount;
+            try
+            {
+                LuaBundleReader.ReadHeader(bundleBytes, out buildId, out expectedCount);
+            }
+            catch (Exception e)
+            {
+                s_error = "读取 Lua Bundle 包头失败: " + e.Message;
+                Debug.LogError("[LuaManager] " + s_error);
+                yield break;
+            }
+
+            bool unpacked = false;
+            yield return LuaScriptUnpacker.EnsureUnpackedRoutine(bundleBytes, buildId, ok => unpacked = ok);
+
+            // 解包后立即释放 bundle 引用，避免整份字节常驻内存。
+            bundleAsset = null;
+            bundleBytes = null;
+
+            if (!unpacked)
+            {
+                s_error = "解包失败: " + LuaScriptUnpacker.LastError;
+                Debug.LogWarning("[LuaManager] " + s_error);
+                yield break;
+            }
+
+            LoadModuleListFromDirectory(LuaScriptUnpacker.CurrentDir, flat: true);
+            Debug.Log("[LuaManager] 解包目录 " + ModuleList.Count + " 个模块，期望 " + expectedCount + " 个");
+        }
+
+        /// <summary>从解包目录读模块名（扁平名 = 文件名去掉 .lua）。</summary>
+        private static void LoadModuleListFromDirectory(string dir, bool flat)
+        {
+            if (!Directory.Exists(dir))
+            {
+                s_error = "目录不存在: " + dir;
+                Debug.LogWarning("[LuaManager] " + s_error);
+                return;
+            }
+
+            string[] files = Directory.GetFiles(dir, "*.lua", SearchOption.TopDirectoryOnly);
+            Array.Sort(files, StringComparer.Ordinal);
+
+            for (int i = 0; i < files.Length; i++)
+            {
+                string name = Path.GetFileNameWithoutExtension(files[i]);
+                AddModule(flat ? name : LuaBundleReader.ToModuleName(name));
+            }
+        }
+
+        private static void AddModule(string name)
+        {
+            if (string.IsNullOrEmpty(name) || !Modules.Add(name))
+            {
+                return;
+            }
+
+            ModuleList.Add(name);
+        }
+
+        // ---------------------------------------------------------------- loader
+
+        /// <summary>
+        /// xLua 自定义 loader：按模式从工程源码或解包目录读取**单个文件**。
+        /// 每次 require 只产生一次小文件 IO。
+        /// </summary>
         private static byte[] CustomLoader(ref string filepath)
         {
             if (string.IsNullOrEmpty(filepath))
@@ -370,130 +465,51 @@ namespace CarrotFantasy
                 return null;
             }
 
-            string key = NormalizeModuleName(filepath);
+            string moduleName = LuaBundleReader.ToModuleName(filepath);
 
-            string script;
-            if (!ModuleScripts.TryGetValue(key, out script))
+            string path;
+            if (s_useProjectSource)
             {
-                string module;
-                if (AssetToModule.TryGetValue(key, out module))
+                if (string.IsNullOrEmpty(s_projectSourceDir))
                 {
-                    ModuleScripts.TryGetValue(module, out script);
+                    return null;
                 }
+
+                path = Path.Combine(s_projectSourceDir, moduleName.Replace('.', Path.DirectorySeparatorChar) + ".lua");
+            }
+            else
+            {
+                path = LuaScriptUnpacker.ResolveModuleFile(moduleName);
             }
 
-            if (string.IsNullOrEmpty(script))
+            if (!File.Exists(path))
             {
+                Debug.LogError("[LuaManager] 找不到模块文件: " + path + "（module=" + moduleName + "）");
                 return null;
             }
 
-            return Encoding.UTF8.GetBytes(script);
-        }
-
-        /// <summary>把 require 传入的名字统一成索引里的模块名写法（gm/demo → gm.demo）。</summary>
-        private static string NormalizeModuleName(string filepath)
-        {
-            return filepath.Replace('\\', '/').Replace('/', '.');
-        }
-
-        /// <summary>
-        /// 加载一个脚本资产，带一次兜底重试。
-        /// <para>
-        /// Unity 只剥掉最后一层扩展名：<c>gm_demo.lua.txt</c> 的资源名是 <c>gm_demo.lua</c>。
-        /// 索引里按 <c>gm_demo.lua</c> 写；万一某个 Unity 版本只取到 <c>gm_demo</c>，这里再试一次，
-        /// 免得因为文件名细节让整条 Lua 链路失效。
-        /// </para>
-        /// </summary>
-        private static IEnumerator LoadTextRoutine(string assetName, Action<string> onLoaded)
-        {
-            string text = null;
-            yield return LoadTextOnceRoutine(assetName, loaded => text = loaded);
-
-            if (string.IsNullOrEmpty(text)
-                && assetName.EndsWith(".lua", StringComparison.OrdinalIgnoreCase)
-                && assetName.Length > 4)
-            {
-                yield return LoadTextOnceRoutine(assetName.Substring(0, assetName.Length - 4), loaded => text = loaded);
-            }
-
-            if (onLoaded != null)
-            {
-                onLoaded(text);
-            }
-        }
-
-        /// <summary>
-        /// 通过 AssetBundleManager 异步加载一个文本资产。
-        /// Development / Debug 模式下管理器会走 AssetDatabase，同样走这个入口。
-        /// </summary>
-        private static IEnumerator LoadTextOnceRoutine(string assetName, Action<string> onLoaded)
-        {
-            if (string.IsNullOrEmpty(assetName))
-            {
-                if (onLoaded != null)
-                {
-                    onLoaded(null);
-                }
-
-                yield break;
-            }
-
-            AssetBundleManager manager = AssetBundleManager.Instance;
-            if (manager == null)
-            {
-                Debug.LogWarning("[LuaManager] AssetBundleManager 未初始化，跳过 " + assetName);
-                if (onLoaded != null)
-                {
-                    onLoaded(null);
-                }
-
-                yield break;
-            }
-
-            TextAsset result = null;
             try
             {
-                manager.LoadAsset(
-                    ScriptBundleName,
-                    assetName,
-                    typeof(TextAsset),
-                    obj => result = obj as TextAsset);
+                return File.ReadAllBytes(path);
             }
             catch (Exception e)
             {
-                Debug.LogError("[LuaManager] 请求加载 " + assetName + " 失败: " + e.Message);
-                if (onLoaded != null)
-                {
-                    onLoaded(null);
-                }
-
-                yield break;
+                Debug.LogError("[LuaManager] 读取模块失败 " + path + " : " + e.Message);
+                return null;
             }
+        }
 
-            float elapsed = 0f;
-            while (result == null && elapsed < LoadTimeoutSeconds)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                yield return null;
-            }
+        // ---------------------------------------------------------------- 模式判定
 
-            if (result == null)
-            {
-                Debug.LogWarning(
-                    "[LuaManager] 加载超时 " + LoadTimeoutSeconds + "s: " + ScriptBundleName + "/" + assetName
-                    + "（检查该资产是否已分配到 AB 包 " + ScriptBundleName + "）");
-                if (onLoaded != null)
-                {
-                    onLoaded(null);
-                }
-
-                yield break;
-            }
-
-            if (onLoaded != null)
-            {
-                onLoaded(result.text);
-            }
+        private static bool DetectProjectSourceMode()
+        {
+#if UNITY_EDITOR
+            // Development = 0, DebugMode = 4：与 AssetBundleManager 的 LoadMode 语义一致
+            int mode = UnityEditor.EditorPrefs.GetInt("GameLoadMode", 0);
+            return mode == 0 || mode == 4;
+#else
+            return false;
+#endif
         }
     }
 

@@ -149,16 +149,20 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         return name + "_prefab";
     }
 
-    /// <summary>Lua 脚本统一进这个包，运行时有 LuaManager.ScriptBundleName 与之对应。</summary>
+    /// <summary>Lua Bundle 产物归属的 AB 包名；与 LuaBundleReader.BundleName 对应。</summary>
     private const string LuaScriptBundleName = "lua_scripts";
 
+    /// <summary>
+    /// 只有打包产物 lua_bundle.bytes 进 AB。
+    /// 源码 *.lua 不被 Unity 导入（无 .meta、无资产），因此不会命中这里。
+    /// </summary>
     private static bool IsLuaScriptAsset(string path)
     {
         if (string.IsNullOrEmpty(path))
             return false;
 
         string normalizedPath = path.Replace('\\', '/').ToLowerInvariant();
-        return normalizedPath.StartsWith("assets/game/luascripts/");
+        return normalizedPath.EndsWith("/lua_bundle.bytes", System.StringComparison.Ordinal);
     }
 
     private static bool IsImageInImagesFolder(string path)
