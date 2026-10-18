@@ -8,7 +8,7 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 
 /// <summary>
-/// PC Player 一键出包：通道准备 →（可选）HybridCLR Generate/同步 → BuildPlayer。
+/// PC Player 一键出包：通道准备 → 校验 → BuildPlayer。
 /// 输出到 CarrotFantasy/Build/PC/{env}/{时间戳}/。
 /// </summary>
 public static class PcPlayerBuildPipeline
@@ -26,8 +26,6 @@ public static class PcPlayerBuildPipeline
         public Channel Channel;
         /// <summary>false 时不弹 Dialog（Batch CLI）。</summary>
         public bool Interactive;
-        /// <summary>默认 true：Generate/All + 同步 DLL 到 StreamingAssets/AB。</summary>
-        public bool RunHybridClrGenerateAndSync;
         /// <summary>相对工程根，默认 Build/PC。</summary>
         public string RelativeOutputRoot;
     }
@@ -49,7 +47,6 @@ public static class PcPlayerBuildPipeline
         {
             Channel = Channel.Dev,
             Interactive = true,
-            RunHybridClrGenerateAndSync = true,
             RelativeOutputRoot = DefaultRelativeOutputRoot,
         });
     }
@@ -61,7 +58,6 @@ public static class PcPlayerBuildPipeline
         {
             Channel = Channel.Prod,
             Interactive = true,
-            RunHybridClrGenerateAndSync = true,
             RelativeOutputRoot = DefaultRelativeOutputRoot,
         });
     }
@@ -112,33 +108,6 @@ public static class PcPlayerBuildPipeline
                 result.Message = validateError;
                 Fail(result, interactive);
                 return result;
-            }
-
-            if (request.RunHybridClrGenerateAndSync)
-            {
-                if (interactive)
-                {
-                    EditorUtility.DisplayProgressBar("PC 出包", "HybridCLR Generate/All…", 0.15f);
-                }
-
-                if (!EditorApplication.ExecuteMenuItem("HybridCLR/Generate/All"))
-                {
-                    Debug.LogWarning("[PcPlayerBuild] ExecuteMenuItem HybridCLR/Generate/All 返回 false，继续同步 DLL。");
-                }
-
-                if (interactive)
-                {
-                    EditorUtility.DisplayProgressBar("PC 出包", "同步 HybridCLR DLL…", 0.4f);
-                }
-
-                int copied = HybridCLRProjectSetup.SyncDllsForHotUpdate(target);
-                if (copied <= 0)
-                {
-                    result.Message =
-                        "未同步到 HybridCLR DLL。请确认 IL2CPP 工具链与 Generate/All 已成功。";
-                    Fail(result, interactive);
-                    return result;
-                }
             }
 
             string[] scenes = GetEnabledScenePaths();

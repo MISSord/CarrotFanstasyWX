@@ -5,7 +5,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// PC 运行时 GM 面板（IMGUI），复用 <see cref="GmCommandDispatcher"/>，交互对齐 Editor GM 工具。
-    /// 依赖热更程序集，由 <see cref="HotUpdateEntry"/> 安装。
+    /// 由 <see cref="GameEntry"/> 安装（仅开发版 / 编辑器）。
     /// </summary>
     public sealed class RuntimeGmConsole : MonoBehaviour
     {

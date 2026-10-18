@@ -86,6 +86,10 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         if (!ShouldAssignAssetBundle(path))
             return string.Empty;
 
+        // Lua 脚本单独成包：改得最频繁、体积又小，热更时只下这几百 KB，不必动整个 AB。
+        if (IsLuaScriptAsset(path))
+            return LuaScriptBundleName;
+
         if (IsLubanConfigJson(path))
             return CarrotFantasy.LubanConfigAbPaths.BundleName;
 
@@ -143,6 +147,18 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
 
         string name = normalizedBundleName + "/" + Path.GetFileNameWithoutExtension(path);
         return name + "_prefab";
+    }
+
+    /// <summary>Lua 脚本统一进这个包，运行时有 LuaManager.ScriptBundleName 与之对应。</summary>
+    private const string LuaScriptBundleName = "lua_scripts";
+
+    private static bool IsLuaScriptAsset(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        string normalizedPath = path.Replace('\\', '/').ToLowerInvariant();
+        return normalizedPath.StartsWith("assets/game/luascripts/");
     }
 
     private static bool IsImageInImagesFolder(string path)

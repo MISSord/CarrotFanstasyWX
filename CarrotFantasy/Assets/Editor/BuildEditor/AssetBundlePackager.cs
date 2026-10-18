@@ -106,35 +106,6 @@ public static class AssetBundlePackager
         }
     }
 
-    /// <summary>把 HybridCLR 设置里的 patchAOTAssemblies 导出成运行时读取的清单文件。</summary>
-    static void WriteAotMetaListFile()
-    {
-        try
-        {
-            HybridCLR.Editor.Settings.HybridCLRSettings settings =
-                HybridCLR.Editor.Settings.HybridCLRSettings.Instance;
-            string[] names = settings != null
-                             && settings.patchAOTAssemblies != null
-                             && settings.patchAOTAssemblies.Length > 0
-                ? settings.patchAOTAssemblies
-                : CarrotFantasy.HybridCLRPaths.DefaultAotMetaAssemblies;
-
-            string directory = Path.Combine(Application.streamingAssetsPath, "HybridCLR", "AOT");
-            if (!Directory.Exists(directory))
-            {
-                Directory.CreateDirectory(directory);
-            }
-
-            File.WriteAllLines(
-                Path.Combine(directory, CarrotFantasy.HybridCLRPaths.AotMetaListFileName),
-                names);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogWarning("[AB Build] 导出 aot_meta_list.txt 失败（运行时会退回内置默认值）: " + e.Message);
-        }
-    }
-
     /// <summary>
     /// 把构建输出里的 AB 文件名统一成小写（与清单 / 运行时 GetBundleFileName 一致）。
     /// Unity 按资源上登记的包名生成文件，大小写会原样保留；Windows 无感，iOS/Android 会找不到。
@@ -290,31 +261,6 @@ public static class AssetBundlePackager
             return null;
         }
 
-        // HybridCLR 的 .dll.bytes 不是 Unity AB：需在扫描清单前拷入输出目录。
-        // 完整打 AB 若勾选清空输出，会删掉此前手动同步的 hybridclr/，必须在此补回。
-        int hybridClrCopied = CarrotFantasy.Editor.HybridCLRProjectSetup.EnsureDllsInAbOutput(target, bundlePath);
-        if (hybridClrCopied <= 0)
-        {
-            if (CarrotFantasy.Editor.HybridCLRProjectSetup.IsCodeHotUpdateEnabled())
-            {
-                // 不中止：资源 AB 本身是好的，缺的只是热更 DLL。
-                // 但必须报错——否则清单里会静默缺少 hybridclr/* 条目，代码热更永远不生效且难以发现。
-                Debug.LogError(
-                    "[AB Build] HybridCLR DLL 一个都没拷进 AB 输出目录，本次清单将缺少 hybridclr/* 条目，"
-                    + "代码热更不会生效、热更程序集也永远读不到新版本。"
-                    + "请先执行 Tools/HybridCLR/Generate All（需要 il2cpp 构建产出 HybridCLRData），"
-                    + "确认 HybridCLRData 目录已生成后再重新打包。");
-            }
-            else
-            {
-                // 代码热更被主动关闭时，hybridclr/* 本来就不该进清单，不是错误。
-                Debug.Log("[AB Build] 代码热更已关闭，本次清单不含 hybridclr/* 条目（资源热更不受影响）。");
-            }
-        }
-
-        // 把「需要补充元数据的 AOT 程序集」从 HybridCLR 设置导出给运行时，避免两边各维护一份硬编码。
-        WriteAotMetaListFile();
-
         // 清单 / 运行时都按小写包名找文件，这里把构建产物统一成小写，避免大小写敏感平台找不到。
         NormalizeBundleFileNames(bundlePath, target);
 
@@ -373,11 +319,7 @@ public static class AssetBundlePackager
                 };
 
                 HashSet<string> processedBundles = new HashSet<string>();
-                // HybridCLR 原始 DLL 不是 Unity AB，无依赖图。
-                if (!CarrotFantasy.HybridCLRPaths.IsHybridClrRawFile(bundleKey))
-                {
-                    GenerateFlatDependencyList(registeredName, 0, processedBundles);
-                }
+                GenerateFlatDependencyList(registeredName, 0, processedBundles);
 
                 info.Dependencies = processedBundles
                     .Select(NormalizeBundleName)

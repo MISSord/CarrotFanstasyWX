@@ -19,7 +19,7 @@ namespace CarrotFantasy
     }
 
     /// <summary>
-    /// 轻量 Tween，替代 DOTween.dll（避免 HybridCLR Player 编译 CS0012）。
+    /// 轻量 Tween，替代 DOTween.dll（避免外部依赖与 IL2CPP 程序集引用问题）。
     /// </summary>
     public sealed class SimpleTween
     {

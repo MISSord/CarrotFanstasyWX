@@ -54,7 +54,7 @@ public static class PcBuildChannel
         LogCurrentState("已启用 CF_DEV_TOOLS");
         EditorUtility.DisplayDialog(
             "CF_DEV_TOOLS",
-            "已启用。请重新编译后同步热更 DLL（Tools/HybridCLR/同步 DLL）。\n\n"
+            "已启用。请重新编译。\n\n"
             + "当前宏:\n" + GetDefinesDisplay(),
             "确定");
     }
@@ -95,7 +95,7 @@ public static class PcBuildChannel
             "CF_DEV_TOOLS: " + (hasDevTools ? "已启用（开发工具会进包）" : "未启用（正式裁剪）") + "\n\n"
             + "Standalone 宏:\n" + GetDefinesDisplay() + "\n\n"
             + "Development Build 勾选建议: " + (hasDevTools ? "开发包可勾选" : "正式包请勿勾选") + "\n\n"
-            + "注意: 切换宏后需等待脚本编译，再执行 HybridCLR Generate/同步 DLL，"
+            + "注意: 切换宏后需等待脚本编译，再执行打包，"
             + "保证 AOT 与热更 DLL 宏一致。";
 
         EditorUtility.DisplayDialog("Build Channel 状态", message, "确定");
@@ -114,7 +114,7 @@ public static class PcBuildChannel
             + (defineChanged ? "宏已变更，请先等待脚本编译完成。\n\n" : string.Empty)
             + "接下来可选:\n"
             + "- Tools/Build Channel/一键打" + (enableDevTools ? "开发" : "正式") + " PC 包（推荐）\n"
-            + "- 或手动: HybridCLR Generate/同步 DLL → File/Build Settings\n\n"
+            + "- 或手动: AssetBundle 打包 → File/Build Settings\n\n"
             + "当前宏:\n" + GetDefinesDisplay();
 
         LogCurrentState(title);

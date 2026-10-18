@@ -59,7 +59,7 @@ namespace CarrotFantasy
 
         /// <summary>
         /// BattleScene 加载完成后查找场景内唯一的 BattleViewHost。
-        /// HybridCLR IL2CPP 下场景内序列化的热更 MonoBehaviour 常会变成 Missing Script，
+        /// IL2CPP 下场景内序列化的热更 MonoBehaviour 常会变成 Missing Script，
         /// 因此找不到时回退到对 BattleRoot 运行时 AddComponent（与 GameModeSelectGui 同类做法）。
         /// </summary>
         public static BattleViewHost FindInLoadedBattleScene()

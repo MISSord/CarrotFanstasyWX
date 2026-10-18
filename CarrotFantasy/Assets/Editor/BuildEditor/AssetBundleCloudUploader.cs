@@ -134,7 +134,7 @@ public static class AssetBundleCloudUploader
         }
     }
 
-    /// <summary>代码热更：只上传 hybridclr / 清单 / version / packs。</summary>
+    /// <summary>增量上传：清单 / version / packs 这三类才允许走「只传热更产物」。</summary>
     public static bool IsCodeHotUpdateUploadPath(string relativePath)
     {
         if (string.IsNullOrEmpty(relativePath))
@@ -146,11 +146,6 @@ public static class AssetBundleCloudUploader
         if (path == "custom_manifest.json"
             || path == "custom_manifest.json.sig"
             || path == "version.txt")
-        {
-            return true;
-        }
-
-        if (path.StartsWith("hybridclr/", StringComparison.Ordinal))
         {
             return true;
         }

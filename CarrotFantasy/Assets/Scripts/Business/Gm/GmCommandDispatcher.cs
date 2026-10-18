@@ -91,6 +91,9 @@ namespace CarrotFantasy
             sb.AppendLine("startRoguelike <大关> <小关>                   进肉鸽小关地图（需 Play）");
             sb.AppendLine("openRoguelikeMap [大关] [小关]                 打开肉鸽选关（需 Play）");
             sb.AppendLine("resdump                                         打印资源管理器快照/未释放 handle");
+            sb.AppendLine("lua <代码>                                      执行 Lua（例: /gm lua require('gm.demo').ping()）");
+            sb.AppendLine("lua reload                                      重新从 AB 拉 Lua 脚本（改脚本不用重启）");
+            sb.AppendLine("lua                                            显示 Lua 环境状态与已载模块");
             sb.AppendLine("help [指令名]                                   显示帮助");
             return sb.ToString();
         }
@@ -160,6 +163,7 @@ namespace CarrotFantasy
                 { "startroguelike", HandleStartRoguelike },
                 { "openroguelikemap", HandleOpenRoguelikeMap },
                 { "resdump", HandleResDump },
+                { "lua", HandleLua },
             };
         }
 
@@ -167,6 +171,37 @@ namespace CarrotFantasy
         {
             ResourceManagerDiagnostics.DumpAll("gm resdump");
             return GmCommandResult.Ok("已输出资源快照到日志。");
+        }
+
+        /// <summary>
+        /// /gm lua &lt;代码&gt;   执行任意 Lua（例: /gm lua require('gm.demo').ping()）
+        /// /gm lua reload      重新从 AB 拉脚本，改完 Lua 不用重启
+        /// /gm lua             显示 Lua 环境状态与已载模块
+        /// </summary>
+        static GmCommandResult HandleLua(GmCommandContext ctx, string[] args)
+        {
+            if (args == null || args.Length == 0)
+            {
+                return GmCommandResult.Ok(
+                    LuaManager.Describe() + "\n用法: /gm lua <lua 代码> | /gm lua reload");
+            }
+
+            if (args.Length == 1 && string.Equals(args[0], "reload", StringComparison.OrdinalIgnoreCase))
+            {
+                bool started = LuaManager.RequestReload(
+                    count => UnityEngine.Debug.Log("[GM] Lua 脚本重载完成: " + count + " 个"));
+
+                return started
+                    ? GmCommandResult.Ok("正在重新加载 Lua 脚本，完成后查看 Console。")
+                    : GmCommandResult.Fail("Lua 未就绪，无法重载。");
+            }
+
+            // TryParse 已按空格切分，这里拼回去；多余空格会丢，GM 调试够用。
+            string chunk = string.Join(" ", args);
+            LuaExecResult result = LuaManager.Execute(chunk);
+            return result.Success
+                ? GmCommandResult.Ok(result.Message)
+                : GmCommandResult.Fail(result.Message);
         }
 
         static GmCommandResult HandleHelp(GmCommandContext ctx, string[] args)

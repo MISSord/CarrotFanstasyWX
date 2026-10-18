@@ -1,0 +1,19 @@
+{
+    "name": "CarrotFantasy.Editor",
+    "rootNamespace": "",
+    "references": [
+        "CarrotFantasy",
+        "Unity.ThirdParty",
+        "CfNet.Generated"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

@@ -5,7 +5,7 @@ using UnityEditor;
 #endif
 using UnityEngine;
 
-// 状态机接口（GameState 枚举在 CarrotFantasy.Shared）
+// 状态机接口（GameState 枚举见 Scripts/Shared/GameState.cs）
 public interface IGameState
 {
     void Enter();
@@ -30,7 +30,7 @@ public abstract class BaseGameState : IGameState
     public abstract GameState GetStateType();
 }
 
-// 状态机管理器（GameContext 在 CarrotFantasy.AOT）
+// 状态机管理器
 public class GameStateMachine
 {
     private Dictionary<GameState, IGameState> states = new Dictionary<GameState, IGameState>();
@@ -54,7 +54,7 @@ public class GameStateMachine
 
         ViewManager.Instance.OpenView<StartLoadPanel>();
 
-        // 资源更新（含 HybridCLR DLL）已在 AOT 的 AotResourceUpdateRunner 完成，
+        // 资源更新已在 AOT 的 AotResourceUpdateRunner 完成，
         // 热更层从选模式开始；配置表在此重新加载以吃到最新 AB。
         LubanConfigLoader.Reload();
         GameJsonLoader.Reload();

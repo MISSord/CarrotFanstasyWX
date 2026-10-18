@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 
@@ -276,33 +276,6 @@ public class ABPackagerWindow : EditorWindow
     {
         GUILayout.Space(10);
 
-        EditorGUILayout.BeginHorizontal();
-        GUI.color = new Color(0.45f, 0.75f, 1f);
-        if (GUILayout.Button("仅热更代码（Generate + 同步 DLL + 清单）", GUILayout.Height(32)))
-        {
-            SaveDeploySettings();
-            if (buildTarget != EditorUserBuildSettings.activeBuildTarget)
-            {
-                EditorUtility.DisplayDialog(
-                    "平台不一致",
-                    "窗口目标平台与 Build Settings 激活平台不一致。\n请先切换 Build Settings 到: "
-                    + buildTarget,
-                    "确定");
-            }
-            else
-            {
-                HybridCLRCodeHotUpdatePipeline.Run(buildTarget, promptUpload: true);
-                lastVersionNumber = AssetBundleBuildSettings.ReadLastManifestVersion(outputPath, buildTarget);
-                curVersionNumber = AssetBundleBuildSettings.SuggestNextManifestVersion(outputPath, buildTarget);
-            }
-        }
-        GUI.color = Color.white;
-        EditorGUILayout.EndHorizontal();
-
-        EditorGUILayout.HelpBox(
-            "「仅热更代码」不重打 Unity AB：执行 HybridCLR Generate/All，同步 DLL，刷新清单与 Packs，完成后询问是否上传（仅 hybridclr/packs/清单）。",
-            MessageType.None);
-
         GUILayout.Space(6);
         EditorGUILayout.BeginHorizontal();
 
@@ -354,9 +327,6 @@ public class ABPackagerWindow : EditorWindow
             "打包完成",
             "平台: " + buildTarget + "\n路径: " + result.PlatformBundlePath,
             "确定");
-
-        PcPlayerRebuildAdvisor.ShowAfterPack(
-            "AssetBundle 打包已完成。\n平台: " + buildTarget);
 
         CustomManifestBuilderWindow.ShowWindow(generatedManifest);
         SaveDeploySettings();

@@ -26,7 +26,7 @@ namespace CarrotFantasy.Editor.Batch
                 if (string.IsNullOrEmpty(options.Command))
                 {
                     message =
-                        "缺少 -cfCommand=codeHotUpdate|abBuild|pcBuild。"
+                        "缺少 -cfCommand=abBuild|pcBuild。"
                         + " 示例: -cfCommand=pcBuild -cfChannel=dev";
                     Debug.LogError("[BuildCli] " + message);
                 }
@@ -47,7 +47,7 @@ namespace CarrotFantasy.Editor.Batch
                 else
                 {
                     Debug.Log(string.Format(
-                        "[BuildCli] command={0} target={1} upload={2} env={3} channel={4} forceRebuild={5} copyStreaming={6} skipGenerate={7} batch={8}",
+                        "[BuildCli] command={0} target={1} upload={2} env={3} channel={4} forceRebuild={5} copyStreaming={6} batch={7}",
                         options.Command,
                         target,
                         options.Upload,
@@ -55,7 +55,6 @@ namespace CarrotFantasy.Editor.Batch
                         options.Channel ?? "(n/a)",
                         options.ForceRebuild,
                         options.CopyStreaming,
-                        options.SkipGenerate,
                         batchMode));
 
                     success = Execute(options, target, out message, out exitCode);
@@ -103,22 +102,6 @@ namespace CarrotFantasy.Editor.Batch
         {
             exitCode = 1;
             string command = options.Command.Trim();
-            if (string.Equals(command, "codeHotUpdate", StringComparison.OrdinalIgnoreCase))
-            {
-                HybridCLRCodeHotUpdatePipeline.Result result = HybridCLRCodeHotUpdatePipeline.Run(
-                    target,
-                    promptUpload: options.Upload,
-                    showManifestDialog: false,
-                    interactive: false);
-                message = result.Message;
-                if (result.Success)
-                {
-                    exitCode = 0;
-                }
-
-                return result.Success;
-            }
-
             if (string.Equals(command, "abBuild", StringComparison.OrdinalIgnoreCase))
             {
                 var request = AssetBundleBuildPipeline.CreateDefaultRequest();
@@ -179,7 +162,6 @@ namespace CarrotFantasy.Editor.Batch
                     {
                         Channel = channel.Value,
                         Interactive = false,
-                        RunHybridClrGenerateAndSync = !options.SkipGenerate,
                         RelativeOutputRoot = PcPlayerBuildPipeline.DefaultRelativeOutputRoot,
                     });
 
@@ -199,7 +181,7 @@ namespace CarrotFantasy.Editor.Batch
                 return pcResult.Success;
             }
 
-            message = "未知 -cfCommand: " + command + "（支持 codeHotUpdate / abBuild / pcBuild）";
+            message = "未知 -cfCommand: " + command + "（支持 abBuild / pcBuild）";
             return false;
         }
 
@@ -260,10 +242,6 @@ namespace CarrotFantasy.Editor.Batch
                 else if (string.Equals(key, "-cfCopyStreaming", StringComparison.OrdinalIgnoreCase))
                 {
                     options.CopyStreaming = ParseBool(value, defaultValue: false);
-                }
-                else if (string.Equals(key, "-cfSkipGenerate", StringComparison.OrdinalIgnoreCase))
-                {
-                    options.SkipGenerate = ParseBool(value, defaultValue: false);
                 }
             }
 
@@ -335,7 +313,6 @@ namespace CarrotFantasy.Editor.Batch
             public string Channel;
             public bool ForceRebuild;
             public bool CopyStreaming;
-            public bool SkipGenerate;
         }
     }
 }
