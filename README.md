@@ -3,7 +3,7 @@
 
 包含客户端与服务端。
 
-**构建 / 热更日常流程**见：[docs/BuildAndHotUpdateSOP.md](docs/BuildAndHotUpdateSOP.md)
+**构建 / 热更日常流程**见：[Docs/构建与热更-操作手册.md](Docs/构建与热更-操作手册.md)
 
 运行时热更使用 **HybridCLR**（不是 ILRuntime）。配表导表推荐入口：`ConfigTools/gen_code_json.bat`。
 

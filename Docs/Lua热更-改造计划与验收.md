@@ -6,7 +6,7 @@
 | 编写日期 | 2026-10-18 |
 | 代码基线 | `8f5926e`（已移除 HybridCLR，程序集 9 → 6） |
 | 目标形态 | **资源热更（AssetBundle）+ 代码热更（Lua）双链路** |
-| 关联文档 | `BuildAndHotUpdateSOP.md`、`AssetBundleHotUpdate_Review.md`、`LoadingFramework_Review.md` |
+| 关联文档 | `构建与热更-操作手册.md`、`AB框架-问题清单与改进建议.md`、`资源加载-框架改版评审.md` |
 | 估算总量 | 约 10~12 人日（不含 §4 中标注"可选"的项） |
 
 > 本文只回答三个问题：**还缺什么、怎么做、怎么验**。已完成的部分见 §2，不再重复设计。

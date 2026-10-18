@@ -12,7 +12,7 @@
 .NOTES
   Unity path: -UnityPath or env UNITY_EDITOR.
   Exit code matches Unity process (0 = success, 2 = recompile retry for pcBuild).
-  See docs/BuildAndHotUpdateSOP.md
+  See Docs/构建与热更-操作手册.md
 #>
 [CmdletBinding()]
 param(

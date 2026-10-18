@@ -6,7 +6,7 @@ namespace CarrotFantasy.Editor.Batch
 {
     /// <summary>
     /// Batch / -executeMethod 入口：代码热更、完整 AB、PC Player 出包。
-    /// 用法见 docs/BuildAndHotUpdateSOP.md「命令行（Batch）」。
+    /// 用法见 Docs/构建与热更-操作手册.md「命令行（Batch）」。
     /// </summary>
     public static class BuildCli
     {

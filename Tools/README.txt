@@ -30,7 +30,7 @@ pc-build.ps1
   - 跑前 Unity 工程 Build Settings 激活平台需与 -Target 一致（默认 StandaloneWindows64）
   - 日志在仓库根 Logs/ 目录
   - 若提示禁止运行脚本：powershell -ExecutionPolicy Bypass -File .\Tools\xxx.ps1
-  - 详细参数见 docs/BuildAndHotUpdateSOP.md 第 7 节
+  - 详细参数见 Docs/构建与热更-操作手册.md 第 7 节
 
 【协议 / 网络代码生成】
 
