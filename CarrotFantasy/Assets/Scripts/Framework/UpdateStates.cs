@@ -235,11 +235,10 @@ namespace CarrotFantasy
         }
     }
 
-    /// <summary>下载 + 解包 + 转换。</summary>
     internal sealed class DownloadState : IUpdateState
     {
         private BundleDownloadTask task;
-        private AotDownloadProgressView progressView;
+        private AotBootPanel panel;
         private bool openFailed;
 
         public UpdateFlowState Id
@@ -251,24 +250,23 @@ namespace CarrotFantasy
         {
             AotBootUi.EnsureEventSystem();
 
-            this.task = new BundleDownloadTask();
-            this.task.Start(ctx);
-
-            this.progressView = new AotDownloadProgressView();
-            if (!this.progressView.Open(AssetBundleDownloader.Instance, ctx.Parent))
+            this.panel = AotBootPanel.Ensure(ctx);
+            if (this.panel == null)
             {
                 this.openFailed = true;
+                return;
             }
 
-            // 面板要跨到 Converting 阶段继续显示，放进 ctx 交给后续状态关闭。
-            ctx.ProgressView = this.progressView;
+            this.panel.ShowProgress();
+
+            this.task = new BundleDownloadTask();
+            this.task.Start(ctx);
         }
 
         public void Exit(UpdateContext ctx)
         {
-            // 进度面板不在这里关闭：解压阶段还要继续显示，
-            // 由 FinalizeState / FailedState 统一收尾。
-            this.progressView = null;
+            // 面板不在这里关闭：解压阶段继续显示同一个面板，由 Finalize / Failed 收尾。
+            this.panel = null;
 
             if (this.task != null)
             {
@@ -279,9 +277,9 @@ namespace CarrotFantasy
 
         public StepResult Tick(UpdateContext ctx)
         {
-            if (this.openFailed)
+            if (this.openFailed || this.task == null)
             {
-                ctx.Error = "无法打开下载进度面板";
+                ctx.Error = "无法打开启动面板（AotUI/BootPanel 缺失？）";
                 return StepResult.Fail;
             }
 
@@ -289,9 +287,14 @@ namespace CarrotFantasy
             ctx.Flow.SetProgress(this.task.Progress);
             ctx.Flow.LogIfStuck(120f);
 
-            if (this.progressView != null)
+            if (this.panel != null && this.panel.IsOpen)
             {
-                this.progressView.Refresh();
+                AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
+                this.panel.SetProgress(
+                    this.task.Progress,
+                    downloader.GetDownloadedBytes(),
+                    downloader.GetTotalDownloadSize(),
+                    downloader.GetDownloadSpeedText());
             }
 
             if (!this.task.IsDone)
@@ -299,8 +302,7 @@ namespace CarrotFantasy
                 return StepResult.Running;
             }
 
-            // 下载器「下载阶段不解压」，进入 Convert 说明还有一整段解压/转换要做，
-            // 因此这里分流到独立的 Converting 状态，而不是直接进 Finalizing。
+            // 下载器「下载阶段不解压」，进入 Convert 说明还有一整段解压/转换要做。
             ctx.NextState = this.task.CurrentLoaderState == LoaderState.Convert
                 ? UpdateFlowState.Converting
                 : UpdateFlowState.Finalizing;
@@ -310,7 +312,7 @@ namespace CarrotFantasy
 
     /// <summary>
     /// 解压 / 转换阶段：下载全部完成后才开始（下载期间不解压，避免 IO 过大）。
-    /// 转换任务完成后才触发下载完成回调，所以这里以「回调到达 + 下载器回 Idle」为退出条件。
+    /// 转换任务完成后才触发下载完成回调，所以以「回调到达 + 下载器回 Idle」为退出条件。
     /// </summary>
     internal sealed class ConvertingState : IUpdateState
     {
@@ -323,6 +325,11 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation("解压中，请稍候...");
             ctx.Flow.SetProgress(1f);
+
+            if (ctx.Panel != null && ctx.Panel.IsOpen)
+            {
+                ctx.Panel.SetStatus("解压中，请稍候...", true);
+            }
         }
 
         public void Exit(UpdateContext ctx)
@@ -331,13 +338,8 @@ namespace CarrotFantasy
 
         public StepResult Tick(UpdateContext ctx)
         {
-            // 下载器是单例（Instance 懒创建，不会为 null），不需要经 ctx 中转。
+            // 下载器是单例（Instance 懒创建，不会为 null）。
             AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
-
-            if (ctx.ProgressView != null)
-            {
-                ctx.ProgressView.Refresh();
-            }
 
             if (ctx.Download != DownloadOutcome.Pending && downloader.GetLoaderState() == LoaderState.Idle)
             {
@@ -351,7 +353,7 @@ namespace CarrotFantasy
         }
     }
 
-    /// <summary>收尾：结束下载器、校验最终结果。</summary>
+    /// <summary>收尾：关闭面板、结束下载器、校验最终结果。</summary>
     internal sealed class FinalizeState : IUpdateState
     {
         private bool ended;
@@ -365,12 +367,7 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation("收尾：结束下载器");
             ctx.Flow.SetProgress(1f);
-
-            if (ctx.ProgressView != null)
-            {
-                ctx.ProgressView.Close();
-                ctx.ProgressView = null;
-            }
+            AotBootPanel.CloseIfAny(ctx);
         }
 
         public void Exit(UpdateContext ctx)
@@ -397,7 +394,7 @@ namespace CarrotFantasy
         }
     }
 
-    /// <summary>失败：弹面板等玩家点按，再结束进程。</summary>
+    /// <summary>失败：用统一面板显示原因，等玩家点退出后结束进程。</summary>
     internal sealed class FailedState : IUpdateState
     {
         private ErrorDialogTask task;
@@ -409,12 +406,6 @@ namespace CarrotFantasy
 
         public void Enter(UpdateContext ctx)
         {
-            if (ctx.ProgressView != null)
-            {
-                ctx.ProgressView.Close();
-                ctx.ProgressView = null;
-            }
-
             ctx.Flow.SetOperation(string.IsNullOrEmpty(ctx.Error) ? "资源更新失败" : ctx.Error);
             this.task = new ErrorDialogTask();
             this.task.Start(ctx);
@@ -444,11 +435,6 @@ namespace CarrotFantasy
         }
     }
 
-    // =====================================================================
-    // 任务：状态内部的具体工作，全部为"可轮询"，不阻塞、不 yield
-    // =====================================================================
-
-    /// <summary>把 <see cref="AssetBundleUpdateChecker"/> 包成可轮询任务。</summary>
     internal sealed class CheckTask : IUpdateTask
     {
         private AssetBundleUpdateChecker checker;
@@ -545,10 +531,10 @@ namespace CarrotFantasy
         }
     }
 
-    /// <summary>回退提示面板。完成条件由按钮回调写入，状态机只轮询。</summary>
+    /// <summary>回退提示：复用统一面板的 Fallback 节点。</summary>
     internal sealed class FallbackTask : IUpdateTask
     {
-        private AotUpdateListFallbackView view;
+        private AotBootPanel panel;
 
         /// <summary>0=未选 1=继续 2=退出</summary>
         private int choice;
@@ -569,15 +555,17 @@ namespace CarrotFantasy
         {
             AotBootUi.EnsureEventSystem();
 
-            this.view = new AotUpdateListFallbackView();
-            if (!this.view.Open(
-                    () => this.choice = 1,
-                    () => this.choice = 2,
-                    ctx.Parent))
+            this.panel = AotBootPanel.Ensure(ctx);
+            if (this.panel == null)
             {
                 this.Error = "无法显示回退提示面板";
                 this.choice = 2;
+                return;
             }
+
+            this.panel.ContinueChosen += this.OnContinue;
+            this.panel.ExitChosen += this.OnExit;
+            this.panel.ShowFallback();
         }
 
         public void Tick(UpdateContext ctx)
@@ -586,19 +574,31 @@ namespace CarrotFantasy
 
         public void Abort()
         {
-            if (this.view != null)
+            if (this.panel != null)
             {
-                this.view.Close();
-                this.view = null;
+                this.panel.ContinueChosen -= this.OnContinue;
+                this.panel.ExitChosen -= this.OnExit;
+                this.panel = null;
             }
+        }
+
+        private void OnContinue()
+        {
+            this.choice = 1;
+        }
+
+        private void OnExit()
+        {
+            this.choice = 2;
         }
     }
 
-    /// <summary>下载确认面板。</summary>
+    /// <summary>下载确认：复用统一面板的 Confirm 节点。</summary>
     internal sealed class ConfirmTask : IUpdateTask
     {
-        private AotDownloadConfirmView view;
+        private AotBootPanel panel;
 
+        /// <summary>0=未选 1=确认 2=取消</summary>
         private int choice;
 
         public bool IsDone
@@ -617,18 +617,19 @@ namespace CarrotFantasy
         {
             AotBootUi.EnsureEventSystem();
 
-            long totalSize = ctx.CheckResult != null ? ctx.CheckResult.totalDownloadSize : 0L;
-
-            this.view = new AotDownloadConfirmView();
-            if (!this.view.Open(
-                    totalSize,
-                    () => this.choice = 1,
-                    () => this.choice = 2,
-                    ctx.Parent))
+            this.panel = AotBootPanel.Ensure(ctx);
+            if (this.panel == null)
             {
                 this.Error = "无法显示下载确认面板";
                 this.choice = 2;
+                return;
             }
+
+            this.panel.Confirmed += this.OnConfirm;
+            this.panel.Cancelled += this.OnCancel;
+
+            long totalSize = ctx.CheckResult != null ? ctx.CheckResult.totalDownloadSize : 0L;
+            this.panel.ShowConfirm(totalSize);
         }
 
         public void Tick(UpdateContext ctx)
@@ -637,17 +638,25 @@ namespace CarrotFantasy
 
         public void Abort()
         {
-            if (this.view != null)
+            if (this.panel != null)
             {
-                this.view.Close();
-                this.view = null;
+                this.panel.Confirmed -= this.OnConfirm;
+                this.panel.Cancelled -= this.OnCancel;
+                this.panel = null;
             }
+        }
+
+        private void OnConfirm()
+        {
+            this.choice = 1;
+        }
+
+        private void OnCancel()
+        {
+            this.choice = 2;
         }
     }
 
-    /// <summary>
-    /// 下载任务：只**读**下载器状态，不驱动它（下载器由 AssetBundleManager.Update 驱动）。
-    /// </summary>
     internal sealed class BundleDownloadTask : IUpdateTask
     {
         /// <summary>本任务观察到的结果，供 IUpdateTask 上报。</summary>
@@ -723,10 +732,10 @@ namespace CarrotFantasy
         }
     }
 
-    /// <summary>失败提示面板：等玩家确认后结束进程。</summary>
+    /// <summary>失败提示：复用统一面板的 Error 节点，等玩家点退出。</summary>
     internal sealed class ErrorDialogTask : IUpdateTask
     {
-        private AotUpdateListErrorView view;
+        private AotBootPanel panel;
         private bool exitChosen;
 
         public bool IsDone
@@ -745,16 +754,17 @@ namespace CarrotFantasy
         {
             AotBootUi.EnsureEventSystem();
 
-            string message = string.IsNullOrEmpty(ctx.Error)
-                ? "资源更新失败，请重启游戏后重试。"
-                : "资源更新失败：" + ctx.Error + "\n请重启游戏后重试。";
-
-            this.view = new AotUpdateListErrorView();
-            if (!this.view.Open(message, () => this.exitChosen = true, null, ctx.Parent))
+            this.panel = AotBootPanel.Ensure(ctx);
+            if (this.panel == null)
             {
-                Debug.LogError("[UpdateFlow] 无法显示错误面板: " + message);
+                // 连面板都开不出来时，至少留下日志并退出，避免静默卡住。
+                Debug.LogError("[UpdateFlow] 无法显示错误面板: " + ctx.Error);
                 this.exitChosen = true;
+                return;
             }
+
+            this.panel.ExitChosen += this.OnExit;
+            this.panel.ShowError(ctx.Error);
         }
 
         public void Tick(UpdateContext ctx)
@@ -763,11 +773,17 @@ namespace CarrotFantasy
 
         public void Abort()
         {
-            if (this.view != null)
+            if (this.panel != null)
             {
-                this.view.Close();
-                this.view = null;
+                this.panel.ExitChosen -= this.OnExit;
+                this.panel = null;
             }
         }
+
+        private void OnExit()
+        {
+            this.exitChosen = true;
+        }
     }
+
 }

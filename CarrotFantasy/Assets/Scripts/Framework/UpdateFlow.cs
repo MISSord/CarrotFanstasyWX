@@ -91,9 +91,9 @@ namespace CarrotFantasy
         /// <summary>下载（含解压/转换）的最终结果；Pending 表示还没结束。</summary>
         public DownloadOutcome Download;
 
-        /// <summary>下载进度面板：跨 Downloading / Converting 两个状态存活，
-        /// 由 FinalizeState / FailedState 负责关闭。</summary>
-        public AotDownloadProgressView ProgressView;
+        /// <summary>启动期统一面板（Confirm / Progress / Error / Fallback 四选一）：
+        /// 由第一个需要 UI 的状态创建，FinalizeState / FailedState 负责关闭。</summary>
+        public AotBootPanel Panel;
 
         /// <summary>所属状态机（状态内部用它设置进度/描述/完成）。</summary>
         public UpdateFlow Flow;
