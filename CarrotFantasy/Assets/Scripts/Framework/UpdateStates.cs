@@ -695,7 +695,6 @@ namespace CarrotFantasy
 
             downloader.StartDownload(
                 gameContext,
-                _ => { },
                 ok =>
                 {
                     // 这个回调要等「下载 + 解压/转换」全部结束才触发

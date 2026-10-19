@@ -163,7 +163,17 @@ public class AssetBundleDownloader
         }
     }
 
-    public void StartDownload(GameContext context, System.Action<bool> finishCalls, System.Action<bool> callBacks)
+    /// <summary>
+    /// 开始批量下载（Pack 优先；未被 Pack 覆盖的 AB 走单包下载）。
+    /// <para>
+    /// <paramref name="onCompleted"/> 的触发时机**不是"下载完成"**：
+    /// LZMA 模式（CompressedFormat == 0）下，每个包的 callback 会被转移给 ConvertTask，
+    /// 所以本回调要等「下载 + LZMA→LZ4 转换」全部结束才触发；
+    /// LZ4 / 无压缩模式才会在下载完成后立即触发。
+    /// 参数 true/false 表示整批是否全部成功。
+    /// </para>
+    /// </summary>
+    public void StartDownload(GameContext context, System.Action<bool> onCompleted)
     {
         loaderState = LoaderState.Loading;
         activePackOperations = 0;
@@ -178,16 +188,14 @@ public class AssetBundleDownloader
             Debug.LogError(urlError);
             finallDownloadUrl = string.Empty;
             loaderState = LoaderState.Idle;
-            finishCalls?.Invoke(false);
-            callBacks?.Invoke(false);
+            onCompleted?.Invoke(false);
             return;
         }
 
         if (!HasEnoughDiskSpace(result?.totalDownloadSize ?? 0))
         {
             loaderState = LoaderState.Idle;
-            finishCalls?.Invoke(false);
-            callBacks?.Invoke(false);
+            onCompleted?.Invoke(false);
             return;
         }
 
@@ -219,7 +227,7 @@ public class AssetBundleDownloader
             {
                 string[] remaining = CollectBundlesNotCoveredByPacks(result, out long uncoveredSize);
                 totalDownloadSize += uncoveredSize;
-                this.DownloadPacks(result.packsToDownload.ToArray(), custom, null, callBacks, remaining);
+                this.DownloadPacks(result.packsToDownload.ToArray(), custom, null, onCompleted, remaining);
                 return;
             }
 
@@ -227,7 +235,7 @@ public class AssetBundleDownloader
             if (totalBundles <= 0)
             {
                 loaderState = LoaderState.Idle;
-                callBacks?.Invoke(true);
+                onCompleted?.Invoke(true);
                 return;
             }
 
@@ -246,12 +254,12 @@ public class AssetBundleDownloader
                 bundleStr[index] = list[i].BundleName;
                 index++;
             }
-            this.DownloadBundles(bundleStr, custom, null, callBacks);
+            this.DownloadBundles(bundleStr, custom, null, onCompleted);
         }
         else
         {
             loaderState = LoaderState.Idle;
-            callBacks?.Invoke(false);
+            onCompleted?.Invoke(false);
         }
     }
 
