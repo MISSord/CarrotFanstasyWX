@@ -115,6 +115,7 @@ namespace CarrotFantasy.EditorTools
 
             foreach ((string name, string prefabPath) in Sources)
             {
+                string panelName = name.ToLowerInvariant();
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
                 GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
                 if (instance == null)
@@ -123,7 +124,7 @@ namespace CarrotFantasy.EditorTools
                     continue;
                 }
 
-                instance.name = name;
+                instance.name = panelName;
                 instance.transform.SetParent(root.transform, false);
 
                 RectTransform rect = instance.GetComponent<RectTransform>();
@@ -143,9 +144,9 @@ namespace CarrotFantasy.EditorTools
                 }
 
                 // 子根本身也登记，便于运行时 SetActive 切换。
-                entries.Add(new UINameEntry { name = name, uiReference = instance });
+                entries.Add(new UINameEntry { name = panelName, uiReference = instance });
 
-                CollectEntries(instance, name, entries);
+                CollectEntries(instance, panelName, entries);
             }
 
             UINameTable table = root.AddComponent<UINameTable>();
@@ -177,11 +178,29 @@ namespace CarrotFantasy.EditorTools
                         continue;
                     }
 
-                    string key = prefix + "/" + entry.name;
+                    // 键 == 节点名：全小写、用下划线连接；节点名已含面板前缀时去掉重复，
+                    // 例如 Progress 下的 ProgressFill → progress_fill。
+                    string leaf = entry.name.Trim().ToLowerInvariant().Replace(' ', '_');
+                    if (leaf.StartsWith(prefix))
+                    {
+                        string stripped = leaf.Substring(prefix.Length).TrimStart('_');
+                        if (stripped.Length > 0)
+                        {
+                            leaf = stripped;
+                        }
+                    }
+
+                    string key = prefix + "_" + leaf;
                     if (output.Exists(e => e.name == key))
                     {
                         Debug.LogWarning("[BootPanelMerger] 键重复，已跳过: " + key);
                         continue;
+                    }
+
+                    // 节点本身也改名，保证表键与节点名一致。
+                    if (!string.Equals(entry.uiReference.name, key))
+                    {
+                        entry.uiReference.name = key;
                     }
 
                     output.Add(new UINameEntry { name = key, uiReference = entry.uiReference });

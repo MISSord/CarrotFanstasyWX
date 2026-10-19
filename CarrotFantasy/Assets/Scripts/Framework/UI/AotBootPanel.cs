@@ -108,24 +108,24 @@ namespace CarrotFantasy
 
         protected override void OnOpen()
         {
-            this.confirmRoot = this.FindNode("Confirm");
-            this.progressRoot = this.FindNode("Progress");
-            this.errorRoot = this.FindNode("Error");
-            this.fallbackRoot = this.FindNode("Fallback");
+            this.confirmRoot = this.FindNode("confirm");
+            this.progressRoot = this.FindNode("progress");
+            this.errorRoot = this.FindNode("error");
+            this.fallbackRoot = this.FindNode("fallback");
 
-            this.confirmTitle = this.FindText("Confirm/Title");
-            this.confirmMessage = this.FindText("Confirm/Message");
+            this.confirmTitle = this.FindText("confirm_title");
+            this.confirmMessage = this.FindText("confirm_message");
 
-            this.progressTitle = this.FindText("Progress/Title");
-            this.progressStatus = this.FindText("Progress/Status");
-            this.progressInfo = this.FindText("Progress/Info");
-            this.progressFill = this.FindImage("Progress/ProgressFill");
+            this.progressTitle = this.FindText("progress_title");
+            this.progressStatus = this.FindText("progress_status");
+            this.progressInfo = this.FindText("progress_info");
+            this.progressFill = this.FindImage("progress_fill");
 
-            this.errorTitle = this.FindText("Error/Title");
-            this.errorMessage = this.FindText("Error/Message");
+            this.errorTitle = this.FindText("error_title");
+            this.errorMessage = this.FindText("error_message");
 
-            this.fallbackTitle = this.FindText("Fallback/Title");
-            this.fallbackMessage = this.FindText("Fallback/Message");
+            this.fallbackTitle = this.FindText("fallback_title");
+            this.fallbackMessage = this.FindText("fallback_message");
 
             if (this.progressFill != null)
             {
@@ -138,12 +138,12 @@ namespace CarrotFantasy
             this.SetMode(Mode.None);
 
             // 按钮只在打开时绑定一次；文案随模式变化。
-            this.BindButton("Confirm/Btn_Confirm", () => this.Raise(this.Confirmed));
-            this.BindButton("Confirm/Btn_Cancel", () => this.Raise(this.Cancelled));
-            this.BindButton("Error/Btn_Confirm", () => this.Raise(this.ExitChosen));
-            this.BindButton("Error/Btn_Cancel", null);   // 重启暂无实现，隐藏按钮
-            this.BindButton("Fallback/Btn_Confirm", () => this.Raise(this.ContinueChosen));
-            this.BindButton("Fallback/Btn_Cancel", () => this.Raise(this.ExitChosen));
+            this.BindButton("confirm_btn_confirm", () => this.Raise(this.Confirmed));
+            this.BindButton("confirm_btn_cancel", () => this.Raise(this.Cancelled));
+            this.BindButton("error_btn_confirm", () => this.Raise(this.ExitChosen));
+            this.BindButton("error_btn_cancel", null);   // 重启暂无实现，隐藏按钮
+            this.BindButton("fallback_btn_confirm", () => this.Raise(this.ContinueChosen));
+            this.BindButton("fallback_btn_cancel", () => this.Raise(this.ExitChosen));
         }
 
         /// <summary>切换显示的子面板（只 SetActive，不销毁重建）。</summary>
@@ -173,8 +173,8 @@ namespace CarrotFantasy
                     "发现新版本资源，需要下载 " + FormatBytes(downloadSizeBytes) + "。";
             }
 
-            SetButtonLabel("Confirm/Btn_Confirm", "下载");
-            SetButtonLabel("Confirm/Btn_Cancel", "退出");
+            SetButtonLabel("confirm_btn_confirm", "下载");
+            SetButtonLabel("confirm_btn_cancel", "退出");
         }
 
         /// <summary>显示下载进度。</summary>
@@ -263,7 +263,7 @@ namespace CarrotFantasy
                     : message + "\n请重启游戏后重试。";
             }
 
-            SetButtonLabel("Error/Btn_Confirm", "退出");
+            SetButtonLabel("error_btn_confirm", "退出");
         }
 
         /// <summary>显示"远程不可用，是否用本地清单继续"。</summary>
@@ -283,8 +283,8 @@ namespace CarrotFantasy
                     "（可能缺少部分最新内容）";
             }
 
-            SetButtonLabel("Fallback/Btn_Confirm", "继续");
-            SetButtonLabel("Fallback/Btn_Cancel", "退出");
+            SetButtonLabel("fallback_btn_confirm", "继续");
+            SetButtonLabel("fallback_btn_cancel", "退出");
         }
 
         // ---------------------------------------------------------------- 内部
