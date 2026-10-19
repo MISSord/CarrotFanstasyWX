@@ -339,7 +339,7 @@ namespace CarrotFantasy
                 ctx.ProgressView.Refresh();
             }
 
-            if (ctx.DownloadFinished && downloader.GetLoaderState() == LoaderState.Idle)
+            if (ctx.Download != DownloadOutcome.Pending && downloader.GetLoaderState() == LoaderState.Idle)
             {
                 ctx.NextState = UpdateFlowState.Finalizing;
                 return StepResult.Advance;
@@ -385,7 +385,7 @@ namespace CarrotFantasy
                 AssetBundleDownloader.Instance.EndDownload();
             }
 
-            if (!ctx.DownloadSucceeded)
+            if (ctx.Download != DownloadOutcome.Succeeded)
             {
                 ctx.Error = "资源下载或校验失败";
                 return StepResult.Fail;
@@ -650,8 +650,8 @@ namespace CarrotFantasy
     /// </summary>
     internal sealed class BundleDownloadTask : IUpdateTask
     {
-        private bool finished;
-        private bool success;
+        /// <summary>本任务观察到的结果，供 IUpdateTask 上报。</summary>
+        private DownloadOutcome outcome;
 
         public float Progress { get; private set; }
 
@@ -660,7 +660,7 @@ namespace CarrotFantasy
 
         /// <summary>
         /// 下载阶段是否结束：进入 Convert（下载全部完成，开始解压）或直接 Idle（无需解压）。
-        /// 不能用 success/finished 判断——它们要等「转换全部结束」才会被回调。
+        /// 不能用 outcome 判断——它要等「转换全部结束」才会被回调。
         /// </summary>
         public bool IsDone
         {
@@ -673,10 +673,13 @@ namespace CarrotFantasy
 
         public bool IsSucceeded
         {
-            get { return this.success; }
+            get { return this.outcome == DownloadOutcome.Succeeded; }
         }
 
-        public string Error { get; private set; }
+        public string Error
+        {
+            get { return this.outcome == DownloadOutcome.Failed ? "下载失败" : null; }
+        }
 
         public void Start(UpdateContext ctx)
         {
@@ -692,10 +695,8 @@ namespace CarrotFantasy
                     // 这个回调要等「下载 + 解压/转换」全部结束才触发
                     // （需要转换的包会把 callback 转交给 ConvertTask），
                     // 所以它代表整段流程完成，而不是下载完成。
-                    this.success = ok;
-                    this.finished = true;
-                    ctx.DownloadFinished = true;
-                    ctx.DownloadSucceeded = ok;
+                    this.outcome = ok ? DownloadOutcome.Succeeded : DownloadOutcome.Failed;
+                    ctx.Download = this.outcome;
 
                     if (!ok || ctx.CheckResult == null)
                     {
@@ -714,11 +715,6 @@ namespace CarrotFantasy
             AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
             this.Progress = downloader.GetTotalProgress();
             this.CurrentLoaderState = downloader.GetLoaderState();
-
-            if (this.finished && !this.success)
-            {
-                this.Error = "下载失败";
-            }
         }
 
         public void Abort()

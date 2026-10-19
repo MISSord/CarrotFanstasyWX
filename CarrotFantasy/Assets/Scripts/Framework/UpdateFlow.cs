@@ -57,6 +57,22 @@ namespace CarrotFantasy
     }
 
     /// <summary>
+    /// 下载（含解压/转换）的最终结果。用一个枚举代替「是否结束 + 是否成功」两个 bool，
+    /// 因为两个 bool 允许出现「未结束但成功」这种非法组合。
+    /// </summary>
+    public enum DownloadOutcome
+    {
+        /// <summary>尚未结束。</summary>
+        Pending = 0,
+
+        /// <summary>下载 + 解压/转换全部成功。</summary>
+        Succeeded,
+
+        /// <summary>失败（含下载失败、校验失败、转换失败）。</summary>
+        Failed,
+    }
+
+    /// <summary>
     /// 跨状态共享的上下文。状态之间**不直接通信**，只通过这里交换数据。
     /// </summary>
     public sealed class UpdateContext
@@ -72,11 +88,8 @@ namespace CarrotFantasy
         /// <summary>失败原因（配合 <see cref="StepResult.Fail"/>）。</summary>
         public string Error;
 
-        /// <summary>整段下载（含解压/转换）是否已结束（转换阶段读取）。</summary>
-        public bool DownloadFinished;
-
-        /// <summary>本次下载是否成功（Finalize 阶段读取）。</summary>
-        public bool DownloadSucceeded;
+        /// <summary>下载（含解压/转换）的最终结果；Pending 表示还没结束。</summary>
+        public DownloadOutcome Download;
 
         /// <summary>下载进度面板：跨 Downloading / Converting 两个状态存活，
         /// 由 FinalizeState / FailedState 负责关闭。</summary>
