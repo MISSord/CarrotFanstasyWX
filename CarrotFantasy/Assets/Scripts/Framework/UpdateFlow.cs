@@ -58,8 +58,6 @@ namespace CarrotFantasy
     /// </summary>
     public sealed class UpdateContext
     {
-        public MonoBehaviour Host;
-
         public Transform Parent;
 
         public AssetBundleDownloader Downloader;
@@ -142,10 +140,9 @@ namespace CarrotFantasy
 
         private readonly List<string> trace = new List<string>(MaxTrace);
 
-        private UpdateStateMachineContext machineContext;
+        private UpdateContext context;
 
         private IUpdateState currentState;
-        private IUpdateTask currentTask;
 
         private float flowStartedAt;
         private float stateEnteredAt;
@@ -218,7 +215,8 @@ namespace CarrotFantasy
         public static UpdateFlow Create(UpdateContext ctx)
         {
             UpdateFlow flow = new UpdateFlow();
-            flow.machineContext = new UpdateStateMachineContext(ctx, flow);
+            ctx.Flow = flow;
+            flow.context = ctx;
 
             flow.Register(new PrepareState());
             flow.Register(new CheckState());
@@ -271,7 +269,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            UpdateContext ctx = this.machineContext.Context;
+            UpdateContext ctx = this.context;
             ctx.NextState = this.State;
 
             StepResult result = this.currentState.Tick(ctx);
@@ -341,7 +339,8 @@ namespace CarrotFantasy
             {
                 try
                 {
-                    this.currentState.Exit(this.machineContext.Context);
+                    // 状态的 Exit 负责 abort 自己持有的任务，这里不必再单独处理。
+                    this.currentState.Exit(this.context);
                 }
                 catch (Exception e)
                 {
@@ -349,19 +348,6 @@ namespace CarrotFantasy
                 }
             }
 
-            if (this.currentTask != null)
-            {
-                try
-                {
-                    this.currentTask.Abort();
-                }
-                catch (Exception e)
-                {
-                    Debug.LogError("[UpdateFlow] 任务 Abort 异常: " + e);
-                }
-            }
-
-            this.currentTask = null;
             this.currentState = null;
 
             Debug.Log("[UpdateFlow] 状态机已关闭，Tick 不再产生开销");
@@ -436,12 +422,6 @@ namespace CarrotFantasy
             return sb.ToString();
         }
 
-        /// <summary>供状态登记它启动的任务，便于统一 Abort。</summary>
-        internal void AttachTask(IUpdateTask task)
-        {
-            this.currentTask = task;
-        }
-
         private void EnterState(UpdateFlowState next, bool initial = false)
         {
             UpdateFlowState from = this.State;
@@ -450,15 +430,16 @@ namespace CarrotFantasy
             {
                 try
                 {
-                    this.currentState.Exit(this.machineContext.Context);
+                    this.currentState.Exit(this.context);
                 }
                 catch (Exception e)
                 {
                     Debug.LogError("[UpdateFlow] " + from + " Exit 异常: " + e);
                 }
-            }
 
-            this.currentTask = null;
+                // 立刻置空：终态分支里还会调 Stop()，避免 Exit 被调用两次。
+                this.currentState = null;
+            }
 
             // 真终态：进入即关闭，不再 Tick。
             // 注意：Failed **不在这里**——它要弹面板等玩家点按，必须走正常状态路径。
@@ -521,7 +502,7 @@ namespace CarrotFantasy
 
             try
             {
-                state.Enter(this.machineContext.Context);
+                state.Enter(this.context);
             }
             catch (Exception e)
             {
@@ -557,18 +538,6 @@ namespace CarrotFantasy
             }
 
             this.trace.Add(line);
-        }
-
-        /// <summary>给状态用的薄封装：把 flow 与 ctx 绑在一起，省掉重复传参。</summary>
-        private sealed class UpdateStateMachineContext
-        {
-            public UpdateStateMachineContext(UpdateContext context, UpdateFlow flow)
-            {
-                this.Context = context;
-                this.Context.Flow = flow;
-            }
-
-            public UpdateContext Context { get; private set; }
         }
     }
 }

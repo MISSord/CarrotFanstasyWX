@@ -33,7 +33,7 @@ namespace CarrotFantasy
         {
             UpdateContext ctx = new UpdateContext
             {
-                Host = host,
+                // 状态只需要 UI 挂点；真要用 MonoBehaviour 时可由 Parent.gameObject 取。
                 Parent = host != null ? host.transform : null,
             };
 

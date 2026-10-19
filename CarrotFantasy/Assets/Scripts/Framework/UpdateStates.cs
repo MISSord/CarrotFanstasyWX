@@ -78,7 +78,6 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation("检查资源版本");
             this.task = new CheckTask();
-            ctx.Flow.AttachTask(this.task);
             this.task.Start(ctx);
         }
 
@@ -153,7 +152,6 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation("已回退到本地缓存清单");
             this.task = new FallbackTask();
-            ctx.Flow.AttachTask(this.task);
             this.task.Start(ctx);
         }
 
@@ -201,7 +199,6 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation("等待确认下载");
             this.task = new ConfirmTask();
-            ctx.Flow.AttachTask(this.task);
             this.task.Start(ctx);
         }
 
@@ -251,7 +248,6 @@ namespace CarrotFantasy
             AotBootUi.EnsureEventSystem();
 
             this.task = new BundleDownloadTask();
-            ctx.Flow.AttachTask(this.task);
             this.task.Start(ctx);
 
             this.progressView = new AotDownloadProgressView();
@@ -361,7 +357,6 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation(string.IsNullOrEmpty(ctx.Error) ? "资源更新失败" : ctx.Error);
             this.task = new ErrorDialogTask();
-            ctx.Flow.AttachTask(this.task);
             this.task.Start(ctx);
         }
 
