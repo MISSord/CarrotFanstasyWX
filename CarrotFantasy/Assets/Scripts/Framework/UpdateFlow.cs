@@ -63,8 +63,6 @@ namespace CarrotFantasy
     {
         public Transform Parent;
 
-        public AssetBundleDownloader Downloader;
-
         /// <summary>检查结果（Checking 之后所有状态都可读）。</summary>
         public UpdateCheckResult CheckResult;
 

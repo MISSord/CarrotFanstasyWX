@@ -255,7 +255,7 @@ namespace CarrotFantasy
             this.task.Start(ctx);
 
             this.progressView = new AotDownloadProgressView();
-            if (!this.progressView.Open(ctx.Downloader, ctx.Parent))
+            if (!this.progressView.Open(AssetBundleDownloader.Instance, ctx.Parent))
             {
                 this.openFailed = true;
             }
@@ -331,12 +331,8 @@ namespace CarrotFantasy
 
         public StepResult Tick(UpdateContext ctx)
         {
-            AssetBundleDownloader downloader = ctx.Downloader;
-            if (downloader == null)
-            {
-                ctx.Error = "下载器为空，无法解压";
-                return StepResult.Fail;
-            }
+            // 下载器是单例（Instance 懒创建，不会为 null），不需要经 ctx 中转。
+            AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
 
             if (ctx.ProgressView != null)
             {
@@ -386,10 +382,7 @@ namespace CarrotFantasy
             if (!this.ended)
             {
                 this.ended = true;
-                if (ctx.Downloader != null)
-                {
-                    ctx.Downloader.EndDownload();
-                }
+                AssetBundleDownloader.Instance.EndDownload();
             }
 
             if (!ctx.DownloadSucceeded)
@@ -689,7 +682,6 @@ namespace CarrotFantasy
         {
             AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
             downloader.Init();
-            ctx.Downloader = downloader;
 
             GameContext gameContext = new GameContext { result = ctx.CheckResult };
 
@@ -719,13 +711,7 @@ namespace CarrotFantasy
 
         public void Tick(UpdateContext ctx)
         {
-            AssetBundleDownloader downloader = ctx.Downloader;
-            if (downloader == null)
-            {
-                this.CurrentLoaderState = LoaderState.Idle;
-                return;
-            }
-
+            AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
             this.Progress = downloader.GetTotalProgress();
             this.CurrentLoaderState = downloader.GetLoaderState();
 
