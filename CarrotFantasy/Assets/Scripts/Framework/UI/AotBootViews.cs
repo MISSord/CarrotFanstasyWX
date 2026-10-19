@@ -106,6 +106,7 @@ namespace CarrotFantasy
         }
 
         AssetBundleDownloader downloader;
+        UpdateFlow flow;
         Image progressFill;
         Text statusText;
         Text infoText;
@@ -114,6 +115,12 @@ namespace CarrotFantasy
         public bool Open(AssetBundleDownloader downloader, Transform parent = null)
         {
             this.downloader = downloader;
+
+            // 订阅状态机：阶段变化即时反映到文案，不再每帧轮询 downloader。
+            this.flow = UpdateFlow.Current;
+            this.flow.StateChanged -= this.OnFlowStateChanged;
+            this.flow.StateChanged += this.OnFlowStateChanged;
+
             return base.Open(parent);
         }
 
@@ -138,23 +145,60 @@ namespace CarrotFantasy
             }
         }
 
-        /// <summary>由 Runner 每帧调用。</summary>
-        public void Refresh()
+        /// <summary>
+        /// 阶段文案由状态机事件驱动（离散变化），不再每帧去问 downloader 处于什么状态。
+        /// </summary>
+        void OnFlowStateChanged(UpdateFlowState from, UpdateFlowState to)
         {
-            if (this.downloader == null || !this.IsOpen)
+            if (this.statusText == null)
             {
                 return;
             }
 
-            LoaderState loaderState = this.downloader.GetLoaderState();
-            bool isConverting = loaderState == LoaderState.Convert;
-            bool isIdle = loaderState == LoaderState.Idle;
+            if (to == UpdateFlowState.Finalizing)
+            {
+                this.statusText.text = "解压中，请稍候...";
+            }
+            else if (to == UpdateFlowState.Done)
+            {
+                this.statusText.text = "下载完成，准备进入游戏";
+            }
+            else if (this.flow != null && !string.IsNullOrEmpty(this.flow.Operation))
+            {
+                this.statusText.text = this.flow.Operation;
+            }
+        }
 
-            if (isConverting || isIdle)
+        protected override void OnClose()
+        {
+            if (this.flow != null)
+            {
+                this.flow.StateChanged -= this.OnFlowStateChanged;
+                this.flow = null;
+            }
+
+            this.downloader = null;
+            base.OnClose();
+        }
+
+        /// <summary>每帧刷新连续量（进度百分比 / 字节 / 速度）；阶段文案走事件。</summary>
+        public void Refresh()
+        {
+            if (!this.IsOpen)
+            {
+                return;
+            }
+
+            UpdateFlowState state = this.flow != null ? this.flow.State : UpdateFlowState.Downloading;
+
+            if (state == UpdateFlowState.Finalizing
+                || state == UpdateFlowState.Done)
             {
                 if (this.statusText != null)
                 {
-                    this.statusText.text = isIdle ? "下载完成，准备进入游戏" : "解压中，请稍候...";
+                    this.statusText.text = state == UpdateFlowState.Finalizing
+                        ? "解压中，请稍候..."
+                        : "下载完成，准备进入游戏";
                     this.statusText.gameObject.SetActive(true);
                 }
 
@@ -165,13 +209,17 @@ namespace CarrotFantasy
 
                 if (this.progressFill != null)
                 {
-                    this.progressFill.fillAmount = isIdle ? 1f : this.progressFill.fillAmount;
+                    this.progressFill.fillAmount = 1f;
                 }
 
                 return;
             }
 
-            float progress = this.downloader.GetTotalProgress();
+            // 进度以状态机为准（Runner 每帧 SetProgress）；字节与速度仍取自 downloader 明细。
+            float progress = this.flow != null && this.flow.Progress > 0f
+                ? this.flow.Progress
+                : (this.downloader != null ? this.downloader.GetTotalProgress() : 0f);
+
             if (this.progressFill != null)
             {
                 this.progressFill.fillAmount = Mathf.Clamp01(progress);
@@ -183,7 +231,7 @@ namespace CarrotFantasy
                 this.statusText.gameObject.SetActive(true);
             }
 
-            if (this.infoText != null)
+            if (this.infoText != null && this.downloader != null)
             {
                 long downloaded = this.downloader.GetDownloadedBytes();
                 long total = this.downloader.GetTotalDownloadSize();

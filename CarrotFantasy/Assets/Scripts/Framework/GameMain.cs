@@ -4,7 +4,13 @@ using UnityEngine;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// AOT 启动壳：先资源更新，再启动热更业务入口。
+    /// AOT 启动壳。
+    /// <para>
+    /// 启动分两段：
+    /// 1. **资源更新**：由 <see cref="UpdateFlow"/> 状态机驱动，<see cref="Update"/> 每帧 Tick，
+    ///    跑到终态（Done / Failed / Cancelled）后状态机自行关闭，之后不再产生任何开销。
+    /// 2. **启动后半段**：Lua 环境初始化 + 业务入口启动，仍是协程（与资源无关，且是纯异步）。
+    /// </para>
     /// </summary>
     public class GameMain : MonoBehaviour
     {
@@ -12,7 +18,15 @@ namespace CarrotFantasy
 
         private AssetBundleManager assetBundleManager;
         private IGameEntry gameEntry;
-        private bool gameEntryStarted;
+
+        /// <summary>资源更新状态机。</summary>
+        private UpdateFlow updateFlow;
+
+        /// <summary>一次性闩锁：保证"启动后半段"只触发一次。</summary>
+        private bool bootStarted;
+
+        /// <summary>业务入口是否已成功启动。</summary>
+        private bool entryStarted;
 
         private void Awake()
         {
@@ -41,24 +55,57 @@ namespace CarrotFantasy
 
         private void Start()
         {
-            this.StartCoroutine(this.BootstrapRoutine());
+            // 创建并启动状态机；之后由 Update 每帧 Tick，不再用协程编排更新流程。
+            this.updateFlow = AotResourceUpdateRunner.CreateFlow(this);
+            this.updateFlow.Start();
         }
 
-        private IEnumerator BootstrapRoutine()
+        private void Update()
         {
-            AotResourceUpdateRunner.Result updateResult = AotResourceUpdateRunner.Result.Failed;
-            yield return AotResourceUpdateRunner.Run(this, result => updateResult = result);
+            // ① 先让下载器等资源系统推进（状态机只读它们的状态，不驱动它们）。
+            AssetBundleManager.Instance?.Update();
+            LuaManager.Tick();
 
-            if (updateResult != AotResourceUpdateRunner.Result.Success)
+            // ② 更新阶段：只推进状态机，不进入业务。
+            if (this.updateFlow != null && this.updateFlow.IsRunning)
             {
-                Debug.LogError($"[GameMain] 资源更新未成功: {updateResult}");
-
-                // 原来这里直接 yield break，真机上就表现为"永久黑屏、没有任何提示"。
-                yield return AotResourceUpdateRunner.ShowFatalErrorDialog(
-                    this,
-                    "资源更新失败（" + updateResult + "），请重启游戏后重试。");
-                yield break;
+                this.updateFlow.Tick();
+                return;
             }
+
+            // ③ 状态机跑完：成功则进启动后半段；失败/取消已由状态机内部弹面板并退出。
+            if (this.updateFlow != null && this.updateFlow.HasFinished && !this.bootStarted)
+            {
+                this.bootStarted = true;
+
+                if (this.updateFlow.Result == AotResourceUpdateRunner.Result.Success)
+                {
+                    this.StartCoroutine(this.ContinueBoot());
+                }
+
+                return;
+            }
+
+            // ④ 业务阶段。
+            if (!this.entryStarted || this.gameEntry == null)
+            {
+                return;
+            }
+
+            this.gameEntry.Tick(Time.deltaTime);
+
+            if (this.gameEntry.IsQuitRequested)
+            {
+                this.OnApplicationQuit();
+            }
+        }
+
+        /// <summary>
+        /// 资源就绪后的启动后半段。保留协程：Lua 初始化是纯异步，与资源更新生命周期无关。
+        /// </summary>
+        private IEnumerator ContinueBoot()
+        {
+            Debug.Log("[GameMain] 资源就绪，开始启动 Lua 与业务入口");
 
             // Lua 环境初始化：失败也不阻断启动，只影响 GM 指令与 Lua 热更逻辑。
             yield return LuaManager.InitializeRoutine(this);
@@ -69,12 +116,12 @@ namespace CarrotFantasy
             {
                 this.gameEntry = new GameEntry();
                 this.gameEntry.Start(this.gameObject);
-                this.gameEntryStarted = true;
+                this.entryStarted = true;
+                Debug.Log("[GameMain] 业务入口已启动");
             }
             catch (System.Exception e)
             {
-                // 异常被吞掉后 gameEntryStarted 会一直是 false，Update 静默 return，
-                // 表现同样是永久黑屏。这里必须让玩家看见原因。
+                // 入口没起来时 Update 会一直静默 return，表现为永久黑屏；这里必须让玩家看见原因。
                 Debug.LogError($"[GameMain] 热更入口启动失败: {e}");
                 entryError = e.Message;
             }
@@ -84,24 +131,6 @@ namespace CarrotFantasy
                 yield return AotResourceUpdateRunner.ShowFatalErrorDialog(
                     this,
                     "热更代码加载失败，请重启游戏后重试。\n" + entryError);
-            }
-        }
-
-        private void Update()
-        {
-            AssetBundleManager.Instance?.Update();
-            LuaManager.Tick();
-
-            if (!this.gameEntryStarted || this.gameEntry == null)
-            {
-                return;
-            }
-
-            this.gameEntry.Tick(Time.deltaTime);
-
-            if (this.gameEntry.IsQuitRequested)
-            {
-                this.OnApplicationQuit();
             }
         }
 

@@ -85,7 +85,8 @@ public class UpdateCheckResult
 }
 
 // 状态机枚举
-public enum CheckerState
+/// <summary>检查器内部状态。仅供本类实现使用；外部一律通过 UpdateFlow 观察流程。</summary>
+internal enum CheckerState
 {
     Idle,                   // 空闲状态
     DownloadingManifest,    // 下载远程清单
@@ -108,6 +109,16 @@ public enum CheckerState
 ///
 /// 校验策略见 CheckBundleIntegrity：默认 HashOnly(MD5)；
 /// LZMA 模式下持久化目录中的已转换文件改用「本地清单源 Hash」比对版本。
+/// </summary>
+/// <summary>
+/// 职责划分（后续可拆成 4 个独立服务，当前先以注释标注归属）：
+///   ManifestFetcher          拉取 + 验签 + 版本接受
+///   LocalManifestStore       本地清单读写 + 客户端版本标记
+///   ManifestDiffer           清单比对（帧内游标推进）
+///   BundleIntegrityVerifier  Size/Hash/ConvertedHash 校验（无状态纯函数）
+/// 
+/// 关键约束：本类**不再对外暴露流程状态**。
+/// CheckerState 已降级为 internal；"走到哪一步"由 UpdateFlow 统一描述。
 /// </summary>
 public class AssetBundleUpdateChecker
 {
@@ -141,7 +152,7 @@ public class AssetBundleUpdateChecker
     private string m_CurrentOperation = "";
 
     // 公共属性
-    public CheckerState CurrentState => m_CurrentState;
+    internal CheckerState CurrentState => m_CurrentState;
     public float Progress => m_Progress;
     public string CurrentOperation => m_CurrentOperation;
     public bool IsRunning => m_CurrentState != CheckerState.Idle &&

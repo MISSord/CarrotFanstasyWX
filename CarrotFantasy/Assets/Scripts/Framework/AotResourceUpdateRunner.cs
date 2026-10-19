@@ -8,8 +8,14 @@ using UnityEditor;
 namespace CarrotFantasy
 {
     /// <summary>
-    /// AOT 侧资源更新：在加载热更 DLL 之前完成 CheckUpdate / Download。
-    /// 使用 <see cref="AotResourcesView"/>（Resources + UINameTable）展示确认/进度/错误界面。
+    /// 启动期资源更新的**入口与工具**。
+    /// <para>
+    /// 流程本身由 <see cref="UpdateFlow"/> 状态机驱动（状态在 <c>UpdateStates.cs</c>）。
+    /// 这里只保留：
+    /// 1. 创建状态机（<see cref="CreateFlow"/>）；
+    /// 2. 远程不可用时的两级回退注入（缓存清单 / 包内基线清单）；
+    /// 3. 结束进程与致命错误面板（面板是协程，供启动后半段复用）。
+    /// </para>
     /// </summary>
     public static class AotResourceUpdateRunner
     {
@@ -21,111 +27,21 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// 执行更新检查与下载。Editor Development/Debug 模式直接成功跳过。
+        /// 创建并返回状态机实例（未启动）。调用方负责每帧 <see cref="UpdateFlow.Tick"/>。
         /// </summary>
-        public static IEnumerator Run(MonoBehaviour host, System.Action<Result> onFinished)
+        public static UpdateFlow CreateFlow(MonoBehaviour host)
         {
-            if (host == null)
+            UpdateContext ctx = new UpdateContext
             {
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
+                Host = host,
+                Parent = host != null ? host.transform : null,
+            };
 
-#if UNITY_EDITOR
-            LoadMode loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-            if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
-            {
-                Debug.Log("[AotResourceUpdateRunner] Editor Dev/Debug：跳过资源更新");
-                onFinished?.Invoke(Result.Success);
-                yield break;
-            }
-
-            if (loadMode == LoadMode.Testing
-                && AssetBundleUpdateChecker.TryBootstrapTestingCheck(out UpdateCheckResult testingResult))
-            {
-                AssetBundleManager.Instance.SetAssetBundleItem(testingResult.customManifest);
-                if (testingResult.hasChanges)
-                {
-                    yield return RunDownloadFlow(host, testingResult, onFinished);
-                }
-                else
-                {
-                    onFinished?.Invoke(Result.Success);
-                }
-
-                yield break;
-            }
-#endif
-
-            bool checkDone = false;
-            UpdateCheckResult checkResult = null;
-            AssetBundleUpdateChecker checker = new AssetBundleUpdateChecker();
-
-            checker.StartUpdateCheck(
-                AssetBundlePathHelper.GetServerLoadUrl(),
-                result =>
-                {
-                    checkResult = result;
-                    checkDone = true;
-                });
-
-            while (!checkDone || checker.IsRunning)
-            {
-                checker.Update();
-                yield return null;
-            }
-
-            // 必须以 isSuccess 为准：Error 可能在 yield 期间由下载协程触发，
-            // 此时循环内缓存的 lastState 可能仍是 DownloadingManifest，不能当作成功。
-            bool checkFailed = checkResult == null || !checkResult.isSuccess;
-            checker.EndCheck();
-
-            if (checkFailed)
-            {
-                if (TryInjectCachedLocalManifest() || TryInjectBundledManifest())
-                {
-                    Debug.LogWarning(
-                        "[AotResourceUpdateRunner] 远程清单检查失败，已回退到本地缓存/内置基线清单");
-                    yield return ShowUpdateListFallbackDialog(host, onFinished);
-                    yield break;
-                }
-
-                Debug.LogError("[AotResourceUpdateRunner] 资源更新检查失败（无可用本地清单）");
-                yield return ShowUpdateListErrorDialog(host);
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
-
-            if (checkResult.customManifest == null
-                || checkResult.customManifest.AssetBundles == null
-                || checkResult.customManifest.AssetBundles.Count == 0)
-            {
-                if (TryInjectCachedLocalManifest() || TryInjectBundledManifest())
-                {
-                    Debug.LogWarning(
-                        "[AotResourceUpdateRunner] 远程清单为空，已回退到本地缓存/内置基线清单");
-                    yield return ShowUpdateListFallbackDialog(host, onFinished);
-                    yield break;
-                }
-
-                Debug.LogError("[AotResourceUpdateRunner] 清单为空，无法继续");
-                yield return ShowUpdateListErrorDialog(host);
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
-
-            if (!checkResult.hasChanges)
-            {
-                AssetBundleManager.Instance.SetAssetBundleItem(checkResult.customManifest);
-                onFinished?.Invoke(Result.Success);
-                yield break;
-            }
-
-            yield return RunDownloadFlow(host, checkResult, onFinished);
+            return UpdateFlow.Create(ctx);
         }
 
         /// <summary>远程不可用且本地无清单时，用包里内置的基线清单兜底（断网首启）。</summary>
-        private static bool TryInjectBundledManifest()
+        internal static bool TryInjectBundledManifest()
         {
             string path = AssetBundlePathHelper.GetStreamingAssetsManifestPath();
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
@@ -167,7 +83,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>远程失败时尝试使用 persistentDataPath 中上次成功保存的清单。</summary>
-        private static bool TryInjectCachedLocalManifest()
+        internal static bool TryInjectCachedLocalManifest()
         {
             string path = AssetBundlePathHelper.GetPersistentManifestPath();
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
@@ -196,167 +112,9 @@ namespace CarrotFantasy
             }
         }
 
-        private static IEnumerator RunDownloadFlow(
-            MonoBehaviour host,
-            UpdateCheckResult checkResult,
-            System.Action<Result> onFinished)
-        {
-            AotBootUi.EnsureEventSystem();
-
-            bool confirmed = false;
-            bool cancelled = false;
-
-            Transform parent = host != null ? host.transform : null;
-            var confirmView = new AotDownloadConfirmView();
-            if (!confirmView.Open(
-                    checkResult.totalDownloadSize,
-                    () => confirmed = true,
-                    () => cancelled = true,
-                    parent))
-            {
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
-
-            while (!confirmed && !cancelled)
-            {
-                yield return null;
-            }
-
-            confirmView.Close();
-
-            if (cancelled)
-            {
-                onFinished?.Invoke(Result.Cancelled);
-                QuitApp();
-                yield break;
-            }
-
-            GameContext context = new GameContext { result = checkResult };
-            AssetBundleDownloader downloader = AssetBundleDownloader.Instance;
-            downloader.Init();
-
-            var progressView = new AotDownloadProgressView();
-            if (!progressView.Open(downloader, parent))
-            {
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
-
-            bool downloadFinished = false;
-            bool downloadSuccess = false;
-            downloader.StartDownload(
-                context,
-                _ => { },
-                success =>
-                {
-                    downloadFinished = true;
-                    downloadSuccess = success;
-                    if (success)
-                    {
-                        AssetBundleUpdateChecker.SaveLocalManifest(checkResult.customManifest);
-                        AssetBundleManager.Instance.SetAssetBundleItem(checkResult.customManifest);
-                        // 清掉远端清单里已经不存在的旧 AB / 旧热更 DLL。
-                        AssetBundleCacheCleaner.CleanObsoleteBundles(checkResult.customManifest);
-                    }
-                });
-
-            // 下载器由 GameMain.Update -> AssetBundleManager.Update 统一驱动，这里只刷新 UI。
-            while (!downloadFinished || downloader.GetLoaderState() != LoaderState.Idle)
-            {
-                progressView.Refresh();
-                yield return null;
-            }
-
-            progressView.Refresh();
-            downloader.EndDownload();
-            progressView.Close();
-
-            if (!downloadSuccess)
-            {
-                Debug.LogError("[AotResourceUpdateRunner] 资源下载失败");
-                yield return ShowFatalErrorDialog(host, "资源下载或校验失败，请检查网络后重试。");
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
-
-            onFinished?.Invoke(Result.Success);
-        }
-
         /// <summary>
-        /// 远程失败但本地有清单：询问是否继续；继续则走后续成功逻辑，退出则结束进程。
-        /// </summary>
-        private static IEnumerator ShowUpdateListFallbackDialog(
-            MonoBehaviour host,
-            System.Action<Result> onFinished)
-        {
-            AotBootUi.EnsureEventSystem();
-
-            bool continueChosen = false;
-            bool exitChosen = false;
-            Transform parent = host != null ? host.transform : null;
-
-            var dialog = new AotUpdateListFallbackView();
-            if (!dialog.Open(
-                    onContinue: () => continueChosen = true,
-                    onExit: () => exitChosen = true,
-                    parent))
-            {
-                onFinished?.Invoke(Result.Failed);
-                yield break;
-            }
-
-            while (!continueChosen && !exitChosen)
-            {
-                yield return null;
-            }
-
-            dialog.Close();
-
-            if (exitChosen)
-            {
-                onFinished?.Invoke(Result.Cancelled);
-                QuitApp();
-                yield break;
-            }
-
-            onFinished?.Invoke(Result.Success);
-        }
-
-        /// <summary>获取热更新列表失败：提示后仅允许退出；重启按钮暂无逻辑。</summary>
-        private static IEnumerator ShowUpdateListErrorDialog(MonoBehaviour host)
-        {
-            AotBootUi.EnsureEventSystem();
-
-            bool exitChosen = false;
-            Transform parent = host != null ? host.transform : null;
-
-            var dialog = new AotUpdateListErrorView();
-            if (!dialog.Open(
-                    onExit: () => exitChosen = true,
-                    onRestart: () =>
-                    {
-                        // TODO: 实现进程级重启；当前按需求点击无反应。
-                    },
-                    parent))
-            {
-                QuitApp();
-                yield break;
-            }
-
-            while (!exitChosen)
-            {
-                yield return null;
-            }
-
-            dialog.Close();
-            QuitApp();
-        }
-
-        /// <summary>
-        /// 致命错误提示：显示错误面板并等待用户点退出。
-        /// 面板故意不关闭——小程序 / WebGL 上 Application.Quit 无效，
-        /// 关掉面板就会留下"永久黑屏且没有任何提示"，所以这里保留错误信息。
+        /// 致命错误面板：提示后退出。等玩家点按，属于"阻塞式"协程，
+        /// 供启动后半段（Lua / 业务入口）复用；更新流程内部的面板由状态机任务实现。
         /// </summary>
         public static IEnumerator ShowFatalErrorDialog(MonoBehaviour host, string message)
         {
@@ -384,7 +142,7 @@ namespace CarrotFantasy
             QuitApp();
         }
 
-        private static void QuitApp()
+        internal static void QuitApp()
         {
 #if UNITY_EDITOR
             EditorApplication.isPlaying = false;

@@ -263,6 +263,36 @@ flowchart TD
     F --> H["重打 bundle → 下载 → 自动解包"]
 ```
 
+### 3.6 启动流程状态机（UpdateFlow）
+
+> 2026-10-19 重构：**状态机成为驱动者**。此前是「协程编排 + 被动记录状态」，
+> 顺序藏在 yield 链里，无法查询下一步、无法停止、协程与 Update 双写状态会互相覆盖。
+
+```
+每个状态 = 一个 IUpdateState（只管"做完没/失败没/下一步去哪"）
+状态内部 = 一个 IUpdateTask（可轮询，不阻塞、不 yield）
+
+Idle(Prepare) → Checking → Confirming → Downloading → Finalizing → Done
+                    ↓            ↓            ↓              ↓
+              CheckFallback   Cancelled     Failed         Failed
+```
+
+| 层 | 角色 | 位置 |
+|---|---|---|
+| 驱动者 | `UpdateFlow`：`Tick()` 每帧推进一步；**终态自动关闭**，之后 Tick 零开销 | `Scripts/Framework/UpdateFlow.cs` |
+| 状态 | `PrepareState` / `CheckState` / `CheckFallbackState` / `ConfirmState` / `DownloadState` / `FinalizeState` / `FailedState` | `Scripts/Framework/UpdateStates.cs` |
+| 任务 | `CheckTask`（包装 checker）/ `FallbackTask` / `ConfirmTask` / `DownloadTask`（只读下载器）/ `ErrorDialogTask` | 同上 |
+| 调用方 | `GameMain.Update()`：先 `AssetBundleManager.Update()`，再 `updateFlow.Tick()` | `Scripts/Framework/GameMain.cs` |
+
+关键契约：
+
+- **只有状态机能推进状态**：状态通过 `StepResult` 回答（`Running / Advance / Fail / Cancel`），转移只发生在 `Tick()`。
+- **任务不阻塞**：`Tick()` 内禁止 `while` 等待、禁止 `yield`；异步完成靠"轮询对象状态"或"回调写字段 + 状态机轮询"。
+- **终态可关闭**：进入 `Done` 即 `Result=Success` 并 `Stop()`；`Failed` 特殊——它要弹面板等玩家点按，
+  所以不是终态，由 `FailedState` 完成交互后才 `Complete(Failed)`。
+- **可诊断**：`LogIfStuck(秒)` + 最近 16 次转移历史（`DumpTrace()`），失败时自动打进日志。
+
+
 ---
 
 ## 4. 关键数据结构
