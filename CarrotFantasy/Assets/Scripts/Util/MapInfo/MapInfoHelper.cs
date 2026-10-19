@@ -13,7 +13,6 @@ namespace CarrotFantasy
         // 第五个为是否解锁 1为是，2为否
 
         private static char bigInfoSplitSign = '#';
-        private static String normalInfoSplitSign = ",";
         private static String blankMapInfo = "#{0},{1},{2},{3},{4}";
 
         private static String[] newInfo = new String[15] {

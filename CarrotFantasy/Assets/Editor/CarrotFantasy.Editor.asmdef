@@ -2,6 +2,7 @@
     "name": "CarrotFantasy.Editor",
     "rootNamespace": "",
     "references": [
+        "Unity.2D.Sprite.Editor",
         "CarrotFantasy",
         "Unity.ThirdParty",
         "CfNet.Generated",
