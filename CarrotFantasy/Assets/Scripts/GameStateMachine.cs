@@ -111,12 +111,6 @@ public class LoginState : BaseGameState
     {
         //loginManager?.UpdateLogin();
 
-        //// 登录成功后进入游戏
-        //if (loginManager != null && loginManager.IsLoginSuccess())
-        //{
-        //    GameStateMachine machine = GameObject.FindObjectOfType<GameStateMachine>();
-        //    machine?.ChangeState(GameState.EnterGame);
-        //}
     }
 
     public override void Exit()
@@ -221,56 +215,3 @@ public class InGameState : IGameState
 
     public GameState GetStateType() => GameState.InGame;
 }
-
-//public class RestartState : IGameState
-//{
-//    public void Enter()
-//    {
-//        Debug.Log("进入重启游戏流程");
-//        // 执行重启逻辑，比如清理资源、重置数据等
-
-//        // 重启完成后回到检测更新状态
-//        GameStateMachine machine = GameObject.FindObjectOfType<GameStateMachine>();
-//        machine?.ChangeState(GameState.CheckUpdate);
-//    }
-
-//    public void Update()
-//    {
-//        // 重启流程通常比较快，可能不需要每帧更新
-//    }
-
-//    public void Exit()
-//    {
-//        Debug.Log("退出重启游戏流程");
-//    }
-
-//    public GameState GetStateType() => GameState.Restart;
-//}
-
-//public class ExitState : IGameState
-//{
-//    public void Enter()
-//    {
-//        Debug.Log("进入游戏退出流程");
-//        // 执行退出逻辑，比如保存数据、清理资源等
-
-//        // 退出游戏
-//#if UNITY_EDITOR
-//        UnityEditor.EditorApplication.isPlaying = false;
-//#else
-//            Application.Quit();
-//#endif
-//    }
-
-//    public void Update()
-//    {
-//        // 退出流程通常不需要更新
-//    }
-
-//    public void Exit()
-//    {
-//        Debug.Log("退出游戏退出流程");
-//    }
-
-//    public GameState GetStateType() => GameState.Exit;
-//}
