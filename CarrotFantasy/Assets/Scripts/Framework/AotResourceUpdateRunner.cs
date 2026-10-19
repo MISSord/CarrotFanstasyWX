@@ -121,18 +121,24 @@ namespace CarrotFantasy
             AotBootUi.EnsureEventSystem();
 
             bool exitChosen = false;
-            Transform parent = host != null ? host.transform : null;
 
-            var dialog = new AotUpdateListErrorView();
+            // 这里没有状态机，临时造一个只带 UI 挂点的上下文即可。
+            UpdateContext ctx = new UpdateContext
+            {
+                Parent = host != null ? host.transform : null,
+            };
 
-            // onRestart 传 null：没有可靠的重启实现时，按钮会被隐藏而不是点了没反应。
-            if (!dialog.Open(message, () => exitChosen = true, null, parent))
+            AotBootPanel panel = AotBootPanel.Ensure(ctx);
+            if (panel == null)
             {
                 // 连面板都开不出来时，至少留下日志并退出，避免静默卡住。
                 Debug.LogError("[AotResourceUpdateRunner] 无法显示错误面板: " + message);
                 QuitApp();
                 yield break;
             }
+
+            panel.ExitChosen += () => exitChosen = true;
+            panel.ShowError(message);
 
             while (!exitChosen)
             {
