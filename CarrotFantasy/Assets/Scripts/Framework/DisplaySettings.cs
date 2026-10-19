@@ -140,7 +140,7 @@ namespace CarrotFantasy
             {
                 cachedResolutions = new[]
                 {
-                    new Resolution { width = Screen.width, height = Screen.height, refreshRate = 60 },
+                    new Resolution { width = Screen.width, height = Screen.height, refreshRateRatio = new RefreshRate { numerator = 60, denominator = 1 } },
                 };
                 return cachedResolutions;
             }
@@ -155,7 +155,7 @@ namespace CarrotFantasy
                 }
 
                 long key = ((long)r.width << 32) | (uint)r.height;
-                if (!map.TryGetValue(key, out Resolution existing) || r.refreshRate > existing.refreshRate)
+                if (!map.TryGetValue(key, out Resolution existing) || r.refreshRateRatio.value > existing.refreshRateRatio.value)
                 {
                     map[key] = r;
                 }
@@ -165,7 +165,7 @@ namespace CarrotFantasy
             {
                 cachedResolutions = new[]
                 {
-                    new Resolution { width = Screen.width, height = Screen.height, refreshRate = 60 },
+                    new Resolution { width = Screen.width, height = Screen.height, refreshRateRatio = new RefreshRate { numerator = 60, denominator = 1 } },
                 };
                 return cachedResolutions;
             }

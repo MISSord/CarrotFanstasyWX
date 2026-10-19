@@ -47,7 +47,7 @@ public class HexWorldMapController : MonoBehaviour
 			mapLayout.Apply();
 			mapLayout.LayoutChanged += HandleLayoutChanged;
 		}
-		cameraPan = FindObjectOfType<HexMapCameraPan>();
+		cameraPan = FindFirstObjectByType<HexMapCameraPan>();
 	}
 
 	void OnDestroy ()

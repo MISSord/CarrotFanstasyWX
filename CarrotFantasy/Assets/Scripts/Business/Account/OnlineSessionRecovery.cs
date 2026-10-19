@@ -39,7 +39,7 @@ namespace CarrotFantasy
         {
             ViewManager.Instance?.CloseAllOpenViews();
 
-            GameMain main = Object.FindObjectOfType<GameMain>();
+            GameMain main = Object.FindFirstObjectByType<GameMain>();
             if (main == null)
             {
                 return;

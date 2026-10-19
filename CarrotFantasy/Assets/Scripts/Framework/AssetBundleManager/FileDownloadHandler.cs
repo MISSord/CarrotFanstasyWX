@@ -49,7 +49,7 @@ public class FileDownloadHandler : DownloadHandlerScript
     }
 
     // 获取下载进度（0.0 到 1.0）
-    public float GetProgress()
+    public new float GetProgress()
     {
         if (expectedContentLength <= 0)
             return 0f;

@@ -197,7 +197,7 @@ public static class GameViewHierarchyPicker
         }
 
         Ray ray = camera.ScreenPointToRay(screenPos);
-        Renderer[] renderers = Object.FindObjectsOfType<Renderer>();
+        Renderer[] renderers = Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
         GameObject best = null;
         float bestDistance = float.MaxValue;
 

@@ -17,7 +17,7 @@ namespace CarrotFantasy
             this.gameObj = GameObject.Find("HexWorldMapRoot");
             if (this.gameObj == null)
             {
-                HexWorldMapController controller = Object.FindObjectOfType<HexWorldMapController>();
+                HexWorldMapController controller = Object.FindFirstObjectByType<HexWorldMapController>();
                 if (controller != null)
                 {
                     this.gameObj = controller.gameObject;
@@ -37,7 +37,7 @@ namespace CarrotFantasy
 
         static void DelayedBindHexMap()
         {
-            HexWorldMapController controller = Object.FindObjectOfType<HexWorldMapController>();
+            HexWorldMapController controller = Object.FindFirstObjectByType<HexWorldMapController>();
             if (controller != null)
             {
                 RoguelikeRunManager.EnsureOn(controller);

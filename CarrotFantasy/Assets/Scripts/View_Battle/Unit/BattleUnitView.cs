@@ -19,7 +19,6 @@ namespace CarrotFantasy
         private Vector3 hidePositon = new Vector3(5000, 5000, 0);
         private UnitTransformComponent transformComponent;
 
-        private bool isPaused = false;
         public bool isVisible; //是否可见
 
         private Vector3 lastPosition;
@@ -37,7 +36,6 @@ namespace CarrotFantasy
             this.unit = battleUnit;
 
             this.unitEventDispatcher = battleUnit.eventDipatcher;
-            this.isPaused = false;
             this.isVisible = true;
             this.transformComponent = (UnitTransformComponent)this.unit.GetComponent(UnitComponentType.TRANSFORM);
         }

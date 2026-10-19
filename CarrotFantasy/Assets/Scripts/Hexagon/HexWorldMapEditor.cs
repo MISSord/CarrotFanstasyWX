@@ -58,7 +58,7 @@ public class HexWorldMapEditor : MonoBehaviour
 
 	void BindCameraPan ()
 	{
-		cameraPan = FindObjectOfType<HexMapCameraPan>();
+		cameraPan = FindFirstObjectByType<HexMapCameraPan>();
 		if (cameraPan != null) {
 			cameraPan.SetInputBlocker(IsPointerOnToolPanel);
 		}

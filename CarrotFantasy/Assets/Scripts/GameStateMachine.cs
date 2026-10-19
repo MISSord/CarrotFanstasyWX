@@ -136,7 +136,7 @@ public class SelectGameModeState : BaseGameState
     public override void Enter()
     {
         Debug.Log("进入游玩模式选择");
-        GameMain main = GameObject.FindObjectOfType<GameMain>();
+        GameMain main = Object.FindFirstObjectByType<GameMain>();
         if (main == null)
         {
             return;

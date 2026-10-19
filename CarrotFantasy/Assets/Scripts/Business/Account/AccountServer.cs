@@ -9,7 +9,6 @@ namespace CarrotFantasy
         private String account;
         private string cachedPassword = string.Empty;
         public long userId { get; private set; }
-        private bool isInit = false;
 
         public static String LOGIN_SUCCESS = "Login_success";
         public static String LOGIN_FAILED = "Login_failed";
@@ -59,7 +58,6 @@ namespace CarrotFantasy
         public void SetAccountId(String id)
         {
             this.account = id;
-            this.isInit = true;
         }
 
         public string GetAccountId()
@@ -71,7 +69,6 @@ namespace CarrotFantasy
         {
             this.account = accout ?? string.Empty;
             this.cachedPassword = password ?? string.Empty;
-            this.isInit = true;
         }
 
         public bool TryReloginWithCachedCredentials()
@@ -171,7 +168,6 @@ namespace CarrotFantasy
             this.userId = 0;
             this.account = string.Empty;
             this.cachedPassword = string.Empty;
-            this.isInit = false;
 
             this.eventDispatcher.DispatchEvent(SESSION_EXPIRED);
 

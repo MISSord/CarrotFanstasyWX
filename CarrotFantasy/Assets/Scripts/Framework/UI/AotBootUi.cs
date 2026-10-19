@@ -8,7 +8,7 @@ namespace CarrotFantasy
     {
         public static void EnsureEventSystem()
         {
-            if (Object.FindObjectOfType<EventSystem>() != null)
+            if (Object.FindFirstObjectByType<EventSystem>() != null)
             {
                 return;
             }

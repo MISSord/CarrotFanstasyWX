@@ -134,7 +134,7 @@ public static class UIPresentationPersistence
 
     static void DetachOverlayFromOtherBaseCameras(Camera overlayCamera, Camera keepBaseCamera)
     {
-        Camera[] cameras = Object.FindObjectsOfType<Camera>();
+        Camera[] cameras = Object.FindObjectsByType<Camera>(FindObjectsSortMode.None);
         for (int i = 0; i < cameras.Length; i++)
         {
             Camera cam = cameras[i];
