@@ -29,12 +29,27 @@ public static class AssetBundleCacheCleaner
         Debug.Log($"[{LogTag}] 缓存已清理");
     }
 
-    /// <summary>客户端整包升级后重置：旧版本的 AB / 热更 DLL / 本地清单全部作废。</summary>
-    public static void ResetDownloadedAssetsForAppVersionChange()
+    /// <summary>
+    /// 客户端整包升级后重置：旧版本的 AB / 热更 DLL / 本地清单全部作废。
+    /// <para>
+    /// 返回 false 表示**没有清理干净**（文件被占用、权限不足等）。
+    /// 调用方据此决定是否写入版本标记——清理失败还写标记的话，下次启动不会再尝试清理，
+    /// 旧 AB 会一直盖住包内基线。
+    /// </para>
+    /// </summary>
+    public static bool ResetDownloadedAssetsForAppVersionChange()
     {
-        ClearDownloadedFiles();
-        ClearLocalManifest();
-        Debug.Log($"[{LogTag}] 客户端版本变化，已清空旧版本 AB 缓存");
+        bool filesCleared = ClearDownloadedFiles();
+        bool manifestCleared = ClearLocalManifest();
+
+        if (filesCleared && manifestCleared)
+        {
+            Debug.Log($"[{LogTag}] 客户端版本变化，已清空旧版本 AB 缓存");
+            return true;
+        }
+
+        Debug.LogWarning($"[{LogTag}] 客户端版本变化，但缓存未清理干净（files={filesCleared}, manifest={manifestCleared}）");
+        return false;
     }
 
     /// <summary>
@@ -115,40 +130,44 @@ public static class AssetBundleCacheCleaner
         return removed;
     }
 
-    static void ClearDownloadedFiles()
+    static bool ClearDownloadedFiles()
     {
         string downloadDir = AssetBundlePathHelper.GetPersistentDownloadDirectory();
         if (!Directory.Exists(downloadDir))
         {
-            return;
+            return true;
         }
 
         try
         {
             Directory.Delete(downloadDir, true);
             Directory.CreateDirectory(downloadDir);
+            return true;
         }
         catch (Exception e)
         {
             Debug.LogWarning($"[{LogTag}] 清理 AB 下载目录失败: {e.Message}");
+            return false;
         }
     }
 
-    static void ClearLocalManifest()
+    static bool ClearLocalManifest()
     {
         string manifestPath = AssetBundlePathHelper.GetPersistentManifestPath();
         if (!File.Exists(manifestPath))
         {
-            return;
+            return true;
         }
 
         try
         {
             File.Delete(manifestPath);
+            return true;
         }
         catch (Exception e)
         {
             Debug.LogWarning($"[{LogTag}] 清理本地清单失败: {e.Message}");
+            return false;
         }
     }
 

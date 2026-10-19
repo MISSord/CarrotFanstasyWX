@@ -455,11 +455,19 @@ public class AssetBundleUpdateChecker
                     Debug.LogWarning(
                         "检测到客户端整包版本变化（标记=" + ReadClientVersionMarker()
                         + ", 当前=" + Application.version + "），清空持久化缓存后重新校验。");
-                    AssetBundleCacheCleaner.ResetDownloadedAssetsForAppVersionChange();
+                    bool cleaned = AssetBundleCacheCleaner.ResetDownloadedAssetsForAppVersionChange();
                     m_LocalManifest = new CustomManifest { AssetBundles = new List<CustomAssetBundleInfo>() };
 
-                    // 立刻更新标记：即使本次下载中途失败，下次启动也不会重复清库。
-                    WriteClientVersionMarker();
+                    if (cleaned)
+                    {
+                        // 清理成功才写标记：本次下载中途失败也不会重复清库。
+                        WriteClientVersionMarker();
+                    }
+                    else
+                    {
+                        // 清理失败时保留旧标记：下次启动会再尝试清理，避免旧 AB 盖住包内基线。
+                        Debug.LogWarning("[AssetBundleUpdateChecker] 旧缓存未清理干净，保留版本标记以便下次启动重试");
+                    }
                 }
                 else
                 {
@@ -965,6 +973,10 @@ public class AssetBundleUpdateChecker
         string manifestPath = Path.Combine(Application.persistentDataPath, "custom_manifest.json");
         try
         {
+            // ConvertedHash / ConvertedSize 是本地专有字段，远程清单里没有；
+            // 整份覆盖会抹掉历史转换记录，下次启动就退化成「文件非空即通过」。
+            MergeConvertedInfoFromLocal(manifestPath, generatedManifest);
+
             WriteManifestAtomically(manifestPath, generatedManifest);
             ClearPendingLocalBundles();
             WriteClientVersionMarker();
@@ -973,6 +985,82 @@ public class AssetBundleUpdateChecker
         catch (Exception e)
         {
             Debug.LogError("保存本地清单失败: " + e.Message);
+        }
+    }
+
+    /// <summary>
+    /// 把旧本地清单里「源 Hash 与将要保存的清单一致」的转换记录合并回来。
+    /// 源 Hash 不同说明远程版本变了，旧的转换结果作废，不能沿用。
+    /// </summary>
+    static void MergeConvertedInfoFromLocal(string manifestPath, CustomManifest target)
+    {
+        if (target == null || target.AssetBundles == null || !File.Exists(manifestPath))
+        {
+            return;
+        }
+
+        CustomManifest local;
+        try
+        {
+            local = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(manifestPath));
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[Manifest] 读取旧本地清单失败，跳过转换记录合并: " + e.Message);
+            return;
+        }
+
+        if (local == null || local.AssetBundles == null)
+        {
+            return;
+        }
+
+        Dictionary<string, CustomAssetBundleInfo> localByName =
+            new Dictionary<string, CustomAssetBundleInfo>(StringComparer.OrdinalIgnoreCase);
+
+        for (int i = 0; i < local.AssetBundles.Count; i++)
+        {
+            CustomAssetBundleInfo info = local.AssetBundles[i];
+            if (info != null && !string.IsNullOrEmpty(info.BundleName))
+            {
+                localByName[info.BundleName] = info;
+            }
+        }
+
+        int merged = 0;
+        for (int i = 0; i < target.AssetBundles.Count; i++)
+        {
+            CustomAssetBundleInfo remote = target.AssetBundles[i];
+            if (remote == null || string.IsNullOrEmpty(remote.BundleName))
+            {
+                continue;
+            }
+
+            CustomAssetBundleInfo old;
+            if (!localByName.TryGetValue(remote.BundleName, out old) || old == null)
+            {
+                continue;
+            }
+
+            // 源 Hash 必须一致：否则远程换了新版本，旧的转换结果已经作废。
+            if (!string.Equals(old.Hash, remote.Hash, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(old.ConvertedHash) || old.ConvertedSize <= 0)
+            {
+                continue;
+            }
+
+            remote.ConvertedHash = old.ConvertedHash;
+            remote.ConvertedSize = old.ConvertedSize;
+            merged++;
+        }
+
+        if (merged > 0)
+        {
+            Debug.Log($"[Manifest] 保留了 {merged} 个包的转换记录（ConvertedHash / ConvertedSize）");
         }
     }
 
