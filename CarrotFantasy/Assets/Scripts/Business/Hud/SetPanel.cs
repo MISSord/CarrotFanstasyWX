@@ -10,10 +10,6 @@ namespace CarrotFantasy
         private const string SpriteMusicOn = "setting02-hd_6";
         private const string SpriteMusicOff = "setting02-hd_11";
 
-        private int stateId;
-        private Vector3 fadePosition = new Vector3(0, 3000, 0);
-        private Vector3 showPosition = Vector3.zero;
-
         // 显示设置草稿（点「应用」后才写入并生效）
         private GameObject displayRootGo;
         private Text txtResolution;
@@ -33,7 +29,6 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.stateId = 1;
             this.LoadResource();
             this.AddListener();
             this.BindDisplaySettingsUi();
@@ -198,13 +193,11 @@ namespace CarrotFantasy
 
         private void ShowOptionPage()
         {
-            this.stateId = 1;
             this.UpdatePagePosition();
         }
 
         private void ShowProducePage()
         {
-            this.stateId = 2;
             this.UpdatePagePosition();
         }
 
