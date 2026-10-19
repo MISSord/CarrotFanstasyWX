@@ -1053,6 +1053,14 @@ public class AssetBundleUpdateChecker
                 continue;
             }
 
+            // 内存里的值优先：本次刚转换过的包（RecordConvertedBundle 已写进 manifest）
+            // 比磁盘上的旧记录更新。用旧值覆盖会导致下次启动拿旧 MD5 校验新文件，
+            // 校验失败后重下、再被覆盖，来回打转。
+            if (!string.IsNullOrEmpty(remote.ConvertedHash) && remote.ConvertedSize > 0)
+            {
+                continue;
+            }
+
             remote.ConvertedHash = old.ConvertedHash;
             remote.ConvertedSize = old.ConvertedSize;
             merged++;

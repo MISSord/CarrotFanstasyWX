@@ -81,6 +81,17 @@ public static class AssetBundleBuildPipeline
             AtlasPackager.PackForAbBuild();
         }
 
+        // —— 步骤 1.5：Lua 脚本包 ——
+        // 必须早于 AB 打包：lua_bundle.bytes 是 AB 的一个资产，漏打的话包里是旧脚本，
+        // 症状是「改了 Lua 没生效」，比打包失败难查得多，所以失败即中止整次打包。
+        if (!CarrotFantasy.Editor.LuaBundleBuilder.Build(out string luaSummary))
+        {
+            Debug.LogError("[AB Build] Lua Bundle 打包失败，已中止：\n" + luaSummary);
+            return result;
+        }
+
+        Debug.Log("[AB Build] " + luaSummary.Replace('\n', ' '));
+
         // —— 步骤 2：打 AB ——
         // ForceRebuild 只能附加，不能替换压缩选项。
         BuildAssetBundleOptions options = AssetBundlePackager.GetCompressionOption(request.Compression);

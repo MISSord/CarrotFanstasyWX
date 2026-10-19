@@ -659,16 +659,21 @@ public class AssetBundleDownloader
             });
         }
 
-        // 不设整批墙钟上限，改用「无进展」看门狗：只要还有任务在完成就不算超时。
+        // 不设整批墙钟上限，改用「无进展」看门狗。
+        // 「有进展」包括两种：有任务完成，或者已下载字节还在涨。
+        // 只看完成数会误杀单个大包：15MB 的 Pack 在 80KB/s 下要 180 秒以上才能下完，
+        // 期间 completedCount 不变，但下载是健康的。
         bool stalled = false;
         int lastCompleted = -1;
+        long lastBytes = -1;
         float lastProgressAt = Time.realtimeSinceStartup;
 
         while (completedCount < totalCount)
         {
-            if (completedCount != lastCompleted)
+            if (completedCount != lastCompleted || downloadedBytes != lastBytes)
             {
                 lastCompleted = completedCount;
+                lastBytes = downloadedBytes;
                 lastProgressAt = Time.realtimeSinceStartup;
             }
             else if (Time.realtimeSinceStartup - lastProgressAt >= BatchStallTimeoutSeconds)
@@ -746,15 +751,17 @@ public class AssetBundleDownloader
             });
         }
 
-        // 同上：不设墙钟上限，只监控「是否有进展」。
+        // 同上：不设墙钟上限，只监控「是否有进展」（完成数或已下载字节任一增长）。
         int lastCompleted = -1;
+        long lastBytes = -1;
         float lastProgressAt = Time.realtimeSinceStartup;
 
         while (completedCount < totalCount)
         {
-            if (completedCount != lastCompleted)
+            if (completedCount != lastCompleted || downloadedBytes != lastBytes)
             {
                 lastCompleted = completedCount;
+                lastBytes = downloadedBytes;
                 lastProgressAt = Time.realtimeSinceStartup;
             }
             else if (Time.realtimeSinceStartup - lastProgressAt >= BatchStallTimeoutSeconds)
