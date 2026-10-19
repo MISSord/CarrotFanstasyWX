@@ -62,7 +62,7 @@ public class LoadModeToolbarEditor : EditorWindow
             alignment = TextAnchor.MiddleCenter
         };
 
-        EditorGUILayout.LabelField("🎮 游戏加载模式设置", titleStyle, GUILayout.Width(200));
+        EditorGUILayout.LabelField("游戏加载模式设置", titleStyle, GUILayout.Width(200));
         GUILayout.FlexibleSpace();
         EditorGUILayout.EndHorizontal();
 
@@ -81,11 +81,15 @@ public class LoadModeToolbarEditor : EditorWindow
         GUILayout.Space(5);
 
         // 创建模式选择按钮
-        DrawModeButton(GameLoadMode.Development, "🛠️ 开发模式", "启用所有调试工具和日志");
-        DrawModeButton(GameLoadMode.Production, "🚀 生产模式", "优化性能，适合发布版本");
-        DrawModeButton(GameLoadMode.Testing, "🧪 测试模式", "Editor 下加载本地 AB 包，不走 AssetDatabase");
-        DrawModeButton(GameLoadMode.Demo, "🎯 演示模式", "平衡性能和功能的演示版本");
-        DrawModeButton(GameLoadMode.DebugMode, "🐛 调试模式", "详细的调试信息和日志");
+        // 注意：编辑器 IMGUI 使用 EditorStyles 默认字体，没有 emoji 字形。
+        // 标签里放 emoji 图标会渲染成 □，并且每帧重绘都会往 Console 刷
+        //   The character with Unicode value ... was not found in the ... font asset
+        // 中文有字形所以显示正常，因此标签一律只用纯文本。
+        DrawModeButton(GameLoadMode.Development, "开发模式", "启用所有调试工具和日志");
+        DrawModeButton(GameLoadMode.Production, "生产模式", "优化性能，适合发布版本");
+        DrawModeButton(GameLoadMode.Testing, "测试模式", "Editor 下加载本地 AB 包，不走 AssetDatabase");
+        DrawModeButton(GameLoadMode.Demo, "演示模式", "平衡性能和功能的演示版本");
+        DrawModeButton(GameLoadMode.DebugMode, "调试模式", "详细的调试信息和日志");
 
         EditorGUILayout.EndVertical();
     }
