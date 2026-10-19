@@ -81,8 +81,7 @@ public static class AssetBundlePackMerger
                     PackSize = zipInfo.Length,
                     PackHash = MD5Checker.ComputeFileMD5(zipPath),
                     BundleNames = binBundles.Select(b => b.BundleName).ToArray(),
-                    // boot 包缺失就进不了游戏，属于关键包；其余包失败可降级。
-                    Critical = group.IsCritical,
+
                 };
                 manifest.DownloadPacks.Add(packInfo);
             }
@@ -133,7 +132,6 @@ public static class AssetBundlePackMerger
             {
                 PackNamePrefix = PackGroupingDefaults.BootPackName,
                 Bundles = bootBundles,
-                IsCritical = true,
             });
         }
 
@@ -286,7 +284,6 @@ public static class AssetBundlePackMerger
     {
         public string PackNamePrefix;
         public List<CustomAssetBundleInfo> Bundles;
-        public bool IsCritical;
     }
 
     class PackBin

@@ -60,8 +60,6 @@ public class DownloadPackInfo
     public long PackSize;
     public string PackHash;
     public string[] BundleNames;
-    /// <summary>关键包：失败则整次更新失败；非关键包失败可降级进游戏，缺的资源走按需下载。</summary>
-    public bool Critical;
 }
 
 /// <summary>

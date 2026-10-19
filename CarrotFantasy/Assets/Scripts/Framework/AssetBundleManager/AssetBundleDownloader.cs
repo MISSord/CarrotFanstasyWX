@@ -52,11 +52,7 @@ public class AssetBundleDownloader
     private const float StallTimeoutSeconds = 25f;
     /// <summary>单次请求绝对上限（秒），防止极端情况下永久挂起；真正判超时以 stall 为主。</summary>
     private const int AbsoluteMaxTimeoutSeconds = 1800;
-    /// <summary>整批下载的安全上限；单个任务仍以 stall 超时为主判据。</summary>
-    private const float BatchTimeoutSeconds = 600f;
     private LoaderState loaderState = LoaderState.None;
-    /// <summary>关键 Pack（boot）失败：只有它为 true 才阻止进入游戏。</summary>
-    private bool criticalPackFailed;
 
     private bool enableLogging = true;
     private List<DownloadTask> activeDownloads = new List<DownloadTask>();
@@ -177,7 +173,6 @@ public class AssetBundleDownloader
     {
         loaderState = LoaderState.Loading;
         activePackOperations = 0;
-        criticalPackFailed = false;
 
         UpdateCheckResult result = context.result;
         CustomManifest custom = result.customManifest;
@@ -433,7 +428,12 @@ public class AssetBundleDownloader
         }
 
         // 下载队列清空后进入 Convert；Pack 解压也算在 Convert 阶段。
-        if (loaderState == LoaderState.Loading && pendingDownloads.Count == 0 && activeDownloads.Count == 0)
+        // 必须连 pendingRetries 一起判断：失败重试还在退避时若提前进入 Convert / Idle，
+        // 上层「下载完成」判定会误以为结束，重试永远等不到。
+        if (loaderState == LoaderState.Loading
+            && pendingDownloads.Count == 0
+            && activeDownloads.Count == 0
+            && pendingRetries.Count == 0)
         {
             loaderState = LoaderState.Convert;
         }
@@ -639,16 +639,10 @@ public class AssetBundleDownloader
             {
                 if (!success)
                 {
-                    if (pack.Critical)
-                    {
-                        criticalPackFailed = true;
-                        LogError($"关键 Pack 下载失败: {pack.PackName}, {message}");
-                    }
-                    else
-                    {
-                        // 非关键包失败不阻止进游戏，缺的资源由按需下载补。
-                        GameLogController.Warning($"非关键 Pack 下载失败，进入游戏后按需补: {pack.PackName}, {message}", LogTag);
-                    }
+                    // 任何 Pack 失败都算整批失败：一旦降级，本地清单会把没下到的包
+                    // 记成最新版本，下次启动据此跳过，问题被藏到运行时缺资源。
+                    allSuccess = false;
+                    LogError($"Pack 下载失败: {pack.PackName}, {message}");
                 }
 
                 completedCount++;
@@ -657,16 +651,11 @@ public class AssetBundleDownloader
             });
         }
 
-        float deadline = Time.realtimeSinceStartup + BatchTimeoutSeconds;
-        while (completedCount < totalCount && Time.realtimeSinceStartup < deadline)
+        // 不设整批墙钟上限：单个任务已由 stall(25s) + 请求绝对上限(1800s) 兜底，
+        // 批次超时只会误杀「慢但一直在下」的大更新。
+        while (completedCount < totalCount)
         {
             yield return null;
-        }
-
-        if (completedCount < totalCount)
-        {
-            LogError($"Pack 批量下载超时: {completedCount}/{totalCount}");
-            allSuccess = false;
         }
 
         // Pack 覆盖不到的 AB 继续按单包下载；这部分失败只降级，不算致命。
@@ -684,7 +673,7 @@ public class AssetBundleDownloader
         AssetBundleUpdateChecker.FlushPendingLocalBundles();
 
         Log($"批量 Pack 下载完成: 成功 {completedCount}/{totalCount}");
-        completeCallback?.Invoke(allSuccess && !criticalPackFailed);
+        completeCallback?.Invoke(allSuccess);
     }
 
     /// <summary>
@@ -731,16 +720,10 @@ public class AssetBundleDownloader
             });
         }
 
-        float deadline = Time.realtimeSinceStartup + BatchTimeoutSeconds;
-        while (completedCount < totalCount && Time.realtimeSinceStartup < deadline)
+        // 同上：交给单包超时兜底，不设整批墙钟上限。
+        while (completedCount < totalCount)
         {
             yield return null;
-        }
-
-        if (completedCount < totalCount)
-        {
-            LogError($"AB 批量下载超时: {completedCount}/{totalCount}");
-            allSuccess = false;
         }
 
         AssetBundleUpdateChecker.FlushPendingLocalBundles();
@@ -1130,11 +1113,6 @@ public class AssetBundleDownloader
 
             task.status = DownloadStatus.Failed;
             task.errorMessage = errorMsg;
-
-            if (task.isPackDownload && task.packInfo != null && task.packInfo.Critical)
-            {
-                criticalPackFailed = true;
-            }
 
             OnDownloadFailed?.Invoke(task.bundleName, errorMsg);
             task.callback?.Invoke(false, errorMsg);
