@@ -52,6 +52,14 @@ public class AssetBundleDownloader
     private const float StallTimeoutSeconds = 25f;
     /// <summary>单次请求绝对上限（秒），防止极端情况下永久挂起；真正判超时以 stall 为主。</summary>
     private const int AbsoluteMaxTimeoutSeconds = 1800;
+    /// <summary>
+    /// 批次「无进展」看门狗（秒）：整批在这段时间内没有任何任务完成，才判定卡死。
+    /// 比整批墙钟上限精确——慢速大更新只要还在完成就不会被误杀；
+    /// 只在协程被掐断、完成回调永不到来这类真正卡死的场景触发。
+    /// 取值必须大于「单包 stall(25s) + 退避上限(30s) × 重试次数」，否则正常重试会被误判
+    /// （3 次重试约 110 秒），故取 180 秒。
+    /// </summary>
+    private const float BatchStallTimeoutSeconds = 180f;
     private LoaderState loaderState = LoaderState.None;
 
     private bool enableLogging = true;
@@ -651,22 +659,40 @@ public class AssetBundleDownloader
             });
         }
 
-        // 不设整批墙钟上限：单个任务已由 stall(25s) + 请求绝对上限(1800s) 兜底，
-        // 批次超时只会误杀「慢但一直在下」的大更新。
+        // 不设整批墙钟上限，改用「无进展」看门狗：只要还有任务在完成就不算超时。
+        bool stalled = false;
+        int lastCompleted = -1;
+        float lastProgressAt = Time.realtimeSinceStartup;
+
         while (completedCount < totalCount)
         {
+            if (completedCount != lastCompleted)
+            {
+                lastCompleted = completedCount;
+                lastProgressAt = Time.realtimeSinceStartup;
+            }
+            else if (Time.realtimeSinceStartup - lastProgressAt >= BatchStallTimeoutSeconds)
+            {
+                LogError($"Pack 批量下载卡死：{BatchStallTimeoutSeconds:F0}s 内无任何任务完成 ({completedCount}/{totalCount})");
+                allSuccess = false;
+                stalled = true;
+                break;
+            }
+
             yield return null;
         }
 
-        // Pack 覆盖不到的 AB 继续按单包下载；这部分失败只降级，不算致命。
-        if (remainingBundles != null && remainingBundles.Length > 0)
+        // 已经卡死就不再尝试补充下载，直接以失败收尾。
+        if (!stalled && remainingBundles != null && remainingBundles.Length > 0)
         {
             bool remainderSuccess = false;
             bool needConvert = currentManifest != null && currentManifest.CompressedFormat == 0;
             yield return DownloadBundlesCoroutine(remainingBundles, needConvert, progressCallback, r => remainderSuccess = r);
             if (!remainderSuccess)
             {
-                GameLogController.Warning("部分补充包下载失败，进入游戏后按需重试", LogTag);
+                // 与 Pack 一致：补充包失败也算整批失败，避免清单与磁盘内容不一致。
+                allSuccess = false;
+                LogError("部分补充包下载失败，整次更新判定失败");
             }
         }
 
@@ -720,9 +746,24 @@ public class AssetBundleDownloader
             });
         }
 
-        // 同上：交给单包超时兜底，不设整批墙钟上限。
+        // 同上：不设墙钟上限，只监控「是否有进展」。
+        int lastCompleted = -1;
+        float lastProgressAt = Time.realtimeSinceStartup;
+
         while (completedCount < totalCount)
         {
+            if (completedCount != lastCompleted)
+            {
+                lastCompleted = completedCount;
+                lastProgressAt = Time.realtimeSinceStartup;
+            }
+            else if (Time.realtimeSinceStartup - lastProgressAt >= BatchStallTimeoutSeconds)
+            {
+                LogError($"AB 批量下载卡死：{BatchStallTimeoutSeconds:F0}s 内无任何任务完成 ({completedCount}/{totalCount})");
+                allSuccess = false;
+                break;
+            }
+
             yield return null;
         }
 
