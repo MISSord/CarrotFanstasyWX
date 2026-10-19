@@ -21,8 +21,11 @@ namespace CarrotFantasy
         /// <summary>等待玩家确认下载。</summary>
         Confirming,
 
-        /// <summary>下载 + 解包 + LZMA→LZ4 转换。</summary>
+        /// <summary>下载 AB 包（下载阶段不解压，避免 IO 过大）。</summary>
         Downloading,
+
+        /// <summary>解压 / LZMA→LZ4 转换 / Pack 解包（下载全部完成后才开始）。</summary>
+        Converting,
 
         /// <summary>收尾：结束下载器、关闭进度面板、保存清单。</summary>
         Finalizing,
@@ -71,8 +74,15 @@ namespace CarrotFantasy
         /// <summary>失败原因（配合 <see cref="StepResult.Fail"/>）。</summary>
         public string Error;
 
+        /// <summary>整段下载（含解压/转换）是否已结束（转换阶段读取）。</summary>
+        public bool DownloadFinished;
+
         /// <summary>本次下载是否成功（Finalize 阶段读取）。</summary>
         public bool DownloadSucceeded;
+
+        /// <summary>下载进度面板：跨 Downloading / Converting 两个状态存活，
+        /// 由 FinalizeState / FailedState 负责关闭。</summary>
+        public AotDownloadProgressView ProgressView;
 
         /// <summary>所属状态机（状态内部用它设置进度/描述/完成）。</summary>
         public UpdateFlow Flow;
@@ -187,6 +197,7 @@ namespace CarrotFantasy
                        || this.State == UpdateFlowState.CheckFallback
                        || this.State == UpdateFlowState.Confirming
                        || this.State == UpdateFlowState.Downloading
+                       || this.State == UpdateFlowState.Converting
                        || this.State == UpdateFlowState.Finalizing;
             }
         }
@@ -223,6 +234,7 @@ namespace CarrotFantasy
             flow.Register(new CheckFallbackState());
             flow.Register(new ConfirmState());
             flow.Register(new DownloadState());
+            flow.Register(new ConvertingState());
             flow.Register(new FinalizeState());
             flow.Register(new FailedState());
 

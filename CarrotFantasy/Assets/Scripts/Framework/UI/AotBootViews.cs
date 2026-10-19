@@ -155,7 +155,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (to == UpdateFlowState.Finalizing)
+            if (to == UpdateFlowState.Converting || to == UpdateFlowState.Finalizing)
             {
                 this.statusText.text = "解压中，请稍候...";
             }
@@ -191,14 +191,15 @@ namespace CarrotFantasy
 
             UpdateFlowState state = this.flow != null ? this.flow.State : UpdateFlowState.Downloading;
 
-            if (state == UpdateFlowState.Finalizing
+            if (state == UpdateFlowState.Converting
+                || state == UpdateFlowState.Finalizing
                 || state == UpdateFlowState.Done)
             {
                 if (this.statusText != null)
                 {
-                    this.statusText.text = state == UpdateFlowState.Finalizing
-                        ? "解压中，请稍候..."
-                        : "下载完成，准备进入游戏";
+                    this.statusText.text = state == UpdateFlowState.Done
+                        ? "下载完成，准备进入游戏"
+                        : "解压中，请稍候...";
                     this.statusText.gameObject.SetActive(true);
                 }
 

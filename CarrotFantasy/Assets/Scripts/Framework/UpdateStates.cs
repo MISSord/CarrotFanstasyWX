@@ -96,6 +96,10 @@ namespace CarrotFantasy
 
             if (!this.task.IsDone)
             {
+                // 子阶段（下载清单 → 比对 → 校验）检查器已经暴露，直接映射到状态机的
+                // 描述与进度，不必为此新增状态。
+                ctx.Flow.SetOperation(this.task.Operation);
+                ctx.Flow.SetProgress(this.task.Progress);
                 ctx.Flow.LogIfStuck(30f);
                 return StepResult.Running;
             }
@@ -255,15 +259,16 @@ namespace CarrotFantasy
             {
                 this.openFailed = true;
             }
+
+            // 面板要跨到 Converting 阶段继续显示，放进 ctx 交给后续状态关闭。
+            ctx.ProgressView = this.progressView;
         }
 
         public void Exit(UpdateContext ctx)
         {
-            if (this.progressView != null)
-            {
-                this.progressView.Close();
-                this.progressView = null;
-            }
+            // 进度面板不在这里关闭：解压阶段还要继续显示，
+            // 由 FinalizeState / FailedState 统一收尾。
+            this.progressView = null;
 
             if (this.task != null)
             {
@@ -294,9 +299,59 @@ namespace CarrotFantasy
                 return StepResult.Running;
             }
 
-            ctx.DownloadSucceeded = this.task.IsSucceeded;
-            ctx.NextState = UpdateFlowState.Finalizing;
+            // 下载器「下载阶段不解压」，进入 Convert 说明还有一整段解压/转换要做，
+            // 因此这里分流到独立的 Converting 状态，而不是直接进 Finalizing。
+            ctx.NextState = this.task.CurrentLoaderState == LoaderState.Convert
+                ? UpdateFlowState.Converting
+                : UpdateFlowState.Finalizing;
             return StepResult.Advance;
+        }
+    }
+
+    /// <summary>
+    /// 解压 / 转换阶段：下载全部完成后才开始（下载期间不解压，避免 IO 过大）。
+    /// 转换任务完成后才触发下载完成回调，所以这里以「回调到达 + 下载器回 Idle」为退出条件。
+    /// </summary>
+    internal sealed class ConvertingState : IUpdateState
+    {
+        public UpdateFlowState Id
+        {
+            get { return UpdateFlowState.Converting; }
+        }
+
+        public void Enter(UpdateContext ctx)
+        {
+            ctx.Flow.SetOperation("解压中，请稍候...");
+            ctx.Flow.SetProgress(1f);
+        }
+
+        public void Exit(UpdateContext ctx)
+        {
+        }
+
+        public StepResult Tick(UpdateContext ctx)
+        {
+            AssetBundleDownloader downloader = ctx.Downloader;
+            if (downloader == null)
+            {
+                ctx.Error = "下载器为空，无法解压";
+                return StepResult.Fail;
+            }
+
+            if (ctx.ProgressView != null)
+            {
+                ctx.ProgressView.Refresh();
+            }
+
+            if (ctx.DownloadFinished && downloader.GetLoaderState() == LoaderState.Idle)
+            {
+                ctx.NextState = UpdateFlowState.Finalizing;
+                return StepResult.Advance;
+            }
+
+            // 解压/转换的单包超时阈值与下载不同，单独设。
+            ctx.Flow.LogIfStuck(60f);
+            return StepResult.Running;
         }
     }
 
@@ -314,6 +369,12 @@ namespace CarrotFantasy
         {
             ctx.Flow.SetOperation("收尾：结束下载器");
             ctx.Flow.SetProgress(1f);
+
+            if (ctx.ProgressView != null)
+            {
+                ctx.ProgressView.Close();
+                ctx.ProgressView = null;
+            }
         }
 
         public void Exit(UpdateContext ctx)
@@ -355,6 +416,12 @@ namespace CarrotFantasy
 
         public void Enter(UpdateContext ctx)
         {
+            if (ctx.ProgressView != null)
+            {
+                ctx.ProgressView.Close();
+                ctx.ProgressView = null;
+            }
+
             ctx.Flow.SetOperation(string.IsNullOrEmpty(ctx.Error) ? "资源更新失败" : ctx.Error);
             this.task = new ErrorDialogTask();
             this.task.Start(ctx);
@@ -404,6 +471,18 @@ namespace CarrotFantasy
         public bool IsSucceeded
         {
             get { return this.result != null && this.result.isSuccess; }
+        }
+
+        /// <summary>子阶段进度（直接读检查器，不做拷贝）。</summary>
+        public float Progress
+        {
+            get { return this.checker != null ? this.checker.Progress : 0f; }
+        }
+
+        /// <summary>子阶段描述，如"对比清单文件... (37/120)"。</summary>
+        public string Operation
+        {
+            get { return this.checker != null ? this.checker.CurrentOperation : string.Empty; }
         }
 
         public string Error { get; private set; }
@@ -580,14 +659,23 @@ namespace CarrotFantasy
     {
         private bool finished;
         private bool success;
-        private bool idle;
-        private bool convertNoted;
 
         public float Progress { get; private set; }
 
+        /// <summary>下载器当前阶段（None / Loading / Convert / Idle）。</summary>
+        public LoaderState CurrentLoaderState { get; private set; }
+
+        /// <summary>
+        /// 下载阶段是否结束：进入 Convert（下载全部完成，开始解压）或直接 Idle（无需解压）。
+        /// 不能用 success/finished 判断——它们要等「转换全部结束」才会被回调。
+        /// </summary>
         public bool IsDone
         {
-            get { return this.finished && this.idle; }
+            get
+            {
+                return this.CurrentLoaderState == LoaderState.Convert
+                       || this.CurrentLoaderState == LoaderState.Idle;
+            }
         }
 
         public bool IsSucceeded
@@ -610,8 +698,13 @@ namespace CarrotFantasy
                 _ => { },
                 ok =>
                 {
+                    // 这个回调要等「下载 + 解压/转换」全部结束才触发
+                    // （需要转换的包会把 callback 转交给 ConvertTask），
+                    // 所以它代表整段流程完成，而不是下载完成。
                     this.success = ok;
                     this.finished = true;
+                    ctx.DownloadFinished = true;
+                    ctx.DownloadSucceeded = ok;
 
                     if (!ok || ctx.CheckResult == null)
                     {
@@ -630,21 +723,12 @@ namespace CarrotFantasy
             AssetBundleDownloader downloader = ctx.Downloader;
             if (downloader == null)
             {
-                this.idle = true;
+                this.CurrentLoaderState = LoaderState.Idle;
                 return;
             }
 
             this.Progress = downloader.GetTotalProgress();
-
-            LoaderState state = downloader.GetLoaderState();
-
-            if (state == LoaderState.Convert && !this.convertNoted)
-            {
-                this.convertNoted = true;
-                ctx.Flow.SetOperation("解压中，请稍候...");
-            }
-
-            this.idle = state == LoaderState.Idle;
+            this.CurrentLoaderState = downloader.GetLoaderState();
 
             if (this.finished && !this.success)
             {
