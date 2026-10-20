@@ -91,7 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: antiboss1-hd_17
-  _lastRecordedSpriteInstanceId: 24218
+  _lastRecordedSpriteInstanceId: 48966
 --- !u!1 &1062324103668222
 GameObject:
   m_ObjectHideFlags: 0
@@ -181,9 +181,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/antiboss1-hd_0
-  defaultAssetName: antiboss1-hd_0
-  _lastRecordedSpriteInstanceId: 24268
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1093044292909406
 GameObject:
   m_ObjectHideFlags: 0
@@ -275,7 +275,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: allclear
-  _lastRecordedSpriteInstanceId: 24216
+  _lastRecordedSpriteInstanceId: 47752
 --- !u!1 &1133735313546436
 GameObject:
   m_ObjectHideFlags: 0
@@ -715,7 +715,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_42
-  _lastRecordedSpriteInstanceId: 23336
+  _lastRecordedSpriteInstanceId: 48964
 --- !u!1 &1468780664675684
 GameObject:
   m_ObjectHideFlags: 0
@@ -919,7 +919,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: antiboss1-hd_16
-  _lastRecordedSpriteInstanceId: 24206
+  _lastRecordedSpriteInstanceId: 48948
 --- !u!1 &1604990301032656
 GameObject:
   m_ObjectHideFlags: 0
@@ -1011,7 +1011,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: antiboss_bg-hd_14
-  _lastRecordedSpriteInstanceId: 24214
+  _lastRecordedSpriteInstanceId: 48962
 --- !u!1 &1614116453138074
 GameObject:
   m_ObjectHideFlags: 0
@@ -1103,7 +1103,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: antiboss1-hd_19
-  _lastRecordedSpriteInstanceId: 24212
+  _lastRecordedSpriteInstanceId: 48958
 --- !u!1 &1614895023562082
 GameObject:
   m_ObjectHideFlags: 0
@@ -1294,7 +1294,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: antiboss_bg-hd_23
-  _lastRecordedSpriteInstanceId: 24174
+  _lastRecordedSpriteInstanceId: 48950
 --- !u!1 &1724100769568754
 GameObject:
   m_ObjectHideFlags: 0
@@ -1386,7 +1386,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: antiboss_bg-hd_3
-  _lastRecordedSpriteInstanceId: 24210
+  _lastRecordedSpriteInstanceId: 48954
 --- !u!1 &1768625630286492
 GameObject:
   m_ObjectHideFlags: 0
@@ -1864,7 +1864,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_41
-  _lastRecordedSpriteInstanceId: 23342
+  _lastRecordedSpriteInstanceId: 48956
 --- !u!1 &1972517742059322
 GameObject:
   m_ObjectHideFlags: 0
@@ -1956,7 +1956,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: stages_bg-hd_30
-  _lastRecordedSpriteInstanceId: 24208
+  _lastRecordedSpriteInstanceId: 48952
 --- !u!1 &225660621730019570
 GameObject:
   m_ObjectHideFlags: 0
@@ -1968,7 +1968,7 @@ GameObject:
   - component: {fileID: 4623787977741825033}
   - component: {fileID: 8395781485207977421}
   - component: {fileID: 4203839200776624005}
-  - component: {fileID: 376060811637910831}
+  - component: {fileID: 7983007781288764041}
   m_Layer: 5
   m_Name: RawImage
   m_TagString: Untagged
@@ -2031,7 +2031,7 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
---- !u!114 &376060811637910831
+--- !u!114 &7983007781288764041
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2040,9 +2040,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 225660621730019570}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/antiboss_bg-hd_0
   defaultAssetName: antiboss_bg-hd_0
-  _lastRecordedSpriteInstanceId: 24102
+  _lastRecordedTextureInstanceId: 48968

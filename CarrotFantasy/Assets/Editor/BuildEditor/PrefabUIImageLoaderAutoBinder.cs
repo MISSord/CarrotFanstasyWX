@@ -34,6 +34,12 @@ public static class PrefabUIImageLoaderAutoBinder
         }
 
         bool changed = false;
+
+        // 旧版工具把 UIImageLoader 挂到了 RawImage 等非 Image 对象上（它只认 Image），
+        // 属于无效组件：EnsureGraphicBinding 永远拿不到 targetImage，AB 字段也会被清空。
+        // 这里顺手清掉，避免每个面板都挂着空转的组件。
+        changed |= RemoveInvalidImageLoaders(prefabRoot);
+
         Graphic[] graphics = prefabRoot.GetComponentsInChildren<Graphic>(true);
         for (int i = 0; i < graphics.Length; i++)
         {
@@ -81,6 +87,26 @@ public static class PrefabUIImageLoaderAutoBinder
         }
 
         return changed;
+    }
+
+    /// <summary>清理挂在非 Image 对象上的 UIImageLoader（旧版工具的产物）。</summary>
+    private static bool RemoveInvalidImageLoaders(GameObject prefabRoot)
+    {
+        UIImageLoader[] loaders = prefabRoot.GetComponentsInChildren<UIImageLoader>(true);
+        bool removed = false;
+        for (int i = 0; i < loaders.Length; i++)
+        {
+            UIImageLoader loader = loaders[i];
+            if (loader == null || loader.GetComponent<Image>() != null)
+            {
+                continue;
+            }
+
+            UnityEngine.Object.DestroyImmediate(loader, true);
+            removed = true;
+        }
+
+        return removed;
     }
 
     internal static bool IsProcessingWillSave()

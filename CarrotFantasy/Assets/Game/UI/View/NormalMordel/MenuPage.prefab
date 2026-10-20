@@ -10,8 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 5256675363015372515}
   - component: {fileID: 5258091259969919097}
-  - component: {fileID: 725916874053703510}
   - component: {fileID: 3251266767178767860}
+  - component: {fileID: 3781497012678698749}
   m_Layer: 5
   m_Name: rawimg_bg
   m_TagString: Untagged
@@ -47,21 +47,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5469798933069539315}
   m_CullTransparentMesh: 0
---- !u!114 &725916874053703510
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5469798933069539315}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/gamemenu-hd_0
-  defaultAssetName: gamemenu-hd_0
-  _lastRecordedSpriteInstanceId: 38702
 --- !u!114 &3251266767178767860
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -89,6 +74,21 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
+--- !u!114 &3781497012678698749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5469798933069539315}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedTextureInstanceId: 0
 --- !u!1 &5470108669934287339
 GameObject:
   m_ObjectHideFlags: 0
@@ -235,9 +235,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/gamemenu-hd
-  defaultAssetName: gamemenu-hd_5
-  _lastRecordedSpriteInstanceId: 27432
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &5470387978477980117
 GameObject:
   m_ObjectHideFlags: 0
@@ -444,9 +444,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/gamemenu-hd_2
-  defaultAssetName: gamemenu-hd_2
-  _lastRecordedSpriteInstanceId: 38740
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &5471367765816611137
 GameObject:
   m_ObjectHideFlags: 0
@@ -593,6 +593,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/gamemenu-hd
-  defaultAssetName: gamemenu-hd_6
-  _lastRecordedSpriteInstanceId: 27434
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0

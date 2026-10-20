@@ -148,7 +148,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_48
-  _lastRecordedSpriteInstanceId: 40004
+  _lastRecordedSpriteInstanceId: 54614
 --- !u!1 &1114682092639218
 GameObject:
   m_ObjectHideFlags: 0
@@ -297,7 +297,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: btn_return
-  _lastRecordedSpriteInstanceId: 39994
+  _lastRecordedSpriteInstanceId: 54602
 --- !u!1 &1139911536846220
 GameObject:
   m_ObjectHideFlags: 0
@@ -389,7 +389,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_2
-  _lastRecordedSpriteInstanceId: 40038
+  _lastRecordedSpriteInstanceId: 54608
 --- !u!1 &1149227691287700
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,8 +400,8 @@ GameObject:
   m_Component:
   - component: {fileID: 224775867125511912}
   - component: {fileID: 222977553516347020}
-  - component: {fileID: 7277331973074943328}
   - component: {fileID: 6287929009069724103}
+  - component: {fileID: 5822579523605588947}
   m_Layer: 5
   m_Name: OptionPage
   m_TagString: Untagged
@@ -442,21 +442,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1149227691287700}
   m_CullTransparentMesh: 0
---- !u!114 &7277331973074943328
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1149227691287700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultBundleName: 
-  defaultAssetName: 
-  _lastRecordedSpriteInstanceId: 0
 --- !u!114 &6287929009069724103
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -484,6 +469,21 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
+--- !u!114 &5822579523605588947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1149227691287700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedTextureInstanceId: 0
 --- !u!1 &1242220006456296
 GameObject:
   m_ObjectHideFlags: 0
@@ -700,7 +700,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_15
-  _lastRecordedSpriteInstanceId: 40002
+  _lastRecordedSpriteInstanceId: 54612
 --- !u!1 &1685372121190142
 GameObject:
   m_ObjectHideFlags: 0
@@ -837,7 +837,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_6
-  _lastRecordedSpriteInstanceId: 39996
+  _lastRecordedSpriteInstanceId: 54604
 --- !u!1 &1827840995576408
 GameObject:
   m_ObjectHideFlags: 0
@@ -929,7 +929,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_0
-  _lastRecordedSpriteInstanceId: 40040
+  _lastRecordedSpriteInstanceId: 54616
 --- !u!1 &1991779740775686
 GameObject:
   m_ObjectHideFlags: 0
@@ -1066,7 +1066,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/settingview/images_atlas
   defaultAssetName: setting02-hd_45
-  _lastRecordedSpriteInstanceId: 39998
+  _lastRecordedSpriteInstanceId: 54606
 --- !u!1 &761530719378425103
 GameObject:
   m_ObjectHideFlags: 0
@@ -2239,7 +2239,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: btn_normal
-  _lastRecordedSpriteInstanceId: 46518
+  _lastRecordedSpriteInstanceId: 48706
 --- !u!114 &6779987652969911560
 MonoBehaviour:
   m_ObjectHideFlags: 0

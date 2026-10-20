@@ -149,7 +149,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_32
-  _lastRecordedSpriteInstanceId: 23212
+  _lastRecordedSpriteInstanceId: 49668
 --- !u!114 &2955495010811897538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,7 +383,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_26
-  _lastRecordedSpriteInstanceId: 23222
+  _lastRecordedSpriteInstanceId: 49672
 --- !u!114 &8123992239159800648
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -626,7 +626,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_1
-  _lastRecordedSpriteInstanceId: 23228
+  _lastRecordedSpriteInstanceId: 49674
 --- !u!1 &3765526303574767443
 GameObject:
   m_ObjectHideFlags: 0
@@ -638,7 +638,7 @@ GameObject:
   - component: {fileID: 2936640417062827037}
   - component: {fileID: 5070874722503370246}
   - component: {fileID: 2874591995106453389}
-  - component: {fileID: 5336218248008069992}
+  - component: {fileID: 4422433827011683165}
   m_Layer: 5
   m_Name: RawImage
   m_TagString: Untagged
@@ -701,7 +701,7 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
---- !u!114 &5336218248008069992
+--- !u!114 &4422433827011683165
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -710,12 +710,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 3765526303574767443}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/stages_bg-hd_0
   defaultAssetName: stages_bg-hd_0
-  _lastRecordedSpriteInstanceId: 23238
+  _lastRecordedTextureInstanceId: 49664
 --- !u!1 &5161565909190315285
 GameObject:
   m_ObjectHideFlags: 0
@@ -903,7 +903,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_41
-  _lastRecordedSpriteInstanceId: 23246
+  _lastRecordedSpriteInstanceId: 48956
 --- !u!1 &7443709657981402647
 GameObject:
   m_ObjectHideFlags: 0
@@ -1052,7 +1052,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_42
-  _lastRecordedSpriteInstanceId: 23240
+  _lastRecordedSpriteInstanceId: 48964
 --- !u!1 &7443717128759601441
 GameObject:
   m_ObjectHideFlags: 0
@@ -1144,4 +1144,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption2/images_atlas
   defaultAssetName: stages_bg-hd_32
-  _lastRecordedSpriteInstanceId: 23248
+  _lastRecordedSpriteInstanceId: 49680

@@ -308,7 +308,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover-hd_3
-  _lastRecordedSpriteInstanceId: 27160
+  _lastRecordedSpriteInstanceId: 48224
 --- !u!1 &2604450851061851699
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,7 +457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover-hd_0
-  _lastRecordedSpriteInstanceId: 27148
+  _lastRecordedSpriteInstanceId: 48244
 --- !u!1 &2604598525948915173
 GameObject:
   m_ObjectHideFlags: 0
@@ -615,7 +615,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: carrot_2
-  _lastRecordedSpriteInstanceId: 27588
+  _lastRecordedSpriteInstanceId: 49216
 --- !u!1 &2605000173524846613
 GameObject:
   m_ObjectHideFlags: 0
@@ -627,7 +627,7 @@ GameObject:
   - component: {fileID: 2827327462006938559}
   - component: {fileID: 2825584538218476295}
   - component: {fileID: 1597380157907814577}
-  - component: {fileID: 8139871359598829727}
+  - component: {fileID: 1497541002778222663}
   m_Layer: 5
   m_Name: RawImg_BG
   m_TagString: Untagged
@@ -690,7 +690,7 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
---- !u!114 &8139871359598829727
+--- !u!114 &1497541002778222663
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -699,9 +699,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2605000173524846613}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/gameover0-hd_9
   defaultAssetName: gameover0-hd_9
-  _lastRecordedSpriteInstanceId: 27402
+  _lastRecordedTextureInstanceId: 49214

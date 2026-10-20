@@ -136,7 +136,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: btn_help
-  _lastRecordedSpriteInstanceId: 28488
+  _lastRecordedSpriteInstanceId: 48714
 --- !u!1 &1028903024054316
 GameObject:
   m_ObjectHideFlags: 0
@@ -171,7 +171,7 @@ RectTransform:
   - {fileID: 4698709426105326190}
   - {fileID: 2320838552491114586}
   m_Father: {fileID: 0}
-  m_RootOrder: -1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -300,7 +300,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: flymonster
-  _lastRecordedSpriteInstanceId: 28512
+  _lastRecordedSpriteInstanceId: 48708
 --- !u!1 &1200737407963828
 GameObject:
   m_ObjectHideFlags: 0
@@ -392,7 +392,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: leaf1
-  _lastRecordedSpriteInstanceId: 28500
+  _lastRecordedSpriteInstanceId: 48712
 --- !u!1 &1231001879295710
 GameObject:
   m_ObjectHideFlags: 0
@@ -484,7 +484,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: leaf3
-  _lastRecordedSpriteInstanceId: 28498
+  _lastRecordedSpriteInstanceId: 48704
 --- !u!1 &1283307548845210
 GameObject:
   m_ObjectHideFlags: 0
@@ -576,7 +576,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: cloud
-  _lastRecordedSpriteInstanceId: 28518
+  _lastRecordedSpriteInstanceId: 48728
 --- !u!1 &1359254519708610
 GameObject:
   m_ObjectHideFlags: 0
@@ -727,7 +727,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: btn_normal
-  _lastRecordedSpriteInstanceId: 28510
+  _lastRecordedSpriteInstanceId: 48706
 --- !u!114 &7730640484790419988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -960,7 +960,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/monsternet/images_atlas
   defaultAssetName: close_normal
-  _lastRecordedSpriteInstanceId: 28516
+  _lastRecordedSpriteInstanceId: 48724
 --- !u!1 &1627964372533596
 GameObject:
   m_ObjectHideFlags: 0
@@ -1110,7 +1110,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: btn_normal
-  _lastRecordedSpriteInstanceId: 28510
+  _lastRecordedSpriteInstanceId: 48706
 --- !u!1 &1667325082287264
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,7 +1121,6 @@ GameObject:
   m_Component:
   - component: {fileID: 224067748225224156}
   - component: {fileID: 222671448101219424}
-  - component: {fileID: 9049916659204182132}
   - component: {fileID: 6802493459274729928}
   - component: {fileID: 4756111592957926971}
   m_Layer: 5
@@ -1159,21 +1158,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1667325082287264}
   m_CullTransparentMesh: 0
---- !u!114 &9049916659204182132
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1667325082287264}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultBundleName: 
-  defaultAssetName: 
-  _lastRecordedSpriteInstanceId: 0
 --- !u!114 &6802493459274729928
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1215,7 +1199,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/maintitle
   defaultAssetName: maintitle
-  _lastRecordedTextureInstanceId: 28496
+  _lastRecordedTextureInstanceId: 48730
 --- !u!1 &1803117802962108
 GameObject:
   m_ObjectHideFlags: 0
@@ -1307,7 +1291,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: carrotbody
-  _lastRecordedSpriteInstanceId: 28502
+  _lastRecordedSpriteInstanceId: 48716
 --- !u!1 &1851339160123426
 GameObject:
   m_ObjectHideFlags: 0
@@ -1444,7 +1428,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: btn_setlight
-  _lastRecordedSpriteInstanceId: 28494
+  _lastRecordedSpriteInstanceId: 48718
 --- !u!1 &1969897163301580
 GameObject:
   m_ObjectHideFlags: 0
@@ -1536,7 +1520,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: leaf2
-  _lastRecordedSpriteInstanceId: 28504
+  _lastRecordedSpriteInstanceId: 48722
 --- !u!1 &740705278202063576
 GameObject:
   m_ObjectHideFlags: 0
@@ -1886,7 +1870,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/mainview/images_atlas
   defaultAssetName: btn_normal
-  _lastRecordedSpriteInstanceId: 28510
+  _lastRecordedSpriteInstanceId: 48706
 --- !u!1 &4530780191319591703
 GameObject:
   m_ObjectHideFlags: 0
@@ -1975,7 +1959,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/mainbg
   defaultAssetName: mainbg
-  _lastRecordedTextureInstanceId: 28506
+  _lastRecordedTextureInstanceId: 48732
 --- !u!1 &4575523279557376594
 GameObject:
   m_ObjectHideFlags: 0
