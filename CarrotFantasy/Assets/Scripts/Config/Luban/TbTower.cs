@@ -15,13 +15,13 @@ namespace cfg
 {
 public partial class TbTower
 {
-    private readonly System.Collections.Generic.Dictionary<int, TowerDef> _dataMap;
     private readonly System.Collections.Generic.List<TowerDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, TowerDef> _dataMap_TowerId;
+
     public TbTower(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, TowerDef>(count);
         _dataList = new System.Collections.Generic.List<TowerDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -29,17 +29,18 @@ public partial class TbTower
             TowerDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.TowerDef.DeserializeTowerDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.TowerId, _v);
+        }
+        _dataMap_TowerId = new System.Collections.Generic.Dictionary<int, TowerDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_TowerId.Add(_v.TowerId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, TowerDef> DataMap => _dataMap;
     public System.Collections.Generic.List<TowerDef> DataList => _dataList;
 
-    public TowerDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public TowerDef Get(int key) => _dataMap[key];
-    public TowerDef this[int key] => _dataMap[key];
-
+    public TowerDef GetByTowerId(int key) => _dataMap_TowerId.TryGetValue(key, out TowerDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -47,7 +48,6 @@ public partial class TbTower
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

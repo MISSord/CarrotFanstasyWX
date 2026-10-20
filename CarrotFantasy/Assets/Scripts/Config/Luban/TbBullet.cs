@@ -15,13 +15,13 @@ namespace cfg
 {
 public partial class TbBullet
 {
-    private readonly System.Collections.Generic.Dictionary<int, BulletDef> _dataMap;
     private readonly System.Collections.Generic.List<BulletDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, BulletDef> _dataMap_BulletId;
+
     public TbBullet(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, BulletDef>(count);
         _dataList = new System.Collections.Generic.List<BulletDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -29,17 +29,18 @@ public partial class TbBullet
             BulletDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.BulletDef.DeserializeBulletDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.BulletId, _v);
+        }
+        _dataMap_BulletId = new System.Collections.Generic.Dictionary<int, BulletDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_BulletId.Add(_v.BulletId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, BulletDef> DataMap => _dataMap;
     public System.Collections.Generic.List<BulletDef> DataList => _dataList;
 
-    public BulletDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public BulletDef Get(int key) => _dataMap[key];
-    public BulletDef this[int key] => _dataMap[key];
-
+    public BulletDef GetByBulletId(int key) => _dataMap_BulletId.TryGetValue(key, out BulletDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -47,7 +48,6 @@ public partial class TbBullet
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

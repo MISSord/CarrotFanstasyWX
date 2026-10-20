@@ -15,13 +15,13 @@ namespace cfg
 {
 public partial class TbItem
 {
-    private readonly System.Collections.Generic.Dictionary<int, ItemDef> _dataMap;
     private readonly System.Collections.Generic.List<ItemDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, ItemDef> _dataMap_ItemTypeId;
+
     public TbItem(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, ItemDef>(count);
         _dataList = new System.Collections.Generic.List<ItemDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -29,17 +29,18 @@ public partial class TbItem
             ItemDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.ItemDef.DeserializeItemDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.ItemTypeId, _v);
+        }
+        _dataMap_ItemTypeId = new System.Collections.Generic.Dictionary<int, ItemDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_ItemTypeId.Add(_v.ItemTypeId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, ItemDef> DataMap => _dataMap;
     public System.Collections.Generic.List<ItemDef> DataList => _dataList;
 
-    public ItemDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public ItemDef Get(int key) => _dataMap[key];
-    public ItemDef this[int key] => _dataMap[key];
-
+    public ItemDef GetByItemTypeId(int key) => _dataMap_ItemTypeId.TryGetValue(key, out ItemDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -47,7 +48,6 @@ public partial class TbItem
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

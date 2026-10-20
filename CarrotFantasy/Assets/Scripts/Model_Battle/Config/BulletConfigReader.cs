@@ -37,7 +37,9 @@ namespace CarrotFantasy
 
         static Dictionary<string, Fix64> ToBirthParam(BulletDef def)
         {
-            TowerDef towerDef = LubanConfigLoader.Tables.TbTower.GetOrDefault(def.TowerId);
+            // list 模式下 Luban 仍生成按索引查的方法，只是名字从 Get/GetOrDefault
+            // 改成了 GetBy<索引字段>（见 TbTower.GetByTowerId）。
+            TowerDef towerDef = LubanConfigLoader.Tables.TbTower.GetByTowerId(def.TowerId);
             BulletMoveType moveType = towerDef != null
                 ? BulletMoveComponentFactory.Normalize(towerDef.BulletMoveType)
                 : BulletMoveType.Homing;

@@ -15,13 +15,13 @@ namespace cfg
 {
 public partial class TbBuff
 {
-    private readonly System.Collections.Generic.Dictionary<int, BuffDef> _dataMap;
     private readonly System.Collections.Generic.List<BuffDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, BuffDef> _dataMap_BuffId;
+
     public TbBuff(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, BuffDef>(count);
         _dataList = new System.Collections.Generic.List<BuffDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -29,17 +29,18 @@ public partial class TbBuff
             BuffDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.BuffDef.DeserializeBuffDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.BuffId, _v);
+        }
+        _dataMap_BuffId = new System.Collections.Generic.Dictionary<int, BuffDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_BuffId.Add(_v.BuffId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, BuffDef> DataMap => _dataMap;
     public System.Collections.Generic.List<BuffDef> DataList => _dataList;
 
-    public BuffDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public BuffDef Get(int key) => _dataMap[key];
-    public BuffDef this[int key] => _dataMap[key];
-
+    public BuffDef GetByBuffId(int key) => _dataMap_BuffId.TryGetValue(key, out BuffDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -47,7 +48,6 @@ public partial class TbBuff
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

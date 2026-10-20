@@ -18,13 +18,13 @@ namespace cfg
 /// </summary>
 public partial class TbMapBigLevel
 {
-    private readonly System.Collections.Generic.Dictionary<int, MapBigLevelDef> _dataMap;
     private readonly System.Collections.Generic.List<MapBigLevelDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, MapBigLevelDef> _dataMap_BigLevelId;
+
     public TbMapBigLevel(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, MapBigLevelDef>(count);
         _dataList = new System.Collections.Generic.List<MapBigLevelDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -32,17 +32,18 @@ public partial class TbMapBigLevel
             MapBigLevelDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.MapBigLevelDef.DeserializeMapBigLevelDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.BigLevelId, _v);
+        }
+        _dataMap_BigLevelId = new System.Collections.Generic.Dictionary<int, MapBigLevelDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_BigLevelId.Add(_v.BigLevelId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, MapBigLevelDef> DataMap => _dataMap;
     public System.Collections.Generic.List<MapBigLevelDef> DataList => _dataList;
 
-    public MapBigLevelDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public MapBigLevelDef Get(int key) => _dataMap[key];
-    public MapBigLevelDef this[int key] => _dataMap[key];
-
+    public MapBigLevelDef GetByBigLevelId(int key) => _dataMap_BigLevelId.TryGetValue(key, out MapBigLevelDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -50,7 +51,6 @@ public partial class TbMapBigLevel
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

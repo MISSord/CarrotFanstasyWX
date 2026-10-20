@@ -18,13 +18,13 @@ namespace cfg
 /// </summary>
 public partial class TbRoguelikeShopPool
 {
-    private readonly System.Collections.Generic.Dictionary<int, RoguelikeShopPoolDef> _dataMap;
     private readonly System.Collections.Generic.List<RoguelikeShopPoolDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, RoguelikeShopPoolDef> _dataMap_PoolId;
+
     public TbRoguelikeShopPool(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, RoguelikeShopPoolDef>(count);
         _dataList = new System.Collections.Generic.List<RoguelikeShopPoolDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -32,17 +32,18 @@ public partial class TbRoguelikeShopPool
             RoguelikeShopPoolDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.RoguelikeShopPoolDef.DeserializeRoguelikeShopPoolDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.PoolId, _v);
+        }
+        _dataMap_PoolId = new System.Collections.Generic.Dictionary<int, RoguelikeShopPoolDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_PoolId.Add(_v.PoolId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, RoguelikeShopPoolDef> DataMap => _dataMap;
     public System.Collections.Generic.List<RoguelikeShopPoolDef> DataList => _dataList;
 
-    public RoguelikeShopPoolDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public RoguelikeShopPoolDef Get(int key) => _dataMap[key];
-    public RoguelikeShopPoolDef this[int key] => _dataMap[key];
-
+    public RoguelikeShopPoolDef GetByPoolId(int key) => _dataMap_PoolId.TryGetValue(key, out RoguelikeShopPoolDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -50,7 +51,6 @@ public partial class TbRoguelikeShopPool
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

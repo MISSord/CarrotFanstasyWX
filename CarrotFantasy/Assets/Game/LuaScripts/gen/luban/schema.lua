@@ -344,16 +344,16 @@ local beans = {}
 
 local tables =
 {
-    { name='TbMonster', file='tbmonster', mode='map', index='MonsterId', value_type='MonsterDef' },
-    { name='TbTower', file='tbtower', mode='map', index='TowerId', value_type='TowerDef' },
-    { name='TbBullet', file='tbbullet', mode='map', index='BulletId', value_type='BulletDef' },
-    { name='TbBuff', file='tbbuff', mode='map', index='BuffId', value_type='BuffDef' },
-    { name='TbItem', file='tbitem', mode='map', index='ItemTypeId', value_type='ItemDef' },
-    { name='TbRoguelikeEffect', file='tbroguelikeeffect', mode='map', index='EffectId', value_type='RoguelikeEffectDef' },
-    { name='TbRoguelikeItem', file='tbroguelikeitem', mode='map', index='ItemId', value_type='RoguelikeItemDef' },
-    { name='TbRoguelikeShopPool', file='tbroguelikeshoppool', mode='map', index='PoolId', value_type='RoguelikeShopPoolDef' },
+    { name='TbMonster', file='tbmonster', mode='list', index='MonsterId', value_type='MonsterDef' },
+    { name='TbTower', file='tbtower', mode='list', index='TowerId', value_type='TowerDef' },
+    { name='TbBullet', file='tbbullet', mode='list', index='BulletId', value_type='BulletDef' },
+    { name='TbBuff', file='tbbuff', mode='list', index='BuffId', value_type='BuffDef' },
+    { name='TbItem', file='tbitem', mode='list', index='ItemTypeId', value_type='ItemDef' },
+    { name='TbRoguelikeEffect', file='tbroguelikeeffect', mode='list', index='EffectId', value_type='RoguelikeEffectDef' },
+    { name='TbRoguelikeItem', file='tbroguelikeitem', mode='list', index='ItemId', value_type='RoguelikeItemDef' },
+    { name='TbRoguelikeShopPool', file='tbroguelikeshoppool', mode='list', index='PoolId', value_type='RoguelikeShopPoolDef' },
     { name='TbRoguelikeLevel', file='tbroguelikelevel', mode='list', index='BigLevelId+LevelId', value_type='RoguelikeLevelDef' },
-    { name='TbMapBigLevel', file='tbmapbiglevel', mode='map', index='BigLevelId', value_type='MapBigLevelDef' },
+    { name='TbMapBigLevel', file='tbmapbiglevel', mode='list', index='BigLevelId', value_type='MapBigLevelDef' },
     { name='TbMapLevel', file='tbmaplevel', mode='list', index='BigLevelId+LevelId', value_type='MapLevelDef' },
 }
 

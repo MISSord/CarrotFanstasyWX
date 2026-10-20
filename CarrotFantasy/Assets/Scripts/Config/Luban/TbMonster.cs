@@ -15,13 +15,13 @@ namespace cfg
 {
 public partial class TbMonster
 {
-    private readonly System.Collections.Generic.Dictionary<int, MonsterDef> _dataMap;
     private readonly System.Collections.Generic.List<MonsterDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, MonsterDef> _dataMap_MonsterId;
+
     public TbMonster(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, MonsterDef>(count);
         _dataList = new System.Collections.Generic.List<MonsterDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -29,17 +29,18 @@ public partial class TbMonster
             MonsterDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.MonsterDef.DeserializeMonsterDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.MonsterId, _v);
+        }
+        _dataMap_MonsterId = new System.Collections.Generic.Dictionary<int, MonsterDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_MonsterId.Add(_v.MonsterId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, MonsterDef> DataMap => _dataMap;
     public System.Collections.Generic.List<MonsterDef> DataList => _dataList;
 
-    public MonsterDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public MonsterDef Get(int key) => _dataMap[key];
-    public MonsterDef this[int key] => _dataMap[key];
-
+    public MonsterDef GetByMonsterId(int key) => _dataMap_MonsterId.TryGetValue(key, out MonsterDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -47,7 +48,6 @@ public partial class TbMonster
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

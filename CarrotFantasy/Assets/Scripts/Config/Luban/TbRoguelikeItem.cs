@@ -18,13 +18,13 @@ namespace cfg
 /// </summary>
 public partial class TbRoguelikeItem
 {
-    private readonly System.Collections.Generic.Dictionary<int, RoguelikeItemDef> _dataMap;
     private readonly System.Collections.Generic.List<RoguelikeItemDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, RoguelikeItemDef> _dataMap_ItemId;
+
     public TbRoguelikeItem(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, RoguelikeItemDef>(count);
         _dataList = new System.Collections.Generic.List<RoguelikeItemDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -32,17 +32,18 @@ public partial class TbRoguelikeItem
             RoguelikeItemDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.RoguelikeItemDef.DeserializeRoguelikeItemDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.ItemId, _v);
+        }
+        _dataMap_ItemId = new System.Collections.Generic.Dictionary<int, RoguelikeItemDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_ItemId.Add(_v.ItemId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, RoguelikeItemDef> DataMap => _dataMap;
     public System.Collections.Generic.List<RoguelikeItemDef> DataList => _dataList;
 
-    public RoguelikeItemDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public RoguelikeItemDef Get(int key) => _dataMap[key];
-    public RoguelikeItemDef this[int key] => _dataMap[key];
-
+    public RoguelikeItemDef GetByItemId(int key) => _dataMap_ItemId.TryGetValue(key, out RoguelikeItemDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -50,7 +51,6 @@ public partial class TbRoguelikeItem
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }

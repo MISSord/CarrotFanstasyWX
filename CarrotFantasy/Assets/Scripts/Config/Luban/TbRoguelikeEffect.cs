@@ -18,13 +18,13 @@ namespace cfg
 /// </summary>
 public partial class TbRoguelikeEffect
 {
-    private readonly System.Collections.Generic.Dictionary<int, RoguelikeEffectDef> _dataMap;
     private readonly System.Collections.Generic.List<RoguelikeEffectDef> _dataList;
-    
+
+    private System.Collections.Generic.Dictionary<int, RoguelikeEffectDef> _dataMap_EffectId;
+
     public TbRoguelikeEffect(JSONNode _buf)
     {
         int count = _buf.Count;
-        _dataMap = new System.Collections.Generic.Dictionary<int, RoguelikeEffectDef>(count);
         _dataList = new System.Collections.Generic.List<RoguelikeEffectDef>(count);
         
         foreach(JSONNode _ele in _buf.Children)
@@ -32,17 +32,18 @@ public partial class TbRoguelikeEffect
             RoguelikeEffectDef _v;
             { if(!_ele.IsObject) { throw new SerializationException(); }  _v = global::cfg.RoguelikeEffectDef.DeserializeRoguelikeEffectDef(_ele);  }
             _dataList.Add(_v);
-            _dataMap.Add(_v.EffectId, _v);
+        }
+        _dataMap_EffectId = new System.Collections.Generic.Dictionary<int, RoguelikeEffectDef>(count);
+        foreach(var _v in _dataList)
+        {
+            _dataMap_EffectId.Add(_v.EffectId, _v);
         }
     }
 
-    public System.Collections.Generic.Dictionary<int, RoguelikeEffectDef> DataMap => _dataMap;
     public System.Collections.Generic.List<RoguelikeEffectDef> DataList => _dataList;
 
-    public RoguelikeEffectDef GetOrDefault(int key) => _dataMap.TryGetValue(key, out var v) ? v : default;
-    public RoguelikeEffectDef Get(int key) => _dataMap[key];
-    public RoguelikeEffectDef this[int key] => _dataMap[key];
-
+    public RoguelikeEffectDef GetByEffectId(int key) => _dataMap_EffectId.TryGetValue(key, out RoguelikeEffectDef __v) ? __v : default;
+    
     public void ResolveRef(Tables tables)
     {
         foreach(var _v in _dataList)
@@ -50,7 +51,6 @@ public partial class TbRoguelikeEffect
             _v.ResolveRef(tables);
         }
     }
-
 }
 
 }
