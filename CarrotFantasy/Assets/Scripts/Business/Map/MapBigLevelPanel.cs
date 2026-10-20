@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine.UI;
 
 namespace CarrotFantasy
@@ -32,14 +31,7 @@ namespace CarrotFantasy
         private void RefreshBigLevelList()
         {
             var model = MapServer.Instance.mapModel;
-            int count = model.GetBigLevelCount();
-            var items = new List<BigLevelInfo>(count);
-            for (int i = 1; i <= count; i++)
-            {
-                items.Add(model.GetBigLevelInfo(i));
-            }
-
-            scrollerList.SetItemsList(items);
+            scrollerList.SetItemsList(model.GetAllBigLevelInfos());
         }
 
         private void OnBigLevelSelected(int index, BigLevelInfo info)

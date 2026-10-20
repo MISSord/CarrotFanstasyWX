@@ -215,13 +215,13 @@ namespace CarrotFantasy
 
         public void UpdateTowerUI()
         {
-            if (_isLoadTower == false || levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
+            if (_isLoadTower == false || currentLevelID <= 0)
             {
                 return;
             }
 
             Stage stage = MapServer.Instance.mapModel.GetStage(currentBigLevelID, currentLevelID);
-            SingleMapInfo info = levelInfoList[currentLevelID - 1];
+            SingleMapInfo info = MapServer.Instance.mapModel.GetSingleMapInfo(currentBigLevelID, currentLevelID);
             if (info == null || stage == null)
             {
                 return;
@@ -247,12 +247,12 @@ namespace CarrotFantasy
 
         public void StartGame()
         {
-            if (levelInfoList == null || currentLevelID <= 0 || currentLevelID > levelInfoList.Length)
+            if (currentLevelID <= 0)
             {
                 return;
             }
 
-            SingleMapInfo info = levelInfoList[currentLevelID - 1];
+            SingleMapInfo info = MapServer.Instance.mapModel.GetSingleMapInfo(currentBigLevelID, currentLevelID);
             if (info == null || info.unLocked != MapInfoType.UNLOCK_LEVEL)
             {
                 return;

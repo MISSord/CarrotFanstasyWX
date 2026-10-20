@@ -230,7 +230,7 @@ namespace CarrotFantasy
             };
 
             mapSnapshot = MapInfoHelper.GetNewMapInfo(mapSnapshot, progress);
-            (int nb, int nl) = NextLevel(bigLevelId, levelId);
+            (int nb, int nl) = MapConfigReader.GetNextLevel(bigLevelId, levelId);
             if (nb != 0)
             {
                 var unlock = new SingleMapInfo
@@ -247,21 +247,6 @@ namespace CarrotFantasy
             StandaloneMapPersistence.Save(sessionUserId, mapSnapshot);
 
             return (nb, nl);
-        }
-
-        private static (int big, int level) NextLevel(int big, int level)
-        {
-            if (level < 5)
-            {
-                return (big, level + 1);
-            }
-
-            if (big < 3)
-            {
-                return (big + 1, 1);
-            }
-
-            return (0, 0);
         }
 
         private static void DispatchLoginSuccess(ConnectionServer cs, long userId)

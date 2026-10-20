@@ -35,6 +35,14 @@ public partial class Tables
     /// 肉鸽小关
     /// </summary>
     public TbRoguelikeLevel TbRoguelikeLevel {get; }
+    /// <summary>
+    /// 冒险大关
+    /// </summary>
+    public TbMapBigLevel TbMapBigLevel {get; }
+    /// <summary>
+    /// 冒险小关
+    /// </summary>
+    public TbMapLevel TbMapLevel {get; }
 
     public Tables(System.Func<string, JSONNode> loader)
     {
@@ -47,6 +55,8 @@ public partial class Tables
         TbRoguelikeItem = new TbRoguelikeItem(loader("tbroguelikeitem"));
         TbRoguelikeShopPool = new TbRoguelikeShopPool(loader("tbroguelikeshoppool"));
         TbRoguelikeLevel = new TbRoguelikeLevel(loader("tbroguelikelevel"));
+        TbMapBigLevel = new TbMapBigLevel(loader("tbmapbiglevel"));
+        TbMapLevel = new TbMapLevel(loader("tbmaplevel"));
         ResolveRef();
     }
     
@@ -61,6 +71,8 @@ public partial class Tables
         TbRoguelikeItem.ResolveRef(this);
         TbRoguelikeShopPool.ResolveRef(this);
         TbRoguelikeLevel.ResolveRef(this);
+        TbMapBigLevel.ResolveRef(this);
+        TbMapLevel.ResolveRef(this);
     }
 }
 

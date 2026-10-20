@@ -39,6 +39,10 @@ namespace CarrotFantasy
         /// <summary>加载超时，避免 AB 异常时把启动流程卡死。</summary>
         private const float LoadTimeoutSeconds = 5f;
 
+        /// <summary>加载全局模块并 New Ctrl 单例；热更重载后需再次执行。</summary>
+        private const string BootstrapChunk =
+            "local ok, err = pcall(require, 'framework.module_controller') if not ok then error(err) end";
+
         /// <summary>当前可用的模块名集合（仅名字，不存源码）。</summary>
         private static readonly HashSet<string> Modules = new HashSet<string>(StringComparer.Ordinal);
 
@@ -106,6 +110,7 @@ namespace CarrotFantasy
 
                 // 预热内置库，尽早暴露 xLua Resources 缺失这类问题。
                 s_env.DoString("local ok, err = pcall(require, 'xlua.util') if not ok then error(err) end", "lua_bootstrap");
+                s_env.DoString(BootstrapChunk, "lua_module_controller");
 
                 Debug.Log("[LuaManager] Lua 环境就绪，模块 " + ModuleList.Count + " 个，模式="
                           + (s_useProjectSource ? "编辑器直读源码" : "解包散文件"));
@@ -250,10 +255,11 @@ namespace CarrotFantasy
                 }
 
                 s_env.DoString(sb.ToString(), "lua_reload");
+                s_env.DoString(BootstrapChunk, "lua_reload_module_controller");
             }
             catch (Exception e)
             {
-                Debug.LogWarning("[LuaManager] 清理 package.loaded 失败: " + e.Message);
+                Debug.LogWarning("[LuaManager] 清理 package.loaded / module_controller 失败: " + e.Message);
             }
 
             int count = ModuleList.Count;
@@ -479,7 +485,9 @@ namespace CarrotFantasy
             }
             else
             {
-                path = LuaScriptUnpacker.ResolveModuleFile(moduleName);
+                // 解包后模块名是扁平文件名；require('framework.class') 与 require('class') 都应能解析。
+                string flatName = LuaBundleReader.ToFlatName(moduleName);
+                path = LuaScriptUnpacker.ResolveModuleFile(flatName);
             }
 
             if (!File.Exists(path))

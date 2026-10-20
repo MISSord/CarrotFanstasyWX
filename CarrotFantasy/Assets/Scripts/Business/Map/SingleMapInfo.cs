@@ -6,10 +6,10 @@ namespace CarrotFantasy
     /// </summary>
     public class SingleMapInfo
     {
-        /// <summary>大关卡 ID，当前配置为 1–3。</summary>
+        /// <summary>大关卡 ID，取值来自 <c>TbMapBigLevel</c>。</summary>
         public byte bigLevelId;
 
-        /// <summary>该大关下的小关序号，当前为 1–5（每大关 5 小关）。</summary>
+        /// <summary>该大关下的小关序号，取值来自 <c>TbMapLevel</c>。</summary>
         public byte levelId;
 
         /// <summary>

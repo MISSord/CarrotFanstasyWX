@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace CarrotFantasy
@@ -5,9 +6,6 @@ namespace CarrotFantasy
     /// <summary>GM 用地图进度读写（Editor 窗口与运行时调试共用）。</summary>
     public static class GmMapProgressService
     {
-        public const int MaxBigLevel = 3;
-        public const int LevelsPerBig = 5;
-
         public static long ResolveUserId(long fallbackUserId = StandaloneBackendMock.DefaultUserId)
         {
             if (Application.isPlaying && AccountServer.Instance != null && AccountServer.Instance.userId > 0)
@@ -30,21 +28,12 @@ namespace CarrotFantasy
 
         public static string BuildUnlockAllSnapshot(byte clearedCarrotState = MapInfoType.CARROT_STATE_GOLD, byte clearedAllClear = MapInfoType.ALL_CLEAR)
         {
-            SingleMapInfo[] cells = new SingleMapInfo[MaxBigLevel * LevelsPerBig];
-            int index = 0;
-            for (int big = 1; big <= MaxBigLevel; big++)
+            SingleMapInfo[] cells = MapConfigReader.CreateDefaultCells();
+            for (int i = 0; i < cells.Length; i++)
             {
-                for (int level = 1; level <= LevelsPerBig; level++)
-                {
-                    cells[index++] = new SingleMapInfo
-                    {
-                        bigLevelId = (byte)big,
-                        levelId = (byte)level,
-                        carrotState = clearedCarrotState,
-                        isAllClear = clearedAllClear,
-                        unLocked = MapInfoType.UNLOCK_LEVEL,
-                    };
-                }
+                cells[i].carrotState = clearedCarrotState;
+                cells[i].isAllClear = clearedAllClear;
+                cells[i].unLocked = MapInfoType.UNLOCK_LEVEL;
             }
 
             return MapInfoHelper.BuildSnapshot(cells);
@@ -60,23 +49,13 @@ namespace CarrotFantasy
             byte clearedCarrotState = MapInfoType.CARROT_STATE_GOLD,
             byte clearedAllClear = MapInfoType.ALL_CLEAR)
         {
-            targetBig = ClampBig(targetBig);
-            targetLevel = ClampLevel(targetLevel);
+            ClampToExisting(ref targetBig, ref targetLevel);
 
-            SingleMapInfo[] cells = new SingleMapInfo[MaxBigLevel * LevelsPerBig];
-            int index = 0;
-            for (int big = 1; big <= MaxBigLevel; big++)
+            SingleMapInfo[] cells = MapConfigReader.CreateDefaultCells();
+            for (int i = 0; i < cells.Length; i++)
             {
-                for (int level = 1; level <= LevelsPerBig; level++)
-                {
-                    cells[index++] = BuildCellState(
-                        big,
-                        level,
-                        targetBig,
-                        targetLevel,
-                        clearedCarrotState,
-                        clearedAllClear);
-                }
+                SingleMapInfo cell = cells[i];
+                ApplyUnlockUpToState(cell, targetBig, targetLevel, clearedCarrotState, clearedAllClear);
             }
 
             return MapInfoHelper.BuildSnapshot(cells);
@@ -95,10 +74,11 @@ namespace CarrotFantasy
                 baseSnapshot = BuildResetSnapshot();
             }
 
+            ClampToExisting(ref bigLevelId, ref levelId);
             var cell = new SingleMapInfo
             {
-                bigLevelId = (byte)ClampBig(bigLevelId),
-                levelId = (byte)ClampLevel(levelId),
+                bigLevelId = (byte)bigLevelId,
+                levelId = (byte)levelId,
                 carrotState = carrotState,
                 isAllClear = isAllClear,
                 unLocked = unlocked,
@@ -148,24 +128,17 @@ namespace CarrotFantasy
             return !string.IsNullOrEmpty(persisted) ? persisted : BuildResetSnapshot();
         }
 
-        static SingleMapInfo BuildCellState(
-            int big,
-            int level,
+        static void ApplyUnlockUpToState(
+            SingleMapInfo info,
             int targetBig,
             int targetLevel,
             byte clearedCarrotState,
             byte clearedAllClear)
         {
-            var info = new SingleMapInfo
-            {
-                bigLevelId = (byte)big,
-                levelId = (byte)level,
-            };
-
-            if (IsOnOrBefore(big, level, targetBig, targetLevel))
+            if (IsOnOrBefore(info.bigLevelId, info.levelId, targetBig, targetLevel))
             {
                 info.unLocked = MapInfoType.UNLOCK_LEVEL;
-                if (IsStrictlyBefore(big, level, targetBig, targetLevel))
+                if (IsStrictlyBefore(info.bigLevelId, info.levelId, targetBig, targetLevel))
                 {
                     info.carrotState = clearedCarrotState;
                     info.isAllClear = clearedAllClear;
@@ -182,8 +155,6 @@ namespace CarrotFantasy
                 info.carrotState = 0;
                 info.isAllClear = MapInfoType.NOT_ALL_CLEAR;
             }
-
-            return info;
         }
 
         static bool IsOnOrBefore(int big, int level, int targetBig, int targetLevel)
@@ -216,34 +187,59 @@ namespace CarrotFantasy
             return level < targetLevel;
         }
 
-        static int ClampBig(int big)
+        static void ClampToExisting(ref int big, ref int level)
         {
-            if (big < 1)
+            IReadOnlyList<int> bigIds = MapConfigReader.GetBigLevelIds();
+            if (bigIds.Count == 0)
             {
-                return 1;
+                big = 1;
+                level = 1;
+                return;
             }
 
-            if (big > MaxBigLevel)
+            if (IndexOf(bigIds, big) < 0)
             {
-                return MaxBigLevel;
+                if (big < bigIds[0])
+                {
+                    big = bigIds[0];
+                }
+                else
+                {
+                    big = bigIds[bigIds.Count - 1];
+                }
             }
 
-            return big;
+            IReadOnlyList<int> levelIds = MapConfigReader.GetLevelIds(big);
+            if (levelIds.Count == 0)
+            {
+                level = 1;
+                return;
+            }
+
+            if (IndexOf(levelIds, level) < 0)
+            {
+                if (level < levelIds[0])
+                {
+                    level = levelIds[0];
+                }
+                else
+                {
+                    level = levelIds[levelIds.Count - 1];
+                }
+            }
         }
 
-        static int ClampLevel(int level)
+        static int IndexOf(IReadOnlyList<int> list, int value)
         {
-            if (level < 1)
+            for (int i = 0; i < list.Count; i++)
             {
-                return 1;
+                if (list[i] == value)
+                {
+                    return i;
+                }
             }
 
-            if (level > LevelsPerBig)
-            {
-                return LevelsPerBig;
-            }
-
-            return level;
+            return -1;
         }
     }
 }

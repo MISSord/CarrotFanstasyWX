@@ -1,0 +1,25 @@
+{
+  "runtime.version": "Lua 5.3",
+  "workspace": {
+    "library": [
+      "Assets/Game/LuaScripts/framework/global_env.lua"
+    ],
+    "ignoreDir": [
+      "Library",
+      "Temp",
+      "Logs",
+      "obj"
+    ]
+  },
+  "diagnostics.globals": [
+    "CS",
+    "class",
+    "log",
+    "Event",
+    "BaseView",
+    "ViewManager",
+    "MapCtrl",
+    "ConfigManager",
+    "ModuleController"
+  ]
+}

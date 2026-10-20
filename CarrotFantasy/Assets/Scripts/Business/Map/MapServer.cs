@@ -237,7 +237,7 @@ namespace CarrotFantasy
             }
 
             this.mapModel.UpdateSingleMapInfo(progress);
-            (int nb, int nl) = NextLevel(progress.bigLevelId, progress.levelId);
+            (int nb, int nl) = MapConfigReader.GetNextLevel(progress.bigLevelId, progress.levelId);
             if (nb != 0)
             {
                 this.mapModel.UpdateSingleMapInfoUnLockState(nb, nl, MapInfoType.UNLOCK_LEVEL);
@@ -262,19 +262,5 @@ namespace CarrotFantasy
             StandaloneMapPersistence.Save(userId, this.mapModel.ExportSnapshot());
         }
 
-        private static (int big, int level) NextLevel(int big, int level)
-        {
-            if (level < 5)
-            {
-                return (big, level + 1);
-            }
-
-            if (big < 3)
-            {
-                return (big + 1, 1);
-            }
-
-            return (0, 0);
-        }
     }
 }

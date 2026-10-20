@@ -1,131 +1,171 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using CarrotFantasy;
-using LitJson;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 /// <summary>
-/// 将关卡 JSON 的 roundInfo 波次数同步到 MapConfig.mTotalRound。
+/// 将关卡 JSON 的 roundInfo 波次数同步到 Luban <c>TbMapLevel.TotalRound</c>（MapLevelInfo.xlsx / MapLevel），并重新导出。
 /// </summary>
 public static class MapConfigWaveSync
 {
-    private const string MapConfigGame = "Assets/Game/Json/MapConfig.json";
-    private const string LevelJsonFolder = "Assets/Game/Json/Level";
+    const string PythonScriptRelative = "ConfigTools/LevelSpawn/_sync_mapconfig_waves.py";
 
-    [MenuItem("Tools/CarrotFantasy/关卡刷怪表/同步所有关卡波次到 MapConfig", false, 12)]
+    [MenuItem("Tools/CarrotFantasy/关卡刷怪表/同步所有关卡波次到 TbMapLevel", false, 12)]
     public static void SyncAllLevelsFromJson()
     {
         try
         {
-            var waveCounts = CollectWaveCountsFromLevelJson();
-            int updated = ApplyWaveCounts(waveCounts);
-            AssetDatabase.Refresh();
-            Debug.Log(string.Format("[MapConfigWaveSync] 已从关卡 JSON 同步 {0} 个小关波次到 MapConfig", updated));
+            RunSync();
         }
         catch (Exception ex)
         {
             Debug.LogError("[MapConfigWaveSync] 同步失败: " + ex);
-            EditorUtility.DisplayDialog("同步 MapConfig 波次失败", ex.Message, "确定");
+            EditorUtility.DisplayDialog("同步 TbMapLevel 波次失败", ex.Message, "确定");
         }
     }
 
     public static void SyncFromRoundInfoByLevel(Dictionary<string, List<Round.RoundInfo>> byLevel)
     {
-        if (byLevel == null || byLevel.Count == 0)
-        {
-            return;
-        }
-
-        var waveCounts = new Dictionary<string, int>();
-        foreach (KeyValuePair<string, List<Round.RoundInfo>> kv in byLevel)
-        {
-            waveCounts[kv.Key] = kv.Value != null ? kv.Value.Count : 0;
-        }
-
-        ApplyWaveCounts(waveCounts);
+        RunSync();
     }
 
-    private static Dictionary<string, int> CollectWaveCountsFromLevelJson()
+    static void RunSync()
     {
-        var result = new Dictionary<string, int>();
-        string folder = Path.GetFullPath(LevelJsonFolder);
-        if (!Directory.Exists(folder))
-        {
-            throw new DirectoryNotFoundException("关卡目录不存在: " + LevelJsonFolder);
-        }
-
-        string[] files = Directory.GetFiles(folder, "Level*.json");
-        var pattern = new Regex(@"Level(\d+)_(\d+)\.json", RegexOptions.IgnoreCase);
-        for (int i = 0; i < files.Length; i++)
-        {
-            string name = Path.GetFileName(files[i]);
-            Match m = pattern.Match(name);
-            if (!m.Success)
-            {
-                continue;
-            }
-
-            int big = int.Parse(m.Groups[1].Value);
-            int level = int.Parse(m.Groups[2].Value);
-            string json = File.ReadAllText(files[i], Encoding.UTF8);
-            LevelInfo info = JsonMapper.ToObject<LevelInfo>(json);
-            int count = LevelWaveQuery.GetTotalWaves(info);
-            result[LevelSpawnSheetCompiler.LevelKey(big, level)] = count;
-        }
-
-        return result;
+        int updated = SyncMapLevelWorkbook();
+        ExportLuban();
+        AssetDatabase.Refresh();
+        Debug.Log(string.Format("[MapConfigWaveSync] 已从关卡 JSON 同步 {0} 个小关波次到 TbMapLevel", updated));
     }
 
-    private static int ApplyWaveCounts(Dictionary<string, int> waveCounts)
+    static int SyncMapLevelWorkbook()
     {
-        return SyncMapConfigFile(MapConfigGame, waveCounts);
+        string repoRoot = GetRepositoryRoot();
+        string script = Path.Combine(repoRoot, PythonScriptRelative.Replace('/', Path.DirectorySeparatorChar));
+        if (!File.Exists(script))
+        {
+            throw new FileNotFoundException("缺少波次同步脚本: " + script);
+        }
+
+        string output = RunProcess("python", Quote(script), repoRoot);
+        return ParseUpdatedCount(output);
     }
 
-    private static int SyncMapConfigFile(string assetRelativePath, Dictionary<string, int> waveCounts)
+    static void ExportLuban()
     {
-        string fullPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", assetRelativePath));
-        if (!File.Exists(fullPath))
+        string repoRoot = GetRepositoryRoot();
+        string configDir = Path.Combine(repoRoot, "ConfigTools", "Config");
+        string lubanDll = Path.Combine(repoRoot, "ConfigTools", "Luban", "Luban.dll");
+        if (!File.Exists(lubanDll))
+        {
+            throw new FileNotFoundException("缺少 Luban: " + lubanDll);
+        }
+
+        string csOut = Path.Combine(repoRoot, "CarrotFantasy", "Assets", "Scripts", "Config", "Luban");
+        string jsonOut = Path.Combine(repoRoot, "CarrotFantasy", "Assets", "Game", "Config", "Luban");
+        string luaCodeOut = Path.Combine(repoRoot, "CarrotFantasy", "Assets", "Game", "LuaScripts", "gen", "luban");
+        string luaDataOut = Path.Combine(repoRoot, "CarrotFantasy", "Assets", "Game", "LuaScripts", "gen", "luban_data");
+        string args = string.Format(
+            "{0} -t client -c cs-simple-json -c lua-lua -d json -d lua --conf __root__.conf -x {1} -x {2} -x {3} -x {4}",
+            Quote(lubanDll),
+            Quote("cs-simple-json.outputCodeDir=" + csOut),
+            Quote("json.outputDataDir=" + jsonOut),
+            Quote("lua-lua.outputCodeDir=" + luaCodeOut),
+            Quote("lua.outputDataDir=" + luaDataOut));
+        RunProcess("dotnet", args, configDir);
+    }
+
+    static int ParseUpdatedCount(string output)
+    {
+        if (string.IsNullOrEmpty(output))
         {
             return 0;
         }
 
-        string json = File.ReadAllText(fullPath, Encoding.UTF8);
-        PlayerManager playerManager = JsonMapper.ToObject<PlayerManager>(json);
-        if (playerManager?.unLockedNormalModelLevelList == null)
+        const string marker = "updated ";
+        int last = output.LastIndexOf(marker, StringComparison.Ordinal);
+        if (last < 0)
         {
             return 0;
         }
 
-        int changed = 0;
-        foreach (KeyValuePair<string, int> kv in waveCounts)
+        int start = last + marker.Length;
+        int end = start;
+        while (end < output.Length && char.IsDigit(output[end]))
         {
-            string[] parts = kv.Key.Split('_');
-            int big = int.Parse(parts[0]);
-            int level = int.Parse(parts[1]);
-            int index = (big - 1) * 5 + (level - 1);
-            if (index < 0 || index >= playerManager.unLockedNormalModelLevelList.Count)
-            {
-                continue;
-            }
-
-            Stage stage = playerManager.unLockedNormalModelLevelList[index];
-            if (stage.mTotalRound != kv.Value)
-            {
-                stage.mTotalRound = kv.Value;
-                changed++;
-            }
+            end++;
         }
 
-        if (changed > 0)
+        int value;
+        if (int.TryParse(output.Substring(start, end - start), out value))
         {
-            File.WriteAllText(fullPath, JsonMapper.ToJson(playerManager), Encoding.UTF8);
-            Debug.Log(string.Format("[MapConfigWaveSync] 已更新 {0}（{1} 项）", assetRelativePath, changed));
+            return value;
         }
 
-        return changed;
+        return 0;
+    }
+
+    static string RunProcess(string fileName, string arguments, string workingDirectory)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            WorkingDirectory = workingDirectory,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+
+        using (var process = Process.Start(psi))
+        {
+            if (process == null)
+            {
+                throw new InvalidOperationException("无法启动进程: " + fileName);
+            }
+
+            string stdout = process.StandardOutput.ReadToEnd();
+            string stderr = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                throw new InvalidOperationException(
+                    string.Format("{0} 失败 ({1}): {2}\n{3}", fileName, process.ExitCode, stdout, stderr));
+            }
+
+            if (!string.IsNullOrEmpty(stdout))
+            {
+                Debug.Log("[MapConfigWaveSync] " + stdout.Trim());
+            }
+
+            return stdout;
+        }
+    }
+
+    static string Quote(string value)
+    {
+        return "\"" + value + "\"";
+    }
+
+    static string GetRepositoryRoot()
+    {
+        var assetsDir = new DirectoryInfo(Application.dataPath);
+        DirectoryInfo carrotFantasyDir = assetsDir.Parent;
+        if (carrotFantasyDir == null)
+        {
+            throw new InvalidOperationException("无法解析工程根目录（Assets 上级目录不存在）");
+        }
+
+        DirectoryInfo repoRoot = carrotFantasyDir.Parent;
+        if (repoRoot == null)
+        {
+            throw new InvalidOperationException("无法解析仓库根目录（CarrotFantasy 上级目录不存在）");
+        }
+
+        return repoRoot.FullName;
     }
 }
