@@ -112,6 +112,14 @@ namespace CarrotFantasy
                 return false;
             }
 
+            // 只有图集包能经 AtlasLoader 加载；ui/sprites 这类「直出精灵」的包名
+            // 传进来会在运行时加载失败并把 sprite 置空，所以这里不记录，反而清空字段，
+            // 让 prefab 上序列化的 Sprite 直接生效。
+            if (importer.assetBundleName.IndexOf("images_atlas", System.StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return ClearRecordedPath();
+            }
+
             bool changed = false;
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
             if (!string.Equals(defaultBundleName, newBundleName))
@@ -129,6 +137,31 @@ namespace CarrotFantasy
             defaultBundleName = importer.assetBundleName.ToLowerInvariant();
             _lastRecordedSpriteInstanceId = spriteId;
             return changed;
+        }
+
+        /// <summary>清空已记录的 AB 路径（该图不适合走 AB 加载）。返回是否发生过变更。</summary>
+        private bool ClearRecordedPath()
+        {
+            bool cleared = false;
+            if (!string.IsNullOrEmpty(defaultBundleName))
+            {
+                defaultBundleName = string.Empty;
+                cleared = true;
+            }
+
+            if (!string.IsNullOrEmpty(defaultAssetName))
+            {
+                defaultAssetName = string.Empty;
+                cleared = true;
+            }
+
+            if (_lastRecordedSpriteInstanceId != 0)
+            {
+                _lastRecordedSpriteInstanceId = 0;
+                cleared = true;
+            }
+
+            return cleared;
         }
 #endif
 

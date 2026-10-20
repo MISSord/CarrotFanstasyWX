@@ -115,6 +115,13 @@ namespace CarrotFantasy
                 return false;
             }
 
+            // 本组件按 Texture 加载，只认 rawimages 包；图集包（images_atlas）里的
+            // 贴图是图集内页，单独取没有意义，直接不记录。
+            if (importer.assetBundleName.IndexOf("/rawimages/", System.StringComparison.OrdinalIgnoreCase) < 0)
+            {
+                return ClearRecordedPath();
+            }
+
             bool changed = false;
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
             if (!string.Equals(defaultBundleName, newBundleName))
@@ -132,6 +139,31 @@ namespace CarrotFantasy
             defaultBundleName = importer.assetBundleName.ToLowerInvariant();
             _lastRecordedTextureInstanceId = textureId;
             return changed;
+        }
+
+        /// <summary>清空已记录的 AB 路径（该图不适合走 AB 加载）。返回是否发生过变更。</summary>
+        private bool ClearRecordedPath()
+        {
+            bool cleared = false;
+            if (!string.IsNullOrEmpty(defaultBundleName))
+            {
+                defaultBundleName = string.Empty;
+                cleared = true;
+            }
+
+            if (!string.IsNullOrEmpty(defaultAssetName))
+            {
+                defaultAssetName = string.Empty;
+                cleared = true;
+            }
+
+            if (_lastRecordedTextureInstanceId != 0)
+            {
+                _lastRecordedTextureInstanceId = 0;
+                cleared = true;
+            }
+
+            return cleared;
         }
 #endif
 
