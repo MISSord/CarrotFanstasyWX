@@ -98,12 +98,12 @@ namespace CarrotFantasy
                 return;
             }
 
-            string asset = string.Format("Level_{0}_BG_Left", this.currentBigLevelID);
+            string asset = string.Format("level_{0}_bg_left", this.currentBigLevelID);
             string bundle = ResPath.GetRawImagePath(asset);
             RawImage imgLeft = this.nameTableDic["img_bg_left"].GetComponent<RawImage>();
             imgLeft.SetTexture(bundle, asset);
 
-            asset = string.Format("Level_{0}_BG_Right", this.currentBigLevelID);
+            asset = string.Format("level_{0}_bg_right", this.currentBigLevelID);
             bundle = ResPath.GetRawImagePath(asset);
             RawImage imgRight = this.nameTableDic["img_bg_right"].GetComponent<RawImage>();
             imgRight.SetTexture(bundle, asset);
