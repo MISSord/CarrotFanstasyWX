@@ -1,0 +1,223 @@
+using UnityEngine;
+using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
+namespace CarrotFantasy
+{
+    /// <summary>
+    /// 绑定到 RawImage，只负责加载单张贴图并在换图或销毁时释放引用。
+    /// <para>
+    /// 与 <see cref="UIImageLoader"/> 设计一致：那个面向 Image + 图集精灵，这个面向 RawImage + 单张贴图。
+    /// 两者刻意不合并——图集与单图的引用计数、释放时机不同，混在一起容易互相干扰。
+    /// </para>
+    /// </summary>
+    [DisallowMultipleComponent]
+    public class RawImageLoader : MonoBehaviour
+    {
+        private RawImage targetRawImage;
+
+        [Header("AB配置")]
+        [SerializeField] private string defaultBundleName;
+        [SerializeField] private string defaultAssetName;
+        private LoadPriority defaultLoadPriority = LoadPriority.Medium;
+        private bool clearTextureOnRelease = true;
+
+        private AssetBundleHandle<Texture> _textureHandle;
+        private int _requestVersion = 0;
+        [SerializeField, HideInInspector]
+        private int _lastRecordedTextureInstanceId;
+
+        private void Reset()
+        {
+            EnsureGraphicBinding();
+#if UNITY_EDITOR
+            EditorRefreshBindingAndPath();
+#endif
+        }
+
+        private void Awake()
+        {
+            EnsureGraphicBinding();
+        }
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            EditorRefreshBindingAndPath();
+        }
+
+        /// <summary>
+        /// 编辑器下供外部调用：自动绑定 RawImage，并从当前贴图刷新 AB 字段。
+        /// </summary>
+        public bool EditorRefreshBindingAndPath()
+        {
+            bool changed = false;
+            changed |= EnsureGraphicBinding();
+            changed |= TryAutoRecordPathFromCurrentGraphic();
+            if (changed)
+            {
+                EditorUtility.SetDirty(this);
+            }
+            return changed;
+        }
+
+        private bool TryAutoRecordPathFromCurrentGraphic()
+        {
+            UnityEngine.Object sourceAsset = null;
+            string assetName = string.Empty;
+            if (targetRawImage != null && targetRawImage.texture != null)
+            {
+                sourceAsset = targetRawImage.texture;
+                assetName = targetRawImage.texture.name;
+            }
+            if (sourceAsset == null)
+            {
+                bool cleared = false;
+                if (_lastRecordedTextureInstanceId != 0)
+                {
+                    _lastRecordedTextureInstanceId = 0;
+                    cleared = true;
+                }
+
+                if (!string.IsNullOrEmpty(defaultBundleName))
+                {
+                    defaultBundleName = string.Empty;
+                    cleared = true;
+                }
+
+                if (!string.IsNullOrEmpty(defaultAssetName))
+                {
+                    defaultAssetName = string.Empty;
+                    cleared = true;
+                }
+
+                return cleared;
+            }
+
+            int textureId = sourceAsset.GetInstanceID();
+            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
+            if (_lastRecordedTextureInstanceId == textureId && hasDefaultPath)
+            {
+                return false;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(sourceAsset);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                return false;
+            }
+
+            AssetImporter importer = AssetImporter.GetAtPath(assetPath);
+            if (importer == null || string.IsNullOrEmpty(importer.assetBundleName))
+            {
+                return false;
+            }
+
+            bool changed = false;
+            string newBundleName = importer.assetBundleName.ToLowerInvariant();
+            if (!string.Equals(defaultBundleName, newBundleName))
+            {
+                defaultBundleName = newBundleName;
+                changed = true;
+            }
+
+            if (!string.Equals(defaultAssetName, assetName))
+            {
+                defaultAssetName = assetName;
+                changed = true;
+            }
+
+            defaultBundleName = importer.assetBundleName.ToLowerInvariant();
+            _lastRecordedTextureInstanceId = textureId;
+            return changed;
+        }
+#endif
+
+        private void OnDestroy()
+        {
+            ReleaseCurrent();
+        }
+
+        private void OnEnable()
+        {
+            if (_textureHandle != null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(defaultBundleName) || string.IsNullOrEmpty(defaultAssetName))
+            {
+                return;
+            }
+
+            SetTexture(defaultBundleName, defaultAssetName, defaultLoadPriority);
+        }
+
+        /// <summary>
+        /// 加载单张贴图。<paramref name="bundleName"/> 为图片自身的 AB 包名（常见为 ui/rawimages/xxx）。
+        /// 引用由本组件在换图/销毁时自动 Release，业务无需关心计数。
+        /// </summary>
+        public void SetTexture(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
+        {
+            _requestVersion++;
+            int currentVersion = _requestVersion;
+
+            ReleaseCurrent();
+            defaultBundleName = bundleName;
+            defaultAssetName = assetName;
+            defaultLoadPriority = priority;
+            EnsureGraphicBinding();
+
+            if (targetRawImage == null)
+            {
+                GameLogController.Warning(
+                    "SetTexture 需要 RawImage 组件: " + gameObject.name,
+                    "RawImageLoader");
+                return;
+            }
+
+            _textureHandle = ImageLoader.Instance.LoadTexture(bundleName, assetName, priority);
+            _textureHandle.Completed += texture =>
+            {
+                if (currentVersion != _requestVersion || targetRawImage == null)
+                {
+                    return;
+                }
+
+                targetRawImage.texture = texture;
+            };
+        }
+
+        public void ReleaseCurrent()
+        {
+            if (_textureHandle != null)
+            {
+                _textureHandle.Release();
+                _textureHandle = null;
+            }
+
+            if (clearTextureOnRelease && targetRawImage != null)
+            {
+                targetRawImage.texture = null;
+            }
+        }
+
+        private bool EnsureGraphicBinding()
+        {
+            bool changed = false;
+            if (targetRawImage == null)
+            {
+                RawImage img = GetComponent<RawImage>();
+                if (img != null)
+                {
+                    targetRawImage = img;
+                    changed = true;
+                }
+            }
+
+            return changed;
+        }
+    }
+}

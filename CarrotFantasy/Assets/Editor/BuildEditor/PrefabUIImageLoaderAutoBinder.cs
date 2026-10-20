@@ -43,6 +43,25 @@ public static class PrefabUIImageLoaderAutoBinder
                 continue;
             }
 
+            // RawImage 用 RawImageLoader（单张贴图），Image 用 UIImageLoader（图集精灵）。
+            // 两者的 AB 字段都从当前显示的图/贴图自动回填，所以这里按 graphic 类型分流。
+            if (graphic is RawImage rawImage)
+            {
+                RawImageLoader textureLoader = rawImage.GetComponent<RawImageLoader>();
+                if (textureLoader == null)
+                {
+                    textureLoader = rawImage.gameObject.AddComponent<RawImageLoader>();
+                    changed = true;
+                }
+
+                if (textureLoader != null && textureLoader.EditorRefreshBindingAndPath())
+                {
+                    changed = true;
+                }
+
+                continue;
+            }
+
             UIImageLoader loader = graphic.GetComponent<UIImageLoader>();
             if (loader == null)
             {
