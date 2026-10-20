@@ -6,8 +6,6 @@ namespace CarrotFantasy
     /// <summary>战斗胜利结算（独立 BaseView）。</summary>
     public class GameWinView : BattleBoundView
     {
-        private Sprite[] carrotSprites; // 0 铜 1 银 2 金
-
         public override void InitData()
         {
             viewName = "GameWinView";
@@ -38,16 +36,6 @@ namespace CarrotFantasy
                 return;
             }
 
-            if (this.carrotSprites == null)
-            {
-                this.carrotSprites = new Sprite[3];
-                for (int i = 0; i < 3; i++)
-                {
-                    this.carrotSprites[i] = Resources.Load<Sprite>(
-                        "Pictures/GameOption/Normal/Level/Carrot_" + (i + 1));
-                }
-            }
-
             this.RemoveSettlementButtonListeners();
             XUI.AddButtonListener(nameTableDic["btn_replay"].GetComponent<Button>(), OnReplay);
             XUI.AddButtonListener(nameTableDic["btn_choose_level"].GetComponent<Button>(), OnChooseOtherLevel);
@@ -65,7 +53,16 @@ namespace CarrotFantasy
                 this.pveDataComponent.level.ToString());
 
             int trophy = Mathf.Clamp(this.pveDataComponent.CarrotTropyLevel(), 1, 3);
-            nameTableDic["Img_Carrot"].GetComponent<Image>().sprite = this.carrotSprites[trophy - 1];
+
+            // 走 Image 扩展：不用关心 Img_Carrot 上有没有 UIImageLoader，
+            // 缺失时扩展会自动补一个，加载、换图与引用释放都由它负责。
+            // （原先用 Resources.Load("Pictures/...Carrot_N") 是已失效的旧路径，
+            //   Resources 下没有 Pictures 目录，只会把 prefab 上已绑好的图覆盖成 null。）
+            Image carrotImage = nameTableDic["Img_Carrot"].GetComponent<Image>();
+            if (carrotImage != null)
+            {
+                carrotImage.SetAtlasSprite(ResPath.GetGameOptionImagePath(), "carrot_" + trophy);
+            }
         }
 
         void RemoveSettlementButtonListeners()
@@ -82,7 +79,6 @@ namespace CarrotFantasy
         protected override void ReleaseCallBack()
         {
             this.RemoveSettlementButtonListeners();
-            this.carrotSprites = null;
             this.ClearBattleBinding();
         }
 

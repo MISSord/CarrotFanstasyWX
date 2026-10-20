@@ -21,7 +21,8 @@ namespace CarrotFantasy
         private static readonly Color NormalSpriteTint = Color.white;
         private static readonly Color StunSpriteTint = new Color(0.72f, 0.72f, 0.78f, 1f);
 
-        private String animatorUrl = "Animator/AnimatorController/Monster/{0}/{1}";
+        /// <summary>异步加载控制器的版本号，避免对象池复用后旧回调覆盖新怪物的动画。</summary>
+        private int animatorRequestVersion;
 
         public override void InitTransform(Transform node)
         {
@@ -80,9 +81,49 @@ namespace CarrotFantasy
                 this.spriteRender.sprite = null;
             }
 
-            this.animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(
-                string.Format(this.animatorUrl, monster.curLevel, monster.monsterId));
-            this.animator.Play(monster.monsterId.ToString());
+            this.ApplyMonsterAnimator(monster);
+        }
+
+        /// <summary>
+        /// 从 AB 加载怪物动画控制器。
+        /// <para>
+        /// 原实现用 Resources.Load("Animator/AnimatorController/Monster/{关卡}/{id}")，
+        /// 但控制器在 <c>Assets/Game/Animator</c> 下，不在任何 Resources 目录里，永远取不到；
+        /// 且打包规则此前显式排除 .controller，控制器根本没进 AB。
+        /// </para>
+        /// </summary>
+        void ApplyMonsterAnimator(BattleUnit_Monster monster)
+        {
+            if (this.animator == null)
+            {
+                return;
+            }
+
+            int version = ++this.animatorRequestVersion;
+            string bundle = FightViewSpriteAb.MonsterAnimatorBundle(monster.curLevel);
+            string assetName = FightViewSpriteAb.MonsterAnimatorAssetName(monster.monsterId);
+
+            AssetBundleManager.Instance.LoadAsset(
+                bundle,
+                assetName,
+                typeof(RuntimeAnimatorController),
+                obj =>
+                {
+                    // 对象池复用：期间可能已切到别的怪物，丢弃过期回调。
+                    if (version != this.animatorRequestVersion || this.animator == null)
+                    {
+                        return;
+                    }
+
+                    RuntimeAnimatorController controller = obj as RuntimeAnimatorController;
+                    if (controller == null)
+                    {
+                        return;
+                    }
+
+                    this.animator.runtimeAnimatorController = controller;
+                    this.animator.Play(monster.monsterId.ToString());
+                });
         }
 
         private void CacheWorldUi()

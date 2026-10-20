@@ -142,6 +142,12 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return string.IsNullOrEmpty(dir) ? "ui/sprites/" + imageName : "ui/sprites/" + dir + "/" + imageName;
         }
 
+        // 动画控制器：按目录成包（animator/animatorcontroller/monster/{关卡}），
+        // 资源名 = 文件名（怪物 id），供 BattleUnitView_Monster 运行时按 id 取。
+        // 动画片段 .anim 仍不单独成包，会作为依赖并入控制器所在的包。
+        if (path.EndsWith(".controller", System.StringComparison.OrdinalIgnoreCase))
+            return normalizedBundleName;
+
         if (UseGameFolderRule(path))
             return normalizedBundleName + "_prefab";
 
@@ -234,7 +240,6 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
                extension != ".cs" &&
                extension != ".unity" &&
                extension != ".anim" &&
-               extension != ".controller" &&
                extension != ".asmdef" &&
                extension != ".asmref" &&
                extension != ".dll" &&

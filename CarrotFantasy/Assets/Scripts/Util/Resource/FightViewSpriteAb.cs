@@ -27,6 +27,18 @@ namespace CarrotFantasy
             return string.Format("ui/images/tower/{0}/images_atlas", towerId);
         }
 
+        /// <summary>怪物动画控制器包：Animator/AnimatorController/Monster/{关卡} → animator/animatorcontroller/monster/{关卡}。</summary>
+        public static string MonsterAnimatorBundle(int bigLevel)
+        {
+            return string.Format("animator/animatorcontroller/monster/{0}", bigLevel);
+        }
+
+        /// <summary>控制器资源名 = 怪物 id（控制器内状态名同样是 id）。</summary>
+        public static string MonsterAnimatorAssetName(int monsterId)
+        {
+            return monsterId.ToString();
+        }
+
         public static string CarrotStateAsset(int stateIndex)
         {
             return stateIndex.ToString();
