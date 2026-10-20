@@ -1,18 +1,9 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace CarrotFantasy
 {
-    public enum AudioLoadRoute
-    {
-        AssetBundle = 0,
-        Resources = 1,
-    }
-
     public class AudioManager
     {
         private static AudioManager instance;
@@ -159,7 +150,12 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// Resources 加载链路：只吃 Resources 逻辑路径（AudioClips/...）。
+        /// 「逻辑路径」加载链路：入参形如 <c>AudioClips/NormalMordel/Tower/TowerBulid</c>。
+        /// <para>
+        /// 项目里的音频实际都在 <c>Assets/Game/AudioClips</c> 下（由 AB 下发），
+        /// <c>Assets/Resources</c> 里并没有 AudioClips 目录，所以直接用 Resources.Load 恒为 null。
+        /// 这里先把逻辑路径推导成 AB 坐标再加载，Resources 仅作兜底。
+        /// </para>
         /// </summary>
         private void LoadAudioClipByResourcesAsync(string resPath, Action<AudioClip> onLoaded)
         {
@@ -176,13 +172,64 @@ namespace CarrotFantasy
                 return;
             }
 
+            if (!TryConvertResourcePathToAb(key, out string bundleName, out string assetName))
+            {
+                onLoaded?.Invoke(LoadFromResources(key));
+                return;
+            }
+
+            this.LoadAudioClipByAbAsync(bundleName, assetName, clip =>
+            {
+                if (clip != null)
+                {
+                    this.clipCacheResources[key] = clip;
+                    onLoaded?.Invoke(clip);
+                    return;
+                }
+
+                // AB 里也没有时再退回 Resources（例如真放在 Resources 下的音频）。
+                onLoaded?.Invoke(LoadFromResources(key));
+            });
+        }
+
+        private AudioClip LoadFromResources(string key)
+        {
             AudioClip clip = Resources.Load<AudioClip>(key);
             if (clip != null)
             {
                 this.clipCacheResources[key] = clip;
             }
 
-            onLoaded?.Invoke(clip);
+            return clip;
+        }
+
+        /// <summary>
+        /// 把逻辑路径推导成 AB 坐标，规则与 <c>PrefabABPathPostprocessor</c> 对 <c>Assets/Game</c> 的处理一致
+        /// （目录小写 + <c>_prefab</c> 后缀，资源名 = 文件名且保留大小写）。
+        /// <example>
+        /// AudioClips/NormalMordel/Tower/TowerBulid
+        ///   → bundle: audioclips/normalmordel/tower_prefab
+        ///   → asset : TowerBulid
+        /// AudioClips/NormalMordel/Monster/1/3
+        ///   → bundle: audioclips/normalmordel/monster/1_prefab
+        ///   → asset : 3
+        /// </example>
+        /// </summary>
+        private static bool TryConvertResourcePathToAb(string resPath, out string bundleName, out string assetName)
+        {
+            bundleName = null;
+            assetName = null;
+
+            string path = resPath.Trim().Replace('\\', '/').Trim('/');
+            int slash = path.LastIndexOf('/');
+            if (slash <= 0 || slash >= path.Length - 1)
+            {
+                return false;
+            }
+
+            bundleName = path.Substring(0, slash).ToLowerInvariant() + "_prefab";
+            assetName = path.Substring(slash + 1);
+            return true;
         }
 
         void EnsureReady()
@@ -241,15 +288,16 @@ namespace CarrotFantasy
             this.audioSourceEffect.volume = this.effectVolume;
         }
 
-        /// <summary>播放战斗 BGM；Editor 测试模式走 AB，其余走 Resources。</summary>
+        /// <summary>
+        /// 播放战斗 BGM。
+        /// <para>
+        /// 以前这里按 LoadMode 分叉（Editor 走 AB、其余走 Resources），
+        /// 但 Resources 下并没有 AudioClips 目录，非 AB 那条路恒为静音；
+        /// 现在 <see cref="PlayMusicByResources"/> 内部会先推导 AB 坐标，统一走一条路即可。
+        /// </para>
+        /// </summary>
         public int PlayBattleBgm(int priority = 1, Action<int> onPlaybackStarted = null)
         {
-#if UNITY_EDITOR
-            if ((LoadMode)EditorPrefs.GetInt("GameLoadMode", 0) == LoadMode.Testing)
-            {
-                return this.PlayMusicByAb("audioclips/normalmordel_prefab", "BGMusic", priority, onPlaybackStarted);
-            }
-#endif
             return this.PlayMusicByResources("AudioClips/NormalMordel/BGMusic", priority, onPlaybackStarted);
         }
 
