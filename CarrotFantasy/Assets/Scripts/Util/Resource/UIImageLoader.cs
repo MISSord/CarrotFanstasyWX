@@ -93,13 +93,8 @@ namespace CarrotFantasy
                 return cleared;
             }
 
-            int spriteId = sourceAsset.GetInstanceID();
-            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
-            if (_lastRecordedSpriteInstanceId == spriteId && hasDefaultPath)
-            {
-                return false;
-            }
-
+            // 包名能不能加载，优先于「已记录就跳过」判断：
+            // 否则先前记错的路径（如 ui/rawimages/xxx）永远不会被纠正。
             string spriteAssetPath = AssetDatabase.GetAssetPath(sourceAsset);
             if (string.IsNullOrEmpty(spriteAssetPath))
             {
@@ -118,6 +113,13 @@ namespace CarrotFantasy
             if (importer.assetBundleName.IndexOf("images_atlas", System.StringComparison.OrdinalIgnoreCase) < 0)
             {
                 return ClearRecordedPath();
+            }
+
+            int spriteId = sourceAsset.GetInstanceID();
+            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
+            if (_lastRecordedSpriteInstanceId == spriteId && hasDefaultPath)
+            {
+                return false;
             }
 
             bool changed = false;

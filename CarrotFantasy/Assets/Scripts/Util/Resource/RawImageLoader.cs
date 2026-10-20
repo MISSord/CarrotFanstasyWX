@@ -96,13 +96,8 @@ namespace CarrotFantasy
                 return cleared;
             }
 
-            int textureId = sourceAsset.GetInstanceID();
-            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
-            if (_lastRecordedTextureInstanceId == textureId && hasDefaultPath)
-            {
-                return false;
-            }
-
+            // 包名能不能加载，优先于「已记录就跳过」判断：
+            // 否则先前记错的路径永远不会被纠正。
             string assetPath = AssetDatabase.GetAssetPath(sourceAsset);
             if (string.IsNullOrEmpty(assetPath))
             {
@@ -120,6 +115,13 @@ namespace CarrotFantasy
             if (importer.assetBundleName.IndexOf("/rawimages/", System.StringComparison.OrdinalIgnoreCase) < 0)
             {
                 return ClearRecordedPath();
+            }
+
+            int textureId = sourceAsset.GetInstanceID();
+            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
+            if (_lastRecordedTextureInstanceId == textureId && hasDefaultPath)
+            {
+                return false;
             }
 
             bool changed = false;
