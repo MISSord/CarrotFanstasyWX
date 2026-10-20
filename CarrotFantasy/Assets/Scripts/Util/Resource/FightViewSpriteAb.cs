@@ -27,10 +27,13 @@ namespace CarrotFantasy
             return string.Format("ui/images/tower/{0}/images_atlas", towerId);
         }
 
-        /// <summary>怪物动画控制器包：Animator/AnimatorController/Monster/{关卡} → animator/animatorcontroller/monster/{关卡}。</summary>
+        /// <summary>
+        /// 怪物动画控制器包：Animator/AnimatorController/Monster/{关卡} →
+        /// animator/animatorcontroller/monster/{关卡}_prefab（_prefab 是 Assets/Game 目录规则的统一后缀）。
+        /// </summary>
         public static string MonsterAnimatorBundle(int bigLevel)
         {
-            return string.Format("animator/animatorcontroller/monster/{0}", bigLevel);
+            return string.Format("animator/animatorcontroller/monster/{0}_prefab", bigLevel);
         }
 
         /// <summary>控制器资源名 = 怪物 id（控制器内状态名同样是 id）。</summary>

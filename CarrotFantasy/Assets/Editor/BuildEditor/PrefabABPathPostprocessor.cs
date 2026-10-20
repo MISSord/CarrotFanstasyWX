@@ -66,13 +66,23 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         }
     }
 
+    private static bool IsImageFilePath(string path)
+    {
+        string lower = path.ToLowerInvariant();
+        return lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg")
+            || lower.EndsWith(".tga") || lower.EndsWith(".psd");
+    }
+
     private static bool ShouldAssignAssetBundle(string path)
     {
         if (string.IsNullOrEmpty(path))
             return false;
 
         bool isPrefab = IsViewLikePrefab(path);
-        bool isRawImage = path.Contains("UI/RawImage");
+        // 只对图片文件生效：这是旧的宽松路径判断（UI/RawImage 单数目录）。
+        // 若不限定扩展名，目录（如 UI/RawImages）也会被判成资源并写入包名，
+        // 而「目录带包名」会让它下面所有资源隐式并入该包，造成重复打包。
+        bool isRawImage = path.Contains("UI/RawImage") && IsImageFilePath(path);
         bool isSpriteAtlas = path.EndsWith(".spriteatlas");
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
@@ -142,12 +152,10 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return string.IsNullOrEmpty(dir) ? "ui/sprites/" + imageName : "ui/sprites/" + dir + "/" + imageName;
         }
 
-        // 动画控制器：按目录成包（animator/animatorcontroller/monster/{关卡}），
-        // 资源名 = 文件名（怪物 id），供 BattleUnitView_Monster 运行时按 id 取。
-        // 动画片段 .anim 仍不单独成包，会作为依赖并入控制器所在的包。
-        if (path.EndsWith(".controller", System.StringComparison.OrdinalIgnoreCase))
-            return normalizedBundleName;
-
+        // 动画控制器也走下面的 _prefab 约定：若直接返回 normalizedBundleName，
+        // 父目录会得到 .../monster，子目录得到 .../monster/1，
+        // Unity 无法同时在 .../monster 写文件又在 .../monster/ 写目录 → 打包失败。
+        // 加 _prefab 后缀后：.../monster_prefab（文件）与 .../monster/1_prefab（文件）不再冲突。
         if (UseGameFolderRule(path))
             return normalizedBundleName + "_prefab";
 
@@ -245,5 +253,82 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
                extension != ".dll" &&
                extension != ".pdb" &&
                extension != ".mdb";
+    }
+    /// <summary>
+    /// 按当前规则重新分配 Assets/Game 下所有资源的 AB 包名。
+    /// <para>
+    /// 规则改动后（例如把 .controller 纳入打包），已导入资源的 .meta 里仍是旧包名；
+    /// 逐个目录手动 Reimport 容易漏，这个菜单一次性重算。
+    /// </para>
+    /// </summary>
+    [MenuItem("Tools/AssetBundle/重新分配所有资源包名", false, 302)]
+    public static void ReassignAllBundleNames()
+    {
+        string[] guids = AssetDatabase.FindAssets("t:Object", new[] { "Assets/Game" });
+        int scanned = 0;
+        int changed = 0;
+
+        AssetDatabase.StartAssetEditing();
+        try
+        {
+            for (int i = 0; i < guids.Length; i++)
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guids[i]).Replace('\\', '/');
+                if (string.IsNullOrEmpty(path) || AssetDatabase.IsValidFolder(path) || !ShouldAssignAssetBundle(path))
+                {
+                    continue;
+                }
+
+                AssetImporter importer = AssetImporter.GetAtPath(path);
+                if (importer == null)
+                {
+                    continue;
+                }
+
+                scanned++;
+                string bundleName = BuildAssetBundleName(path);
+                if (string.Equals(importer.assetBundleName, bundleName, System.StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                importer.assetBundleName = bundleName;
+                EditorUtility.SetDirty(importer);
+                changed++;
+            }
+        }
+        finally
+        {
+            AssetDatabase.StopAssetEditing();
+        }
+
+        // 目录本身绝不能有包名：会把它下面所有资源隐式并入该包，造成重复打包。
+        // 这里顺手清掉历史误写（旧规则把 UI/RawImages 这类目录也判成了 rawimage）。
+        int clearedFolders = 0;
+        string[] folders = Directory.GetDirectories("Assets/Game", "*", SearchOption.AllDirectories);
+        AssetDatabase.StartAssetEditing();
+        try
+        {
+            for (int i = 0; i < folders.Length; i++)
+            {
+                string folder = folders[i].Replace('\\', '/');
+                AssetImporter folderImporter = AssetImporter.GetAtPath(folder);
+                if (folderImporter == null || string.IsNullOrEmpty(folderImporter.assetBundleName))
+                {
+                    continue;
+                }
+
+                folderImporter.assetBundleName = string.Empty;
+                EditorUtility.SetDirty(folderImporter);
+                clearedFolders++;
+            }
+        }
+        finally
+        {
+            AssetDatabase.StopAssetEditing();
+        }
+
+        AssetDatabase.Refresh();
+        Debug.Log($"[AB] 重新分配包名：扫描 {scanned} 个资源，更新 {changed} 个，清理目录包名 {clearedFolders} 个");
     }
 }
