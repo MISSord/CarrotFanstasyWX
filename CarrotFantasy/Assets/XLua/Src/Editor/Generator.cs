@@ -114,31 +114,31 @@ namespace CSObjectWrapEditor
         static Generator()
         {
 #if !XLUA_GENERAL
-            TemplateRef template_ref = ScriptableObject.CreateInstance<TemplateRef>();
-
+            // 本项目没有 xLua 自带的 TemplateRef.asset：CreateInstance 得到的字段全是 null，
+            // 静态构造里一取值就 NRE。这里直接按路径加载 Editor/Template 下的模板文件。
             templateRef = new XLuaTemplates()
             {
 #if GEN_CODE_MINIMIZE
-                LuaClassWrap = { name = template_ref.LuaClassWrapGCM.name, text = template_ref.LuaClassWrapGCM.text },
+                LuaClassWrap = LoadTemplate("LuaClassWrapGCM.tpl.txt"),
 #else
-                LuaClassWrap = { name = template_ref.LuaClassWrap.name, text = template_ref.LuaClassWrap.text },
+                LuaClassWrap = LoadTemplate("LuaClassWrap.tpl.txt"),
 #endif
-                LuaDelegateBridge = { name = template_ref.LuaDelegateBridge.name, text = template_ref.LuaDelegateBridge.text },
-                LuaDelegateWrap = { name = template_ref.LuaDelegateWrap.name, text = template_ref.LuaDelegateWrap.text },
+                LuaDelegateBridge = LoadTemplate("LuaDelegateBridge.tpl.txt"),
+                LuaDelegateWrap = LoadTemplate("LuaDelegateWrap.tpl.txt"),
 #if GEN_CODE_MINIMIZE
-                LuaEnumWrap = { name = template_ref.LuaEnumWrapGCM.name, text = template_ref.LuaEnumWrapGCM.text },
+                LuaEnumWrap = LoadTemplate("LuaEnumWrapGCM.tpl.txt"),
 #else
-                LuaEnumWrap = { name = template_ref.LuaEnumWrap.name, text = template_ref.LuaEnumWrap.text },
+                LuaEnumWrap = LoadTemplate("LuaEnumWrap.tpl.txt"),
 #endif
-                LuaInterfaceBridge = { name = template_ref.LuaInterfaceBridge.name, text = template_ref.LuaInterfaceBridge.text },
+                LuaInterfaceBridge = LoadTemplate("LuaInterfaceBridge.tpl.txt"),
 #if GEN_CODE_MINIMIZE
-                LuaRegister = { name = template_ref.LuaRegisterGCM.name, text = template_ref.LuaRegisterGCM.text },
+                LuaRegister = LoadTemplate("LuaRegisterGCM.tpl.txt"),
 #else
-                LuaRegister = { name = template_ref.LuaRegister.name, text = template_ref.LuaRegister.text },
+                LuaRegister = LoadTemplate("LuaRegister.tpl.txt"),
 #endif
-                LuaWrapPusher = { name = template_ref.LuaWrapPusher.name, text = template_ref.LuaWrapPusher.text },
-                PackUnpack = { name = template_ref.PackUnpack.name, text = template_ref.PackUnpack.text },
-                TemplateCommon = { name = template_ref.TemplateCommon.name, text = template_ref.TemplateCommon.text },
+                LuaWrapPusher = LoadTemplate("LuaWrapPusher.tpl.txt"),
+                PackUnpack = LoadTemplate("PackUnpack.tpl.txt"),
+                TemplateCommon = LoadTemplate("TemplateCommon.lua.txt"),
             };
 #endif
             luaenv.AddLoader((ref string filepath) =>
@@ -153,6 +153,22 @@ namespace CSObjectWrapEditor
                 }
             });
         }
+
+#if !XLUA_GENERAL
+        /// <summary>按文件名加载 <c>Assets/XLua/Src/Editor/Template</c> 下的模板文本。</summary>
+        private static XLuaTemplate LoadTemplate(string fileName)
+        {
+            const string TemplateDir = "Assets/XLua/Src/Editor/Template/";
+            string path = TemplateDir + fileName;
+            TextAsset asset = AssetDatabase.LoadAssetAtPath<TextAsset>(path);
+            if (asset == null)
+            {
+                throw new FileNotFoundException("[XLua Generator] 找不到模板文件: " + path);
+            }
+
+            return new XLuaTemplate { name = fileName, text = asset.text };
+        }
+#endif
 
         static bool IsOverride(MethodBase method)
         {

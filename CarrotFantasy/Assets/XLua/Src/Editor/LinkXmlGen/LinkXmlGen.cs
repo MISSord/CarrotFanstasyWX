@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEditor;
 using System.Collections.Generic;
 using XLua;
 using System.IO;
@@ -29,15 +30,15 @@ public class LinkXmlGen : ScriptableObject
     [GenCodeMenu]//加到 Generate Code 菜单里头
     public static void GenLinkXml()
     {
-        LinkXmlGen gen = ScriptableObject.CreateInstance<LinkXmlGen>();
-        if (gen.Template == null)
+        // 项目里没有 LinkXmlGen.asset，模板直接按路径读。
+        TextAsset template = AssetDatabase.LoadAssetAtPath<TextAsset>(
+            "Assets/XLua/Src/Editor/LinkXmlGen/LinkXmlGen.tpl.txt");
+        if (template == null)
         {
-            Debug.LogWarning(
-                "[LinkXmlGen] 未配置 Template（缺 LinkXmlGen.asset），跳过 link.xml 生成。" +
-                "出包前建议补上，或确认用到的类型都通过 [LuaCallCSharp] 生成的包装被引用，不会被裁剪。");
+            Debug.LogWarning("[LinkXmlGen] 找不到模板 LinkXmlGen.tpl.txt，跳过 link.xml 生成。");
             return;
         }
 
-        Generator.CustomGen(gen.Template.text, GetTasks);
+        Generator.CustomGen(template.text, GetTasks);
     }
 }
