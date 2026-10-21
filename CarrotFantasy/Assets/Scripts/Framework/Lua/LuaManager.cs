@@ -479,6 +479,34 @@ namespace CarrotFantasy
         /// <summary>打包后：取 AB 里的 bundle → 按 buildId 解包 → 从解包目录读模块名（扁平）。</summary>
         private static IEnumerator LoadFromBundleRoutine()
         {
+            // 预解包（lua_scripts 落盘即解包，见 LuaBundlePrefetcher）可能已完成或正在进行：
+            //   进行中 → 等它结束，避免两边同时解包同一目录；
+            //   已完成 → 直接扫模块表，不再重复加载 AB / 解包。
+            if (LuaBundlePrefetcher.IsRunning)
+            {
+                float waited = 0f;
+                bool warned = false;
+                while (LuaBundlePrefetcher.IsRunning)
+                {
+                    waited += Time.unscaledDeltaTime;
+                    if (!warned && waited >= LoadTimeoutSeconds)
+                    {
+                        warned = true;
+                        Debug.LogWarning(
+                            "[LuaManager] 预解包超过 " + LoadTimeoutSeconds + "s 仍未结束，继续等待（避免并发解包同一目录）");
+                    }
+
+                    yield return null;
+                }
+            }
+
+            if (LuaBundlePrefetcher.IsReady && Directory.Exists(LuaScriptUnpacker.CurrentDir))
+            {
+                LoadModuleListFromDirectory(LuaScriptUnpacker.CurrentDir, flat: true);
+                Debug.Log("[LuaManager] 使用预解包结果：" + ModuleList.Count + " 个模块（跳过 AB 加载与解包）");
+                yield break;
+            }
+
             AssetBundleManager manager = AssetBundleManager.Instance;
             if (manager == null)
             {

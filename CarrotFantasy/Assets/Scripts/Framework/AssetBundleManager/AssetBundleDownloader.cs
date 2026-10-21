@@ -1470,6 +1470,8 @@ public class AssetBundleDownloader
     /// </summary>
     private void PersistCompletedBundle(string bundleName)
     {
+        NotifyBundlePersisted(bundleName);
+
         CustomAssetBundleInfo info = ResolveBundleInfo(bundleName);
         if (info == null)
         {
@@ -1480,11 +1482,34 @@ public class AssetBundleDownloader
     }
 
     /// <summary>
+    /// 通知「这个 AB 已经落盘」的订阅方。
+    /// <para>
+    /// 目前只有 <c>CarrotFantasy.LuaBundlePrefetcher</c> 订阅：Lua 包一落盘就立刻解包，
+    /// 不必等全部下载结束（Lua 包只有 ~20 KB，但排在 32 MB 的下载队列里）。
+    /// 只做通知，不改变原有持久化/清单逻辑。
+    /// </para>
+    /// <para>
+    /// 本文件在全局命名空间，所以这里必须写全限定名。
+    /// </para>
+    /// </summary>
+    private static void NotifyBundlePersisted(string bundleName)
+    {
+        if (string.IsNullOrEmpty(bundleName))
+        {
+            return;
+        }
+
+        CarrotFantasy.LuaBundlePrefetcher.OnBundlePersisted(bundleName);
+    }
+
+    /// <summary>
     /// LZMA 转 LZ4 完成后落盘记录：同时记下转换后的大小与 MD5，
     /// 下次启动就能真正校验落盘文件，而不是只看"存在且非空"。
     /// </summary>
     private void PersistConvertedBundle(string bundleName)
     {
+        NotifyBundlePersisted(bundleName);
+
         CustomAssetBundleInfo info = ResolveBundleInfo(bundleName);
         if (info == null)
         {
@@ -1544,6 +1569,16 @@ public class AssetBundleDownloader
 
     private void PersistCompletedBundles(string[] bundleNames)
     {
+        // 先通知「已落盘」的订阅方（Lua 预解包），再做清单记录：
+        // 文件此时已经在磁盘上，通知与 Upsert 的顺序无关。
+        if (bundleNames != null)
+        {
+            for (int i = 0; i < bundleNames.Length; i++)
+            {
+                NotifyBundlePersisted(bundleNames[i]);
+            }
+        }
+
         if (bundleNames == null || bundleNames.Length == 0 || currentManifest == null)
         {
             return;
