@@ -64,5 +64,29 @@ namespace CarrotFantasy
         public static List<Type> CSharpCallLua = new List<Type>
         {
         };
+
+        /// <summary>
+        /// 不生成包装的成员，元素格式：<c>{ 类型全名, 成员名 }</c>。
+        /// <para>
+        /// `UnityEngine.Transform` 的 Directions / Points / Vectors 三组方法在
+        /// Unity 2022+ 增加了 <c>Span&lt;Vector3&gt;</c> 重载。Span 是 ref struct，
+        /// 不能作为泛型实参使用，生成出来必然 CS0306（"Span&lt;Vector3&gt; may not be used
+        /// as a type argument"），所以整组屏蔽。
+        /// </para>
+        /// <para>
+        /// 影响：Lua 侧不能用这些做批量坐标变换；单个点的 TransformPoint/Vector 等
+        /// 仍可用（它们没有 Span 重载）。
+        /// </para>
+        /// </summary>
+        [BlackList]
+        public static List<List<string>> BlackList = new List<List<string>>
+        {
+            new List<string> { "UnityEngine.Transform", "TransformDirections" },
+            new List<string> { "UnityEngine.Transform", "TransformPoints" },
+            new List<string> { "UnityEngine.Transform", "TransformVectors" },
+            new List<string> { "UnityEngine.Transform", "InverseTransformDirections" },
+            new List<string> { "UnityEngine.Transform", "InverseTransformPoints" },
+            new List<string> { "UnityEngine.Transform", "InverseTransformVectors" },
+        };
     }
 }
