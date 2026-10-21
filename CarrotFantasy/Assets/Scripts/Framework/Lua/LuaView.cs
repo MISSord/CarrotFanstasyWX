@@ -30,12 +30,24 @@ namespace CarrotFantasy
         /// <summary>prefab 资源名。</summary>
         protected abstract string LuaAsset { get; }
 
+        /// <summary>
+        /// 对外的视图名（注册进 ViewManager 的名字）。
+        /// <para>
+        /// 默认用 C# 类型名；Lua 版沿用被替换的那个 C# 面板名（如 "HelpPanel"），
+        /// 这样 <c>OpenView&lt;HelpPanel&gt;()</c> 这类既有调用不用改。
+        /// </para>
+        /// </summary>
+        protected virtual string LuaViewName
+        {
+            get { return GetType().Name; }
+        }
+
         private LuaTable luaView;
         private LuaViewBridge bridge;
 
         public override void InitData()
         {
-            viewName = GetType().Name;
+            viewName = LuaViewName;
             SetUILoadInfo(0, LuaBundle, LuaAsset);
         }
 

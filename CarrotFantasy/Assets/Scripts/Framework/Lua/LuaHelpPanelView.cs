@@ -23,5 +23,11 @@ namespace CarrotFantasy
         {
             get { return "HelpPanel"; }
         }
+
+        /// <summary>沿用 C# HelpPanel 的名字，既有 <c>OpenView&lt;HelpPanel&gt;()</c> 才能命中。</summary>
+        protected override string LuaViewName
+        {
+            get { return "HelpPanel"; }
+        }
     }
 }

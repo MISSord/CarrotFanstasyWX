@@ -179,9 +179,19 @@ public class ViewManager
 
         if (viewTypeDic.TryGetValue(viewType, out BaseView view) == false)
         {
-            Debug.LogWarning("View not registered by type: " + viewType.FullName);
+            // Lua 版面板（LuaView 子类）注册的是自己的类型，但对外沿用原面板名
+            // （如 LuaHelpPanelView 的 ViewName 是 "HelpPanel"）。
+            // 这里按类型名回退一次，让 OpenView<HelpPanel>() 这类既有调用不用改。
+            if (viewDic.TryGetValue(viewType.Name, out view) == false)
+            {
+                Debug.LogWarning("View not registered by type: " + viewType.FullName);
+                return;
+            }
+
+            view.Open();
             return;
         }
+
         view.Open();
     }
 
@@ -204,7 +214,11 @@ public class ViewManager
 
         if (viewTypeDic.TryGetValue(viewType, out BaseView view) == false)
         {
-            return;
+            // 同 OpenView：允许按类型名回退到 Lua 版面板。
+            if (viewDic.TryGetValue(viewType.Name, out view) == false)
+            {
+                return;
+            }
         }
 
         view.Close();
