@@ -69,6 +69,23 @@ namespace CarrotFantasy
         };
 
         /// <summary>
+        /// 只在编辑器编译的成员名（源码里被 <c>#if UNITY_EDITOR</c> 包住）。
+        /// <para>
+        /// 反射在编辑器里看得见它们，生成器会照常产出包装；但打 Player 时这些成员不存在，
+        /// 必然 CS1061。已知：
+        /// </para>
+        /// <list type="bullet">
+        ///   <item><c>OnRebuildRequested</c> —— uGUI Graphic / Text 的编辑器专用重建回调
+        ///         （Graphic.cs 里包在 <c>#if UNITY_EDITOR</c> 中）；</item>
+        /// </list>
+        /// <para>遇到新的编辑器专用成员，把名字加进来即可。</para>
+        /// </summary>
+        private static readonly HashSet<string> EditorOnlyMemberNames = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "OnRebuildRequested",
+        };
+
+        /// <summary>
         /// 成员级过滤：返回 true 的成员不生成包装。
         /// <para>
         /// <b>为什么不用 <c>List&lt;List&lt;string&gt;&gt;</c> 形式</b>：那种形式匹配方法时，
@@ -89,6 +106,12 @@ namespace CarrotFantasy
         [BlackList]
         public static Func<MemberInfo, bool> UnsupportedMemberFilter = member =>
         {
+            // 编辑器专用成员：Player 里不存在，生成了必然 CS1061。
+            if (EditorOnlyMemberNames.Contains(member.Name))
+            {
+                return true;
+            }
+
             MethodBase method = member as MethodBase;
             if (method != null)
             {
