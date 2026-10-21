@@ -13,6 +13,11 @@
 
     ===== 子类可覆盖的生命周期（PascalCase）=====
         OnInitData / OnLoad / OnOpen / OnFlush / OnPause / OnResume / OnClose / OnRelease
+
+    ===== 构造约定 =====
+        子类**不要覆盖 New**：C# 的 LuaView 会调用 New(cfg)，cfg 里带
+        name / layer / bundle / asset，本类 __init 会消费它；
+        子类按需实现 __init(cfg) 初始化自己的字段即可（父类 __init 由 class() 自动先调）。
 ]]
 
 BaseView = class()

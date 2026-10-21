@@ -13,20 +13,12 @@
       host.MoveResolution(delta)  切换分辨率草稿（delta = ±1）
       host.MoveMode(delta)        切换显示模式草稿（delta = ±1）
       host.ApplyDisplay()         应用并持久化显示设置
+
+    注意：**不要覆盖 New**。构造配置由 C# 的 LuaView 通过 cfg 传入，
+    BaseView.__init(cfg) 消费；本文件只实现 __init 与生命周期方法。
 ]]
 
 local SetPanel = class(BaseView)
-
-local _create = SetPanel.New
-
-function SetPanel.New()
-    return _create({
-        name = 'SetPanel',
-        layer = 1,
-        bundle = 'ui/view/settingview_prefab',
-        asset = 'SetPanel',
-    })
-end
 
 local PAGE_OPTION = 1
 local PAGE_PRODUCE = 2

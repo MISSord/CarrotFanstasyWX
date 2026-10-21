@@ -53,7 +53,7 @@ namespace CarrotFantasy
 
         protected override void LoadCallBack()
         {
-            this.luaView = LuaManager.EnsureLuaView(LuaModule);
+            this.luaView = LuaManager.EnsureLuaView(LuaModule, this.BuildLuaViewConfig());
             if (this.luaView == null)
             {
                 Debug.LogError("[LuaView] 创建 Lua 视图失败: " + LuaModule);
@@ -116,6 +116,28 @@ namespace CarrotFantasy
                 this.luaView.Dispose();
                 this.luaView = null;
             }
+        }
+
+        /// <summary>
+        /// 传给 Lua 的构造配置，由 <c>BaseView.__init(cfg)</c> 消费。
+        /// <para>
+        /// 这样 Lua 子类**不需要**覆盖 <c>New</c>：配置从 C# 传下来，
+        /// 子类只在 <c>__init</c> 里初始化自己的字段（父类 __init 由 class() 自动先调用）。
+        /// </para>
+        /// </summary>
+        private LuaTable BuildLuaViewConfig()
+        {
+            LuaTable cfg = LuaManager.NewTable();
+            if (cfg == null)
+            {
+                return null;
+            }
+
+            cfg.Set("name", this.LuaViewName);
+            cfg.Set("layer", (int)this.Layer);
+            cfg.Set("bundle", this.LuaBundle);
+            cfg.Set("asset", this.LuaAsset);
+            return cfg;
         }
 
         /// <summary>

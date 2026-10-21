@@ -75,7 +75,7 @@ namespace CarrotFantasy
         }
 
         /// <summary>require 一个 Lua 面板模块并 New 出实例（模块需返回可 New 的类）。</summary>
-        public static LuaTable EnsureLuaView(string moduleName)
+        public static LuaTable EnsureLuaView(string moduleName, LuaTable cfg = null)
         {
             if (s_env == null || string.IsNullOrEmpty(moduleName))
             {
@@ -84,9 +84,32 @@ namespace CarrotFantasy
 
             try
             {
-                object[] results = s_env.DoString(
-                    "return LuaViewHost.EnsureView('" + moduleName + "')",
-                    "lua_view_ensure");
+                LuaTable host = s_env.Global.Get<LuaTable>("LuaViewHost");
+                if (host == null)
+                {
+                    Debug.LogError("[LuaManager] LuaViewHost 未加载，检查 module_controller 的 FILE_LIST");
+                    return null;
+                }
+
+                LuaFunction ensure = host.Get<LuaFunction>("EnsureView");
+                if (ensure == null)
+                {
+                    host.Dispose();
+                    Debug.LogError("[LuaManager] LuaViewHost.EnsureView 不存在");
+                    return null;
+                }
+
+                object[] results;
+                try
+                {
+                    results = ensure.Call(moduleName, cfg);
+                }
+                finally
+                {
+                    ensure.Dispose();
+                    host.Dispose();
+                }
+
                 if (results != null && results.Length > 0)
                 {
                     return results[0] as LuaTable;

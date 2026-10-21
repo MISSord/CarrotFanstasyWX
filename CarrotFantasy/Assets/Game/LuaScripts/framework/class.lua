@@ -7,6 +7,7 @@
       · setmetatable(cls, super)，类表本身当实例的 metatable，不再多包一层 { __index = super }
       · 隐藏 Object 基类，Destroy 只定义一次；New 必须绑在每个类上，否则 Child.New 会落到父类闭包
       · 不提供 isA / 多继承 / __call(Dog())；对外构造入口只有 Class.New(...)
+      · 子类**不要覆盖 New**：构造参数直接 New(cfg) 传入，__init 链（父→子）会收到同样的参数
 ]]
 
 local Object = {}

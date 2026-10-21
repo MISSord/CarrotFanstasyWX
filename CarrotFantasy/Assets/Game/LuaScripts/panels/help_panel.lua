@@ -1,22 +1,12 @@
 --[[
-    panels/help_panel.lua —— HelpPanel 样例（全局 class / BaseView / log）
+    panels/help_panel.lua —— 帮助面板（全局 class / BaseView / log）
+
+    注意：**不要覆盖 New**。构造配置（name/layer/bundle/asset）由 C# 的
+    LuaView 通过 cfg 传进来，BaseView.__init(cfg) 消费；
+    子类只实现 __init（初始化自己的字段）与生命周期方法。
 ]]
 
 local HelpPanel = class(BaseView)
-
-local BUNDLE = 'ui/view/helppanel_prefab'
-local ASSET = 'HelpPanel'
-
-local _create = HelpPanel.New
-
-function HelpPanel.New()
-    return _create({
-        name = 'HelpPanel',
-        layer = 1,
-        bundle = BUNDLE,
-        asset = ASSET,
-    })
-end
 
 local PAGE_HELP = 1
 local PAGE_MONSTER = 2
