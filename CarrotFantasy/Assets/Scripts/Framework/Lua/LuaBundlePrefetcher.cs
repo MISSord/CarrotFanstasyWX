@@ -202,7 +202,7 @@ namespace CarrotFantasy
             Finish(unpacked, buildId, expectedCount);
         }
 
-        private void Finish(bool ok, string buildId = null, int expectedCount = 0)
+        private static void Finish(bool ok, string buildId = null, int expectedCount = 0)
         {
             IsReady = ok;
             IsRunning = false;
@@ -227,7 +227,8 @@ namespace CarrotFantasy
             {
                 try
                 {
-                    Destroy(s_runner.gameObject);
+                    // 静态方法里不能用实例语法调 Destroy，这里显式走 UnityEngine.Object。
+                    UnityEngine.Object.Destroy(s_runner.gameObject);
                 }
                 catch
                 {
