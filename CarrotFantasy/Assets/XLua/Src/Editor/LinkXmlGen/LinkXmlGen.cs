@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using XLua;
 using System.IO;
@@ -26,9 +26,18 @@ public class LinkXmlGen : ScriptableObject
         };
     }
 
-    [GenCodeMenu]//加到Generate Code菜单里头
+    [GenCodeMenu]//加到 Generate Code 菜单里头
     public static void GenLinkXml()
     {
-        Generator.CustomGen(ScriptableObject.CreateInstance<LinkXmlGen>().Template.text, GetTasks);
+        LinkXmlGen gen = ScriptableObject.CreateInstance<LinkXmlGen>();
+        if (gen.Template == null)
+        {
+            Debug.LogWarning(
+                "[LinkXmlGen] 未配置 Template（缺 LinkXmlGen.asset），跳过 link.xml 生成。" +
+                "出包前建议补上，或确认用到的类型都通过 [LuaCallCSharp] 生成的包装被引用，不会被裁剪。");
+            return;
+        }
+
+        Generator.CustomGen(gen.Template.text, GetTasks);
     }
 }
