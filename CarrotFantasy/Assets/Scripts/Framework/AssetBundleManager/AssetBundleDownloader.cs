@@ -571,10 +571,29 @@ public class AssetBundleDownloader
         Log($"下载 Pack {packInfo.PackName} 已加入队列，包含 {packInfo.BundleNames?.Length ?? 0} 个 AB");
     }
 
+    /// <summary>
+    /// 磁盘空间预检开关。
+    /// <para>
+    /// IL2CPP 下 <see cref="System.IO.DriveInfo"/> 不受支持（Unity 2023 的 il2cpp 会抛
+    /// <c>This call is not supported by il2cpp</c>，连 <c>IsReady</c> 都取不到），
+    /// 预检在真机上必然失败 → 每次启动刷一条警告，所以按平台关掉。
+    /// </para>
+    /// <para>
+    /// 以后要恢复：换成平台原生调用（Windows: <c>GetDiskFreeSpaceEx</c>），
+    /// 或只在 Mono/编辑器下保留。
+    /// </para>
+    /// </summary>
+    private const bool EnableDiskSpaceCheck =
+#if !ENABLE_IL2CPP
+        true;
+#else
+        false;
+#endif
+
     /// <summary>下载前粗查磁盘：按「下载 + 解压/转换」2 倍估算，再留 64MB 余量。</summary>
     private static bool HasEnoughDiskSpace(long downloadBytes)
     {
-        if (downloadBytes <= 0)
+        if (!EnableDiskSpaceCheck || downloadBytes <= 0)
         {
             return true;
         }
