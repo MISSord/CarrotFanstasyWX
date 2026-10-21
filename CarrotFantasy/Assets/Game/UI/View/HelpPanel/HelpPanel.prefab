@@ -91,7 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_29
-  _lastRecordedSpriteInstanceId: 32630
+  _lastRecordedSpriteInstanceId: 29942
 --- !u!1 &1012527145114426
 GameObject:
   m_ObjectHideFlags: 0
@@ -275,9 +275,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_4
-  defaultAssetName: help_2-hd.pvr_4
-  _lastRecordedSpriteInstanceId: 33088
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1096053440259920
 GameObject:
   m_ObjectHideFlags: 0
@@ -426,7 +426,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_66
-  _lastRecordedSpriteInstanceId: 32448
+  _lastRecordedSpriteInstanceId: 29964
 --- !u!1 &1102240248898288
 GameObject:
   m_ObjectHideFlags: 0
@@ -518,9 +518,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_6
-  defaultAssetName: help_1-hd_6
-  _lastRecordedSpriteInstanceId: 33070
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1115343561494362
 GameObject:
   m_ObjectHideFlags: 0
@@ -610,9 +610,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_8
-  defaultAssetName: help_2-hd.pvr_8
-  _lastRecordedSpriteInstanceId: 33112
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1126502066027536
 GameObject:
   m_ObjectHideFlags: 0
@@ -800,7 +800,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_4
-  _lastRecordedSpriteInstanceId: 33106
+  _lastRecordedSpriteInstanceId: 30006
 --- !u!1 &1154275595342480
 GameObject:
   m_ObjectHideFlags: 0
@@ -892,9 +892,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_54
-  defaultAssetName: help_1-hd_54
-  _lastRecordedSpriteInstanceId: 33060
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1161052510659302
 GameObject:
   m_ObjectHideFlags: 0
@@ -986,9 +986,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_49
-  defaultAssetName: help_1-hd_49
-  _lastRecordedSpriteInstanceId: 33068
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1173817160087248
 GameObject:
   m_ObjectHideFlags: 0
@@ -1080,7 +1080,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_65
-  _lastRecordedSpriteInstanceId: 33086
+  _lastRecordedSpriteInstanceId: 30002
 --- !u!1 &1181811885766368
 GameObject:
   m_ObjectHideFlags: 0
@@ -1170,9 +1170,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1190032153095622
 GameObject:
   m_ObjectHideFlags: 0
@@ -1262,9 +1262,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_2
-  defaultAssetName: help_2-hd.pvr_2
-  _lastRecordedSpriteInstanceId: 33092
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1202179013809736
 GameObject:
   m_ObjectHideFlags: 0
@@ -1356,9 +1356,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_81
-  defaultAssetName: help_1-hd_81
-  _lastRecordedSpriteInstanceId: 33084
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1228428397461938
 GameObject:
   m_ObjectHideFlags: 0
@@ -1507,7 +1507,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_33
-  _lastRecordedSpriteInstanceId: 32452
+  _lastRecordedSpriteInstanceId: 29968
 --- !u!1 &1235024129335156
 GameObject:
   m_ObjectHideFlags: 0
@@ -1597,9 +1597,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1247862366932470
 GameObject:
   m_ObjectHideFlags: 0
@@ -1689,9 +1689,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_11
-  defaultAssetName: help_2-hd.pvr_11
-  _lastRecordedSpriteInstanceId: 33098
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1249373743607816
 GameObject:
   m_ObjectHideFlags: 0
@@ -1782,9 +1782,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_3-hd
-  defaultAssetName: help_3-hd_2
-  _lastRecordedSpriteInstanceId: 33072
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1252846938689908
 GameObject:
   m_ObjectHideFlags: 0
@@ -1874,9 +1874,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1302590755782932
 GameObject:
   m_ObjectHideFlags: 0
@@ -1966,9 +1966,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_7
-  defaultAssetName: help_2-hd.pvr_7
-  _lastRecordedSpriteInstanceId: 33116
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1304178922100750
 GameObject:
   m_ObjectHideFlags: 0
@@ -2058,9 +2058,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_13
-  defaultAssetName: help_2-hd.pvr_13
-  _lastRecordedSpriteInstanceId: 33108
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1307697092781038
 GameObject:
   m_ObjectHideFlags: 0
@@ -2150,9 +2150,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1310109745461166
 GameObject:
   m_ObjectHideFlags: 0
@@ -2386,7 +2386,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_1
-  _lastRecordedSpriteInstanceId: 32632
+  _lastRecordedSpriteInstanceId: 29950
 --- !u!1 &1341220002125472
 GameObject:
   m_ObjectHideFlags: 0
@@ -2514,9 +2514,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_6
-  defaultAssetName: help_2-hd.pvr_6
-  _lastRecordedSpriteInstanceId: 33104
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1369598637533636
 GameObject:
   m_ObjectHideFlags: 0
@@ -2606,9 +2606,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1370256864941366
 GameObject:
   m_ObjectHideFlags: 0
@@ -2757,7 +2757,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_71
-  _lastRecordedSpriteInstanceId: 32450
+  _lastRecordedSpriteInstanceId: 29966
 --- !u!1 &1416023285314822
 GameObject:
   m_ObjectHideFlags: 0
@@ -2847,9 +2847,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1416803894773812
 GameObject:
   m_ObjectHideFlags: 0
@@ -2939,9 +2939,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1419372558023622
 GameObject:
   m_ObjectHideFlags: 0
@@ -3033,7 +3033,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_2
-  _lastRecordedSpriteInstanceId: 32622
+  _lastRecordedSpriteInstanceId: 29944
 --- !u!1 &1431538199427090
 GameObject:
   m_ObjectHideFlags: 0
@@ -3124,9 +3124,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_3-hd
-  defaultAssetName: help_3-hd_6
-  _lastRecordedSpriteInstanceId: 33076
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1434831345951896
 GameObject:
   m_ObjectHideFlags: 0
@@ -3216,9 +3216,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_5
-  defaultAssetName: help_2-hd.pvr_5
-  _lastRecordedSpriteInstanceId: 33102
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1436866944990142
 GameObject:
   m_ObjectHideFlags: 0
@@ -3310,7 +3310,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_50
-  _lastRecordedSpriteInstanceId: 33096
+  _lastRecordedSpriteInstanceId: 30004
 --- !u!1 &1440516026247260
 GameObject:
   m_ObjectHideFlags: 0
@@ -3400,9 +3400,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1471294299400624
 GameObject:
   m_ObjectHideFlags: 0
@@ -3494,7 +3494,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_3
-  _lastRecordedSpriteInstanceId: 32624
+  _lastRecordedSpriteInstanceId: 29946
 --- !u!1 &1480662271311996
 GameObject:
   m_ObjectHideFlags: 0
@@ -3586,7 +3586,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_73
-  _lastRecordedSpriteInstanceId: 33110
+  _lastRecordedSpriteInstanceId: 30008
 --- !u!1 &1522942116436812
 GameObject:
   m_ObjectHideFlags: 0
@@ -3783,9 +3783,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_1
-  defaultAssetName: help_2-hd.pvr_1
-  _lastRecordedSpriteInstanceId: 33090
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1604733542722492
 GameObject:
   m_ObjectHideFlags: 0
@@ -3878,7 +3878,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_0
-  _lastRecordedSpriteInstanceId: 32628
+  _lastRecordedSpriteInstanceId: 29962
 --- !u!1 &1613552451863066
 GameObject:
   m_ObjectHideFlags: 0
@@ -4035,9 +4035,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_60
-  defaultAssetName: help_1-hd_60
-  _lastRecordedSpriteInstanceId: 33066
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1633090141502010
 GameObject:
   m_ObjectHideFlags: 0
@@ -4129,7 +4129,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_29
-  _lastRecordedSpriteInstanceId: 32630
+  _lastRecordedSpriteInstanceId: 29942
 --- !u!1 &1646537818593230
 GameObject:
   m_ObjectHideFlags: 0
@@ -4316,9 +4316,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_3-hd
-  defaultAssetName: help_3-hd_5
-  _lastRecordedSpriteInstanceId: 33064
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1659940336264108
 GameObject:
   m_ObjectHideFlags: 0
@@ -4410,9 +4410,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_64
-  defaultAssetName: help_1-hd_64
-  _lastRecordedSpriteInstanceId: 33074
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1672504704040726
 GameObject:
   m_ObjectHideFlags: 0
@@ -4502,9 +4502,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1682778628637486
 GameObject:
   m_ObjectHideFlags: 0
@@ -4596,7 +4596,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_14
-  _lastRecordedSpriteInstanceId: 32634
+  _lastRecordedSpriteInstanceId: 29952
 --- !u!1 &1683178934928932
 GameObject:
   m_ObjectHideFlags: 0
@@ -4687,9 +4687,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_3-hd
-  defaultAssetName: help_3-hd_1
-  _lastRecordedSpriteInstanceId: 33082
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1688359653753422
 GameObject:
   m_ObjectHideFlags: 0
@@ -4851,9 +4851,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_9
-  defaultAssetName: help_2-hd.pvr_9
-  _lastRecordedSpriteInstanceId: 33114
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1726779215702650
 GameObject:
   m_ObjectHideFlags: 0
@@ -5002,7 +5002,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_67
-  _lastRecordedSpriteInstanceId: 32454
+  _lastRecordedSpriteInstanceId: 29970
 --- !u!1 &1730390291549424
 GameObject:
   m_ObjectHideFlags: 0
@@ -5246,9 +5246,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_59
-  defaultAssetName: help_1-hd_59
-  _lastRecordedSpriteInstanceId: 33062
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1824426138133222
 GameObject:
   m_ObjectHideFlags: 0
@@ -5376,9 +5376,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1852995187422478
 GameObject:
   m_ObjectHideFlags: 0
@@ -5470,7 +5470,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_3
-  _lastRecordedSpriteInstanceId: 32624
+  _lastRecordedSpriteInstanceId: 29946
 --- !u!1 &1904412878117328
 GameObject:
   m_ObjectHideFlags: 0
@@ -5560,9 +5560,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_0
-  defaultAssetName: help_2-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 33094
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1910823000816676
 GameObject:
   m_ObjectHideFlags: 0
@@ -5654,7 +5654,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_39
-  _lastRecordedSpriteInstanceId: 32636
+  _lastRecordedSpriteInstanceId: 29954
 --- !u!1 &1911574850385776
 GameObject:
   m_ObjectHideFlags: 0
@@ -5744,9 +5744,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_3-hd
-  defaultAssetName: help_3-hd_4
-  _lastRecordedSpriteInstanceId: 32626
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1912178588148030
 GameObject:
   m_ObjectHideFlags: 0
@@ -5980,9 +5980,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_61
-  defaultAssetName: help_1-hd_61
-  _lastRecordedSpriteInstanceId: 33078
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1938651205118066
 GameObject:
   m_ObjectHideFlags: 0
@@ -6072,9 +6072,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_2-hd.pvr_3
-  defaultAssetName: help_2-hd.pvr_3
-  _lastRecordedSpriteInstanceId: 33100
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1963440005667486
 GameObject:
   m_ObjectHideFlags: 0
@@ -6166,9 +6166,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_53
-  defaultAssetName: help_1-hd_53
-  _lastRecordedSpriteInstanceId: 33056
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1963746774433480
 GameObject:
   m_ObjectHideFlags: 0
@@ -6260,9 +6260,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_1-hd_46
-  defaultAssetName: help_1-hd_46
-  _lastRecordedSpriteInstanceId: 33080
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedSpriteInstanceId: 0
 --- !u!1 &1986800832740120
 GameObject:
   m_ObjectHideFlags: 0
@@ -6355,7 +6355,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_0
-  _lastRecordedSpriteInstanceId: 32628
+  _lastRecordedSpriteInstanceId: 29962
 --- !u!1 &1995230440788802
 GameObject:
   m_ObjectHideFlags: 0
@@ -6395,10 +6395,10 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1920, y: 1440}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222425921639344880
 CanvasRenderer:
@@ -6474,9 +6474,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/help_3-hd_0
-  defaultAssetName: help_3-hd_0
-  _lastRecordedTextureInstanceId: 54482
+  defaultBundleName: 
+  defaultAssetName: 
+  _lastRecordedTextureInstanceId: 0
 --- !u!1 &1073441487524267667
 GameObject:
   m_ObjectHideFlags: 0
