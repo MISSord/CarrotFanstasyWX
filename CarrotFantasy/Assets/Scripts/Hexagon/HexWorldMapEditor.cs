@@ -45,7 +45,11 @@ public class HexWorldMapEditor : MonoBehaviour
 	HexMapCameraPan cameraPan;
 
 	Rect toolPanelRect = new Rect(10f, 10f, 300f, 640f);
+#if UNITY_EDITOR
+	// 仅在编辑器绘制（DrawMapColorLegend 里使用），打 Player 时不参与编译，
+	// 否则会报 CS0414「字段已赋值但从未使用」。
 	bool showColorLegend = true;
+#endif
 
 	void Awake ()
 	{

@@ -18,12 +18,17 @@ public static class PackGroupingDefaults
     public const string PackFileExtension = ".zip";
     public const string BootPackName = "pack_boot";
 
-    /// <summary>启动阶段优先需要的 AB；改名后需同步更新，否则会落入普通目录桶。</summary>
+    /// <summary>
+    /// 启动阶段优先需要的 AB；改名后需同步更新，否则会落入普通目录桶。
+    /// <para>
+    /// 注意：视图根预制体是 <c>Assets/Resources/BaseView.prefab</c>，走 Resources.Load，
+    /// 不参与 AB，所以这里**没有** <c>ui/view_prefab</c>（它从未被生成过）。
+    /// </para>
+    /// </summary>
     public static readonly string[] BootBundles =
     {
         "ui/view/login_prefab",
         "ui/view/loadingview_prefab",
-        "ui/view_prefab",
     };
 
     /// <summary>名称包含这些片段的包强制独立 Pack（如大图集）。</summary>
