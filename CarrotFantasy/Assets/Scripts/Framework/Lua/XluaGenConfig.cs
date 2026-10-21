@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 using XLua;
@@ -10,12 +11,9 @@ namespace CarrotFantasy
     /// XLua 代码生成配置。
     /// <para>
     /// xLua 生成器（<c>XLua/Generate Code</c>）会扫描所有「静态类 + static 字段」，
-    /// 读取字段上的 <see cref="LuaCallCSharpAttribute"/> / <see cref="CSharpCallLuaAttribute"/>，
-    /// 把字段里的 <see cref="Type"/> 列表编译成 Lua 可直接调用的包装（生成到 <c>Assets/XLua/Gen/</c>）。
-    /// </para>
-    /// <para>
-    /// 为什么需要它：没有生成绑定时，xLua 只在编辑器/Mono 下用反射
-    /// （ObjectTranslator.cs 的条件编译），IL2CPP 包里 Lua 调 C# 会抛 "not gen"。
+    /// 读取字段上的 <see cref="LuaCallCSharpAttribute"/> / <see cref="CSharpCallLuaAttribute"/> /
+    /// <see cref="BlackListAttribute"/>，据此决定生成哪些包装、屏蔽哪些成员。
+    /// 生成物输出到 <c>Assets/XLua/Gen/</c>（属 XLua.Runtime 程序集）。
     /// </para>
     /// <para>
     /// 维护约定：Lua 侧每新调一个 C# 类型，就往对应列表补一行；改完重新跑一次生成。
@@ -28,7 +26,7 @@ namespace CarrotFantasy
         public static List<Type> LuaCallCSharp = new List<Type>
         {
             // ---- 本项目 ----
-            typeof(LuaViewBridge),          // Lua 面板唯一直接调用的 C# 对象
+            typeof(LuaViewBridge),          // Lua 面板唯一直接调用的 C# 对象（在 XLua/Extensions 下）
 
             // ---- UnityEngine 基础 ----
             typeof(UnityEngine.Object),     // Lua 里判空 / Destroy
@@ -66,27 +64,77 @@ namespace CarrotFantasy
         };
 
         /// <summary>
-        /// 不生成包装的成员，元素格式：<c>{ 类型全名, 成员名 }</c>。
+        /// 成员级过滤：返回 true 的成员不生成包装。
         /// <para>
-        /// `UnityEngine.Transform` 的 Directions / Points / Vectors 三组方法在
-        /// Unity 2022+ 增加了 <c>Span&lt;Vector3&gt;</c> 重载。Span 是 ref struct，
-        /// 不能作为泛型实参使用，生成出来必然 CS0306（"Span&lt;Vector3&gt; may not be used
-        /// as a type argument"），所以整组屏蔽。
+        /// <b>为什么不用 <c>List&lt;List&lt;string&gt;&gt;</c> 形式</b>：那种形式匹配方法时，
+        /// 除了 {类型, 方法名} 还要求把每个参数类型都逐个列出
+        /// （见 <c>Generator.isMethodInBlackList</c>：参数个数须等于 Count-2 且逐个比对），
+        /// 写起来啰嗦且容易因类型字符串变化而失效。
         /// </para>
         /// <para>
-        /// 影响：Lua 侧不能用这些做批量坐标变换；单个点的 TransformPoint/Vector 等
-        /// 仍可用（它们没有 Span 重载）。
+        /// 当前过滤两类成员：
         /// </para>
+        /// <list type="bullet">
+        ///   <item>参数或返回值含 <c>Span&lt;T&gt;</c> / <c>ReadOnlySpan&lt;T&gt;</c> 的方法 ——
+        ///         Unity 2022+ 的 <c>Transform.TransformDirections/Points/Vectors</c> 等新增了
+        ///         Span 重载，而 Span 是 ref struct，不能作泛型实参，生成必然 CS0306；</item>
+        ///   <item>指针类型成员 —— xLua 本身也不支持。</item>
+        /// </list>
         /// </summary>
         [BlackList]
-        public static List<List<string>> BlackList = new List<List<string>>
+        public static Func<MemberInfo, bool> UnsupportedMemberFilter = member =>
         {
-            new List<string> { "UnityEngine.Transform", "TransformDirections" },
-            new List<string> { "UnityEngine.Transform", "TransformPoints" },
-            new List<string> { "UnityEngine.Transform", "TransformVectors" },
-            new List<string> { "UnityEngine.Transform", "InverseTransformDirections" },
-            new List<string> { "UnityEngine.Transform", "InverseTransformPoints" },
-            new List<string> { "UnityEngine.Transform", "InverseTransformVectors" },
+            MethodBase method = member as MethodBase;
+            if (method != null)
+            {
+                ParameterInfo[] parameters = method.GetParameters();
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    if (IsUnsupportedType(parameters[i].ParameterType))
+                    {
+                        return true;
+                    }
+                }
+
+                MethodInfo methodInfo = method as MethodInfo;
+                return methodInfo != null && IsUnsupportedType(methodInfo.ReturnType);
+            }
+
+            PropertyInfo property = member as PropertyInfo;
+            if (property != null)
+            {
+                return IsUnsupportedType(property.PropertyType);
+            }
+
+            FieldInfo field = member as FieldInfo;
+            return field != null && IsUnsupportedType(field.FieldType);
         };
+
+        /// <summary>
+        /// 是否是 xLua 无法生成的类型：Span / ReadOnlySpan（ref struct 不能作泛型实参）、指针。
+        /// <para>用类型全名判断，避免额外引用 System.Memory 等程序集。</para>
+        /// </summary>
+        private static bool IsUnsupportedType(Type type)
+        {
+            if (type == null)
+            {
+                return false;
+            }
+
+            if (type.IsPointer)
+            {
+                return true;
+            }
+
+            if (!type.IsGenericType)
+            {
+                return false;
+            }
+
+            string fullName = type.GetGenericTypeDefinition().FullName;
+            return fullName != null
+                && (fullName.StartsWith("System.Span`", StringComparison.Ordinal)
+                    || fullName.StartsWith("System.ReadOnlySpan`", StringComparison.Ordinal));
+        }
     }
 }
