@@ -2,7 +2,7 @@
 
 <linker>
 
-	<assembly fullname="CarrotFantasy">
+	<assembly fullname="XLua.Runtime">
 	    <type fullname="CarrotFantasy.LuaViewBridge" preserve="all"/>
 		
 	</assembly>

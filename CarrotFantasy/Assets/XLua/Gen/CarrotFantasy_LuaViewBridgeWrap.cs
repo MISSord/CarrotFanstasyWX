@@ -52,9 +52,9 @@ namespace XLua.CSObjectWrap
             
 			try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-				if(LuaAPI.lua_gettop(L) == 2 && translator.Assignable<CarrotFantasy.LuaView>(L, 2))
+				if(LuaAPI.lua_gettop(L) == 2 && translator.Assignable<CarrotFantasy.ILuaViewHost>(L, 2))
 				{
-					CarrotFantasy.LuaView _owner = (CarrotFantasy.LuaView)translator.GetObject(L, 2, typeof(CarrotFantasy.LuaView));
+					CarrotFantasy.ILuaViewHost _owner = (CarrotFantasy.ILuaViewHost)translator.GetObject(L, 2, typeof(CarrotFantasy.ILuaViewHost));
 					
 					var gen_ret = new CarrotFantasy.LuaViewBridge(_owner);
 					translator.Push(L, gen_ret);

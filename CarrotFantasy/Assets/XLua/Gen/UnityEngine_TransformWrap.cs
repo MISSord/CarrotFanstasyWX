@@ -21,7 +21,7 @@ namespace XLua.CSObjectWrap
         {
 			ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
 			System.Type type = typeof(UnityEngine.Transform);
-			Utils.BeginObjectRegister(type, L, translator, 0, 30, 19, 13);
+			Utils.BeginObjectRegister(type, L, translator, 0, 24, 19, 13);
 			
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "SetParent", _m_SetParent);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "SetPositionAndRotation", _m_SetPositionAndRotation);
@@ -33,17 +33,11 @@ namespace XLua.CSObjectWrap
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "RotateAround", _m_RotateAround);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "LookAt", _m_LookAt);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "TransformDirection", _m_TransformDirection);
-			Utils.RegisterFunc(L, Utils.METHOD_IDX, "TransformDirections", _m_TransformDirections);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "InverseTransformDirection", _m_InverseTransformDirection);
-			Utils.RegisterFunc(L, Utils.METHOD_IDX, "InverseTransformDirections", _m_InverseTransformDirections);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "TransformVector", _m_TransformVector);
-			Utils.RegisterFunc(L, Utils.METHOD_IDX, "TransformVectors", _m_TransformVectors);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "InverseTransformVector", _m_InverseTransformVector);
-			Utils.RegisterFunc(L, Utils.METHOD_IDX, "InverseTransformVectors", _m_InverseTransformVectors);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "TransformPoint", _m_TransformPoint);
-			Utils.RegisterFunc(L, Utils.METHOD_IDX, "TransformPoints", _m_TransformPoints);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "InverseTransformPoint", _m_InverseTransformPoint);
-			Utils.RegisterFunc(L, Utils.METHOD_IDX, "InverseTransformPoints", _m_InverseTransformPoints);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "DetachChildren", _m_DetachChildren);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "SetAsFirstSibling", _m_SetAsFirstSibling);
 			Utils.RegisterFunc(L, Utils.METHOD_IDX, "SetAsLastSibling", _m_SetAsLastSibling);
@@ -607,49 +601,6 @@ namespace XLua.CSObjectWrap
         }
         
         [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-        static int _m_TransformDirections(RealStatePtr L)
-        {
-		    try {
-            
-                ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-            
-            
-                UnityEngine.Transform gen_to_be_invoked = (UnityEngine.Transform)translator.FastGetCSObj(L, 1);
-            
-            
-			    int gen_param_count = LuaAPI.lua_gettop(L);
-            
-                if(gen_param_count == 2&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 2)) 
-                {
-                    System.Span<UnityEngine.Vector3> _directions;translator.Get(L, 2, out _directions);
-                    
-                    gen_to_be_invoked.TransformDirections( _directions );
-                    
-                    
-                    
-                    return 0;
-                }
-                if(gen_param_count == 3&& translator.Assignable<System.ReadOnlySpan<UnityEngine.Vector3>>(L, 2)&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 3)) 
-                {
-                    System.ReadOnlySpan<UnityEngine.Vector3> _directions;translator.Get(L, 2, out _directions);
-                    System.Span<UnityEngine.Vector3> _transformedDirections;translator.Get(L, 3, out _transformedDirections);
-                    
-                    gen_to_be_invoked.TransformDirections( _directions, _transformedDirections );
-                    
-                    
-                    
-                    return 0;
-                }
-                
-            } catch(System.Exception gen_e) {
-                return LuaAPI.luaL_error(L, "c# exception:" + gen_e);
-            }
-            
-            return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.TransformDirections!");
-            
-        }
-        
-        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
         static int _m_InverseTransformDirection(RealStatePtr L)
         {
 		    try {
@@ -692,49 +643,6 @@ namespace XLua.CSObjectWrap
             }
             
             return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.InverseTransformDirection!");
-            
-        }
-        
-        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-        static int _m_InverseTransformDirections(RealStatePtr L)
-        {
-		    try {
-            
-                ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-            
-            
-                UnityEngine.Transform gen_to_be_invoked = (UnityEngine.Transform)translator.FastGetCSObj(L, 1);
-            
-            
-			    int gen_param_count = LuaAPI.lua_gettop(L);
-            
-                if(gen_param_count == 2&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 2)) 
-                {
-                    System.Span<UnityEngine.Vector3> _directions;translator.Get(L, 2, out _directions);
-                    
-                    gen_to_be_invoked.InverseTransformDirections( _directions );
-                    
-                    
-                    
-                    return 0;
-                }
-                if(gen_param_count == 3&& translator.Assignable<System.ReadOnlySpan<UnityEngine.Vector3>>(L, 2)&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 3)) 
-                {
-                    System.ReadOnlySpan<UnityEngine.Vector3> _directions;translator.Get(L, 2, out _directions);
-                    System.Span<UnityEngine.Vector3> _transformedDirections;translator.Get(L, 3, out _transformedDirections);
-                    
-                    gen_to_be_invoked.InverseTransformDirections( _directions, _transformedDirections );
-                    
-                    
-                    
-                    return 0;
-                }
-                
-            } catch(System.Exception gen_e) {
-                return LuaAPI.luaL_error(L, "c# exception:" + gen_e);
-            }
-            
-            return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.InverseTransformDirections!");
             
         }
         
@@ -785,49 +693,6 @@ namespace XLua.CSObjectWrap
         }
         
         [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-        static int _m_TransformVectors(RealStatePtr L)
-        {
-		    try {
-            
-                ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-            
-            
-                UnityEngine.Transform gen_to_be_invoked = (UnityEngine.Transform)translator.FastGetCSObj(L, 1);
-            
-            
-			    int gen_param_count = LuaAPI.lua_gettop(L);
-            
-                if(gen_param_count == 2&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 2)) 
-                {
-                    System.Span<UnityEngine.Vector3> _vectors;translator.Get(L, 2, out _vectors);
-                    
-                    gen_to_be_invoked.TransformVectors( _vectors );
-                    
-                    
-                    
-                    return 0;
-                }
-                if(gen_param_count == 3&& translator.Assignable<System.ReadOnlySpan<UnityEngine.Vector3>>(L, 2)&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 3)) 
-                {
-                    System.ReadOnlySpan<UnityEngine.Vector3> _vectors;translator.Get(L, 2, out _vectors);
-                    System.Span<UnityEngine.Vector3> _transformedVectors;translator.Get(L, 3, out _transformedVectors);
-                    
-                    gen_to_be_invoked.TransformVectors( _vectors, _transformedVectors );
-                    
-                    
-                    
-                    return 0;
-                }
-                
-            } catch(System.Exception gen_e) {
-                return LuaAPI.luaL_error(L, "c# exception:" + gen_e);
-            }
-            
-            return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.TransformVectors!");
-            
-        }
-        
-        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
         static int _m_InverseTransformVector(RealStatePtr L)
         {
 		    try {
@@ -870,49 +735,6 @@ namespace XLua.CSObjectWrap
             }
             
             return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.InverseTransformVector!");
-            
-        }
-        
-        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-        static int _m_InverseTransformVectors(RealStatePtr L)
-        {
-		    try {
-            
-                ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-            
-            
-                UnityEngine.Transform gen_to_be_invoked = (UnityEngine.Transform)translator.FastGetCSObj(L, 1);
-            
-            
-			    int gen_param_count = LuaAPI.lua_gettop(L);
-            
-                if(gen_param_count == 2&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 2)) 
-                {
-                    System.Span<UnityEngine.Vector3> _vectors;translator.Get(L, 2, out _vectors);
-                    
-                    gen_to_be_invoked.InverseTransformVectors( _vectors );
-                    
-                    
-                    
-                    return 0;
-                }
-                if(gen_param_count == 3&& translator.Assignable<System.ReadOnlySpan<UnityEngine.Vector3>>(L, 2)&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 3)) 
-                {
-                    System.ReadOnlySpan<UnityEngine.Vector3> _vectors;translator.Get(L, 2, out _vectors);
-                    System.Span<UnityEngine.Vector3> _transformedVectors;translator.Get(L, 3, out _transformedVectors);
-                    
-                    gen_to_be_invoked.InverseTransformVectors( _vectors, _transformedVectors );
-                    
-                    
-                    
-                    return 0;
-                }
-                
-            } catch(System.Exception gen_e) {
-                return LuaAPI.luaL_error(L, "c# exception:" + gen_e);
-            }
-            
-            return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.InverseTransformVectors!");
             
         }
         
@@ -963,49 +785,6 @@ namespace XLua.CSObjectWrap
         }
         
         [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-        static int _m_TransformPoints(RealStatePtr L)
-        {
-		    try {
-            
-                ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-            
-            
-                UnityEngine.Transform gen_to_be_invoked = (UnityEngine.Transform)translator.FastGetCSObj(L, 1);
-            
-            
-			    int gen_param_count = LuaAPI.lua_gettop(L);
-            
-                if(gen_param_count == 2&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 2)) 
-                {
-                    System.Span<UnityEngine.Vector3> _positions;translator.Get(L, 2, out _positions);
-                    
-                    gen_to_be_invoked.TransformPoints( _positions );
-                    
-                    
-                    
-                    return 0;
-                }
-                if(gen_param_count == 3&& translator.Assignable<System.ReadOnlySpan<UnityEngine.Vector3>>(L, 2)&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 3)) 
-                {
-                    System.ReadOnlySpan<UnityEngine.Vector3> _positions;translator.Get(L, 2, out _positions);
-                    System.Span<UnityEngine.Vector3> _transformedPositions;translator.Get(L, 3, out _transformedPositions);
-                    
-                    gen_to_be_invoked.TransformPoints( _positions, _transformedPositions );
-                    
-                    
-                    
-                    return 0;
-                }
-                
-            } catch(System.Exception gen_e) {
-                return LuaAPI.luaL_error(L, "c# exception:" + gen_e);
-            }
-            
-            return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.TransformPoints!");
-            
-        }
-        
-        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
         static int _m_InverseTransformPoint(RealStatePtr L)
         {
 		    try {
@@ -1048,49 +827,6 @@ namespace XLua.CSObjectWrap
             }
             
             return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.InverseTransformPoint!");
-            
-        }
-        
-        [MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
-        static int _m_InverseTransformPoints(RealStatePtr L)
-        {
-		    try {
-            
-                ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-            
-            
-                UnityEngine.Transform gen_to_be_invoked = (UnityEngine.Transform)translator.FastGetCSObj(L, 1);
-            
-            
-			    int gen_param_count = LuaAPI.lua_gettop(L);
-            
-                if(gen_param_count == 2&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 2)) 
-                {
-                    System.Span<UnityEngine.Vector3> _positions;translator.Get(L, 2, out _positions);
-                    
-                    gen_to_be_invoked.InverseTransformPoints( _positions );
-                    
-                    
-                    
-                    return 0;
-                }
-                if(gen_param_count == 3&& translator.Assignable<System.ReadOnlySpan<UnityEngine.Vector3>>(L, 2)&& translator.Assignable<System.Span<UnityEngine.Vector3>>(L, 3)) 
-                {
-                    System.ReadOnlySpan<UnityEngine.Vector3> _positions;translator.Get(L, 2, out _positions);
-                    System.Span<UnityEngine.Vector3> _transformedPositions;translator.Get(L, 3, out _transformedPositions);
-                    
-                    gen_to_be_invoked.InverseTransformPoints( _positions, _transformedPositions );
-                    
-                    
-                    
-                    return 0;
-                }
-                
-            } catch(System.Exception gen_e) {
-                return LuaAPI.luaL_error(L, "c# exception:" + gen_e);
-            }
-            
-            return LuaAPI.luaL_error(L, "invalid arguments to UnityEngine.Transform.InverseTransformPoints!");
             
         }
         
