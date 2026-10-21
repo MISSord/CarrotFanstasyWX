@@ -16,6 +16,11 @@ ViewManager = require 'framework.view_manager'
 MapCtrl = require 'services.map_service'
 ConfigManager = require 'framework.config_manager'
 
+---@class LuaViewHost
+---@field EnsureView fun(moduleName: string): table
+---@field Invoke fun(view: table, method: string, ...): any
+LuaViewHost = {}
+
 ---@class ModuleController
 ---@field LoadFiles fun()
 ---@field NewCtrls fun()

@@ -62,6 +62,107 @@ namespace CarrotFantasy
             get { return s_env != null; }
         }
 
+        /// <summary>当前 LuaEnv（未初始化时为 null）。仅供框架层（LuaView 等）使用。</summary>
+        public static LuaEnv Env
+        {
+            get { return s_env; }
+        }
+
+        /// <summary>新建一个 Lua 表，由 C# 填好数据后传给 Lua（节点表、flush info 等）。</summary>
+        public static LuaTable NewTable()
+        {
+            return s_env != null ? s_env.NewTable() : null;
+        }
+
+        /// <summary>require 一个 Lua 面板模块并 New 出实例（模块需返回可 New 的类）。</summary>
+        public static LuaTable EnsureLuaView(string moduleName)
+        {
+            if (s_env == null || string.IsNullOrEmpty(moduleName))
+            {
+                return null;
+            }
+
+            try
+            {
+                object[] results = s_env.DoString(
+                    "return LuaViewHost.EnsureView('" + moduleName + "')",
+                    "lua_view_ensure");
+                if (results != null && results.Length > 0)
+                {
+                    return results[0] as LuaTable;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("[LuaManager] EnsureLuaView 失败: " + moduleName + " / " + e.Message);
+            }
+
+            return null;
+        }
+
+        /// <summary>调用 Lua 视图实例上的方法；方法不存在只告警，异常在 Lua 侧 pcall 兜住。</summary>
+        public static void CallLuaView(LuaTable view, string method, params object[] args)
+        {
+            if (s_env == null || view == null || string.IsNullOrEmpty(method))
+            {
+                return;
+            }
+
+            object[] callArgs = new object[(args != null ? args.Length : 0) + 2];
+            callArgs[0] = view;
+            callArgs[1] = method;
+            if (args != null)
+            {
+                Array.Copy(args, 0, callArgs, 2, args.Length);
+            }
+
+            InvokeLuaFunction("LuaViewHost", "Invoke", callArgs);
+        }
+
+        /// <summary>调用全局表里的普通函数（不自动传 self）。</summary>
+        public static object CallLuaFunc(string tableName, string funcName, params object[] args)
+        {
+            return InvokeLuaFunction(tableName, funcName, args);
+        }
+
+        private static object InvokeLuaFunction(string tableName, string funcName, object[] args)
+        {
+            if (s_env == null || string.IsNullOrEmpty(tableName) || string.IsNullOrEmpty(funcName))
+            {
+                return null;
+            }
+
+            LuaTable table = s_env.Global.Get<LuaTable>(tableName);
+            if (table == null)
+            {
+                Debug.LogWarning("[LuaManager] 全局表不存在: " + tableName);
+                return null;
+            }
+
+            try
+            {
+                LuaFunction fn = table.Get<LuaFunction>(funcName);
+                if (fn == null)
+                {
+                    Debug.LogWarning("[LuaManager] 函数不存在: " + tableName + "." + funcName);
+                    return null;
+                }
+
+                try
+                {
+                    return fn.Call(args ?? new object[0]);
+                }
+                finally
+                {
+                    fn.Dispose();
+                }
+            }
+            finally
+            {
+                table.Dispose();
+            }
+        }
+
         public static string LastError
         {
             get { return s_error; }

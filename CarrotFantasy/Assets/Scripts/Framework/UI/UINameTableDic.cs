@@ -98,6 +98,12 @@ public class UINameTableDic
         return gameObject;
     }
 
+    /// <summary>只读遍历 name → GameObject（LuaView 用它构建 Lua 节点表）。</summary>
+    public IEnumerable<KeyValuePair<string, GameObject>> Entries
+    {
+        get { return this.uiEntries; }
+    }
+
     public bool Has(string name)
     {
         return !string.IsNullOrEmpty(name) && this.uiEntries.ContainsKey(name) && this.uiEntries[name] != null;

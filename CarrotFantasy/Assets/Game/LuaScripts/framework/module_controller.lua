@@ -1,20 +1,10 @@
---[[
-    framework/module_controller.lua —— 全局类装载与 Ctrl 单例入口（LuaManager require）
-
-    约定：framework / services 下的类在**自己文件里直接声明为全局**
-    （class、log、Event、BaseView、ViewManager、ConfigManager、MapCtrl），
-    这里只按依赖顺序 require 一遍，不再做 `_G[item.global] = mod` 这类映射。
-
-    加新类：把模块路径写进 FILE_LIST（顺序即依赖顺序）。
-    加 Ctrl：FILE_LIST 里先 require，再写进 CTRL_LIST，NewCtrls 按表顺序 New 一次。
-]]
-
 local FILE_LIST = {
     'framework.class',
     'framework.logger',
     'framework.event',
     'framework.view_base',
     'framework.view_manager',
+    'framework.lua_view_host',
     'framework.config_manager',
     'services.map_service',
 }
