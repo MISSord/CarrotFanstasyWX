@@ -574,6 +574,14 @@ namespace CarrotFantasy
 
             string moduleName = LuaBundleReader.ToModuleName(filepath);
 
+            // xLua 自带模块（xlua.util / perf.* / tdr.*）以 TextAsset 形式放在 Assets/XLua/Resources 下，
+            // 由 xLua 内置 loader 处理。这里必须静默放行，否则会被拼成 LuaScripts/xlua/util.lua
+            // 并打出误导性的「找不到模块文件」。
+            if (IsXluaInternalModule(moduleName))
+            {
+                return null;
+            }
+
             string path;
             if (s_useProjectSource)
             {
@@ -606,6 +614,20 @@ namespace CarrotFantasy
                 Debug.LogError("[LuaManager] 读取模块失败 " + path + " : " + e.Message);
                 return null;
             }
+        }
+
+        /// <summary>是否为 xLua 运行时自带的模块（由内置 loader 从 Resources 读取）。</summary>
+        private static bool IsXluaInternalModule(string moduleName)
+        {
+            if (string.IsNullOrEmpty(moduleName))
+            {
+                return false;
+            }
+
+            return moduleName == "xlua"
+                || moduleName.StartsWith("xlua.", StringComparison.Ordinal)
+                || moduleName.StartsWith("perf.", StringComparison.Ordinal)
+                || moduleName.StartsWith("tdr.", StringComparison.Ordinal);
         }
 
         // ---------------------------------------------------------------- 模式判定
