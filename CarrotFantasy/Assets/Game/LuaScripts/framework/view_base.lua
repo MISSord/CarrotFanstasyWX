@@ -25,6 +25,7 @@ function BaseView:__init(cfg)
     self.asset = cfg.asset
 
     self.bridge = nil
+    self.host = nil
     self.root = nil
     self.ui = nil
     self.isOpen = false
@@ -44,6 +45,11 @@ function BaseView:OnUnload() end
 
 function BaseView:BindBridge(bridge)
     self.bridge = bridge
+end
+
+-- C# 注入的业务能力（委托表：self.host.ToggleMusic() 等）；没有则为 nil。
+function BaseView:BindHost(host)
+    self.host = host
 end
 
 function BaseView:HandleLoaded(root, uiTable)

@@ -61,6 +61,11 @@ namespace CarrotFantasy
         [CSharpCallLua]
         public static List<Type> CSharpCallLua = new List<Type>
         {
+            // LuaView 通过 host 表调用这些委托（LuaSetPanelView 等）：
+            // C# 委托要推给 Lua 当函数用，必须在这里登记才会生成 DelegateBridge。
+            typeof(Action),
+            typeof(Action<int>),
+            typeof(Func<bool>),
         };
 
         /// <summary>

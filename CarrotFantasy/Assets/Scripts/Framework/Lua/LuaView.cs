@@ -62,6 +62,13 @@ namespace CarrotFantasy
 
             this.bridge = new LuaViewBridge(this);
             this.CallLua("BindBridge", this.bridge);
+
+            // host 是 C# 提供给 Lua 的业务能力（委托表），没有就不注入。
+            LuaTable host = this.BuildLuaHost();
+            if (host != null)
+            {
+                this.CallLua("BindHost", host);
+            }
             this.CallLua(
                 "HandleLoaded",
                 this.transform != null ? this.transform.gameObject : null,
@@ -109,6 +116,17 @@ namespace CarrotFantasy
                 this.luaView.Dispose();
                 this.luaView = null;
             }
+        }
+
+        /// <summary>
+        /// 构建给 Lua 用的 host 表（值是 C# 委托），子类覆写后可向 Lua 暴露业务能力。
+        /// <para>
+        /// 委托类型需要登记在 <c>XluaGenConfig.CSharpCallLua</c>，否则 IL2CPP 下无法转成 Lua 函数。
+        /// </para>
+        /// </summary>
+        protected virtual LuaTable BuildLuaHost()
+        {
+            return null;
         }
 
         /// <summary>nameTableDic → Lua 表，Lua 侧通过 <c>self:Node('Btn_Return')</c> 取节点。</summary>
