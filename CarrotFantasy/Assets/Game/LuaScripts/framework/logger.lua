@@ -1,12 +1,12 @@
 --[[
-    framework/logger.lua —— 统一日志出口（全局 log，由 module_controller 注入）
+    framework/logger.lua —— 统一日志出口（本文件直接定义全局 log）
 ]]
 
-local M = {}
+log = {}
 
 local LEVELS = { debug = 1, info = 2, warn = 3, error = 4 }
-M.LEVELS = LEVELS
-M.level = LEVELS.debug
+log.LEVELS = LEVELS
+log.level = LEVELS.debug
 
 local function _safe_format(fmt, ...)
     if select('#', ...) == 0 then
@@ -21,7 +21,7 @@ local function _has_unity()
 end
 
 local function _output(level, fmt, ...)
-    if LEVELS[level] < M.level then
+    if LEVELS[level] < log.level then
         return
     end
 
@@ -40,16 +40,16 @@ local function _output(level, fmt, ...)
     end
 end
 
-function M.Debug(fmt, ...) _output('debug', fmt, ...) end
-function M.Info(fmt, ...) _output('info', fmt, ...) end
-function M.Warn(fmt, ...) _output('warn', fmt, ...) end
-function M.Error(fmt, ...) _output('error', fmt, ...) end
+function log.Debug(fmt, ...) _output('debug', fmt, ...) end
+function log.Info(fmt, ...) _output('info', fmt, ...) end
+function log.Warn(fmt, ...) _output('warn', fmt, ...) end
+function log.Error(fmt, ...) _output('error', fmt, ...) end
 
-function M.SetLevel(name)
+function log.SetLevel(name)
     local lv = LEVELS[name]
     if lv then
-        M.level = lv
+        log.level = lv
     end
 end
 
-return M
+return log

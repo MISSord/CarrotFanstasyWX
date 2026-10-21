@@ -1,5 +1,5 @@
 --[[
-    framework/view_manager.lua —— 视图注册与栈管理（Ctrl 单例，module_controller 注入全局 ViewManager）
+    framework/view_manager.lua —— 视图注册与栈管理（本文件定义全局 ViewManager，NewCtrls 后为单例实例）
 
     用法：
         ViewManager:Register(require 'panels.help_panel')
@@ -8,7 +8,7 @@
         ViewManager:UnloadAll()
 ]]
 
-local ViewManager = class()
+ViewManager = class()
 
 local LAYER_MIN, LAYER_MAX = 1, 4
 local LAYER_INTERVAL = 1500

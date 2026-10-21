@@ -1,5 +1,5 @@
 --[[
-    framework/config_manager.lua —— Luban 按需加载（Ctrl 单例，全局 ConfigManager）
+    framework/config_manager.lua —— Luban 按需加载（本文件定义全局 ConfigManager，NewCtrls 后为单例实例）
 
     启动只 New 管理器，不读表数据。传入表名后再 require 对应 gen/luban_data。
     schema.lua 仅在第一次取表/枚举时加载（只有结构，没有行数据）。
@@ -18,7 +18,7 @@ local TableUtil = require 'framework.config_tables'
 
 local SCHEMA_MODULE = 'gen.luban.schema'
 
-local ConfigManager = class()
+ConfigManager = class()
 
 function ConfigManager:__init()
     self._schema = nil

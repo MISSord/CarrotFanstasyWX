@@ -1,8 +1,8 @@
 --[[
-    services/map_service.lua —— MapCtrl 单例（由 module_controller NewCtrls 注入全局 MapCtrl）
+    services/map_service.lua —— 本文件定义全局 MapCtrl，NewCtrls 后为单例实例
 ]]
 
-local MapCtrl = class()
+MapCtrl = class()
 
 function MapCtrl:__init()
     self.bridge = nil

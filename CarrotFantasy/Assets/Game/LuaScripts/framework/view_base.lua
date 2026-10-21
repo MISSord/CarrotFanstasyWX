@@ -1,5 +1,5 @@
 --[[
-    framework/view_base.lua —— C# BaseView 的 Lua 对应物（全局 BaseView，由 module_controller 注入）
+    framework/view_base.lua —— C# BaseView 的 Lua 对应物（本文件直接定义全局 BaseView）
 
     ===== C# LuaPanel 桥契约（PascalCase）=====
         view:BindBridge(bridge)
@@ -15,7 +15,7 @@
         OnInitData / OnLoad / OnOpen / OnFlush / OnPause / OnResume / OnClose / OnRelease
 ]]
 
-local BaseView = class()
+BaseView = class()
 
 function BaseView:__init(cfg)
     cfg = cfg or {}

@@ -1,5 +1,5 @@
 --[[
-    framework/event.lua —— 事件总线（全局 Event，由 module_controller 注入）
+    framework/event.lua —— 事件总线（本文件直接定义全局 Event）
 
     用法：
         local bus = Event.New()
@@ -10,7 +10,7 @@
 
 local unpack = table.unpack or unpack
 
-local Event = {}
+Event = {}
 Event.__index = Event
 
 function Event.New()

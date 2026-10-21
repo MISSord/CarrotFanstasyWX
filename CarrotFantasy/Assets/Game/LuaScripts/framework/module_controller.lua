@@ -1,18 +1,22 @@
 --[[
-    framework/module_controller.lua —— 全局模块与 Ctrl 单例入口（LuaManager require）
+    framework/module_controller.lua —— 全局类装载与 Ctrl 单例入口（LuaManager require）
 
-    加全局类：写进 FILE_LIST（path + global）。
-    加 Ctrl：FILE_LIST 里先 require，再写进 CTRL_LIST，NewCtrls 按该表顺序 New 一次。
+    约定：framework / services 下的类在**自己文件里直接声明为全局**
+    （class、log、Event、BaseView、ViewManager、ConfigManager、MapCtrl），
+    这里只按依赖顺序 require 一遍，不再做 `_G[item.global] = mod` 这类映射。
+
+    加新类：把模块路径写进 FILE_LIST（顺序即依赖顺序）。
+    加 Ctrl：FILE_LIST 里先 require，再写进 CTRL_LIST，NewCtrls 按表顺序 New 一次。
 ]]
 
 local FILE_LIST = {
-    { path = 'framework.class',        global = 'class' },
-    { path = 'framework.logger',       global = 'log' },
-    { path = 'framework.event',        global = 'Event' },
-    { path = 'framework.view_base',    global = 'BaseView' },
-    { path = 'framework.view_manager', global = 'ViewManager' },
-    { path = 'services.map_service',   global = 'MapCtrl' },
-    { path = 'framework.config_manager', global = 'ConfigManager' },
+    'framework.class',
+    'framework.logger',
+    'framework.event',
+    'framework.view_base',
+    'framework.view_manager',
+    'framework.config_manager',
+    'services.map_service',
 }
 
 -- 顺序即依赖顺序：先 ViewManager，再业务 Ctrl
@@ -39,12 +43,9 @@ local function _destroy_ctrls()
 end
 
 function ModuleController.LoadFiles()
+    -- 类在自己的文件里已是全局，这里只需按顺序把文件执行一遍
     for i = 1, #FILE_LIST do
-        local item = FILE_LIST[i]
-        local mod = require(item.path)
-        if item.global then
-            _G[item.global] = mod
-        end
+        require(FILE_LIST[i])
     end
 end
 

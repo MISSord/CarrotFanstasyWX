@@ -1,6 +1,6 @@
 --[[
     单继承 OOP：只认 __init / __fini；父类先构造、子类先析构。
-    全局 class() 由 module_controller 注入。
+    本文件直接定义全局 class()；module_controller 只负责按顺序 require。
 
     相对网上常见写法（lua-users SimpleLuaClasses / PIL 16.1）的取舍：
       · 用 __index 链继承，不 pairs 拷贝父类字段（父类后改的方法子类立刻可见）
@@ -55,7 +55,7 @@ function Object:Destroy()
     end
 end
 
-local function class(super)
+function class(super)
     if super ~= nil and type(super) ~= 'table' then
         error('class: super must be a class table', 2)
     end
