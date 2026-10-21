@@ -19,7 +19,7 @@ namespace CarrotFantasy
     ///   <item><term>ReleaseCallBack</term><description>HandleReleased + 释放桥与 Lua 引用</description></item>
     /// </list>
     /// </summary>
-    public abstract class LuaView : BaseView
+    public abstract class LuaView : BaseView, ILuaViewHost
     {
         /// <summary>Lua 模块名（require 路径），如 <c>panels.help_panel</c>。</summary>
         protected abstract string LuaModule { get; }

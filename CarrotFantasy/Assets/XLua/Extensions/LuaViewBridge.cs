@@ -8,6 +8,19 @@ using XLua;
 namespace CarrotFantasy
 {
     /// <summary>
+    /// Lua 视图宿主（由 <c>LuaView</c> 实现）。
+    /// <para>
+    /// 定义在 xLua 运行时程序集里，这样 <see cref="LuaViewBridge"/> 不需要反向引用
+    /// 游戏程序集（会形成循环引用），生成的包装代码才能和运行时同程序集编译。
+    /// </para>
+    /// </summary>
+    public interface ILuaViewHost
+    {
+        void Open(int index);
+        void Close();
+    }
+
+    /// <summary>
     /// Lua 视图与 C# 的桥。Lua 侧只依赖这四个方法（契约见 <c>framework/view_base.lua</c>）：
     /// <c>bridge:AddButtonClick(go, fn)</c> / <c>bridge:RemoveButtonClick(handle)</c> /
     /// <c>bridge:Open(index)</c> / <c>bridge:Close()</c>。
@@ -27,11 +40,11 @@ namespace CarrotFantasy
             public LuaFunction Callback;
         }
 
-        private readonly LuaView owner;
+        private readonly ILuaViewHost owner;
         private readonly Dictionary<int, Binding> bindings = new Dictionary<int, Binding>();
         private int nextHandle = 1;
 
-        public LuaViewBridge(LuaView owner)
+        public LuaViewBridge(ILuaViewHost owner)
         {
             this.owner = owner;
         }
