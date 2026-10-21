@@ -246,6 +246,7 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         // 一旦被绑进 AB，既会与 Build Settings 冲突，AB 里的场景也永远加载不到。
         return extension != ".meta" &&
                extension != ".cs" &&
+               extension != ".lua" &&
                extension != ".unity" &&
                extension != ".anim" &&
                extension != ".asmdef" &&
