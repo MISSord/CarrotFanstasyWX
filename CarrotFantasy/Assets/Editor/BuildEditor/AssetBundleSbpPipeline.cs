@@ -2,10 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEditor.Build.Content;
 using UnityEditor.Build.Pipeline;
 using UnityEditor.Build.Pipeline.Interfaces;
 using UnityEngine;
+
+// SBP 的 BundleBuildParameters.BundleCompression 在 2018.3+ 用的是运行时类型
+// UnityEngine.BuildCompression（见 SBP 源码 BuildParameters.cs 的 using 别名）；
+// 同时 UnityEditor.Build.Content 里也有一个同名类型，不做别名会 CS0104 歧义。
+using BuildCompression = UnityEngine.BuildCompression;
 
 /// <summary>
 /// Scriptable Build Pipeline（SBP）构建后端。
