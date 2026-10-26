@@ -186,9 +186,10 @@ public static class AssetBundleBuildPipeline
         }
 
         // —— 步骤 5：可选内置包 + 运行时 CDN 配置 ——
-        if (request.CopyToStreamingAssets)
+        if (request.CopyToStreamingAssets
+            && !AssetBundlePackager.CopyToStreamingAssets(platformPath, request.BuildTarget))
         {
-            AssetBundlePackager.CopyToStreamingAssets(platformPath, request.BuildTarget);
+            return result;
         }
 
         AssetBundleBuildSettings.WriteRuntimeConfig(request.BuildTarget);

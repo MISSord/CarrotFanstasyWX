@@ -23,11 +23,11 @@ using BuildCompression = UnityEngine.BuildCompression;
 ///   <item>配合 <c>BuildCache</c> 可做增量构建（第二阶段再接）。</item>
 /// </list>
 ///
-/// <para><b>阶段 1（当前）</b>：从 AssetDatabase 收集包名，等价替换 built-in，
-/// 产物、清单、PackMerger 全部不变；用菜单
-/// <c>Tools/AssetBundle/构建后端</c> 可随时切回 built-in 对比。</para>
+/// <para><b>阶段 1（当前）</b>：从 AssetDatabase 收集包名，等价替换 built-in。
+/// 加载名用文件名（不含扩展名），与运行时短名一致。产物、清单、PackMerger 不变；
+/// 用菜单 <c>Tools/AssetBundle/构建后端</c> 可随时切回 built-in 对比。</para>
 ///
-/// <para><b>阶段 2（下一步）</b>：把 <see cref="CollectFromAssetDatabase"/> 换成
+/// <para><b>阶段 2（下一步）</b>：把 <see cref="TryCollectFromAssetDatabase"/> 换成
 /// “代码定义布局” —— 用 <c>AssetDatabase.GetDependencies</c> 做依赖闭包，
 /// 把视图专属资源与 prefab 放进同一个包（视图包），依赖自然归零，
 /// 且不需要改 prefab、不需要重新导入。</para>
@@ -55,7 +55,11 @@ public static class AssetBundleSbpPipeline
     {
         error = null;
 
-        List<AssetBundleBuild> builds = CollectFromAssetDatabase();
+        if (!TryCollectFromAssetDatabase(out List<AssetBundleBuild> builds, out error))
+        {
+            return false;
+        }
+
         if (builds == null || builds.Count == 0)
         {
             error = "AssetDatabase 里没有任何已登记的 AB 包（检查 PrefabABPathPostprocessor 规则是否生效）";
@@ -75,6 +79,13 @@ public static class AssetBundleSbpPipeline
             //   ChunkBasedCompression    → LZ4（运行时随机读友好）
             //   None                     → LZMA（体积最小，首包用；运行时会转换）
             parameters.BundleCompression = ToBuildCompression(options);
+
+            // built-in 的 ForceRebuild 不会自动作用到 SBP。缓存开着时，勾了强制重建仍会交回旧产物。
+            if ((options & BuildAssetBundleOptions.ForceRebuildAssetBundle) != 0)
+            {
+                parameters.UseCache = false;
+                Debug.Log(LogTag + " 强制重建：已关闭 SBP BuildCache");
+            }
 
             ReturnCode code = ContentPipeline.BuildAssetBundles(parameters, content, out _);
             if (code != ReturnCode.Success)
@@ -98,11 +109,14 @@ public static class AssetBundleSbpPipeline
     /// 阶段 1：把 AssetDatabase 里已登记的包名翻译成 SBP 的输入。
     ///
     /// 注意：这里不修改任何 .meta；包名仍由 PrefabABPathPostprocessor 维护。
-    /// 阶段 2 会换成“代码定义布局”，届时此方法只作为兼容兜底保留。
+    /// 加载名用文件名（不含扩展名），与运行时 LoadAsset("Tower_4_3") / sprite.name 一致。
+    /// SBP 在 addressableNames 为空时会登记完整资产路径，运行时按短名加载会失败。
     /// </summary>
-    private static List<AssetBundleBuild> CollectFromAssetDatabase()
+    private static bool TryCollectFromAssetDatabase(out List<AssetBundleBuild> builds, out string error)
     {
-        var builds = new List<AssetBundleBuild>();
+        builds = new List<AssetBundleBuild>();
+        error = null;
+        var conflicts = new List<string>();
         string[] names = AssetDatabase.GetAllAssetBundleNames();
 
         for (int i = 0; i < names.Length; i++)
@@ -117,14 +131,50 @@ public static class AssetBundleSbpPipeline
                 continue;
             }
 
+            var addresses = new string[assets.Length];
+            var usedAddresses = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            for (int assetIndex = 0; assetIndex < assets.Length; assetIndex++)
+            {
+                string assetPath = assets[assetIndex];
+                string address = Path.GetFileNameWithoutExtension(assetPath);
+                if (string.IsNullOrEmpty(address))
+                {
+                    conflicts.Add(bundleName + " 含无法命名的资源: " + assetPath);
+                    continue;
+                }
+
+                if (usedAddresses.TryGetValue(address, out string existingPath))
+                {
+                    conflicts.Add(
+                        bundleName + " 内加载名冲突 \"" + address + "\": " + existingPath + " 与 " + assetPath);
+                    continue;
+                }
+
+                usedAddresses.Add(address, assetPath);
+                addresses[assetIndex] = address;
+            }
+
+            if (conflicts.Count > 0)
+            {
+                continue;
+            }
+
             builds.Add(new AssetBundleBuild
             {
                 assetBundleName = bundleName,
                 assetNames = assets,
+                addressableNames = addresses,
             });
         }
 
-        return builds;
+        if (conflicts.Count == 0)
+        {
+            return true;
+        }
+
+        builds = null;
+        error = "SBP 加载名与运行时不一致或互相冲突，已中止：\n" + string.Join("\n", conflicts);
+        return false;
     }
 
     private static BuildCompression ToBuildCompression(BuildAssetBundleOptions options)
@@ -150,12 +200,19 @@ public static class AssetBundleSbpPipeline
         {
             if (Directory.Exists(outputPath))
             {
+                string outputFolderName = Path.GetFileName(outputPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                string packsPrefix = PackGroupingDefaults.PacksFolderName + "/";
                 foreach (string file in Directory.GetFiles(outputPath, "*", SearchOption.AllDirectories))
                 {
-                    if (file.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase)
-                        || file.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-                        || file.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-                        || file.EndsWith(".sig", StringComparison.OrdinalIgnoreCase))
+                    string relative = file.Substring(outputPath.Length)
+                        .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        .Replace('\\', '/');
+                    if (relative.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase)
+                        || relative.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                        || relative.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+                        || relative.EndsWith(".sig", StringComparison.OrdinalIgnoreCase)
+                        || relative.StartsWith(packsPrefix, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(relative, outputFolderName, StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }

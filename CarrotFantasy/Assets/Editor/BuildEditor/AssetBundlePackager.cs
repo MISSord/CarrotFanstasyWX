@@ -122,9 +122,9 @@ public static class AssetBundlePackager
             Debug.Log($"AssetBundle 已生成。路径: {outputPath} 平台: {buildTarget} 后端: "
                       + (UseScriptableBuildPipeline ? "SBP" : "built-in"));
 
-            if (copyToStreamingAssets)
+            if (copyToStreamingAssets && !CopyToStreamingAssets(outputPath, buildTarget))
             {
-                CopyToStreamingAssets(outputPath, buildTarget);
+                return false;
             }
 
             return true;
@@ -187,7 +187,7 @@ public static class AssetBundlePackager
     }
 
     /// <summary>拷贝到 StreamingAssets/AssetBundles/{平台}/，与运行时 GetRuntimeLoadPath 一致。</summary>
-    public static void CopyToStreamingAssets(string platformBundlePath, BuildTarget buildTarget)
+    public static bool CopyToStreamingAssets(string platformBundlePath, BuildTarget buildTarget)
     {
         // 保证源目录里的文件名已是小写，拷进 StreamingAssets 后与清单一致。
         NormalizeBundleFileNames(platformBundlePath, buildTarget);
@@ -200,7 +200,7 @@ public static class AssetBundlePackager
             if (!IsSafeToDeleteDirectory(destPath))
             {
                 Debug.LogError("StreamingAssets 目标目录不安全，已拒绝覆盖: " + destPath);
-                return;
+                return false;
             }
             Directory.Delete(destPath, true);
         }
@@ -214,6 +214,7 @@ public static class AssetBundlePackager
         FileUtil.CopyFileOrDirectory(platformBundlePath, destPath);
         Debug.Log("已复制到 StreamingAssets: " + destPath);
         AssetDatabase.Refresh();
+        return true;
     }
 
     /// <summary>
@@ -267,7 +268,7 @@ public static class AssetBundlePackager
     /// 流程：
     /// 1. 扫描平台输出目录中的 AB 文件（跳过 .meta/.manifest/.json/.txt、平台总清单文件、packs/）
     /// 2. 为每个文件写 BundleName / Size / MD5 / 扁平依赖
-    /// 3. 诊断「AssetDatabase 有登记但未落盘」的包（只告警，不写入清单）
+    /// 3. 诊断「AssetDatabase 有登记但未落盘」的包（有缺失则中止，不写清单）
     /// 4. PackMerger 合并 ZIP，填充 DownloadPacks
     /// 5. 落盘 custom_manifest.json 与 version.txt
     /// </summary>
@@ -294,6 +295,19 @@ public static class AssetBundlePackager
         ManifestBuildData data = BuildManifestData(bundlePath, target, versionNumber, compressedFormat);
         if (data == null || data.Manifest == null)
         {
+            return null;
+        }
+
+        if (data.MissingOnDisk != null && data.MissingOnDisk.Count > 0)
+        {
+            string missingMessage = data.MissingOnDisk.Count
+                + " 个已登记的包没有打出文件，已中止写清单。详见 Console。";
+            Debug.LogError("[AB Build] " + missingMessage);
+            if (showSuccessDialog)
+            {
+                EditorUtility.DisplayDialog("清单不完整", missingMessage, "确定");
+            }
+
             return null;
         }
 

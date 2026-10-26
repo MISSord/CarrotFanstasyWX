@@ -10,7 +10,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
         public bool Required
         {
-            get { return false; }
+            get { return true; }
         }
 
         public BuildStepResult Run(BuildContext ctx)
@@ -20,7 +20,11 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 return BuildStepResult.Skipped("CopyToStreamingAssets=false");
             }
 
-            AssetBundlePackager.CopyToStreamingAssets(ctx.PlatformPath, ctx.Request.BuildTarget);
+            if (!AssetBundlePackager.CopyToStreamingAssets(ctx.PlatformPath, ctx.Request.BuildTarget))
+            {
+                return BuildStepResult.Failed("拷贝到 StreamingAssets 失败");
+            }
+
             return BuildStepResult.Success();
         }
     }

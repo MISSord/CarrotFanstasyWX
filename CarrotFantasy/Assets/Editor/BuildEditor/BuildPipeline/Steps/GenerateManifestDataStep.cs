@@ -36,11 +36,16 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 return BuildStepResult.Failed("清单数据构建失败");
             }
 
+            if (data.MissingOnDisk != null && data.MissingOnDisk.Count > 0)
+            {
+                return BuildStepResult.Failed(
+                    data.MissingOnDisk.Count + " 个已登记的包没有打出文件，已中止");
+            }
+
             ctx.Set(data);
             ctx.Result.Manifest = data.Manifest;
 
-            return BuildStepResult.Success(
-                data.Manifest.AssetBundles.Count + " 个包，登记未落盘 " + data.MissingOnDisk.Count + " 个");
+            return BuildStepResult.Success(data.Manifest.AssetBundles.Count + " 个包");
         }
     }
 }
