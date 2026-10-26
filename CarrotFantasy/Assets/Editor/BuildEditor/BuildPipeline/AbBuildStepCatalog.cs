@@ -19,44 +19,56 @@ namespace CarrotFantasy.Editor.BuildPipeline
     public static class AbBuildStepCatalog
     {
         /// <summary>
-        /// 当前桌面平台（Windows / macOS）的流程。
+        /// 桌面平台（Windows / macOS）的 AB 打包流程。
         /// <para>
-        /// 阶段 1：整个旧流程先作为一个步骤接入，行为与改造前完全一致；
-        /// 后续按下面的"目标清单"逐步拆开，每拆一步都要对比产物。
+        /// 顺序即依赖：图集/Lua 先于 AB；清单数据先于 Pack 合并与 JSON 写入；
+        /// 写 JSON 之后才能签名；签名之后才写 version.txt。
         /// </para>
         /// </summary>
         public static IReadOnlyList<IBuildStep> Desktop()
         {
             return new IBuildStep[]
             {
-                new LegacyPipelineStep(),
+                // 1) 校验与设置
+                new ValidateRequestStep(),
+                new ApplyBuildSettingsStep(),
+
+                // 2) 资源预处理（必须在打 AB 之前）
+                new PackAtlasStep(),        // 可关：request.PackAtlasesBeforeBuild
+                new BuildLuaBundleStep(),   // 关键：lua_bundle.bytes 是 AB 的资产
+
+                // 3) 打 AB
+                new CleanOutputStep(),      // 可关：request.ClearOutputFolder
+                new BuildBundlesStep(),     // 内部按 UseScriptableBuildPipeline 选 SBP / built-in
+
+                // 4) 清单与分发包
+                new GenerateManifestDataStep(),  // 扫描落盘 → Size/MD5/依赖
+                new MergePacksStep(),            // packs/*.zip → DownloadPacks
+                new WriteManifestJsonStep(),     // custom_manifest.json
+                new SignManifestStep(),          // 签名（dev 宏生效时只告警）
+                new WriteVersionStep(),          // version.txt
+
+                // 5) 交付
+                new RefreshAssetsStep(),
+                new CopyToStreamingAssetsStep(), // 可关：request.CopyToStreamingAssets
+                new WriteRuntimeConfigStep(),    // ab_runtime_config.json
+
+                // 6) 收尾
+                new ShowManifestDialogStep(),  // 可关：request.ShowManifestDialog（批处理自动跳过）
+                new FinalizeResultStep(),
             };
         }
 
         /// <summary>
-        /// 目标形态（阶段 2 之后逐步替换上面的列表）：
-        /// <code>
-        /// new ValidateRequestStep(),          // 路径/平台/参数
-        /// new ApplyBuildSettingsStep(),       // 写入 EditorPrefs / BuildSettings
-        /// new PackAtlasStep(),                // AtlasPackager（可关）
-        /// new BuildLuaBundleStep(),           // LuaBundleBuilder（关键）
-        /// new RefreshAssetsStep(),            // AssetDatabase.Refresh（显式化）
-        /// new CleanOutputStep(),              // 清输出目录（可关）
-        /// new BuildBundlesStep(),             // SBP / built-in
-        /// new NormalizeBundleNamesStep(),     // 文件名小写
-        /// new AuditBundleLayoutStep(),        // 依赖/体积审计（新增）
-        /// new GenerateManifestStep(),         // custom_manifest.json
-        /// new MergePacksStep(),               // packs/*.zip
-        /// new SignManifestStep(),             // 签名（prod 必需）
-        /// new WriteVersionStep(),             // version.txt
-        /// new WriteRuntimeConfigStep(),       // ab_runtime_config.json
-        /// new CopyToStreamingAssetsStep(),    // 可选
-        /// new ReportStep(),                   // 汇总表
-        /// </code>
+        /// 按目标平台选择步骤列表。
+        /// <para>
+        /// 目前只支持桌面（PC / macOS）；将来 Android 需要在这里返回自己的列表，
+        /// 例如插入 <c>new PatchAndroidManifestStep()</c>、替换 StreamingAssets 策略，
+        /// 而不是在现有步骤里写平台分支。
+        /// </para>
         /// </summary>
         public static IReadOnlyList<IBuildStep> ForTarget(BuildTarget target)
         {
-            // 目前只支持桌面（PC / macOS）；Android/iOS/WebGL 的差异列表在这里分支。
             switch (target)
             {
                 default:

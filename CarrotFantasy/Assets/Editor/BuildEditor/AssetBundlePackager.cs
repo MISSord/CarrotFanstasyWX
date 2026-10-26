@@ -291,6 +291,81 @@ public static class AssetBundlePackager
             return null;
         }
 
+        ManifestBuildData data = BuildManifestData(bundlePath, target, versionNumber, compressedFormat);
+        if (data == null || data.Manifest == null)
+        {
+            return null;
+        }
+
+        // 合并 Pack 必须在写 JSON 之前，以便 DownloadPacks 一并序列化。
+        AssetBundlePackMerger.BuildPacks(data.Manifest, bundlePath);
+
+        if (!WriteManifestJson(data.Manifest, bundlePath, out string writeError))
+        {
+            Debug.LogError("[AB Build] " + writeError);
+            if (showSuccessDialog)
+            {
+                EditorUtility.DisplayDialog("写入清单失败", writeError, "确定");
+            }
+
+            return null;
+        }
+
+        if (!SignManifestFile(bundlePath, out string signError))
+        {
+            Debug.LogError("[AB Build] " + signError);
+            if (showSuccessDialog)
+            {
+                EditorUtility.DisplayDialog("清单签名失败", signError, "确定");
+            }
+
+            return null;
+        }
+
+        WriteVersionFile(data.Manifest, bundlePath);
+        AssetDatabase.Refresh();
+
+        if (showSuccessDialog)
+        {
+            EditorUtility.DisplayDialog(
+                "成功",
+                string.Format(
+                    "清单已生成：{0} 个 AB 包（以输出目录实际文件为准）。\n" +
+                    "有资源登记但未构建出文件：{1} 个（详见 Console，多为空文件夹包名或需重新打 AB）。",
+                    data.Manifest.AssetBundles.Count,
+                    data.MissingOnDisk.Count),
+                "确定");
+        }
+
+        Debug.Log(string.Format(
+            "[AB Build] custom_manifest.json 已生成：输出目录 {0} 个包，登记但未落盘 {1} 个。",
+            data.Manifest.AssetBundles.Count,
+            data.MissingOnDisk.Count));
+        return data.Manifest;
+    }
+
+    /// <summary>
+    /// 清单数据 + 诊断信息。
+    /// <para>拆步骤后由 GenerateManifestData / MergePacks / WriteManifestJson 等共享。</para>
+    /// </summary>
+    public sealed class ManifestBuildData
+    {
+        public CustomManifest Manifest;
+
+        /// <summary>「AssetDatabase 有登记但输出目录没有文件」的包名（只诊断，不进清单）。</summary>
+        public List<string> MissingOnDisk;
+    }
+
+    /// <summary>
+    /// 扫描落盘 AB，构建清单数据（Size / MD5 / 扁平依赖）。
+    /// <para>不写文件、不合并 Pack、不签名 —— 这些由调用方或后续步骤负责。</para>
+    /// </summary>
+    public static ManifestBuildData BuildManifestData(
+        string bundlePath,
+        BuildTarget target,
+        int versionNumber,
+        int compressedFormat)
+    {
         // 清单 / 运行时都按小写包名找文件，这里把构建产物统一成小写，避免大小写敏感平台找不到。
         NormalizeBundleFileNames(bundlePath, target);
 
@@ -308,7 +383,7 @@ public static class AssetBundlePackager
         };
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
-        var missingOnDisk = CollectRegisteredButMissingOnDisk(bundlePath);
+        List<string> missingOnDisk = CollectRegisteredButMissingOnDisk(bundlePath);
 
         try
         {
@@ -365,46 +440,84 @@ public static class AssetBundlePackager
 
         LogMissingOnDiskSummary(missingOnDisk);
 
-        // 合并 Pack 必须在写 JSON 之前，以便 DownloadPacks 一并序列化。
-        AssetBundlePackMerger.BuildPacks(generatedManifest, bundlePath);
-
-        string manifestJson = JsonUtility.ToJson(generatedManifest, true);
-        string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");
-        File.WriteAllText(manifestPath, manifestJson);
-        if (!ManifestSigner.TrySign(manifestPath, out string signError))
+        return new ManifestBuildData
         {
-            Debug.LogError("[AB Build] " + signError);
-            if (showSuccessDialog)
-            {
-                EditorUtility.DisplayDialog("清单签名失败", signError, "确定");
-            }
-
-            return null;
-        }
-
-        string versionPath = Path.Combine(bundlePath, "version.txt");
-        File.WriteAllText(versionPath, generatedManifest.BuildTime);
-
-        AssetDatabase.Refresh();
-        if (showSuccessDialog)
-        {
-            EditorUtility.DisplayDialog(
-                "成功",
-                string.Format(
-                    "清单已生成：{0} 个 AB 包（以输出目录实际文件为准）。\n" +
-                    "有资源登记但未构建出文件：{1} 个（详见 Console，多为空文件夹包名或需重新打 AB）。",
-                    generatedManifest.AssetBundles.Count,
-                    missingOnDisk.Count),
-                "确定");
-        }
-
-        Debug.Log(string.Format(
-            "[AB Build] custom_manifest.json 已生成：输出目录 {0} 个包，登记但未落盘 {1} 个。",
-            generatedManifest.AssetBundles.Count,
-            missingOnDisk.Count));
-        return generatedManifest;
+            Manifest = generatedManifest,
+            MissingOnDisk = missingOnDisk,
+        };
     }
 
+    /// <summary>写 custom_manifest.json（不做签名）。</summary>
+    public static bool WriteManifestJson(CustomManifest manifest, string bundlePath, out string error)
+    {
+        error = null;
+        if (manifest == null)
+        {
+            error = "清单为空，无法写入";
+            return false;
+        }
+
+        try
+        {
+            string manifestJson = JsonUtility.ToJson(manifest, true);
+            string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");
+            File.WriteAllText(manifestPath, manifestJson);
+            return true;
+        }
+        catch (System.Exception e)
+        {
+            error = "写 custom_manifest.json 失败: " + e.Message;
+            return false;
+        }
+    }
+
+    /// <summary>对已写出的 custom_manifest.json 做签名（开发宏生效时只告警）。</summary>
+    public static bool SignManifestFile(string bundlePath, out string error)
+    {
+        string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");
+        if (!File.Exists(manifestPath))
+        {
+            error = "清单文件不存在: " + manifestPath;
+            return false;
+        }
+
+        return ManifestSigner.TrySign(manifestPath, out error);
+    }
+
+    /// <summary>写 version.txt（内容为清单里的 BuildTime）。</summary>
+    public static void WriteVersionFile(CustomManifest manifest, string bundlePath)
+    {
+        string versionPath = Path.Combine(bundlePath, "version.txt");
+        File.WriteAllText(versionPath, manifest.BuildTime);
+    }
+
+    /// <summary>
+    /// 清空平台输出目录（带安全校验，拒绝盘符根 / 工程根 / Assets 非 StreamingAssets 路径）。
+    /// <para>从 <see cref="BuildAssetBundles"/> 的 clearFolders 分支拆出，供 CleanOutputStep 复用。</para>
+    /// </summary>
+    public static bool TryCleanOutputDirectory(string outputPath, out string error)
+    {
+        error = null;
+        if (string.IsNullOrEmpty(outputPath))
+        {
+            error = "输出目录为空";
+            return false;
+        }
+
+        if (!Directory.Exists(outputPath))
+        {
+            return true;
+        }
+
+        if (!IsSafeToDeleteDirectory(outputPath))
+        {
+            error = "输出目录过于危险，已拒绝清空: " + outputPath;
+            return false;
+        }
+
+        Directory.Delete(outputPath, true);
+        return true;
+    }
     /// <summary>
     /// 已在 AssetDatabase 登记且仍有关联资源，但输出目录找不到对应 AB 文件。
     /// 不含「无资源引用的历史包名」（已由 RemoveUnusedAssetBundleNames 清理）。

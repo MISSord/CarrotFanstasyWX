@@ -86,8 +86,10 @@ public static class AssetBundleBuildPipeline
     /// <summary>
     /// 用步骤执行器跑完整流程。
     /// <para>
-    /// 阶段 1 的列表里只有一个 <see cref="LegacyPipelineStep"/>（包住旧流程），
-    /// 所以产物与 <see cref="RunLegacyFlow"/> 完全一致；后续逐步拆步骤时只改目录表。
+    /// 步骤列表见 <see cref="AbBuildStepCatalog.Desktop"/>：校验 → 图集/Lua → AB →
+    /// 清单数据 → Pack 合并 → JSON → 签名 → version → 拷贝/配置 → 收尾。
+    /// 旧的整体流程保留在 <see cref="RunLegacyFlow"/>，可通过
+    /// <see cref="UseStepPipeline"/> 与步骤版做 A/B 对比。
     /// </para>
     /// </summary>
     public static BuildResult BuildAndManifestWithSteps(
