@@ -6,7 +6,8 @@
         "CarrotFantasy",
         "Unity.ThirdParty",
         "CfNet.Generated",
-        "XLua.Runtime"
+        "XLua.Runtime",
+        "Unity.ScriptableBuildPipeline"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [

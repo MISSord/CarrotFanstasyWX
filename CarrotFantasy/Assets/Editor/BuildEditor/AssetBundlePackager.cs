@@ -40,6 +40,22 @@ public static class AssetBundlePackager
                || target == BuildTarget.StandaloneOSX;
     }
 
+    private const string UseSbpPrefKey = "AB_UseScriptableBuildPipeline";
+
+    /// <summary>
+    /// 构建后端：true = Scriptable Build Pipeline（<see cref="AssetBundleSbpPipeline"/>），
+    /// false = built-in <c>BuildPipeline.BuildAssetBundles</c>。
+    /// <para>
+    /// 用 EditorPrefs 持久化，菜单 <c>Tools/AssetBundle/构建后端</c> 可随时切换；
+    /// 迁移期间用它做 A/B 对比（同一份资源、同一套清单，只换构建实现）。
+    /// </para>
+    /// </summary>
+    public static bool UseScriptableBuildPipeline
+    {
+        get { return EditorPrefs.GetBool(UseSbpPrefKey, true); }
+        set { EditorPrefs.SetBool(UseSbpPrefKey, value); }
+    }
+
     /// <summary>
     /// 构建 AB 到指定平台输出目录（如 .../StandaloneWindows）。
     /// clearFolders 为 true 时会整目录删除；仅拒绝盘符根与工程根，输出路径请勿指到桌面等。
@@ -83,14 +99,28 @@ public static class AssetBundlePackager
                 Debug.Log("已创建输出目录: " + outputPath);
             }
 
-            AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(outputPath, compression, buildTarget);
-            if (manifest == null)
+            if (UseScriptableBuildPipeline)
             {
-                Debug.LogError("BuildPipeline.BuildAssetBundles 返回空结果。");
-                return false;
+                if (!AssetBundleSbpPipeline.Build(outputPath, buildTarget, compression, out string sbpError))
+                {
+                    Debug.LogError(
+                        "SBP 构建失败: " + sbpError
+                        + "\n可临时切回 built-in：菜单 Tools/AssetBundle/构建后端 → 使用 built-in（BuildPipeline）");
+                    return false;
+                }
+            }
+            else
+            {
+                AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(outputPath, compression, buildTarget);
+                if (manifest == null)
+                {
+                    Debug.LogError("BuildPipeline.BuildAssetBundles 返回空结果。");
+                    return false;
+                }
             }
 
-            Debug.Log($"AssetBundle 已生成。路径: {outputPath} 平台: {buildTarget}");
+            Debug.Log($"AssetBundle 已生成。路径: {outputPath} 平台: {buildTarget} 后端: "
+                      + (UseScriptableBuildPipeline ? "SBP" : "built-in"));
 
             if (copyToStreamingAssets)
             {
