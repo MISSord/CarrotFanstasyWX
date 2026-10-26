@@ -1,4 +1,5 @@
 using System.IO;
+using CarrotFantasy.Editor.BuildPipeline;
 using UnityEditor;
 using UnityEngine;
 
@@ -55,7 +56,64 @@ public static class AssetBundleBuildPipeline
         };
     }
 
+    private const string UseStepPipelinePrefKey = "AB_UseStepPipeline";
+
+    /// <summary>
+    /// 是否用"步骤执行器"跑打包流程（阶段 1 默认关闭，行为与改造前一致）。
+    /// <para>
+    /// 打开后走 <see cref="BuildAndManifestWithSteps"/>：执行器按
+    /// <see cref="AbBuildStepCatalog"/> 里的显式列表逐步执行。
+    /// 迁移期用它做 A/B 对比，菜单 <c>Tools/AssetBundle/构建流程</c> 可切换。
+    /// </para>
+    /// </summary>
+    public static bool UseStepPipeline
+    {
+        get { return EditorPrefs.GetBool(UseStepPipelinePrefKey, false); }
+        set { EditorPrefs.SetBool(UseStepPipelinePrefKey, value); }
+    }
+
+    /// <summary>
+    /// 统一入口：按开关决定走"步骤执行器"还是"旧的整体流程"。
+    /// 调用方（编辑器窗口 / 批处理）不需要感知两者差异。
+    /// </summary>
     public static BuildResult BuildAndManifest(BuildRequest request)
+    {
+        return UseStepPipeline
+            ? BuildAndManifestWithSteps(request)
+            : RunLegacyFlow(request);
+    }
+
+    /// <summary>
+    /// 用步骤执行器跑完整流程。
+    /// <para>
+    /// 阶段 1 的列表里只有一个 <see cref="LegacyPipelineStep"/>（包住旧流程），
+    /// 所以产物与 <see cref="RunLegacyFlow"/> 完全一致；后续逐步拆步骤时只改目录表。
+    /// </para>
+    /// </summary>
+    public static BuildResult BuildAndManifestWithSteps(
+        BuildRequest request,
+        BuildExecutionOptions options = null)
+    {
+        var ctx = new BuildContext { Request = request };
+        ctx.OutputRootFullPath = Path.GetFullPath(
+            Path.Combine(Application.dataPath, "..", request.OutputRoot));
+        ctx.PlatformPath = Path.Combine(
+            ctx.OutputRootFullPath,
+            AssetBundlePackager.GetPlatformFolder(request.BuildTarget));
+
+        BuildReport report = BuildExecutor.Execute(
+            ctx,
+            AbBuildStepCatalog.ForTarget(request.BuildTarget),
+            options);
+
+        BuildResult result = ctx.Result;
+        result.Success = report.Success && result.Success;
+        result.PlatformBundlePath = ctx.PlatformPath;
+        return result;
+    }
+
+    /// <summary>改造前的整体流程（保持原样，作为基准实现与回退路径）。</summary>
+    internal static BuildResult RunLegacyFlow(BuildRequest request)
     {
         var result = new BuildResult();
         if (string.IsNullOrEmpty(request.OutputRoot))
@@ -134,5 +192,26 @@ public static class AssetBundleBuildPipeline
         AssetBundleBuildSettings.WriteRuntimeConfig(request.BuildTarget);
         result.Success = true;
         return result;
+    }
+}
+
+/// <summary>打包流程相关菜单（步骤执行器开关）。</summary>
+public static class AssetBundleBuildPipelineMenu
+{
+    private const string TogglePath = "Tools/AssetBundle/构建流程/使用步骤执行器（实验）";
+
+    [MenuItem(TogglePath, true)]
+    private static bool ValidateToggle()
+    {
+        Menu.SetChecked(TogglePath, AssetBundleBuildPipeline.UseStepPipeline);
+        return true;
+    }
+
+    [MenuItem(TogglePath, false, 41)]
+    private static void Toggle()
+    {
+        AssetBundleBuildPipeline.UseStepPipeline = !AssetBundleBuildPipeline.UseStepPipeline;
+        Debug.Log("[AB Build] 步骤执行器已"
+                  + (AssetBundleBuildPipeline.UseStepPipeline ? "启用（下次打包走步骤列表）" : "关闭（回到旧的整体流程）"));
     }
 }
