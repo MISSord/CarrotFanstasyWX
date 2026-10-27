@@ -6,7 +6,7 @@ using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.U2D;
 
-/// <summary>图集打包逻辑，供 AtlasPacker 窗口与 AB 构建流水线共用。</summary>
+/// <summary>图集打包逻辑，供 AtlasPackerWindow 窗口与 AB 构建流水线共用。</summary>
 public static class AtlasPackager
 {
     public const string UiViewRoot = "Assets/Game/UI/View";

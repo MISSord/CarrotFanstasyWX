@@ -1,7 +1,7 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
-public class AtlasPacker : EditorWindow
+public class AtlasPackerWindow : EditorWindow
 {
     private string targetFolderPath = "Assets";
     private bool includeSubdirectories = true;
@@ -9,7 +9,7 @@ public class AtlasPacker : EditorWindow
     [MenuItem("Tools/AssetBundle/图集打包", false, 302)]
     public static void ShowWindow()
     {
-        GetWindow<AtlasPacker>("图集打包工具");
+        GetWindow<AtlasPackerWindow>("图集打包工具");
     }
 
     private void OnGUI()
