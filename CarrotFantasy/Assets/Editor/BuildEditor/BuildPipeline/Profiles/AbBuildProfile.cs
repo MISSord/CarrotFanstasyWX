@@ -18,33 +18,27 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
     [CreateAssetMenu(menuName = "CarrotFantasy/Build/AB 打包配置", fileName = "AbBuildProfile")]
     public sealed class AbBuildProfile : ScriptableObject
     {
-        [Header("平台")]
         [Tooltip("目标平台；目前运行时只支持 PC / macOS")]
         public BuildTarget BuildTarget = BuildTarget.StandaloneWindows64;
 
-        [Header("输出")]
         [Tooltip("相对工程根目录；运行时 GetServerLoadUrl 会拼成 {OutputRoot}/{平台目录}")]
         public string OutputRoot = "Build/AssetBundles";
 
-        [Header("压缩")]
         [Tooltip("标准压缩=LZMA（最小，运行时需转换）；分块压缩=LZ4（推荐）；不压缩=体积最大")]
         public CompressionType Compression = CompressionType.ChunkBasedCompression;
 
-        [Header("清单版本")]
         [Tooltip("勾选后每次打包自动取「输出目录里当前清单版本 + 1」")]
         public bool AutoManifestVersion = true;
 
         [Tooltip("自动模式下这里显示下一版本号；取消自动后可手工指定")]
         public int ManifestVersion = 0;
 
-        [Header("开关")]
         public bool ClearOutputFolder = true;
         public bool CopyToStreamingAssets = false;
         public bool ForceRebuild = false;
         public bool PackAtlasesBeforeBuild = true;
         public bool ShowManifestDialog = true;
 
-        [Header("云上传（SFTP）")]
         [Tooltip("勾选后打包结束自动上传平台目录；未配置连接信息时上传步骤自动跳过")]
         public bool EnableUpload = false;
         public string UploadHost = string.Empty;
@@ -56,7 +50,6 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("私钥文件绝对路径（仅勾选私钥登录时使用）")]
         public string UploadPrivateKeyPath = string.Empty;
 
-        [Header("流程")]
         [Tooltip("true = 走步骤执行器；false = 走旧的整体流程（A/B 对比用）")]
         public bool UseStepPipeline = true;
 
@@ -94,9 +87,22 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             }
         }
 
-        public AssetBundleBuildPipeline.BuildRequest CreateRequest()
+        /// <summary>
+        /// 一键刷新所有「读本地数据/配置」得到的结果（Inspector 的「刷新」按钮）。
+        /// <para>
+        /// 目前包含：清单版本（读输出目录里现有清单）。
+        /// 以后新增的本地数据/配置读取都挂到这里，按钮不用改。
+        /// </para>
+        /// </summary>
+        public void RefreshLocalData()
         {
             this.RefreshManifestVersion();
+        }
+
+        public AssetBundleBuildPipeline.BuildRequest CreateRequest()
+        {
+            // 打包前也走一次统一刷新，保证用的是最新的本地数据（清单版本等）。
+            this.RefreshLocalData();
 
             int version = this.ManifestVersion > 0
                 ? this.ManifestVersion

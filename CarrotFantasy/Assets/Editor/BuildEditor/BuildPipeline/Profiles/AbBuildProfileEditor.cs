@@ -113,10 +113,13 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             EditorGUILayout.LabelField("解析结果", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(profile.Describe(), MessageType.None);
 
-            if (GUILayout.Button("重新探测清单版本", GUILayout.Height(24f)))
+            if (GUILayout.Button(
+                    new GUIContent("刷新", "重新读取本地数据/配置（当前包含：输出目录里的清单版本）"),
+                    GUILayout.Height(24f)))
             {
-                profile.RefreshManifestVersion();
+                profile.RefreshLocalData();
                 EditorUtility.SetDirty(profile);
+                this.Repaint();
             }
 
             using (new EditorGUILayout.HorizontalScope())
