@@ -236,6 +236,60 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
         // ---------------------------------------------------------------- 6) 收尾
 
+        /// <summary>
+        /// 通过 SFTP 把平台目录上传到云服务器（可选）。
+        /// <para>
+        /// 配置由 Profile 通过 <see cref="BuildContext"/> 注入（<see cref="AbUploadSettings"/>）；
+        /// 未注入或未启用时跳过，不影响命令行/旧窗口的现有行为。
+        /// 密码仍沿用本机 EditorPrefs（不进 Git）。
+        /// </para>
+        /// </summary>
+        public static BuildStepResult UploadToServer(BuildContext ctx)
+        {
+            AbUploadSettings settings = ctx.Get<AbUploadSettings>();
+            if (settings == null)
+            {
+                return BuildStepResult.Skipped("未配置上传（Profile 未提供 AbUploadSettings）");
+            }
+
+            if (!settings.Enabled)
+            {
+                return BuildStepResult.Skipped("EnableUpload=false");
+            }
+
+            // 把 Profile 里的连接信息写进本机 DeploySettings，再复用现有上传器。
+            AssetBundleDeploySettings.Host = settings.Host;
+            AssetBundleDeploySettings.Port = settings.Port;
+            AssetBundleDeploySettings.User = settings.User;
+            AssetBundleDeploySettings.RemotePath = settings.RemotePath;
+            AssetBundleDeploySettings.UsePrivateKey = settings.UsePrivateKey;
+            AssetBundleDeploySettings.PrivateKeyPath = settings.PrivateKeyPath;
+
+            if (!AssetBundleDeploySettings.TryValidate(out string validationError))
+            {
+                return BuildStepResult.Failed(validationError);
+            }
+
+            AssetBundleCloudUploadResult upload = AssetBundleCloudUploader.UploadDirectory(ctx.PlatformPath);
+            if (upload.Cancelled)
+            {
+                return BuildStepResult.Skipped("上传已取消");
+            }
+
+            if (!upload.Success)
+            {
+                return BuildStepResult.Failed(upload.Message);
+            }
+
+            return BuildStepResult.Success(string.Format(
+                "{0} 个文件 / {1:F1} MB → {2}:{3}{4}",
+                upload.UploadedFileCount,
+                upload.UploadedBytes / 1024f / 1024f,
+                settings.Host,
+                settings.Port,
+                settings.RemotePath));
+        }
+
         /// <summary>弹"成功"对话框（受 <c>Request.ShowManifestDialog</c> 控制，BatchMode 自动跳过）。</summary>
         public static BuildStepResult ShowManifestDialog(BuildContext ctx)
         {

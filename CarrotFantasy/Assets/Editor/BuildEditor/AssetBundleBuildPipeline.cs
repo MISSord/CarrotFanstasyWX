@@ -94,7 +94,8 @@ public static class AssetBundleBuildPipeline
     /// </summary>
     public static BuildResult BuildAndManifestWithSteps(
         BuildRequest request,
-        BuildExecutionOptions options = null)
+        BuildExecutionOptions options = null,
+        System.Action<BuildContext> configureContext = null)
     {
         var ctx = new BuildContext { Request = request };
         ctx.OutputRootFullPath = Path.GetFullPath(
@@ -102,6 +103,10 @@ public static class AssetBundleBuildPipeline
         ctx.PlatformPath = Path.Combine(
             ctx.OutputRootFullPath,
             AssetBundlePackager.GetPlatformFolder(request.BuildTarget));
+
+        // 调用方可以在这里注入额外上下文（例如 Profile 的 SFTP 上传配置），
+        // 步骤通过 ctx.Get<T>() 读取；不注入时对应步骤自动跳过。
+        configureContext?.Invoke(ctx);
 
         BuildReport report = BuildExecutor.Execute(
             ctx,

@@ -43,7 +43,10 @@ namespace CarrotFantasy.Editor.BuildPipeline
             BuildStep.Optional("CopyToStreamingAssets", AbBuildSteps.CopyToStreamingAssets),
             BuildStep.Required("WriteRuntimeConfig", AbBuildSteps.WriteRuntimeConfig),
 
-            // 6) 收尾
+            // 6) 可选：上传到云服务器（Profile 注入配置；未配置则跳过）
+            BuildStep.Optional("UploadToServer", AbBuildSteps.UploadToServer),
+
+            // 7) 收尾
             BuildStep.Optional("ShowManifestDialog", AbBuildSteps.ShowManifestDialog),
             BuildStep.Required("FinalizeResult", AbBuildSteps.FinalizeResult),
         };
