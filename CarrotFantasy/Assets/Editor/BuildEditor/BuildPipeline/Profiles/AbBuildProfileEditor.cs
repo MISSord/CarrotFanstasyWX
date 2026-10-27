@@ -8,7 +8,10 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
     /// 并提供「Dry Run」与「开始打包」两个按钮。
     /// </summary>
     [CustomEditor(typeof(AbBuildProfile))]
-    public sealed class AbBuildProfileEditor : Editor
+    // 注意：本文件的命名空间是 CarrotFantasy.Editor.BuildPipeline.Profiles，
+// 其中的 "Editor" 段会遮蔽 UnityEditor.Editor 类型（C# 优先解析为命名空间），
+// 所以这里必须写全限定名，否则会报 CS0118 / CS0115。
+public sealed class AbBuildProfileEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
