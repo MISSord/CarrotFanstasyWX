@@ -267,7 +267,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         /// <example>
         /// Unity.exe -batchmode -projectPath &lt;proj&gt; -executeMethod
         ///   CarrotFantasy.Editor.BuildPipeline.Profiles.AbBuildProfile.BuildFromPath
-        ///   -profilePath Assets/Editor/BuildEditor/BuildPipeline/Profiles/Windows.asset
+        ///   -profilePath Assets/Editor/Build/Pipeline/Profiles/Windows.asset
         /// </example>
         /// </summary>
         public static void BuildFromPath()
