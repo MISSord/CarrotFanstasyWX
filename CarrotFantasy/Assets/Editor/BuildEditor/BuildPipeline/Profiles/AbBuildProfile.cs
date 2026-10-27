@@ -145,6 +145,56 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             };
         }
 
+        /// <summary>
+        /// 单独测试上传：把当前平台目录传到服务器，不需要完整重打包。
+        /// <para>密码来自本机 EditorPrefs（AB_DeployPassword），不进资产。</para>
+        /// </summary>
+        public void TestUpload()
+        {
+            if (!this.EnableUpload)
+            {
+                Debug.LogWarning("[AB Build] 未勾选「启用云上传」，测试上传已跳过");
+                return;
+            }
+
+            AbUploadSettings settings = CreateUploadSettings();
+            settings.ApplyToDeploySettings();
+
+            if (!AssetBundleDeploySettings.TryValidate(out string validationError))
+            {
+                Debug.LogError("[AB Build] 上传配置不完整：" + validationError);
+                return;
+            }
+
+            string platformPath = Path.GetFullPath(Path.Combine(
+                Application.dataPath,
+                "..",
+                this.OutputRoot,
+                AssetBundlePackager.GetPlatformFolder(this.BuildTarget)));
+
+            if (!Directory.Exists(platformPath))
+            {
+                Debug.LogError("[AB Build] 平台目录不存在，请先打一次包：" + platformPath);
+                return;
+            }
+
+            AssetBundleCloudUploadResult result = AssetBundleCloudUploader.UploadDirectory(platformPath);
+            if (result.Success)
+            {
+                Debug.Log(string.Format(
+                    "[AB Build] 测试上传成功：{0} 个文件 / {1:F1} MB → {2}:{3}{4}",
+                    result.UploadedFileCount,
+                    result.UploadedBytes / 1024f / 1024f,
+                    settings.Host,
+                    settings.Port,
+                    settings.RemotePath));
+            }
+            else
+            {
+                Debug.LogError("[AB Build] 测试上传失败：" + result.Message);
+            }
+        }
+
         /// <summary>按本配置执行一次完整打包（含可选的上传步骤）。</summary>
         public AssetBundleBuildPipeline.BuildResult Build()
         {

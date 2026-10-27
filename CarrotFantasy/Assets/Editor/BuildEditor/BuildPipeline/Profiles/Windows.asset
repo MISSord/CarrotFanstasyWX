@@ -16,18 +16,19 @@ MonoBehaviour:
   OutputRoot: Build/AssetBundles
   Compression: 1
   AutoManifestVersion: 1
-  ManifestVersion: 0
+  ManifestVersion: 6
+  ClearOutputFolder: 1
+  CopyToStreamingAssets: 0
+  ForceRebuild: 0
+  PackAtlasesBeforeBuild: 1
+  ShowManifestDialog: 1
   EnableUpload: 0
   UploadHost: 
   UploadPort: 22
   UploadUser: 
   UploadRemotePath: 
   UploadUsePrivateKey: 0
-  UploadPrivateKeyPath:   ClearOutputFolder: 1
-  CopyToStreamingAssets: 0
-  ForceRebuild: 0
-  PackAtlasesBeforeBuild: 1
-  ShowManifestDialog: 1
+  UploadPrivateKeyPath: 
   UseStepPipeline: 1
   DryRun: 0
   SkipSteps: []

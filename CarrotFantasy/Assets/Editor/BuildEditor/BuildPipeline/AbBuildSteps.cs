@@ -258,12 +258,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
             }
 
             // 把 Profile 里的连接信息写进本机 DeploySettings，再复用现有上传器。
-            AssetBundleDeploySettings.Host = settings.Host;
-            AssetBundleDeploySettings.Port = settings.Port;
-            AssetBundleDeploySettings.User = settings.User;
-            AssetBundleDeploySettings.RemotePath = settings.RemotePath;
-            AssetBundleDeploySettings.UsePrivateKey = settings.UsePrivateKey;
-            AssetBundleDeploySettings.PrivateKeyPath = settings.PrivateKeyPath;
+            settings.ApplyToDeploySettings();
 
             if (!AssetBundleDeploySettings.TryValidate(out string validationError))
             {

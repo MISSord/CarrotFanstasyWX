@@ -16,7 +16,7 @@ public static class AssetBundleDeploySettings
     const string PrefsRemotePath = "AB_DeployRemotePath";
     const string PrefsUsePrivateKey = "AB_DeployUsePrivateKey";
     const string PrefsPrivateKeyPath = "AB_DeployPrivateKeyPath";
-    const string PrefsPromptAfterBuild = "AB_DeployPromptAfterBuild";
+
 
     public static string Host
     {
@@ -60,11 +60,6 @@ public static class AssetBundleDeploySettings
         set => EditorPrefs.SetString(PrefsPrivateKeyPath, value ?? string.Empty);
     }
 
-    public static bool PromptUploadAfterBuild
-    {
-        get => EditorPrefs.GetBool(PrefsPromptAfterBuild, true);
-        set => EditorPrefs.SetBool(PrefsPromptAfterBuild, value);
-    }
 
     public static string NormalizeRemotePath(string path)
     {

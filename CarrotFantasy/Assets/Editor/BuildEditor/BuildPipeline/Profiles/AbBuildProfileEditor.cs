@@ -94,9 +94,23 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                     this.DrawProperty("UploadPrivateKeyPath", "私钥文件");
                 }
 
+                // 密码不写进资产：直接读写本机 EditorPrefs，避免随 Git 提交。
+                string password = EditorGUILayout.PasswordField(
+                    new GUIContent("SSH 密码（仅本机保存）"),
+                    AssetBundleDeploySettings.Password);
+                if (password != AssetBundleDeploySettings.Password)
+                {
+                    AssetBundleDeploySettings.Password = password;
+                }
+
+                if (GUILayout.Button("测试上传（当前平台目录）", GUILayout.Height(24f)))
+                {
+                    profile.TestUpload();
+                }
+
                 EditorGUILayout.HelpBox(
-                    "SSH 密码不保存在本资产（避免随 Git 提交），只读取本机 EditorPrefs 的 AB_DeployPassword。\n"
-                    + "首次使用请到 AB Packager 窗口的「云服务器上传」里填写一次密码。",
+                    "SSH 密码只保存在本机 EditorPrefs（AB_DeployPassword），不会随资产提交到 Git。\n"
+                    + "打包时若勾选了启用云上传，会在结束后自动执行上传步骤。",
                     MessageType.Info);
                 EditorGUI.indentLevel--;
             }

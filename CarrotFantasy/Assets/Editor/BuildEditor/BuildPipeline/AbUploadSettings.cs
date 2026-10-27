@@ -16,5 +16,16 @@ namespace CarrotFantasy.Editor.BuildPipeline
         public string RemotePath;
         public bool UsePrivateKey;
         public string PrivateKeyPath;
+
+        /// <summary>把连接信息写入本机 EditorPrefs；密码沿用已保存的值（不经过资产）。</summary>
+        public void ApplyToDeploySettings()
+        {
+            AssetBundleDeploySettings.Host = this.Host;
+            AssetBundleDeploySettings.Port = this.Port;
+            AssetBundleDeploySettings.User = this.User;
+            AssetBundleDeploySettings.RemotePath = this.RemotePath;
+            AssetBundleDeploySettings.UsePrivateKey = this.UsePrivateKey;
+            AssetBundleDeploySettings.PrivateKeyPath = this.PrivateKeyPath;
+        }
     }
 }
