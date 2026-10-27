@@ -4,75 +4,69 @@ using UnityEditor;
 namespace CarrotFantasy.Editor.BuildPipeline
 {
     /// <summary>
-    /// 打包流程的唯一事实来源：**显式列出步骤及其顺序**。
+    /// 打包流程的唯一事实来源：**显式列出步骤、顺序、是否关键**。
     /// <para>
-    /// 为什么不用反射自动发现：
+    /// 每一行 = <c>BuildStep.Required/Optional("名字", AbBuildSteps.方法)</c>：
+    /// 名字进日志，方法体在 <see cref="AbBuildSteps"/>，顺序就是数组顺序。
+    /// 加步骤/调顺序/改关键性都只改这一处，review 时一目了然。
     /// </para>
-    /// <list type="bullet">
-    ///   <item>顺序必须一眼可见——这个文件就是流程文档，review 时能看到顺序变更；</item>
-    ///   <item>漏注册/改名会直接编译报错，而不是"某个步骤悄悄不执行"；</item>
-    ///   <item>步骤可以带构造参数（例如 <c>new SignManifestStep(requireSignature: true)</c>）；</item>
-    ///   <item>平台差异用不同列表表达，不需要在步骤内部散落 <c>if (target == ...)</c>。</item>
-    /// </list>
-    /// <para>SBP 的 <c>DefaultBuildTasks</c> 也是同样的做法（显式 new 出 List&lt;IBuildTask&gt;）。</para>
+    /// <para>
+    /// 平台差异用"不同数组"表达（见 <see cref="ForTarget"/>），不在步骤内部写平台分支。
+    /// </para>
     /// </summary>
     public static class AbBuildStepCatalog
     {
-        /// <summary>
-        /// 桌面平台（Windows / macOS）的 AB 打包流程。
-        /// <para>
-        /// 顺序即依赖：图集/Lua 先于 AB；清单数据先于 Pack 合并与 JSON 写入；
-        /// 写 JSON 之后才能签名；签名之后才写 version.txt。
-        /// </para>
-        /// </summary>
-        public static IReadOnlyList<IBuildStep> Desktop()
+        /// <summary>桌面平台（Windows / macOS）的 AB 打包流程。</summary>
+        private static readonly BuildStep[] DesktopSteps =
         {
-            return new IBuildStep[]
-            {
-                // 1) 校验与设置
-                new ValidateRequestStep(),
-                new ApplyBuildSettingsStep(),
+            // 1) 校验与设置
+            BuildStep.Required("ValidateRequest", AbBuildSteps.ValidateRequest),
+            BuildStep.Required("ApplyBuildSettings", AbBuildSteps.ApplyBuildSettings),
 
-                // 2) 资源预处理（必须在打 AB 之前）
-                new PackAtlasStep(),        // 可关：request.PackAtlasesBeforeBuild
-                new BuildLuaBundleStep(),   // 关键：lua_bundle.bytes 是 AB 的资产
+            // 2) 资源预处理（必须先于 AB）
+            BuildStep.Optional("PackAtlas", AbBuildSteps.PackAtlas),
+            BuildStep.Required("BuildLuaBundle", AbBuildSteps.BuildLuaBundle),
 
-                // 3) 打 AB
-                new CleanOutputStep(),      // 可关：request.ClearOutputFolder
-                new BuildBundlesStep(),     // 内部按 UseScriptableBuildPipeline 选 SBP / built-in
+            // 3) 打 AB
+            BuildStep.Required("CleanOutput", AbBuildSteps.CleanOutput),
+            BuildStep.Required("BuildBundles", AbBuildSteps.BuildBundles),
 
-                // 4) 清单与分发包
-                new GenerateManifestDataStep(),  // 扫描落盘 → Size/MD5/依赖
-                new MergePacksStep(),            // packs/*.zip → DownloadPacks
-                new WriteManifestJsonStep(),     // custom_manifest.json
-                new SignManifestStep(),          // 签名（dev 宏生效时只告警）
-                new WriteVersionStep(),          // version.txt
+            // 4) 清单与分发包
+            BuildStep.Required("GenerateManifestData", AbBuildSteps.GenerateManifestData),
+            BuildStep.Required("MergePacks", AbBuildSteps.MergePacks),
+            BuildStep.Required("WriteManifestJson", AbBuildSteps.WriteManifestJson),
+            BuildStep.Required("SignManifest", AbBuildSteps.SignManifest),
+            BuildStep.Required("WriteVersion", AbBuildSteps.WriteVersion),
 
-                // 5) 交付
-                new RefreshAssetsStep(),
-                new CopyToStreamingAssetsStep(), // 可关：request.CopyToStreamingAssets
-                new WriteRuntimeConfigStep(),    // ab_runtime_config.json
+            // 5) 交付
+            BuildStep.Optional("RefreshAssets", AbBuildSteps.RefreshAssets),
+            BuildStep.Optional("CopyToStreamingAssets", AbBuildSteps.CopyToStreamingAssets),
+            BuildStep.Required("WriteRuntimeConfig", AbBuildSteps.WriteRuntimeConfig),
 
-                // 6) 收尾
-                new ShowManifestDialogStep(),  // 可关：request.ShowManifestDialog（批处理自动跳过）
-                new FinalizeResultStep(),
-            };
+            // 6) 收尾
+            BuildStep.Optional("ShowManifestDialog", AbBuildSteps.ShowManifestDialog),
+            BuildStep.Required("FinalizeResult", AbBuildSteps.FinalizeResult),
+        };
+
+        /// <summary>桌面平台步骤列表（静态只读，零分配）。</summary>
+        public static IReadOnlyList<BuildStep> Desktop()
+        {
+            return DesktopSteps;
         }
 
         /// <summary>
         /// 按目标平台选择步骤列表。
         /// <para>
-        /// 目前只支持桌面（PC / macOS）；将来 Android 需要在这里返回自己的列表，
-        /// 例如插入 <c>new PatchAndroidManifestStep()</c>、替换 StreamingAssets 策略，
-        /// 而不是在现有步骤里写平台分支。
+        /// 将来 Android 需要在这里返回自己的数组（插入签名/Manifest 补丁步骤、
+        /// 替换 StreamingAssets 策略），而不是在现有步骤里写平台分支。
         /// </para>
         /// </summary>
-        public static IReadOnlyList<IBuildStep> ForTarget(BuildTarget target)
+        public static IReadOnlyList<BuildStep> ForTarget(BuildTarget target)
         {
             switch (target)
             {
                 default:
-                    return Desktop();
+                    return DesktopSteps;
             }
         }
     }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using UnityEngine;
+
+// System.Diagnostics 与 UnityEngine 都有 Debug，显式指定为 Unity 的，避免 CS0104。
 using Debug = UnityEngine.Debug;
 
 namespace CarrotFantasy.Editor.BuildPipeline
@@ -65,8 +67,8 @@ namespace CarrotFantasy.Editor.BuildPipeline
     /// <summary>
     /// 顺序执行步骤列表。
     /// <para>
-    /// 这里**不做排序、不做反射发现**：传入的列表就是执行顺序，
-    /// 平台差异也通过"传不同的列表"表达（见 <see cref="AbBuildStepCatalog"/>）。
+    /// 不做排序、不做反射发现：传入的列表就是执行顺序，
+    /// 平台差异通过"传不同的列表"表达（见 <see cref="AbBuildStepCatalog"/>）。
     /// </para>
     /// </summary>
     public static class BuildExecutor
@@ -75,12 +77,12 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
         public static BuildReport Execute(
             BuildContext ctx,
-            IReadOnlyList<IBuildStep> steps,
+            IReadOnlyList<BuildStep> steps,
             BuildExecutionOptions options = null)
         {
             if (ctx == null)
             {
-                throw new ArgumentNullException("ctx");
+                throw new ArgumentNullException(nameof(ctx));
             }
 
             if (steps == null || steps.Count == 0)
@@ -95,8 +97,8 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
             for (int i = 0; i < steps.Count; i++)
             {
-                IBuildStep step = steps[i];
-                if (step == null)
+                BuildStep step = steps[i];
+                if (string.IsNullOrEmpty(step.Name) || step.Handler == null)
                 {
                     continue;
                 }
@@ -131,7 +133,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
                     Debug.LogError(string.Format("{0} 步骤 {1} 抛异常（{2} ms）：\n{3}",
                         LogTag, step.Name, sw.ElapsedMilliseconds, e));
 
-                    if (step.Required)
+                    if (step.IsRequired)
                     {
                         report.Success = false;
                         report.FailedStep = step.Name;
@@ -157,7 +159,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
                         break;
 
                     case BuildStepStatus.Failed:
-                        if (step.Required)
+                        if (step.IsRequired)
                         {
                             report.Success = false;
                             report.FailedStep = step.Name;
