@@ -65,12 +65,6 @@ namespace CarrotFantasy
             {
                 imgAllClear = clearGo.transform;
             }
-
-            GameObject btnGo = nt.GetGameObjectSafely("btn");
-            if (btnGo != null)
-            {
-                button = btnGo.GetComponent<Button>();
-            }
         }
 
         void ApplyMapState(SingleMapInfo info)

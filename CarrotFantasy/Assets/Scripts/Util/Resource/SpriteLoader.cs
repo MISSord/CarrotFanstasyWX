@@ -86,13 +86,6 @@ namespace CarrotFantasy
             }
 
             Sprite source = targetRenderer.sprite;
-            int spriteId = source.GetInstanceID();
-            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
-            if (_lastRecordedSpriteInstanceId == spriteId && hasDefaultPath)
-            {
-                return false;
-            }
-
             string spriteAssetPath = AssetDatabase.GetAssetPath(source);
             if (string.IsNullOrEmpty(spriteAssetPath))
             {
@@ -105,16 +98,26 @@ namespace CarrotFantasy
                 return false;
             }
 
-            bool changed = false;
+            // 图片移动目录后 GUID / Sprite 对象不变，InstanceID 命中不代表包名没变，
+            // 必须比对当前包名与资源名，否则旧 AB 路径不会被纠正。
+            int spriteId = source.GetInstanceID();
+            string assetName = source.name;
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
-            if (!string.Equals(defaultBundleName, newBundleName))
+            if (_lastRecordedSpriteInstanceId == spriteId
+                && string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
+                && string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            bool changed = false;
+            if (!string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal))
             {
                 defaultBundleName = newBundleName;
                 changed = true;
             }
 
-            string assetName = source.name;
-            if (!string.Equals(defaultAssetName, assetName))
+            if (!string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
             {
                 defaultAssetName = assetName;
                 changed = true;

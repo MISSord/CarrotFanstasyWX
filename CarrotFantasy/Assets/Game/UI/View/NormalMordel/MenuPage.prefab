@@ -86,9 +86,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: 
-  defaultAssetName: 
-  _lastRecordedTextureInstanceId: 0
+  defaultBundleName: ui/rawimages/gamemenu-hd_0
+  defaultAssetName: gamemenu-hd_0
+  _lastRecordedTextureInstanceId: 31986
 --- !u!1 &5470108669934287339
 GameObject:
   m_ObjectHideFlags: 0
@@ -127,7 +127,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 9}
-  m_SizeDelta: {x: 234, y: 71}
+  m_SizeDelta: {x: 236, y: 72}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5258949119787544027
 CanvasRenderer:
@@ -157,7 +157,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300010, guid: 16ed5422b5188c143a5186b3bc87d2a8, type: 3}
+  m_Sprite: {fileID: 21300000, guid: c7de6462385925242b74422a0ca8befd, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -197,7 +197,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300006, guid: 16ed5422b5188c143a5186b3bc87d2a8, type: 3}
+    m_PressedSprite: {fileID: 0}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -235,9 +235,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: 
-  defaultAssetName: 
-  _lastRecordedSpriteInstanceId: 0
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gamemenu-hd_3
+  _lastRecordedSpriteInstanceId: 32000
 --- !u!1 &5470387978477980117
 GameObject:
   m_ObjectHideFlags: 0
@@ -272,7 +272,7 @@ RectTransform:
   - {fileID: 5256523071829134905}
   - {fileID: 5256175190209159677}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -406,7 +406,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300002, guid: 16ed5422b5188c143a5186b3bc87d2a8, type: 3}
+    m_PressedSprite: {fileID: 0}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -444,9 +444,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: 
-  defaultAssetName: 
-  _lastRecordedSpriteInstanceId: 0
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gamemenu-hd_2
+  _lastRecordedSpriteInstanceId: 31996
 --- !u!1 &5471367765816611137
 GameObject:
   m_ObjectHideFlags: 0
@@ -485,7 +485,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: -86}
-  m_SizeDelta: {x: 234, y: 71}
+  m_SizeDelta: {x: 236, y: 72}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5258112228800670897
 CanvasRenderer:
@@ -515,7 +515,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300012, guid: 16ed5422b5188c143a5186b3bc87d2a8, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 67c976a728d1a9a47adb6c6f5c6d4ee1, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -555,7 +555,7 @@ MonoBehaviour:
     m_FadeDuration: 0.1
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
-    m_PressedSprite: {fileID: 21300008, guid: 16ed5422b5188c143a5186b3bc87d2a8, type: 3}
+    m_PressedSprite: {fileID: 0}
     m_SelectedSprite: {fileID: 0}
     m_DisabledSprite: {fileID: 0}
   m_AnimationTriggers:
@@ -593,6 +593,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: 
-  defaultAssetName: 
-  _lastRecordedSpriteInstanceId: 0
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: gamemenu-hd_4
+  _lastRecordedSpriteInstanceId: 32004

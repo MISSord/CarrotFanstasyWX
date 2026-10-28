@@ -117,28 +117,30 @@ namespace CarrotFantasy
                 return ClearRecordedPath();
             }
 
+            // 贴图移动目录后 GUID / Texture 对象不变，InstanceID 命中不代表包名没变，
+            // 必须比对当前包名与资源名，否则旧 AB 路径不会被纠正。
             int textureId = sourceAsset.GetInstanceID();
-            bool hasDefaultPath = !string.IsNullOrEmpty(defaultBundleName) && !string.IsNullOrEmpty(defaultAssetName);
-            if (_lastRecordedTextureInstanceId == textureId && hasDefaultPath)
+            string newBundleName = importer.assetBundleName.ToLowerInvariant();
+            if (_lastRecordedTextureInstanceId == textureId
+                && string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
+                && string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
             {
                 return false;
             }
 
             bool changed = false;
-            string newBundleName = importer.assetBundleName.ToLowerInvariant();
-            if (!string.Equals(defaultBundleName, newBundleName))
+            if (!string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal))
             {
                 defaultBundleName = newBundleName;
                 changed = true;
             }
 
-            if (!string.Equals(defaultAssetName, assetName))
+            if (!string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
             {
                 defaultAssetName = assetName;
                 changed = true;
             }
 
-            defaultBundleName = importer.assetBundleName.ToLowerInvariant();
             _lastRecordedTextureInstanceId = textureId;
             return changed;
         }

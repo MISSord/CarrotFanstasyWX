@@ -35,7 +35,7 @@ RectTransform:
   - {fileID: 3819127506420905401}
   - {fileID: 6872586130797231046}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -211,7 +211,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover-hd_3
-  _lastRecordedSpriteInstanceId: 27160
+  _lastRecordedSpriteInstanceId: 29062
 --- !u!1 &1463190402092758219
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,8 +222,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1681295261162482795}
   - component: {fileID: 1684063433166332103}
-  - component: {fileID: 1575225539855819965}
-  - component: {fileID: 1235478086967688091}
+  - component: {fileID: 6061841590987059677}
+  - component: {fileID: 4966702036615090716}
   m_Layer: 5
   m_Name: raw_bg
   m_TagString: Untagged
@@ -249,7 +249,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 14.5, y: 0}
-  m_SizeDelta: {x: 692, y: 467}
+  m_SizeDelta: {x: 692, y: 468}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1684063433166332103
 CanvasRenderer:
@@ -259,7 +259,7 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1463190402092758219}
   m_CullTransparentMesh: 0
---- !u!114 &1575225539855819965
+--- !u!114 &6061841590987059677
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -268,28 +268,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 1463190402092758219}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8ee02e27630c7ac4e84500f66ad35be9, type: 3}
-  m_Type: 0
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!114 &1235478086967688091
+  m_Texture: {fileID: 2800000, guid: dfeca02390779f14a986a0582e72d41c, type: 3}
+  m_UVRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+--- !u!114 &4966702036615090716
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -298,12 +295,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1463190402092758219}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
+  m_Script: {fileID: 11500000, guid: e0d311c9c8a5459daec27eedc3d6020c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/rawimages/gameover0-hd_1_1
-  defaultAssetName: gameover0-hd_1_1
-  _lastRecordedSpriteInstanceId: 27396
+  defaultBundleName: ui/rawimages/gameover0-hd_1
+  defaultAssetName: gameover0-hd_1
+  _lastRecordedTextureInstanceId: 35642
 --- !u!1 &1463377643693608099
 GameObject:
   m_ObjectHideFlags: 0
@@ -452,7 +449,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover-hd_0
-  _lastRecordedSpriteInstanceId: 27148
+  _lastRecordedSpriteInstanceId: 29056
 --- !u!1 &1875375566246769918
 GameObject:
   m_ObjectHideFlags: 0

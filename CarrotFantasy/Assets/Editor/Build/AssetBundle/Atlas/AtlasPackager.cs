@@ -26,6 +26,25 @@ public static class AtlasPackager
         public PackResult ImagesResult;
     }
 
+    /// <summary>单个文件夹的图集打包结果，供 Project 窗口右键菜单展示。</summary>
+    public struct FolderAtlasResult
+    {
+        /// <summary>右键选中的文件夹。</summary>
+        public string RequestedFolder;
+
+        /// <summary>图集实际所在文件夹；当前层没有图片时会回退到 Images 子文件夹。</summary>
+        public string AtlasFolder;
+
+        /// <summary>图集资源路径。</summary>
+        public string AtlasPath;
+
+        /// <summary>参与打包的图片数量。</summary>
+        public int ImageCount;
+
+        /// <summary>是否完成创建/更新。</summary>
+        public bool Packed;
+    }
+
     /// <summary>默认打包：UI/View（TargetFolder）+ UI/Images（EachSubfolder）。</summary>
     public static DefaultPackResult PackDefaultUiAtlases()
     {
@@ -184,6 +203,65 @@ public static class AtlasPackager
         return result;
     }
 
+    /// <summary>
+    /// 为右键选中的文件夹生成一个图集，产物固定为文件夹下的 <c>images_atlas.spriteatlas</c>。
+    /// <para>
+    /// 只取文件夹当前层的图片，不递归子文件夹：项目按「一层一图集」组织
+    /// （如 UI/Images/Tower/1、Tower/2 各自持有 images_atlas），递归会把子文件夹的图
+    /// 重复打进父图集。当前层没有图片、但存在 <c>Images</c> 子文件夹时（UI/View/* 的惯例），
+    /// 回退到该子文件夹，图集仍然落在选中文件夹的下面。
+    /// </para>
+    /// </summary>
+    public static FolderAtlasResult PackAtlasForFolder(string folderPath, bool includeSubdirectories = false)
+    {
+        var result = new FolderAtlasResult
+        {
+            RequestedFolder = NormalizeAssetPath(folderPath),
+            AtlasFolder = string.Empty,
+            AtlasPath = string.Empty,
+            ImageCount = 0,
+            Packed = false,
+        };
+
+        if (!AssetDatabase.IsValidFolder(result.RequestedFolder))
+        {
+            Debug.LogWarning("[AtlasPackager] 选中的不是有效文件夹: " + result.RequestedFolder);
+            return result;
+        }
+
+        SearchOption searchOption = includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        string sourceFolder = result.RequestedFolder;
+        string[] imagePaths = GetImagePathsInFolder(sourceFolder, searchOption);
+
+        if (imagePaths.Length == 0)
+        {
+            string imagesFolder = sourceFolder + "/Images";
+            if (AssetDatabase.IsValidFolder(imagesFolder))
+            {
+                string[] nestedImagePaths = GetImagePathsInFolder(imagesFolder, searchOption);
+                if (nestedImagePaths.Length > 0)
+                {
+                    sourceFolder = imagesFolder;
+                    imagePaths = nestedImagePaths;
+                    Debug.Log("[AtlasPackager] 当前层没有图片，回退到 Images 子文件夹: " + imagesFolder);
+                }
+            }
+        }
+
+        result.AtlasFolder = sourceFolder;
+        result.AtlasPath = sourceFolder + "/" + DefaultAtlasName + ".spriteatlas";
+        result.ImageCount = imagePaths.Length;
+
+        if (imagePaths.Length == 0)
+        {
+            Debug.LogWarning("[AtlasPackager] 文件夹及其 Images 子文件夹中都没有图片: " + result.RequestedFolder);
+            return result;
+        }
+
+        result.Packed = PackImages(sourceFolder, DefaultAtlasName, imagePaths);
+        return result;
+    }
+
     public static bool PackImagesInFolder(
         string folderPath,
         string atlasName,
@@ -195,11 +273,12 @@ public static class AtlasPackager
             return false;
         }
 
-        string[] imagePaths = Directory.GetFiles(ToAbsolutePath(relativeFolderPath), "*.*", searchOption)
-            .Select(ToAssetPath)
-            .Where(IsImageFile)
-            .ToArray();
+        return PackImages(relativeFolderPath, atlasName, GetImagePathsInFolder(relativeFolderPath, searchOption));
+    }
 
+    /// <summary>用已经解析好的图片列表创建/更新文件夹下的图集。</summary>
+    private static bool PackImages(string relativeFolderPath, string atlasName, string[] imagePaths)
+    {
         if (imagePaths.Length == 0)
         {
             Debug.LogWarning("[AtlasPackager] 文件夹中没有图片: " + relativeFolderPath);
@@ -312,6 +391,15 @@ public static class AtlasPackager
         return extension == ".png" || extension == ".jpg" || extension == ".jpeg";
     }
 
+    /// <summary>列出文件夹中参与图集的图片（绝对路径统一转成 Assets/... 形式）。</summary>
+    private static string[] GetImagePathsInFolder(string folderPath, SearchOption searchOption)
+    {
+        return Directory.GetFiles(ToAbsolutePath(folderPath), "*.*", searchOption)
+            .Select(ToAssetPath)
+            .Where(IsImageFile)
+            .ToArray();
+    }
+
     private static bool IsUiImagesRoot(string folderPath)
     {
         string normalizedPath = folderPath.ToLowerInvariant().Replace("\\", "/");
@@ -326,6 +414,6 @@ public static class AtlasPackager
 
     private static bool HasImagesInFolder(string folderPath, SearchOption searchOption)
     {
-        return Directory.GetFiles(ToAbsolutePath(folderPath), "*.*", searchOption).Any(IsImageFile);
+        return GetImagePathsInFolder(folderPath, searchOption).Length > 0;
     }
 }

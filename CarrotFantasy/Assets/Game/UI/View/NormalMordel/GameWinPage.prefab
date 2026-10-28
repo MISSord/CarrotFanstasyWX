@@ -308,7 +308,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover-hd_3
-  _lastRecordedSpriteInstanceId: 48224
+  _lastRecordedSpriteInstanceId: 29062
 --- !u!1 &2604450851061851699
 GameObject:
   m_ObjectHideFlags: 0
@@ -457,7 +457,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/normalmordel/images_atlas
   defaultAssetName: gameover-hd_0
-  _lastRecordedSpriteInstanceId: 48244
+  _lastRecordedSpriteInstanceId: 29056
 --- !u!1 &2604598525948915173
 GameObject:
   m_ObjectHideFlags: 0
@@ -494,7 +494,7 @@ RectTransform:
   - {fileID: 2827920709476952745}
   - {fileID: 2827320347815185099}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
+  m_RootOrder: -1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
@@ -615,7 +615,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: carrot_2
-  _lastRecordedSpriteInstanceId: 49216
+  _lastRecordedSpriteInstanceId: 28784
 --- !u!1 &2605000173524846613
 GameObject:
   m_ObjectHideFlags: 0
@@ -653,7 +653,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 674, y: 391}
+  m_SizeDelta: {x: 676, y: 392}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2825584538218476295
 CanvasRenderer:
@@ -704,4 +704,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/gameover0-hd_9
   defaultAssetName: gameover0-hd_9
-  _lastRecordedTextureInstanceId: 49214
+  _lastRecordedTextureInstanceId: 34664
