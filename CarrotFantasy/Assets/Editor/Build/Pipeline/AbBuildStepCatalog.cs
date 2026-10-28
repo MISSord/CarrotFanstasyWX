@@ -39,7 +39,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
             BuildStep.Required("WriteVersion", AbBuildSteps.WriteVersion),
 
             // 5) 交付
-            BuildStep.Optional("RefreshAssets", AbBuildSteps.RefreshAssets),
+
             BuildStep.Optional("CopyToStreamingAssets", AbBuildSteps.CopyToStreamingAssets),
             BuildStep.Required("WriteRuntimeConfig", AbBuildSteps.WriteRuntimeConfig),
 

@@ -12,7 +12,9 @@ public static class AssetBundleDeploySettings
     const string PrefsHost = "AB_DeployHost";
     const string PrefsPort = "AB_DeployPort";
     const string PrefsUser = "AB_DeployUser";
-    const string PrefsPassword = "AB_DeployPassword";
+    // 旧版单一 key：仅作兼容回退，新写入一律按主机分 key。
+    const string LegacyPrefsPassword = "AB_DeployPassword";
+    const string PrefsPasswordPrefix = "AB_DeployPassword_";
     const string PrefsRemotePath = "AB_DeployRemotePath";
     const string PrefsUsePrivateKey = "AB_DeployUsePrivateKey";
     const string PrefsPrivateKeyPath = "AB_DeployPrivateKeyPath";
@@ -36,10 +38,44 @@ public static class AssetBundleDeploySettings
         set => EditorPrefs.SetString(PrefsUser, value ?? string.Empty);
     }
 
+    /// <summary>
+    /// 当前 Host 对应的密码（读写 EditorPrefs）。
+    /// <para>
+    /// 按主机分 key：dev / prod 两套服务器不会互相串密码；
+    /// 密码仍然只在本机，不写进 Profile 资产。
+    /// </para>
+    /// </summary>
     public static string Password
     {
-        get => EditorPrefs.GetString(PrefsPassword, string.Empty);
-        set => EditorPrefs.SetString(PrefsPassword, value ?? string.Empty);
+        get => GetPassword(Host);
+        set => SetPassword(Host, value);
+    }
+
+    public static string GetPassword(string host)
+    {
+        string key = BuildPasswordKey(host);
+        if (EditorPrefs.HasKey(key))
+        {
+            return EditorPrefs.GetString(key, string.Empty);
+        }
+
+        // 兼容旧版单 key：没按主机存过时回退，首次写入时就会迁移到新 key。
+        return EditorPrefs.GetString(LegacyPrefsPassword, string.Empty);
+    }
+
+    public static void SetPassword(string host, string password)
+    {
+        EditorPrefs.SetString(BuildPasswordKey(host), password ?? string.Empty);
+    }
+
+    static string BuildPasswordKey(string host)
+    {
+        if (string.IsNullOrWhiteSpace(host))
+        {
+            return LegacyPrefsPassword;
+        }
+
+        return PrefsPasswordPrefix + host.Trim().ToLowerInvariant();
     }
 
     public static string RemotePath

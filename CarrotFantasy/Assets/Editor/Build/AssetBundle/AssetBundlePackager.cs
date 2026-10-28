@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,21 +21,25 @@ public static class AssetBundlePackager
     // 运行时用的是 File.Exists + AssetBundle.LoadFromFile，只有 PC/macOS 的同步文件 IO 能这么干。
     // Android/iOS/WebGL 需要先补 UnityWebRequestAssetBundle 分支再放开，否则等于默认出一个跑不起来的包。
     public static readonly BuildTarget[] availablePlatforms = {
-        BuildTarget.StandaloneWindows,
         BuildTarget.StandaloneWindows64,
         BuildTarget.StandaloneOSX,
     };
 
     public static readonly string[] platformNames = {
-        "Windows 32-bit",
         "Windows 64-bit",
         "macOS",
     };
 
+    /// <summary>
+    /// 是否支持该平台的 AB 构建。
+    /// <para>
+    /// 32 位 Windows 已明确拒绝：输出目录与 64 位共用 <c>StandaloneWindows</c>，
+    /// 交替打包会互相覆盖，且运行时只有 64 位产物。
+    /// </para>
+    /// </summary>
     public static bool IsSupportedRuntimePlatform(BuildTarget target)
     {
-        return target == BuildTarget.StandaloneWindows
-               || target == BuildTarget.StandaloneWindows64
+        return target == BuildTarget.StandaloneWindows64
                || target == BuildTarget.StandaloneOSX;
     }
 
@@ -82,15 +85,19 @@ public static class AssetBundlePackager
                 return false;
             }
 
-            if (clearFolders && Directory.Exists(outputPath))
+            if (clearFolders)
             {
-                if (!IsSafeToDeleteDirectory(outputPath))
+                bool existed = Directory.Exists(outputPath);
+                if (!TryCleanOutputDirectory(outputPath, out string cleanError))
                 {
-                    Debug.LogError("输出目录过于危险，已拒绝清空: " + outputPath);
+                    Debug.LogError(cleanError);
                     return false;
                 }
-                Directory.Delete(outputPath, true);
-                Debug.Log("已清空输出文件夹: " + outputPath);
+
+                if (existed)
+                {
+                    Debug.Log("已清空输出文件夹: " + outputPath);
+                }
             }
 
             if (!Directory.Exists(outputPath))
@@ -138,7 +145,7 @@ public static class AssetBundlePackager
 
     /// <summary>
     /// 把构建输出里的 AB 文件名统一成小写（与清单 / 运行时 GetBundleFileName 一致）。
-    /// Unity 按资源上登记的包名生成文件，大小写会原样保留；Windows 无感，iOS/Android 会找不到。
+    /// Windows 上只改大小写时 File.Exists 会认为目标已存在，必须先挪到临时名再改回。
     /// </summary>
     public static void NormalizeBundleFileNames(string platformBundlePath, BuildTarget target)
     {
@@ -147,43 +154,229 @@ public static class AssetBundlePackager
             return;
         }
 
+        string root = Path.GetFullPath(platformBundlePath)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         string platformManifestName = GetPlatformFolder(target).ToLowerInvariant();
-        foreach (string file in Directory.GetFiles(platformBundlePath, "*", SearchOption.AllDirectories))
+        string[] files = Directory.GetFiles(root, "*", SearchOption.AllDirectories);
+        var relatives = new List<string>(files.Length);
+        string rootedPrefix = root + Path.DirectorySeparatorChar;
+        string rootedAltPrefix = root + Path.AltDirectorySeparatorChar;
+        for (int i = 0; i < files.Length; i++)
         {
-            string relative = file.Substring(platformBundlePath.Length)
-                .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
-                .Replace('\\', '/');
-
-            if (relative.StartsWith(PackGroupingDefaults.PacksFolderName + "/", StringComparison.OrdinalIgnoreCase)
-                || relative.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase)
-                || relative.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-                || relative.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
-                || relative.EndsWith(".sig", StringComparison.OrdinalIgnoreCase))
+            string full = files[i];
+            string relative;
+            if (full.StartsWith(rootedPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                relative = full.Substring(rootedPrefix.Length);
+            }
+            else if (full.StartsWith(rootedAltPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                relative = full.Substring(rootedAltPrefix.Length);
+            }
+            else
             {
                 continue;
             }
 
+            relative = relative.Replace('\\', '/');
+            if (ShouldSkipBundleFileNameNormalize(relative))
+            {
+                continue;
+            }
+
+            relatives.Add(relative);
+        }
+
+        for (int i = 0; i < relatives.Count; i++)
+        {
+            string relative = relatives[i];
             string lower = relative.ToLowerInvariant();
             if (lower == platformManifestName || string.Equals(relative, lower, StringComparison.Ordinal))
             {
                 continue;
             }
 
-            string targetPath = Path.Combine(platformBundlePath, lower.Replace('/', Path.DirectorySeparatorChar));
-            if (File.Exists(targetPath))
+            string source = ResolveCaseInsensitivePath(root, relative);
+            if (string.IsNullOrEmpty(source))
             {
-                Debug.LogError("[AB Build] 大小写冲突，已跳过: " + relative + " / " + lower);
+                Debug.LogWarning("[AB Build] 归一文件名时找不到源文件: " + relative);
                 continue;
             }
 
-            string directory = Path.GetDirectoryName(targetPath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            int slash = lower.LastIndexOf('/');
+            string parentRelative = slash < 0 ? string.Empty : lower.Substring(0, slash);
+            string destDirectory = EnsureLowercaseDirectoryChain(root, parentRelative);
+            string dest = Path.Combine(destDirectory, Path.GetFileName(lower));
+
+            // 目录改大小写后，原来的绝对路径在区分大小写的盘上会失效，再解析一次。
+            source = ResolveCaseInsensitivePath(root, relative);
+            if (string.IsNullOrEmpty(source))
             {
-                Directory.CreateDirectory(directory);
+                Debug.LogWarning("[AB Build] 归一文件名时找不到源文件: " + relative);
+                continue;
             }
 
-            File.Move(file, targetPath);
+            MoveFileFixingCase(source, dest, relative, lower);
         }
+    }
+
+    static bool ShouldSkipBundleFileNameNormalize(string relative)
+    {
+        if (string.IsNullOrEmpty(relative))
+        {
+            return true;
+        }
+
+        if (relative.IndexOf(".__case__", StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            return true;
+        }
+
+        return relative.StartsWith(PackGroupingDefaults.PacksFolderName + "/", StringComparison.OrdinalIgnoreCase)
+            || relative.EndsWith(".manifest", StringComparison.OrdinalIgnoreCase)
+            || relative.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            || relative.EndsWith(".txt", StringComparison.OrdinalIgnoreCase)
+            || relative.EndsWith(".sig", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>从平台根按路径逐段做大小写不敏感查找，返回磁盘上的实际路径。</summary>
+    static string ResolveCaseInsensitivePath(string root, string relative)
+    {
+        string[] parts = relative.Split('/');
+        string current = root;
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (string.IsNullOrEmpty(parts[i]))
+            {
+                continue;
+            }
+
+            bool isLast = i == parts.Length - 1;
+            string next = isLast
+                ? FindChildFile(current, parts[i])
+                : FindChildDirectory(current, parts[i]);
+            if (string.IsNullOrEmpty(next))
+            {
+                return null;
+            }
+
+            current = next;
+        }
+
+        return current;
+    }
+
+    static string FindChildFile(string directory, string name)
+    {
+        FileInfo[] files = new DirectoryInfo(directory).GetFiles();
+        for (int i = 0; i < files.Length; i++)
+        {
+            if (string.Equals(files[i].Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                return files[i].FullName;
+            }
+        }
+
+        return null;
+    }
+
+    static string FindChildDirectory(string directory, string name)
+    {
+        DirectoryInfo[] children = new DirectoryInfo(directory).GetDirectories();
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (string.Equals(children[i].Name, name, StringComparison.OrdinalIgnoreCase))
+            {
+                return children[i].FullName;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>把相对目录的每一段改成小写。只改大小写时先经过临时目录名，避免 Windows 认为目标已存在。</summary>
+    static string EnsureLowercaseDirectoryChain(string root, string relativeDirLower)
+    {
+        string current = root;
+        if (string.IsNullOrEmpty(relativeDirLower))
+        {
+            return current;
+        }
+
+        string[] parts = relativeDirLower.Split('/');
+        for (int i = 0; i < parts.Length; i++)
+        {
+            if (string.IsNullOrEmpty(parts[i]))
+            {
+                continue;
+            }
+
+            current = EnsureChildDirectoryCase(current, parts[i]);
+        }
+
+        return current;
+    }
+
+    static string EnsureChildDirectoryCase(string parentFull, string desiredName)
+    {
+        DirectoryInfo parent = new DirectoryInfo(parentFull);
+        if (!parent.Exists)
+        {
+            string created = Path.Combine(parentFull, desiredName);
+            Directory.CreateDirectory(created);
+            return created;
+        }
+
+        DirectoryInfo[] children = parent.GetDirectories();
+        for (int i = 0; i < children.Length; i++)
+        {
+            if (!string.Equals(children[i].Name, desiredName, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            if (string.Equals(children[i].Name, desiredName, StringComparison.Ordinal))
+            {
+                return children[i].FullName;
+            }
+
+            string tempPath = Path.Combine(parentFull, desiredName + ".__case__" + Guid.NewGuid().ToString("N"));
+            string finalPath = Path.Combine(parentFull, desiredName);
+            Directory.Move(children[i].FullName, tempPath);
+            Directory.Move(tempPath, finalPath);
+            return finalPath;
+        }
+
+        string path = Path.Combine(parentFull, desiredName);
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
+    static void MoveFileFixingCase(string source, string dest, string relative, string lower)
+    {
+        string fullSource = Path.GetFullPath(source);
+        string fullDest = Path.GetFullPath(dest);
+        if (string.Equals(fullSource, fullDest, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        bool samePathIgnoreCase = string.Equals(fullSource, fullDest, StringComparison.OrdinalIgnoreCase);
+        if (File.Exists(fullDest) && samePathIgnoreCase)
+        {
+            string temp = fullDest + ".__case__" + Guid.NewGuid().ToString("N");
+            File.Move(fullSource, temp);
+            File.Move(temp, fullDest);
+            return;
+        }
+
+        if (File.Exists(fullDest))
+        {
+            Debug.LogError("[AB Build] 大小写冲突，已跳过: " + relative + " / " + lower);
+            return;
+        }
+
+        File.Move(fullSource, fullDest);
     }
 
     /// <summary>拷贝到 StreamingAssets/AssetBundles/{平台}/，与运行时 GetRuntimeLoadPath 一致。</summary>
@@ -523,6 +716,9 @@ public static class AssetBundlePackager
             return true;
         }
 
+        // 先记下清单版本，再删目录。失败的这次打包不会把下次版本打回 1。
+        AssetBundleBuildSettings.RememberManifestVersionFromDirectory(outputPath);
+
         if (!IsSafeToDeleteDirectory(outputPath))
         {
             error = "输出目录过于危险，已拒绝清空: " + outputPath;
@@ -634,26 +830,6 @@ public static class AssetBundlePackager
             || file.EndsWith(".sig");
     }
 
-    private static void GenerateFlatDependencyList(string abName, int depth, HashSet<string> processedBundles)
-    {
-        if (processedBundles.Contains(abName))
-        {
-            return;
-        }
-
-        if (depth != 0)
-        {
-            processedBundles.Add(abName);
-        }
-
-        string[] dependencies = AssetDatabase.GetAssetBundleDependencies(abName, true);
-
-        foreach (string dependency in dependencies)
-        {
-            GenerateFlatDependencyList(dependency, depth + 1, processedBundles);
-        }
-    }
-
     private static bool IsSafeToDeleteDirectory(string outputPath)
     {
         string fullPath = Path.GetFullPath(outputPath).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
@@ -681,8 +857,20 @@ public static class AssetBundlePackager
             return false;
         }
 
+        // 工程根下的这些目录一律拒绝：它们是 Unity / 工具链的缓存与配置，
+        // 误删会导致编辑器重建、丢缓存，甚至丢工程设置（旧实现只拦了 Assets，Library 可被删）。
+        string[] protectedDirs = { "Library", "Temp", "Logs", "obj", "Packages", "ProjectSettings", ".git" };
+        for (int i = 0; i < protectedDirs.Length; i++)
+        {
+            if (IsSameOrUnder(fullPath, Path.Combine(projectRoot, protectedDirs[i])))
+            {
+                Debug.LogError("[AB Build] 拒绝删除受保护目录: " + fullPath);
+                return false;
+            }
+        }
+
         // Assets 下只允许动 StreamingAssets/AssetBundles（CopyToStreamingAssets 的目标）；
-        // Assets 本身、资源目录、Library 等一律拒绝。
+        // Assets 本身与资源目录一律拒绝。
         string assetsRoot = Path.GetFullPath(Application.dataPath)
             .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
         if (IsSameOrUnder(fullPath, assetsRoot))

@@ -30,7 +30,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("勾选后每次打包自动取「输出目录里当前清单版本 + 1」")]
         public bool AutoManifestVersion = true;
 
-        [Tooltip("自动模式下这里显示下一版本号；取消自动后可手工指定")]
+        [Tooltip("关闭自动后手工指定。0 表示仍取输出目录的下一版本。自动模式不写回这个字段。")]
         public int ManifestVersion = 0;
 
         public bool ClearOutputFolder = true;
@@ -59,54 +59,22 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("按名字跳过步骤（调试用），例如 CopyToStreamingAssets")]
         public string[] SkipSteps = new string[0];
 
-        private void OnEnable()
-        {
-            this.RefreshManifestVersion();
-        }
-
-        private void OnValidate()
-        {
-            this.RefreshManifestVersion();
-        }
-
         /// <summary>
-        /// 自动模式下刷新 <see cref="ManifestVersion"/>：
-        /// 新建资产（默认 0）或改了平台/输出目录后，Inspector 里能直接看到下一版本号。
+        /// 本次打包要用的清单版本。自动模式每次现算，不写回资产，避免打包后 Profile 被标脏。
         /// </summary>
-        public void RefreshManifestVersion()
+        public int ResolveManifestVersion()
         {
-            if (!this.AutoManifestVersion)
+            if (!this.AutoManifestVersion && this.ManifestVersion > 0)
             {
-                return;
+                return this.ManifestVersion;
             }
 
-            int next = AssetBundleBuildSettings.SuggestNextManifestVersion(this.OutputRoot, this.BuildTarget);
-            if (next != this.ManifestVersion)
-            {
-                this.ManifestVersion = next;
-            }
-        }
-
-        /// <summary>
-        /// 一键刷新所有「读本地数据/配置」得到的结果（Inspector 的「刷新」按钮）。
-        /// <para>
-        /// 目前包含：清单版本（读输出目录里现有清单）。
-        /// 以后新增的本地数据/配置读取都挂到这里，按钮不用改。
-        /// </para>
-        /// </summary>
-        public void RefreshLocalData()
-        {
-            this.RefreshManifestVersion();
+            return AssetBundleBuildSettings.SuggestNextManifestVersion(this.OutputRoot, this.BuildTarget);
         }
 
         public AssetBundleBuildPipeline.BuildRequest CreateRequest()
         {
-            // 打包前也走一次统一刷新，保证用的是最新的本地数据（清单版本等）。
-            this.RefreshLocalData();
-
-            int version = this.ManifestVersion > 0
-                ? this.ManifestVersion
-                : AssetBundleBuildSettings.SuggestNextManifestVersion(this.OutputRoot, this.BuildTarget);
+            int version = this.ResolveManifestVersion();
 
             return new AssetBundleBuildPipeline.BuildRequest
             {
@@ -214,9 +182,16 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             Debug.Log("[AB Build] Profile=" + this.name
                       + " 使用步骤执行器（" + AbBuildStepCatalog.ForTarget(this.BuildTarget).Count + " 步）");
 
+            BuildExecutionOptions options = CreateOptions();
+            if (options.DryRun)
+            {
+                Debug.LogWarning("[AB Build] 「开始打包」会忽略 Profile 上的 DryRun；只想预览请用「Dry Run」按钮");
+                options.DryRun = false;
+            }
+
             return AssetBundleBuildPipeline.BuildAndManifestWithSteps(
                 request,
-                CreateOptions(),
+                options,
                 ctx => ctx.Set(this.CreateUploadSettings()));
         }
 
@@ -253,8 +228,8 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 "平台：{0}（{1}）\n清单版本：{2}{3}\n流程：{4} / 后端：{5} / 步骤：{6}\n输出：{7}\n上传：{8}",
                 this.BuildTarget,
                 platformFolder,
-                this.ManifestVersion,
-                this.AutoManifestVersion ? "（自动）" : "（手工）",
+                this.ResolveManifestVersion(),
+                this.AutoManifestVersion ? "（自动，不写入资产）" : "（手工）",
                 this.UseStepPipeline ? "步骤执行器" : "旧整体流程",
                 AssetBundlePackager.UseScriptableBuildPipeline ? "SBP" : "built-in",
                 AbBuildStepCatalog.ForTarget(this.BuildTarget).Count,

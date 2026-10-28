@@ -27,7 +27,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
             if (!AssetBundlePackager.IsSupportedRuntimePlatform(ctx.Request.BuildTarget))
             {
                 return BuildStepResult.Failed(
-                    "当前 AB 运行时只支持 PC/macOS 的 File IO 加载，" + ctx.Request.BuildTarget
+                    "当前 AB 运行时只支持 64 位 Windows / macOS 的 File IO 加载，" + ctx.Request.BuildTarget
                     + " 需要先补 UnityWebRequestAssetBundle 分支");
             }
 
@@ -143,11 +143,17 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 return BuildStepResult.Failed("清单数据构建失败");
             }
 
+            int missingCount = data.MissingOnDisk != null ? data.MissingOnDisk.Count : 0;
+            if (missingCount > 0)
+            {
+                return BuildStepResult.Failed(
+                    missingCount + " 个已登记资源没有打出 AB 文件，已中止。详见 Console。");
+            }
+
             ctx.Set(data);
             ctx.Result.Manifest = data.Manifest;
 
-            return BuildStepResult.Success(
-                data.Manifest.AssetBundles.Count + " 个包，登记未落盘 " + data.MissingOnDisk.Count + " 个");
+            return BuildStepResult.Success(data.Manifest.AssetBundles.Count + " 个包");
         }
 
         /// <summary>把清单里的 AB 按规则合并成下载用 ZIP Pack，填充 DownloadPacks。</summary>
@@ -205,16 +211,6 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
         // ---------------------------------------------------------------- 5) 交付
 
-        /// <summary>
-        /// 显式刷新 AssetDatabase。
-        /// <para>改造前 <c>AssetDatabase.Refresh()</c> 藏在 GenerateManifest 末尾，独立后日志里能看到触发点。</para>
-        /// </summary>
-        public static BuildStepResult RefreshAssets(BuildContext ctx)
-        {
-            AssetDatabase.Refresh();
-            return BuildStepResult.Success();
-        }
-
         /// <summary>把平台 AB 目录拷进 StreamingAssets（受 <c>Request.CopyToStreamingAssets</c> 控制）。</summary>
         public static BuildStepResult CopyToStreamingAssets(BuildContext ctx)
         {
@@ -227,11 +223,19 @@ namespace CarrotFantasy.Editor.BuildPipeline
             return BuildStepResult.Success();
         }
 
-        /// <summary>写入运行时 CDN 配置（StreamingAssets/ab_runtime_config.json）。</summary>
+        /// <summary>
+        /// 写入运行时 CDN 配置（StreamingAssets/ab_runtime_config.json）。
+        /// 未指定 RuntimeEnv 时保留文件里已有的 env，避免打 AB 把正式环境盖成 dev。
+        /// </summary>
         public static BuildStepResult WriteRuntimeConfig(BuildContext ctx)
         {
-            AssetBundleBuildSettings.WriteRuntimeConfig(ctx.Request.BuildTarget);
-            return BuildStepResult.Success();
+            if (!AssetBundleBuildSettings.WriteRuntimeConfig(ctx.Request.BuildTarget, ctx.Request.RuntimeEnv))
+            {
+                return BuildStepResult.Failed(
+                    "写入 ab_runtime_config.json 失败。prod 需要 https:// CDN 模板，详见 Console。");
+            }
+
+            return BuildStepResult.Success("env=" + AssetBundleBuildSettings.ReadRuntimeConfigEnv());
         }
 
         // ---------------------------------------------------------------- 6) 收尾

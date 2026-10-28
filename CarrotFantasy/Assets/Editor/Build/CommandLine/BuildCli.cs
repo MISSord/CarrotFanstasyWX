@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CarrotFantasy.Editor.Batch
 {
     /// <summary>
-    /// Batch / -executeMethod 入口：代码热更、完整 AB、PC Player 出包。
+    /// Batch / -executeMethod 入口：完整 AB、PC Player 出包。Lua 脚本包含在 AB 流程里。
     /// 用法见 Docs/构建与热更-操作手册.md「命令行（Batch）」。
     /// </summary>
     public static class BuildCli
@@ -35,8 +35,7 @@ namespace CarrotFantasy.Editor.Batch
                     message = targetError;
                     Debug.LogError("[BuildCli] " + message);
                 }
-                else if (EditorUserBuildSettings.activeBuildTarget != target
-                         && !IsWindowsStandalonePair(EditorUserBuildSettings.activeBuildTarget, target))
+                else if (EditorUserBuildSettings.activeBuildTarget != target)
                 {
                     message = string.Format(
                         "激活平台 {0} 与 -cfTarget={1} 不一致。请先切换 Build Settings，或保证 batch 工程已切到目标平台。",
@@ -64,12 +63,6 @@ namespace CarrotFantasy.Editor.Batch
                     }
                     else
                     {
-                        if (!string.IsNullOrEmpty(options.Env)
-                            && !string.Equals(options.Command, "pcBuild", StringComparison.OrdinalIgnoreCase))
-                        {
-                            AssetBundleBuildSettings.WriteRuntimeConfig(target, options.Env);
-                        }
-
                         Debug.Log("[BuildCli] 成功: " + message);
                         exitCode = 0;
                     }
@@ -89,15 +82,6 @@ namespace CarrotFantasy.Editor.Batch
             }
         }
 
-        static bool IsWindowsStandalonePair(BuildTarget active, BuildTarget requested)
-        {
-            bool activeWin = active == BuildTarget.StandaloneWindows
-                             || active == BuildTarget.StandaloneWindows64;
-            bool reqWin = requested == BuildTarget.StandaloneWindows
-                          || requested == BuildTarget.StandaloneWindows64;
-            return activeWin && reqWin;
-        }
-
         static bool Execute(CliOptions options, BuildTarget target, out string message, out int exitCode)
         {
             exitCode = 1;
@@ -110,9 +94,11 @@ namespace CarrotFantasy.Editor.Batch
                 request.ForceRebuild = options.ForceRebuild;
                 request.CopyToStreamingAssets = options.CopyStreaming;
                 request.ManifestVersion = AssetBundleBuildSettings.SuggestNextManifestVersion(target);
+                request.RuntimeEnv = options.Env;
 
+                // 命令行固定走步骤表，不读本机 EditorPrefs 里的实验开关。
                 AssetBundleBuildPipeline.BuildResult buildResult =
-                    AssetBundleBuildPipeline.BuildAndManifest(request);
+                    AssetBundleBuildPipeline.BuildAndManifestWithSteps(request);
                 if (!buildResult.Success)
                 {
                     message = "AB 打包失败，请查看日志。";
@@ -179,6 +165,12 @@ namespace CarrotFantasy.Editor.Batch
                 }
 
                 return pcResult.Success;
+            }
+
+            if (string.Equals(command, "codeHotUpdate", StringComparison.OrdinalIgnoreCase))
+            {
+                message = "codeHotUpdate 已随 HybridCLR 移除。Lua 热更包含在 AB 流程里，请改用 -cfCommand=abBuild。";
+                return false;
             }
 
             message = "未知 -cfCommand: " + command + "（支持 abBuild / pcBuild）";
@@ -272,6 +264,14 @@ namespace CarrotFantasy.Editor.Batch
             if (Enum.TryParse(targetName, ignoreCase: true, out target)
                 && target != BuildTarget.NoTarget)
             {
+                // 只支持 64 位：32 位与 64 位共用 StandaloneWindows 输出目录，交替打包会互相覆盖。
+                if (target == BuildTarget.StandaloneWindows)
+                {
+                    error = "AB 打包只支持 64 位：请用 -cfTarget=StandaloneWindows64";
+                    target = BuildTarget.NoTarget;
+                    return false;
+                }
+
                 return true;
             }
 

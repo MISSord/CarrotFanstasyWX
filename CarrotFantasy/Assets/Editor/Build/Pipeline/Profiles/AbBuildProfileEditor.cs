@@ -5,7 +5,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
 {
     /// <summary>
     /// <see cref="AbBuildProfile"/> 的 Inspector：全部字段用中文标签绘制，
-    /// 并提供「重新探测版本」「Dry Run」「开始打包」三个按钮。
+    /// 并提供「刷新」「Dry Run」「开始打包」三个按钮。
     /// <para>
     /// 注意：本文件的命名空间含 <c>Editor</c> 段，基类必须写全限定
     /// <see cref="UnityEditor.Editor"/>，否则 `Editor` 会被解析成命名空间（CS0118）。
@@ -65,8 +65,8 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             if (profile.AutoManifestVersion)
             {
                 EditorGUILayout.HelpBox(
-                    "自动模式：每次打包取「输出目录里当前清单 + 1」，改平台/输出目录后会自动刷新。\n"
-                    + "当前将使用版本：" + profile.ManifestVersion,
+                    "自动模式：每次打包取「输出目录里当前清单 + 1」，数字不写进这个资产。\n"
+                    + "当前将使用版本：" + profile.ResolveManifestVersion(),
                     MessageType.None);
             }
 
@@ -95,12 +95,14 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 }
 
                 // 密码不写进资产：直接读写本机 EditorPrefs，避免随 Git 提交。
+                // 密码按主机分 key（dev/prod 不串），且仍然只存本机 EditorPrefs。
+                string currentPassword = AssetBundleDeploySettings.GetPassword(profile.UploadHost);
                 string password = EditorGUILayout.PasswordField(
-                    new GUIContent("SSH 密码（仅本机保存）"),
-                    AssetBundleDeploySettings.Password);
-                if (password != AssetBundleDeploySettings.Password)
+                    new GUIContent("SSH 密码（仅本机保存，按主机隔离）"),
+                    currentPassword);
+                if (password != currentPassword)
                 {
-                    AssetBundleDeploySettings.Password = password;
+                    AssetBundleDeploySettings.SetPassword(profile.UploadHost, password);
                 }
 
                 if (GUILayout.Button("测试上传（当前平台目录）", GUILayout.Height(24f)))
@@ -128,11 +130,9 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             EditorGUILayout.HelpBox(profile.Describe(), MessageType.None);
 
             if (GUILayout.Button(
-                    new GUIContent("刷新", "重新读取本地数据/配置（当前包含：输出目录里的清单版本）"),
+                    new GUIContent("刷新", "重新读取输出目录里的清单版本"),
                     GUILayout.Height(24f)))
             {
-                profile.RefreshLocalData();
-                EditorUtility.SetDirty(profile);
                 this.Repaint();
             }
 
@@ -170,7 +170,6 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             {
                 Undo.RecordObject(profile, "修改打包平台");
                 profile.BuildTarget = SupportedTargets[newIndex];
-                profile.RefreshManifestVersion();
                 EditorUtility.SetDirty(profile);
             }
         }

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -14,7 +13,7 @@ using UnityEngine;
 /// </para>
 /// <para>
 /// 私有工具方法（CollectRegisteredButMissingOnDisk / FindRegisteredBundleName /
-/// GenerateFlatDependencyList 等）仍留在主文件，partial 类内可直接访问。
+/// CollectFlatDependencies 等）仍留在主文件，partial 类内可直接访问。
 /// </para>
 /// </summary>
 public static partial class AssetBundlePackager
@@ -51,6 +50,19 @@ public static partial class AssetBundlePackager
         ManifestBuildData data = BuildManifestData(bundlePath, target, versionNumber, compressedFormat);
         if (data == null || data.Manifest == null)
         {
+            return null;
+        }
+
+        if (data.MissingOnDisk != null && data.MissingOnDisk.Count > 0)
+        {
+            string missingMsg = data.MissingOnDisk.Count
+                + " 个已登记资源没有打出 AB 文件，已中止（详见 Console）。";
+            Debug.LogError("[AB Build] " + missingMsg);
+            if (showSuccessDialog)
+            {
+                EditorUtility.DisplayDialog("清单未生成", missingMsg, "确定");
+            }
+
             return null;
         }
 
@@ -180,12 +192,9 @@ public static partial class AssetBundlePackager
                     Hash = MD5Checker.ComputeFileMD5(file),
                 };
 
-                HashSet<string> processedBundles = new HashSet<string>();
-                GenerateFlatDependencyList(registeredName, 0, processedBundles);
-
-                info.Dependencies = processedBundles
-                    .Select(NormalizeBundleName)
-                    .ToArray();
+                // GetAssetBundleDependencies(name, true) 本身已是递归的扁平结果，
+                // 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
+                info.Dependencies = CollectFlatDependencies(registeredName);
 
                 generatedManifest.AssetBundles.Add(info);
             }
@@ -204,6 +213,37 @@ public static partial class AssetBundlePackager
         };
     }
 
+    /// <summary>
+    /// 取某个包的直接 + 间接依赖（扁平、去重、排序）。
+    /// <para>依赖来源是 AssetDatabase 的包图；SBP 阶段 C 会切换为构建结果的 BundleInfos。</para>
+    /// </summary>
+    private static string[] CollectFlatDependencies(string bundleName)
+    {
+        string[] dependencies = AssetDatabase.GetAssetBundleDependencies(bundleName, true);
+        if (dependencies == null || dependencies.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        string self = NormalizeBundleName(bundleName);
+        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < dependencies.Length; i++)
+        {
+            string dependency = NormalizeBundleName(dependencies[i]);
+            if (string.IsNullOrEmpty(dependency)
+                || string.Equals(dependency, self, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            unique.Add(dependency);
+        }
+
+        var result = new List<string>(unique);
+        result.Sort(StringComparer.Ordinal);
+        return result.ToArray();
+    }
+
     /// <summary>写 custom_manifest.json（不做签名）。</summary>
     public static bool WriteManifestJson(CustomManifest manifest, string bundlePath, out string error)
     {
@@ -219,6 +259,7 @@ public static partial class AssetBundlePackager
             string manifestJson = JsonUtility.ToJson(manifest, true);
             string manifestPath = Path.Combine(bundlePath, "custom_manifest.json");
             File.WriteAllText(manifestPath, manifestJson);
+            AssetBundleBuildSettings.RememberManifestVersion(bundlePath, manifest.ManifestVersion);
             return true;
         }
         catch (System.Exception e)
