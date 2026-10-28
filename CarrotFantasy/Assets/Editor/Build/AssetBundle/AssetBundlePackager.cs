@@ -623,6 +623,8 @@ public static class AssetBundlePackager
 
         // 阶段 A：依赖来源双算（AssetDatabase 为准，SBP 结果只用于对比报告）。
         int dependencyDiffCount = 0;
+        int dependencySbpOnlyTotal = 0;
+        int dependencyDbOnlyTotal = 0;
         var dependencyDiffSamples = new List<string>();
         const int MaxDependencyDiffSamples = 10;
 
@@ -674,14 +676,25 @@ public static class AssetBundlePackager
                     string[] sbpDependencies = CollectFlatFromResolver(registeredName, sbpDependencyResolver);
                     if (!SameBundleSet(info.Dependencies, sbpDependencies))
                     {
+                        DiffBundleSets(
+                            info.Dependencies,
+                            sbpDependencies,
+                            out List<string> dbOnly,
+                            out List<string> sbpOnly);
+
                         dependencyDiffCount++;
+                        dependencyDbOnlyTotal += dbOnly.Count;
+                        dependencySbpOnlyTotal += sbpOnly.Count;
+
                         if (dependencyDiffSamples.Count < MaxDependencyDiffSamples)
                         {
                             dependencyDiffSamples.Add(string.Format(
-                                "{0}: AssetDatabase=[{1}] SBP=[{2}]",
+                                "{0}\n    SBP 多 {1} 项{2}\n    DB  多 {3} 项{4}",
                                 bundleKey,
-                                string.Join(",", info.Dependencies),
-                                string.Join(",", sbpDependencies)));
+                                sbpOnly.Count,
+                                FormatDependencySample(sbpOnly, 6),
+                                dbOnly.Count,
+                                FormatDependencySample(dbOnly, 6)));
                         }
                     }
                 }
@@ -694,7 +707,12 @@ public static class AssetBundlePackager
             EditorUtility.ClearProgressBar();
         }
 
-        LogDependencySourceDiff(dependencyDiffCount, dependencyDiffSamples, sbpDependencyResolver != null);
+        LogDependencySourceDiff(
+            dependencyDiffCount,
+            dependencySbpOnlyTotal,
+            dependencyDbOnlyTotal,
+            dependencyDiffSamples,
+            sbpDependencyResolver != null);
 
         LogMissingOnDiskSummary(missingOnDisk);
 
@@ -856,7 +874,12 @@ public static class AssetBundlePackager
         return true;
     }
 
-    private static void LogDependencySourceDiff(int diffCount, List<string> samples, bool resolverUsed)
+    private static void LogDependencySourceDiff(
+        int diffCount,
+        int sbpOnlyTotal,
+        int dbOnlyTotal,
+        List<string> samples,
+        bool resolverUsed)
     {
         if (!resolverUsed)
         {
@@ -873,9 +896,62 @@ public static class AssetBundlePackager
             ? "\n  " + string.Join("\n  ", samples)
             : string.Empty;
         Debug.LogWarning(string.Format(
-            "[AB Build] 依赖来源对比：{0} 个包的依赖不一致（清单仍以 AssetDatabase 为准）。{1}",
+            "[AB Build] 依赖来源对比：{0} 个包的依赖不一致"
+            + "（SBP 多出 {1} 项，AssetDatabase 多出 {2} 项；清单仍以 AssetDatabase 为准）。{3}",
             diffCount,
+            sbpOnlyTotal,
+            dbOnlyTotal,
             detail));
+    }
+
+    /// <summary>比较两个扁平依赖集合，分别得到「只有 DB 有」与「只有 SBP 有」。</summary>
+    private static void DiffBundleSets(
+        string[] databaseDependencies,
+        string[] sbpDependencies,
+        out List<string> dbOnly,
+        out List<string> sbpOnly)
+    {
+        var dbSet = new HashSet<string>(
+            databaseDependencies ?? Array.Empty<string>(),
+            StringComparer.OrdinalIgnoreCase);
+        var sbpSet = new HashSet<string>(
+            sbpDependencies ?? Array.Empty<string>(),
+            StringComparer.OrdinalIgnoreCase);
+
+        dbOnly = new List<string>();
+        sbpOnly = new List<string>();
+        foreach (string item in dbSet)
+        {
+            if (!sbpSet.Contains(item))
+            {
+                dbOnly.Add(item);
+            }
+        }
+
+        foreach (string item in sbpSet)
+        {
+            if (!dbSet.Contains(item))
+            {
+                sbpOnly.Add(item);
+            }
+        }
+
+        dbOnly.Sort(StringComparer.Ordinal);
+        sbpOnly.Sort(StringComparer.Ordinal);
+    }
+
+    private static string FormatDependencySample(List<string> items, int max)
+    {
+        if (items == null || items.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        int count = Math.Min(max, items.Count);
+        string sample = string.Join(", ", items.GetRange(0, count));
+        return items.Count > count
+            ? "（如 " + sample + " …）"
+            : "（" + sample + "）";
     }
 
     /// <summary>

@@ -775,7 +775,7 @@ PlayerSettings:
     PS4: DOTWEEN
     PS5: DOTWEEN
     QNX: DOTWEEN
-    Standalone: NET45;ILRuntime;CF_DEV_TOOLS;DOTWEEN
+    Standalone: NET45;ILRuntime;CF_DEV_TOOLS;DOTWEEN;CF_DEV_SKIP_MANIFEST_SIGN
     WebGL: NET45;ILRuntime;DOTWEEN
     Windows Store Apps: DOTWEEN
     XboxOne: DOTWEEN
