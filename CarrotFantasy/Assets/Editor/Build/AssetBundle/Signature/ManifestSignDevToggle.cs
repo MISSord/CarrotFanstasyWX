@@ -31,7 +31,7 @@ public static class ManifestSignDevToggle
         return true;
     }
 
-    private static bool IsEnabled()
+    public static bool IsEnabled()
     {
         List<BuildTargetGroup> groups = CollectGroups();
         for (int i = 0; i < groups.Count; i++)
@@ -45,12 +45,22 @@ public static class ManifestSignDevToggle
         return false;
     }
 
-    private static void SetEnabled(bool enabled)
+    /// <summary>开关开发期跳过签名。返回 true 表示宏发生了变更（需要等脚本重编译）。</summary>
+    public static bool SetEnabled(bool enabled)
     {
+        bool changed = false;
         List<BuildTargetGroup> groups = CollectGroups();
         for (int i = 0; i < groups.Count; i++)
         {
-            ApplySymbol(groups[i], DefineSymbol, enabled);
+            if (ApplySymbol(groups[i], DefineSymbol, enabled))
+            {
+                changed = true;
+            }
+        }
+
+        if (!changed)
+        {
+            return false;
         }
 
         AssetDatabase.Refresh();
@@ -65,6 +75,8 @@ public static class ManifestSignDevToggle
             Debug.Log("[ManifestSignDevToggle] 已关闭开发期跳过清单签名（宏 " + DefineSymbol
                       + "），Unity 正在重新编译。之后打包需要 Keys/manifest_signing_private.xml。");
         }
+
+        return true;
     }
 
     /// <summary>同时作用于当前激活平台组与 Standalone（工程只出 PC/macOS 包）。</summary>
@@ -101,8 +113,14 @@ public static class ManifestSignDevToggle
         return false;
     }
 
-    private static void ApplySymbol(BuildTargetGroup group, string symbol, bool enabled)
+    /// <returns>true 表示符号表发生了变更。</returns>
+    private static bool ApplySymbol(BuildTargetGroup group, string symbol, bool enabled)
     {
+        if (HasSymbol(group, symbol) == enabled)
+        {
+            return false;
+        }
+
         NamedBuildTarget target = NamedBuildTarget.FromBuildTargetGroup(group);
         string defines = PlayerSettings.GetScriptingDefineSymbols(target);
 
@@ -123,6 +141,7 @@ public static class ManifestSignDevToggle
         }
 
         PlayerSettings.SetScriptingDefineSymbols(target, string.Join(";", kept.ToArray()));
+        return true;
     }
 }
 #endif

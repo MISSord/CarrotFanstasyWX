@@ -30,6 +30,8 @@ public static class AssetBundleBuildPipeline
         public bool ForceRebuild;
         public bool ShowManifestDialog;
         public bool PackAtlasesBeforeBuild;
+        /// <summary>写入 ab_runtime_config 的环境。空则保留已有 env，没有文件时用 dev。</summary>
+        public string RuntimeEnv;
     }
 
     public struct BuildResult
@@ -59,11 +61,10 @@ public static class AssetBundleBuildPipeline
     private const string UseStepPipelinePrefKey = "AB_UseStepPipeline";
 
     /// <summary>
-    /// 是否用"步骤执行器"跑打包流程（阶段 1 默认关闭，行为与改造前一致）。
+    /// 是否用步骤执行器跑 <see cref="BuildAndManifest"/>（默认关闭）。
     /// <para>
-    /// 打开后走 <see cref="BuildAndManifestWithSteps"/>：执行器按
-    /// <see cref="AbBuildStepCatalog"/> 里的显式列表逐步执行。
-    /// 迁移期用它做 A/B 对比，菜单 <c>Tools/AssetBundle/构建流程</c> 可切换。
+    /// 命令行 <c>abBuild</c> 不读这个开关，固定走步骤表。Profile 用资产上自己的开关。
+    /// 菜单 <c>Tools/AssetBundle/构建流程</c> 只影响 <see cref="BuildAndManifest"/>。
     /// </para>
     /// </summary>
     public static bool UseStepPipeline
@@ -73,8 +74,8 @@ public static class AssetBundleBuildPipeline
     }
 
     /// <summary>
-    /// 统一入口：按开关决定走"步骤执行器"还是"旧的整体流程"。
-    /// 调用方（编辑器窗口 / 批处理）不需要感知两者差异。
+    /// 按 <see cref="UseStepPipeline"/> 走步骤执行器或旧流程。
+    /// 命令行打包请用 <see cref="BuildAndManifestWithSteps"/>。
     /// </summary>
     public static BuildResult BuildAndManifest(BuildRequest request)
     {
@@ -197,7 +198,12 @@ public static class AssetBundleBuildPipeline
             return result;
         }
 
-        AssetBundleBuildSettings.WriteRuntimeConfig(request.BuildTarget);
+        if (!AssetBundleBuildSettings.WriteRuntimeConfig(request.BuildTarget, request.RuntimeEnv))
+        {
+            Debug.LogError("[AB Build] 写入运行配置失败，已中止。");
+            return result;
+        }
+
         result.Success = true;
         return result;
     }

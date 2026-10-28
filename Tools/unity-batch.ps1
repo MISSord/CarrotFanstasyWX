@@ -1,10 +1,10 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Unity batchmode entry: code hot-update, AB build, PC player build.
+  Unity batchmode entry: AB build (includes Lua), PC player build.
 
 .EXAMPLE
-  .\Tools\unity-batch.ps1 -Command codeHotUpdate -Target StandaloneWindows64
+  .\Tools\unity-batch.ps1 -Command abBuild -Target StandaloneWindows64
   .\Tools\unity-batch.ps1 -Command abBuild -Upload
   .\Tools\unity-batch.ps1 -Command pcBuild -Channel dev
   .\Tools\unity-batch.ps1 -Command pcBuild -Channel prod
@@ -17,7 +17,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("codeHotUpdate", "abBuild", "pcBuild")]
+    [ValidateSet("abBuild", "pcBuild")]
     [string] $Command,
 
     [string] $Target = "StandaloneWindows64",
@@ -33,8 +33,6 @@ param(
     [switch] $ForceRebuild,
 
     [switch] $CopyStreaming,
-
-    [switch] $SkipGenerate,
 
     [string] $UnityPath,
 
@@ -80,8 +78,7 @@ function Invoke-UnityBatch {
         "-cfTarget=$Target",
         "-cfUpload=$($Upload.IsPresent.ToString().ToLowerInvariant())",
         "-cfForceRebuild=$($ForceRebuild.IsPresent.ToString().ToLowerInvariant())",
-        "-cfCopyStreaming=$($CopyStreaming.IsPresent.ToString().ToLowerInvariant())",
-        "-cfSkipGenerate=$($SkipGenerate.IsPresent.ToString().ToLowerInvariant())"
+        "-cfCopyStreaming=$($CopyStreaming.IsPresent.ToString().ToLowerInvariant())"
     )
     if (-not [string]::IsNullOrWhiteSpace($RuntimeEnv)) {
         $cfArgs += "-cfEnv=$RuntimeEnv"
@@ -121,7 +118,7 @@ $code = Invoke-UnityBatch -LogPath $LogFile
 
 # pcBuild exit 2: scripting define just changed; re-run once after recompile.
 if ($Command -eq "pcBuild" -and $code -eq 2) {
-    Write-Host "ExitCode 2: CF_DEV_TOOLS changed, retrying once after Unity recompile..."
+    Write-Host "ExitCode 2: scripting defines changed, retrying once after Unity recompile..."
     $stamp2 = Get-Date -Format "yyyyMMdd-HHmmss"
     $LogFile2 = Join-Path $logsDir "unity-batch-$Command-retry-$stamp2.log"
     $code = Invoke-UnityBatch -LogPath $LogFile2

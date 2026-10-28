@@ -16,7 +16,7 @@ MonoBehaviour:
   OutputRoot: Build/AssetBundles
   Compression: 1
   AutoManifestVersion: 1
-  ManifestVersion: 6
+  ManifestVersion: 7
   ClearOutputFolder: 1
   CopyToStreamingAssets: 0
   ForceRebuild: 0

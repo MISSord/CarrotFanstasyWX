@@ -37,13 +37,25 @@ public static class PcBuildChannel
 
     /// <summary>
     /// 写入通道（宏 + runtime config）。返回 true 表示宏发生了变更（需等待脚本重编）。
+    /// 正式通道同时关掉 CF_DEV_SKIP_MANIFEST_SIGN，避免编辑器打出无签名清单、正式包却强制验签。
+    /// configError 非空表示运行配置没有写入成功。
     /// </summary>
-    public static bool ApplyChannelCore(bool enableDevTools, string env)
+    public static bool ApplyChannelCore(bool enableDevTools, string env, out string configError)
     {
+        configError = null;
         bool defineChanged = SetDevToolsDefine(enableDevTools);
-        AssetBundleBuildSettings.WriteRuntimeConfig(
-            EditorUserBuildSettings.activeBuildTarget,
-            env);
+        if (!enableDevTools && ManifestSignDevToggle.SetEnabled(false))
+        {
+            defineChanged = true;
+        }
+
+        if (!AssetBundleBuildSettings.WriteRuntimeConfig(
+                EditorUserBuildSettings.activeBuildTarget,
+                env))
+        {
+            configError = "写入 ab_runtime_config.json 失败。prod 必须使用 https:// 的 CDN 模板，详见 Console。";
+        }
+
         return defineChanged;
     }
 
@@ -66,7 +78,7 @@ public static class PcBuildChannel
         LogCurrentState("已禁用 CF_DEV_TOOLS");
         EditorUtility.DisplayDialog(
             "CF_DEV_TOOLS",
-            "已禁用。正式包请用无宏状态重编 AOT + 热更 DLL。\n\n"
+            "已禁用。正式包请用无该宏的状态重新出包。\n\n"
             + "当前宏:\n" + GetDefinesDisplay(),
             "确定");
     }
@@ -74,17 +86,29 @@ public static class PcBuildChannel
     [MenuItem(ManualMenuRoot + "写入运行配置 env=dev", priority = 70)]
     public static void WriteEnvDev()
     {
-        AssetBundleBuildSettings.WriteRuntimeConfig(
-            EditorUserBuildSettings.activeBuildTarget,
-            BuildChannelDefines.EnvDev);
+        if (!AssetBundleBuildSettings.WriteRuntimeConfig(
+                EditorUserBuildSettings.activeBuildTarget,
+                BuildChannelDefines.EnvDev))
+        {
+            EditorUtility.DisplayDialog(
+                "写入运行配置失败",
+                "没有改写 ab_runtime_config.json，详见 Console。",
+                "确定");
+        }
     }
 
     [MenuItem(ManualMenuRoot + "写入运行配置 env=prod", priority = 71)]
     public static void WriteEnvProd()
     {
-        AssetBundleBuildSettings.WriteRuntimeConfig(
-            EditorUserBuildSettings.activeBuildTarget,
-            BuildChannelDefines.EnvProd);
+        if (!AssetBundleBuildSettings.WriteRuntimeConfig(
+                EditorUserBuildSettings.activeBuildTarget,
+                BuildChannelDefines.EnvProd))
+        {
+            EditorUtility.DisplayDialog(
+                "写入运行配置失败",
+                "prod 环境必须使用 https:// 的 CDN 模板，本次没有改写 ab_runtime_config.json。详见 Console。",
+                "确定");
+        }
     }
 
     [MenuItem(ManualMenuRoot + "查看当前通道状态", priority = 100)]
@@ -92,11 +116,11 @@ public static class PcBuildChannel
     {
         bool hasDevTools = HasDevToolsDefine();
         string message =
-            "CF_DEV_TOOLS: " + (hasDevTools ? "已启用（开发工具会进包）" : "未启用（正式裁剪）") + "\n\n"
+            "CF_DEV_TOOLS: " + (hasDevTools ? "已启用（开发工具会进包）" : "未启用（正式裁剪）") + "\n"
+            + "CF_DEV_SKIP_MANIFEST_SIGN: " + (ManifestSignDevToggle.IsEnabled() ? "已启用（编辑器打包会跳过签名）" : "未启用") + "\n\n"
             + "Standalone 宏:\n" + GetDefinesDisplay() + "\n\n"
             + "Development Build 勾选建议: " + (hasDevTools ? "开发包可勾选" : "正式包请勿勾选") + "\n\n"
-            + "注意: 切换宏后需等待脚本编译，再执行打包，"
-            + "保证 AOT 与热更 DLL 宏一致。";
+            + "注意: 切换宏后需等待脚本编译，再执行打包。";
 
         EditorUtility.DisplayDialog("Build Channel 状态", message, "确定");
         LogCurrentState("状态查询");
@@ -104,11 +128,24 @@ public static class PcBuildChannel
 
     static void ApplyChannel(bool enableDevTools, string env, bool developmentBuildHint)
     {
-        bool defineChanged = ApplyChannelCore(enableDevTools, env);
+        bool defineChanged = ApplyChannelCore(enableDevTools, env, out string configError);
+        if (!string.IsNullOrEmpty(configError))
+        {
+            if (defineChanged)
+            {
+                configError += "\n\n宏已变更，请等编译结束后再执行一次。";
+            }
+
+            EditorUtility.DisplayDialog("通道准备失败", configError, "确定");
+            return;
+        }
 
         string title = enableDevTools ? "开发 PC 包已准备" : "正式 PC 包已准备";
         string body =
             "1) CF_DEV_TOOLS = " + (enableDevTools ? "ON" : "OFF") + "\n"
+            + (enableDevTools
+                ? string.Empty
+                : "   CF_DEV_SKIP_MANIFEST_SIGN = OFF（正式包必须给清单签名）\n")
             + "2) ab_runtime_config.env = " + env + "\n"
             + "3) Development Build 建议: " + (developmentBuildHint ? "勾选" : "不要勾选") + "\n\n"
             + (defineChanged ? "宏已变更，请先等待脚本编译完成。\n\n" : string.Empty)

@@ -87,12 +87,24 @@ public static class PcPlayerBuildPipeline
                 return result;
             }
 
-            bool defineChanged = PcBuildChannel.ApplyChannelCore(enableDevTools, env);
+            bool defineChanged = PcBuildChannel.ApplyChannelCore(enableDevTools, env, out string configError);
+            if (!string.IsNullOrEmpty(configError))
+            {
+                result.Message = configError;
+                if (defineChanged)
+                {
+                    result.Message += "\n宏已变更，请等编译结束后再执行一次。";
+                }
+
+                Fail(result, interactive);
+                return result;
+            }
+
             if (defineChanged)
             {
                 result.NeedsRecompileRetry = true;
                 result.Message =
-                    "已切换 CF_DEV_TOOLS / 写入 ab_runtime_config.env=" + env + "。\n"
+                    "已切换构建宏，并写入 ab_runtime_config.env=" + env + "。\n"
                     + "脚本正在重新编译，请等待编译完成后再次执行本命令（菜单或脚本）。";
                 Debug.LogWarning("[PcPlayerBuild] " + result.Message.Replace('\n', ' '));
                 if (interactive)
@@ -214,7 +226,7 @@ public static class PcPlayerBuildPipeline
         string wantEnv = channel == Channel.Dev
             ? BuildChannelDefines.EnvDev
             : BuildChannelDefines.EnvProd;
-        string actualEnv = ReadRuntimeConfigEnv();
+        string actualEnv = AssetBundleBuildSettings.ReadRuntimeConfigEnv();
         if (!string.Equals(actualEnv, wantEnv, StringComparison.OrdinalIgnoreCase))
         {
             error = string.Format(
@@ -273,26 +285,6 @@ public static class PcPlayerBuildPipeline
         }
 
         return product + ".exe";
-    }
-
-    static string ReadRuntimeConfigEnv()
-    {
-        string path = Path.Combine(Application.streamingAssetsPath, AssetBundleRuntimeConfig.FileName);
-        if (!File.Exists(path))
-        {
-            return null;
-        }
-
-        try
-        {
-            var config = JsonUtility.FromJson<AssetBundleRuntimeConfig>(File.ReadAllText(path));
-            return config != null ? config.env : null;
-        }
-        catch (Exception e)
-        {
-            Debug.LogWarning("[PcPlayerBuild] 读取 ab_runtime_config.json 失败: " + e.Message);
-            return null;
-        }
     }
 
     static void Fail(BuildResult result, bool interactive)

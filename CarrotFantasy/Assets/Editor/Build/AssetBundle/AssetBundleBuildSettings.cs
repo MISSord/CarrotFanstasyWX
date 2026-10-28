@@ -94,22 +94,100 @@ public static class AssetBundleBuildSettings
         return ReadLastManifestVersion(GetOutputRoot(), target);
     }
 
+    /// <summary>
+    /// 清单版本水位：输出目录里的 custom_manifest.json，以及清空目录前记下的 sidecar。
+    /// 打包中途失败把平台目录删掉之后，仍用 sidecar，避免下次版本回到 1（客户端会拒绝回滚）。
+    /// 要故意从头计数时，删掉输出根目录下的 <c>.manifest_version_{平台}.txt</c>。
+    /// </summary>
     public static int ReadLastManifestVersion(string outputRoot, BuildTarget target)
     {
-        string manifestPath = Path.Combine(
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", outputRoot)),
-            AssetBundlePackager.GetPlatformFolder(target),
-            "custom_manifest.json");
-        if (!File.Exists(manifestPath))
+        int fromManifest = TryReadManifestVersionFile(GetManifestPath(outputRoot, target));
+        int fromSidecar = ReadSidecarVersion(GetManifestVersionSidecarPath(outputRoot, target));
+        return Math.Max(fromManifest, fromSidecar);
+    }
+
+    public static string GetManifestVersionSidecarPath(string outputRoot, BuildTarget target)
+    {
+        return Path.Combine(
+            GetFullOutputRoot(outputRoot),
+            ".manifest_version_" + AssetBundlePackager.GetPlatformFolder(target) + ".txt");
+    }
+
+    /// <summary>把平台目录里现有清单的版本记到 sidecar（清空目录之前调用）。</summary>
+    public static void RememberManifestVersionFromDirectory(string platformDirectory)
+    {
+        if (string.IsNullOrEmpty(platformDirectory))
+        {
+            return;
+        }
+
+        int version = TryReadManifestVersionFile(Path.Combine(platformDirectory, "custom_manifest.json"));
+        RememberManifestVersion(platformDirectory, version);
+    }
+
+    /// <summary>记录已写出的清单版本。只升不降。</summary>
+    public static void RememberManifestVersion(string platformDirectory, int version)
+    {
+        if (version <= 0 || string.IsNullOrEmpty(platformDirectory))
+        {
+            return;
+        }
+
+        string sidecar = SidecarPathForPlatformDirectory(platformDirectory);
+        int existing = ReadSidecarVersion(sidecar);
+        if (version <= existing)
+        {
+            return;
+        }
+
+        string parent = Path.GetDirectoryName(sidecar);
+        if (!string.IsNullOrEmpty(parent) && !Directory.Exists(parent))
+        {
+            Directory.CreateDirectory(parent);
+        }
+
+        File.WriteAllText(sidecar, version.ToString());
+        Debug.Log("[AB Build] 已记录清单版本水位 " + version + " → " + sidecar);
+    }
+
+    static string SidecarPathForPlatformDirectory(string platformDirectory)
+    {
+        string full = Path.GetFullPath(platformDirectory)
+            .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string platformName = Path.GetFileName(full);
+        string parent = Path.GetDirectoryName(full);
+        return Path.Combine(parent ?? string.Empty, ".manifest_version_" + platformName + ".txt");
+    }
+
+    static int TryReadManifestVersionFile(string manifestPath)
+    {
+        if (string.IsNullOrEmpty(manifestPath) || !File.Exists(manifestPath))
         {
             return 0;
         }
 
         try
         {
-            string text = File.ReadAllText(manifestPath);
-            CustomManifest old = JsonUtility.FromJson<CustomManifest>(text);
+            CustomManifest old = JsonUtility.FromJson<CustomManifest>(File.ReadAllText(manifestPath));
             return old != null ? old.ManifestVersion : 0;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+    static int ReadSidecarVersion(string sidecarPath)
+    {
+        if (string.IsNullOrEmpty(sidecarPath) || !File.Exists(sidecarPath))
+        {
+            return 0;
+        }
+
+        try
+        {
+            string text = File.ReadAllText(sidecarPath).Trim();
+            return int.TryParse(text, out int version) && version > 0 ? version : 0;
         }
         catch
         {
@@ -180,18 +258,42 @@ public static class AssetBundleBuildSettings
         return "file://" + normalized + "/{0}";
     }
 
-    /// <summary>写入 StreamingAssets，供运行时 AssetBundlePathHelper 读取。</summary>
-    public static void WriteRuntimeConfig(BuildTarget target)
+    /// <summary>读取已写入的 env；文件不存在或解析失败时返回 null。</summary>
+    public static string ReadRuntimeConfigEnv()
     {
-        WriteRuntimeConfig(target, CarrotFantasy.BuildChannelDefines.EnvDev);
+        string path = Path.Combine(Application.streamingAssetsPath, AssetBundleRuntimeConfig.FileName);
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        try
+        {
+            var config = JsonUtility.FromJson<AssetBundleRuntimeConfig>(File.ReadAllText(path));
+            return config != null && !string.IsNullOrEmpty(config.env) ? config.env : null;
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[AB Build] 读取 ab_runtime_config.json 失败: " + e.Message);
+            return null;
+        }
     }
 
-    /// <summary>写入 StreamingAssets；env 为 dev/staging/prod。</summary>
-    public static void WriteRuntimeConfig(BuildTarget target, string env)
+    /// <summary>
+    /// 写入 StreamingAssets。不指定环境时保留文件里已有的 env，没有文件时用 dev。
+    /// 返回 false 表示没有写入（prod 且 CDN 不是 https）。
+    /// </summary>
+    public static bool WriteRuntimeConfig(BuildTarget target)
+    {
+        return WriteRuntimeConfig(target, null);
+    }
+
+    /// <summary>写入 StreamingAssets；env 为空则保留已有环境，没有文件时用 dev。</summary>
+    public static bool WriteRuntimeConfig(BuildTarget target, string env)
     {
         if (string.IsNullOrEmpty(env))
         {
-            env = CarrotFantasy.BuildChannelDefines.EnvDev;
+            env = ReadRuntimeConfigEnv() ?? CarrotFantasy.BuildChannelDefines.EnvDev;
         }
 
         string template = GetCdnUrlTemplate(env);
@@ -204,12 +306,12 @@ public static class AssetBundleBuildSettings
         bool isHttps = template.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
         bool isInsecureHttp = template.StartsWith("http://", StringComparison.OrdinalIgnoreCase);
 
-        // 正式包必须走 https：下载的清单与热更 DLL 会被执行，明文链路等于把代码执行权交出去。
+        // 正式包必须走 https：下载的清单和 Lua 热更脚本会被执行，明文链路等于把执行权交出去。
         if (isProd && !isHttps)
         {
             Debug.LogError(
                 "[AB Build] prod 环境必须使用 https:// 的 CDN 模板，已拒绝写入运行配置。当前: " + template);
-            return;
+            return false;
         }
 
         if (isInsecureHttp)
@@ -236,5 +338,6 @@ public static class AssetBundleBuildSettings
         File.WriteAllText(destPath, json);
         AssetDatabase.Refresh();
         Debug.Log("[AB Build] 已写入运行时配置 env=" + env + " -> " + destPath);
+        return true;
     }
 }

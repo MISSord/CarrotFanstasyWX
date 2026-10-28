@@ -1,21 +1,7 @@
 #Requires -Version 5.1
-# Code hot-update wrapper (no full AB rebuild).
-param(
-    [string] $Target = "StandaloneWindows64",
-    [switch] $Upload,
-    [string] $RuntimeEnv,
-    [string] $UnityPath,
-    [string] $LogFile
-)
-
-$invoke = @{
-    Command = "codeHotUpdate"
-    Target  = $Target
-    Upload  = $Upload
-}
-if (-not [string]::IsNullOrWhiteSpace($RuntimeEnv)) { $invoke.RuntimeEnv = $RuntimeEnv }
-if (-not [string]::IsNullOrWhiteSpace($UnityPath)) { $invoke.UnityPath = $UnityPath }
-if (-not [string]::IsNullOrWhiteSpace($LogFile)) { $invoke.LogFile = $LogFile }
-
-& (Join-Path $PSScriptRoot "unity-batch.ps1") @invoke
-exit $LASTEXITCODE
+# HybridCLR code hot-update was removed. Lua ships inside the AssetBundle build.
+Write-Host "codeHotUpdate was removed with HybridCLR."
+Write-Host "Lua hot update is packed by the AssetBundle build:"
+Write-Host "  .\Tools\ab-build.ps1"
+Write-Host "Editor: AB build profile (Lua bundle is a required step)."
+exit 1

@@ -5,8 +5,6 @@ param(
     [ValidateSet("dev", "prod")]
     [string] $Channel,
 
-    [switch] $SkipGenerate,
-
     [string] $UnityPath,
 
     [string] $LogFile
@@ -17,7 +15,6 @@ $invoke = @{
     Channel = $Channel
     Target  = "StandaloneWindows64"
 }
-if ($SkipGenerate) { $invoke.SkipGenerate = $true }
 if (-not [string]::IsNullOrWhiteSpace($UnityPath)) { $invoke.UnityPath = $UnityPath }
 if (-not [string]::IsNullOrWhiteSpace($LogFile)) { $invoke.LogFile = $LogFile }
 
