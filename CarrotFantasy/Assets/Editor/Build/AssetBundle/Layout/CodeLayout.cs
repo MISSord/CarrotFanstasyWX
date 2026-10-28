@@ -41,6 +41,12 @@ public sealed class CodeLayout : IAssetBundleLayout
         },
     };
 
+    /// <summary>
+    /// 最近一次 Code 布局实际产出的包名（供清单阶段校验/过滤依赖）。
+    /// 只在编辑器构建流程内使用，单线程。
+    /// </summary>
+    public static IReadOnlyCollection<string> LastBundleNames { get; private set; }
+
     public string Name
     {
         get { return "Code"; }
@@ -53,6 +59,7 @@ public sealed class CodeLayout : IAssetBundleLayout
     {
         builds = null;
         error = null;
+        LastBundleNames = null;
 
         // 以 Meta 布局为底：保证未收编的资源一个都不丢。
         if (!MetaLayout.Instance.TryCreate(target, out List<AssetBundleBuild> baseBuilds, out error))
@@ -121,6 +128,14 @@ public sealed class CodeLayout : IAssetBundleLayout
 
         result.AddRange(viewBundles);
         builds = result;
+
+        var resultNames = new List<string>(result.Count);
+        for (int i = 0; i < result.Count; i++)
+        {
+            resultNames.Add(result[i].assetBundleName);
+        }
+
+        LastBundleNames = resultNames;
 
         Debug.Log(string.Format(
             "[CodeLayout] 试点收编完成：新增 {0} 个视图包，移除 {1} 个空包，其余 {2} 个包沿用 Meta 布局。\n  {3}",

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor.Build.Pipeline.Interfaces;
 using UnityEngine.Build.Pipeline;
 using System.IO;
@@ -169,12 +170,42 @@ namespace CarrotFantasy.Editor.BuildPipeline
                         : null;
             }
 
+            // Code 布局下 .meta 里仍有被收编资源的旧包名，需要用布局实际产出的包名
+            // 来判断缺包、过滤依赖，否则会误报 missing 并把依赖指向不存在的包。
+            HashSet<string> expectedBundleNames = null;
+            if (ctx.Request.Layout == AbBundleLayoutMode.Code)
+            {
+                IReadOnlyCollection<string> names = CodeLayout.LastBundleNames;
+                if (names != null)
+                {
+                    expectedBundleNames = new HashSet<string>(names, StringComparer.OrdinalIgnoreCase);
+                }
+                else
+                {
+                    // BuildBundles 被跳过（Only/Skip 调试）时兜底重算一次。
+                    if (!new CodeLayout().TryCreate(
+                            ctx.Request.BuildTarget,
+                            out List<AssetBundleBuild> layoutBuilds,
+                            out string layoutError))
+                    {
+                        return BuildStepResult.Failed("Code 布局重建失败：" + layoutError);
+                    }
+
+                    expectedBundleNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                    for (int i = 0; i < layoutBuilds.Count; i++)
+                    {
+                        expectedBundleNames.Add(layoutBuilds[i].assetBundleName);
+                    }
+                }
+            }
+
             AssetBundlePackager.ManifestBuildData data = AssetBundlePackager.BuildManifestData(
                 ctx.PlatformPath,
                 ctx.Request.BuildTarget,
                 ctx.Request.ManifestVersion,
                 (int)ctx.Request.Compression,
-                dependencyResolver);
+                dependencyResolver,
+                expectedBundleNames);
 
             if (data == null || data.Manifest == null)
             {

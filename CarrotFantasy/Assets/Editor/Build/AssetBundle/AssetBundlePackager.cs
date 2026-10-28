@@ -602,7 +602,8 @@ public static class AssetBundlePackager
         BuildTarget target,
         int versionNumber,
         int compressedFormat,
-        Func<string, string[]> sbpDependencyResolver = null)
+        Func<string, string[]> sbpDependencyResolver = null,
+        ISet<string> expectedBundleNames = null)
     {
         // 清单 / 运行时都按小写包名找文件，这里把构建产物统一成小写，避免大小写敏感平台找不到。
         NormalizeBundleFileNames(bundlePath, target);
@@ -621,7 +622,12 @@ public static class AssetBundlePackager
         };
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
-        List<string> missingOnDisk = CollectRegisteredButMissingOnDisk(bundlePath);
+
+        // Code 布局下，.meta 里可能有已被收编、不再单独成包的旧包名，
+        // 不能再用 AssetDatabase 判断"缺包"，否则每次都会误报 32 个 missing。
+        List<string> missingOnDisk = expectedBundleNames != null
+            ? CollectMissingOnDisk(bundlePath, expectedBundleNames)
+            : CollectRegisteredButMissingOnDisk(bundlePath);
 
         // 阶段 A：依赖来源双算（AssetDatabase 为准，SBP 结果只用于对比报告）。
         int dependencyDiffCount = 0;
@@ -670,7 +676,14 @@ public static class AssetBundlePackager
 
                 // GetAssetBundleDependencies(name, true) 本身已是递归的扁平结果，
                 // 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
-                info.Dependencies = CollectFlatDependencies(registeredName);
+                string[] databaseDependencies = CollectFlatDependencies(registeredName);
+                if (expectedBundleNames != null)
+                {
+                    // 过滤掉布局里已不存在的旧包名（被视图包收编的单图包等）。
+                    databaseDependencies = FilterToExpected(databaseDependencies, expectedBundleNames);
+                }
+
+                info.Dependencies = databaseDependencies;
 
                 // 阶段 A：SBP 结果可用时再算一遍。
                 // 两边各有盲区（SBP 漏 SpriteAtlas/变体关系，AssetDatabase 漏序列化隐式依赖），
@@ -678,6 +691,10 @@ public static class AssetBundlePackager
                 if (sbpDependencyResolver != null)
                 {
                     string[] sbpDependencies = CollectFlatFromResolver(registeredName, sbpDependencyResolver);
+                    if (expectedBundleNames != null)
+                    {
+                        sbpDependencies = FilterToExpected(sbpDependencies, expectedBundleNames);
+                    }
                     if (!SameBundleSet(info.Dependencies, sbpDependencies))
                     {
                         DiffBundleSets(
@@ -909,6 +926,43 @@ public static class AssetBundlePackager
             sbpOnlyTotal,
             dbOnlyTotal,
             detail));
+    }
+
+    /// <summary>只保留布局里实际存在的包名。</summary>
+    private static string[] FilterToExpected(string[] dependencies, ISet<string> expected)
+    {
+        if (dependencies == null || dependencies.Length == 0 || expected == null)
+        {
+            return dependencies ?? Array.Empty<string>();
+        }
+
+        var kept = new List<string>(dependencies.Length);
+        for (int i = 0; i < dependencies.Length; i++)
+        {
+            if (expected.Contains(dependencies[i]))
+            {
+                kept.Add(dependencies[i]);
+            }
+        }
+
+        return kept.ToArray();
+    }
+
+    /// <summary>按布局期望的包名检查落盘文件，返回缺失项。</summary>
+    private static List<string> CollectMissingOnDisk(string bundlePath, ISet<string> expected)
+    {
+        var missing = new List<string>();
+        foreach (string bundleName in expected)
+        {
+            string path = ResolveBuiltBundleFilePath(bundlePath, bundleName);
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                missing.Add(bundleName);
+            }
+        }
+
+        missing.Sort(StringComparer.Ordinal);
+        return missing;
     }
 
     /// <summary>两个扁平依赖集合的并集（去重、排序）。</summary>
