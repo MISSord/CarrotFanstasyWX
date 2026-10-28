@@ -670,7 +670,9 @@ public static class AssetBundlePackager
                 // 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
                 info.Dependencies = CollectFlatDependencies(registeredName);
 
-                // 阶段 A：SBP 结果可用时再算一遍，只比较、不改变清单内容。
+                // 阶段 A：SBP 结果可用时再算一遍。
+                // 两边各有盲区（SBP 漏 SpriteAtlas/变体关系，AssetDatabase 漏序列化隐式依赖），
+                // 过渡期清单依赖取并集，保证运行时预加载不漏；差异仍记日志供阶段 C 收敛。
                 if (sbpDependencyResolver != null)
                 {
                     string[] sbpDependencies = CollectFlatFromResolver(registeredName, sbpDependencyResolver);
@@ -697,6 +699,9 @@ public static class AssetBundlePackager
                                 FormatDependencySample(dbOnly, 6)));
                         }
                     }
+
+                    // 并集：避免任一来源漏报导致运行时缺依赖。
+                    info.Dependencies = UnionSorted(info.Dependencies, sbpDependencies);
                 }
 
                 generatedManifest.AssetBundles.Add(info);
@@ -897,11 +902,36 @@ public static class AssetBundlePackager
             : string.Empty;
         Debug.LogWarning(string.Format(
             "[AB Build] 依赖来源对比：{0} 个包的依赖不一致"
-            + "（SBP 多出 {1} 项，AssetDatabase 多出 {2} 项；清单仍以 AssetDatabase 为准）。{3}",
+            + "（SBP 多出 {1} 项，AssetDatabase 多出 {2} 项；清单已取两边并集）。{3}",
             diffCount,
             sbpOnlyTotal,
             dbOnlyTotal,
             detail));
+    }
+
+    /// <summary>两个扁平依赖集合的并集（去重、排序）。</summary>
+    private static string[] UnionSorted(string[] left, string[] right)
+    {
+        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (left != null)
+        {
+            for (int i = 0; i < left.Length; i++)
+            {
+                unique.Add(left[i]);
+            }
+        }
+
+        if (right != null)
+        {
+            for (int i = 0; i < right.Length; i++)
+            {
+                unique.Add(right[i]);
+            }
+        }
+
+        var result = new List<string>(unique);
+        result.Sort(StringComparer.Ordinal);
+        return result.ToArray();
     }
 
     /// <summary>比较两个扁平依赖集合，分别得到「只有 DB 有」与「只有 SBP 有」。</summary>
