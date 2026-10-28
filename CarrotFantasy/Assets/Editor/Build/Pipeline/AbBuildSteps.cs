@@ -113,6 +113,16 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 options |= BuildAssetBundleOptions.ForceRebuildAssetBundle;
             }
 
+            if (ctx.Request.Backend == AbBuildBackend.BuiltIn
+                && ctx.Request.Layout == AbBundleLayoutMode.Code)
+            {
+                return BuildStepResult.Failed("built-in 后端不支持 Code 布局（它只认 .meta 包名）");
+            }
+
+            IAssetBundleLayout layout = ctx.Request.Layout == AbBundleLayoutMode.Code
+                ? (IAssetBundleLayout)new CodeLayout()
+                : MetaLayout.Instance;
+
             bool built = AssetBundlePackager.BuildAssetBundles(
                 ctx.PlatformPath,
                 ctx.Request.BuildTarget,
@@ -120,6 +130,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 clearFolders: false,
                 copyToStreamingAssets: false,
                 backend: ctx.Request.Backend,
+                layout: layout,
                 sbpResults: out IBundleBuildResults sbpResults);
 
             if (!built)

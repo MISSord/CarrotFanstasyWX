@@ -72,7 +72,7 @@ public static class AssetBundlePackager
     {
         return BuildAssetBundles(
             outputPath, buildTarget, compression, clearFolders, copyToStreamingAssets,
-            null, out _);
+            null, null, out _);
     }
 
     /// <summary>
@@ -89,6 +89,7 @@ public static class AssetBundlePackager
                                         bool clearFolders,
                                         bool copyToStreamingAssets,
                                         AbBuildBackend? backend,
+                                        IAssetBundleLayout layout,
                                         out IBundleBuildResults sbpResults)
     {
         sbpResults = null;
@@ -136,7 +137,8 @@ public static class AssetBundlePackager
             if (useSbp)
             {
                 if (!AssetBundleSbpPipeline.Build(
-                        outputPath, buildTarget, compression, out string sbpError, out sbpResults))
+                        outputPath, buildTarget, compression, layout,
+                        out string sbpError, out sbpResults))
                 {
                     Debug.LogError(
                         "SBP 构建失败: " + sbpError

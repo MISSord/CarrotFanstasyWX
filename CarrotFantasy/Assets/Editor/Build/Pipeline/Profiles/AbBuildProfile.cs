@@ -30,6 +30,9 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("构建后端：SBP 支持代码化布局与 BuildCache；built-in 仅用于回退对比")]
         public AbBuildBackend Backend = AbBuildBackend.ScriptableBuildPipeline;
 
+        [Tooltip("包布局：Meta 按资源 .meta 包名；Code 由规则决定（阶段 C，尚未实现）")]
+        public AbBundleLayoutMode Layout = AbBundleLayoutMode.Meta;
+
         [Tooltip("勾选后每次打包自动取「输出目录里当前清单版本 + 1」")]
         public bool AutoManifestVersion = true;
 
@@ -85,6 +88,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 BuildTarget = this.BuildTarget,
                 Compression = this.Compression,
                 Backend = this.Backend,
+                Layout = this.Layout,
                 ManifestVersion = version,
                 ClearOutputFolder = this.ClearOutputFolder,
                 CopyToStreamingAssets = this.CopyToStreamingAssets,
@@ -235,7 +239,9 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 this.ResolveManifestVersion(),
                 this.AutoManifestVersion ? "（自动，不写入资产）" : "（手工）",
                 this.UseStepPipeline ? "步骤执行器" : "旧整体流程",
-                this.Backend == AbBuildBackend.ScriptableBuildPipeline ? "SBP" : "built-in",
+                this.Backend == AbBuildBackend.ScriptableBuildPipeline
+                    ? "SBP/" + this.Layout
+                    : "built-in/" + this.Layout,
                 AbBuildStepCatalog.ForTarget(this.BuildTarget).Count,
                 outputPath,
                 upload);

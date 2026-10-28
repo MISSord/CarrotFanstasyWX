@@ -52,6 +52,18 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             "built-in（BuildPipeline，回退对比用）",
         };
 
+        private static readonly AbBundleLayoutMode[] LayoutValues =
+        {
+            AbBundleLayoutMode.Meta,
+            AbBundleLayoutMode.Code,
+        };
+
+        private static readonly string[] LayoutLabels =
+        {
+            "Meta（按资源 .meta 包名）",
+            "Code（代码规则，阶段 C 尚未实现）",
+        };
+
         public override void OnInspectorGUI()
         {
             var profile = (AbBuildProfile)this.target;
@@ -69,6 +81,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("构建后端", EditorStyles.boldLabel);
             this.DrawBackendPopup(profile);
+            this.DrawLayoutPopup(profile);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("清单版本", EditorStyles.boldLabel);
@@ -198,6 +211,18 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             {
                 Undo.RecordObject(profile, "修改构建后端");
                 profile.Backend = BackendValues[newIndex];
+                EditorUtility.SetDirty(profile);
+            }
+        }
+
+        private void DrawLayoutPopup(AbBuildProfile profile)
+        {
+            int index = System.Array.IndexOf(LayoutValues, profile.Layout);
+            int newIndex = EditorGUILayout.Popup("包布局", index < 0 ? 0 : index, LayoutLabels);
+            if (newIndex != index || index < 0)
+            {
+                Undo.RecordObject(profile, "修改包布局");
+                profile.Layout = LayoutValues[newIndex];
                 EditorUtility.SetDirty(profile);
             }
         }

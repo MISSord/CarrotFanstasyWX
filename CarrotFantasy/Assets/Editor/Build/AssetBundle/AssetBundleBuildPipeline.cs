@@ -45,6 +45,9 @@ public static class AssetBundleBuildPipeline
 
         /// <summary>构建后端；Profile 可独立选择，命令行默认沿用全局开关。</summary>
         public AbBuildBackend Backend;
+
+        /// <summary>包布局：Meta（.meta 包名）或 Code（阶段 C 的代码规则）。</summary>
+        public AbBundleLayoutMode Layout;
     }
 
     public struct BuildResult
@@ -71,6 +74,7 @@ public static class AssetBundleBuildPipeline
             Backend = AssetBundlePackager.UseScriptableBuildPipeline
                 ? AbBuildBackend.ScriptableBuildPipeline
                 : AbBuildBackend.BuiltIn,
+            Layout = AbBundleLayoutMode.Meta,
         };
     }
 
@@ -189,6 +193,7 @@ public static class AssetBundleBuildPipeline
             request.ClearOutputFolder,
             copyToStreamingAssets: false,
             backend: request.Backend,
+            layout: null,
             sbpResults: out _);
 
         if (!built)
