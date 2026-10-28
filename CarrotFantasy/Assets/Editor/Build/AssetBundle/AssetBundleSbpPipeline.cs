@@ -20,7 +20,7 @@ using BuildCompression = UnityEngine.BuildCompression;
 ///         不再依赖资源 .meta 里的 assetBundleName；</item>
 ///   <item>可以传入自定义 <see cref="IBuildTask"/>，在依赖计算 / 写包之间插入逻辑
 ///         （依赖审计、资源裁剪、压缩策略、体积报告）；</item>
-///   <item>配合 <c>BuildCache</c> 可做增量构建（第二阶段再接）。</item>
+///   <item>配合 <c>BuildCache</c> 做增量构建（默认开启；强制重建会关闭）。</item>
 /// </list>
 ///
 /// <para><b>阶段 1（当前）</b>：从 AssetDatabase 收集包名，等价替换 built-in。
@@ -91,6 +91,12 @@ public static class AssetBundleSbpPipeline
             {
                 parameters.UseCache = false;
                 Debug.Log(LogTag + " 强制重建：已关闭 SBP BuildCache");
+            }
+            else
+            {
+                // 默认 UseCache = true（SBP 构造函数的默认值）。
+                // 命中缓存时构建会非常快，且还原出来的文件保留缓存时间戳 —— 属正常现象。
+                Debug.Log(LogTag + " 使用 SBP BuildCache（增量）；需要全量请勾选「强制重新构建」");
             }
 
             ReturnCode code = ContentPipeline.BuildAssetBundles(parameters, content, out IBundleBuildResults buildResults);
