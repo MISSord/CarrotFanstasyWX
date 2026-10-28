@@ -40,6 +40,18 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             "不压缩（体积最大）",
         };
 
+        private static readonly AbBuildBackend[] BackendValues =
+        {
+            AbBuildBackend.ScriptableBuildPipeline,
+            AbBuildBackend.BuiltIn,
+        };
+
+        private static readonly string[] BackendLabels =
+        {
+            "SBP（Scriptable Build Pipeline）",
+            "built-in（BuildPipeline，回退对比用）",
+        };
+
         public override void OnInspectorGUI()
         {
             var profile = (AbBuildProfile)this.target;
@@ -53,6 +65,10 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("压缩", EditorStyles.boldLabel);
             this.DrawCompressionPopup(profile);
+
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("构建后端", EditorStyles.boldLabel);
+            this.DrawBackendPopup(profile);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("清单版本", EditorStyles.boldLabel);
@@ -170,6 +186,18 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             {
                 Undo.RecordObject(profile, "修改打包平台");
                 profile.BuildTarget = SupportedTargets[newIndex];
+                EditorUtility.SetDirty(profile);
+            }
+        }
+
+        private void DrawBackendPopup(AbBuildProfile profile)
+        {
+            int index = System.Array.IndexOf(BackendValues, profile.Backend);
+            int newIndex = EditorGUILayout.Popup("构建后端", index < 0 ? 0 : index, BackendLabels);
+            if (newIndex != index || index < 0)
+            {
+                Undo.RecordObject(profile, "修改构建后端");
+                profile.Backend = BackendValues[newIndex];
                 EditorUtility.SetDirty(profile);
             }
         }

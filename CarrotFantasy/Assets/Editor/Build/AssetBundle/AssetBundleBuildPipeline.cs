@@ -3,6 +3,16 @@ using CarrotFantasy.Editor.BuildPipeline;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>AB 构建后端。不同 Profile 可以选不同后端。</summary>
+public enum AbBuildBackend
+{
+    /// <summary>Scriptable Build Pipeline（默认，支持代码化布局与 BuildCache）。</summary>
+    ScriptableBuildPipeline = 0,
+
+    /// <summary>built-in BuildPipeline.BuildAssetBundles（回退对比用）。</summary>
+    BuiltIn = 1,
+}
+
 /// <summary>
 /// AB 打包统一入口（Editor）。
 ///
@@ -32,6 +42,9 @@ public static class AssetBundleBuildPipeline
         public bool PackAtlasesBeforeBuild;
         /// <summary>写入 ab_runtime_config 的环境。空则保留已有 env，没有文件时用 dev。</summary>
         public string RuntimeEnv;
+
+        /// <summary>构建后端；Profile 可独立选择，命令行默认沿用全局开关。</summary>
+        public AbBuildBackend Backend;
     }
 
     public struct BuildResult
@@ -55,6 +68,9 @@ public static class AssetBundleBuildPipeline
             ForceRebuild = false,
             ShowManifestDialog = true,
             PackAtlasesBeforeBuild = true,
+            Backend = AssetBundlePackager.UseScriptableBuildPipeline
+                ? AbBuildBackend.ScriptableBuildPipeline
+                : AbBuildBackend.BuiltIn,
         };
     }
 
@@ -171,7 +187,9 @@ public static class AssetBundleBuildPipeline
             request.BuildTarget,
             options,
             request.ClearOutputFolder,
-            copyToStreamingAssets: false);
+            copyToStreamingAssets: false,
+            backend: request.Backend,
+            sbpResults: out _);
 
         if (!built)
         {

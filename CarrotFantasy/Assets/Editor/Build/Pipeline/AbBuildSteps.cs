@@ -1,3 +1,6 @@
+using System;
+using UnityEditor.Build.Pipeline.Interfaces;
+using UnityEngine.Build.Pipeline;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -115,11 +118,23 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 ctx.Request.BuildTarget,
                 options,
                 clearFolders: false,
-                copyToStreamingAssets: false);
+                copyToStreamingAssets: false,
+                backend: ctx.Request.Backend,
+                sbpResults: out IBundleBuildResults sbpResults);
 
-            return built
-                ? BuildStepResult.Success(AssetBundlePackager.UseScriptableBuildPipeline ? "SBP" : "built-in")
-                : BuildStepResult.Failed("AB 构建失败（详见上方日志）");
+            if (!built)
+            {
+                return BuildStepResult.Failed("AB 构建失败（详见上方日志）");
+            }
+
+            if (sbpResults != null)
+            {
+                // 阶段 A：把 SBP 结果带进上下文，清单阶段用它做依赖双算对比。
+                ctx.Set(sbpResults);
+            }
+
+            return BuildStepResult.Success(
+                ctx.Request.Backend == AbBuildBackend.ScriptableBuildPipeline ? "SBP" : "built-in");
         }
 
         // ---------------------------------------------------------------- 4) 清单与分发包
@@ -132,11 +147,23 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 return BuildStepResult.Failed("AB 输出目录不存在：" + ctx.PlatformPath);
             }
 
+            // 阶段 A：SBP 结果可用时，把 BundleInfos 的直接依赖传给清单阶段做双算对比。
+            IBundleBuildResults sbpResults = ctx.Get<IBundleBuildResults>();
+            Func<string, string[]> dependencyResolver = null;
+            if (sbpResults != null && sbpResults.BundleInfos != null)
+            {
+                dependencyResolver = bundle =>
+                    sbpResults.BundleInfos.TryGetValue(bundle, out BundleDetails details)
+                        ? details.Dependencies
+                        : null;
+            }
+
             AssetBundlePackager.ManifestBuildData data = AssetBundlePackager.BuildManifestData(
                 ctx.PlatformPath,
                 ctx.Request.BuildTarget,
                 ctx.Request.ManifestVersion,
-                (int)ctx.Request.Compression);
+                (int)ctx.Request.Compression,
+                dependencyResolver);
 
             if (data == null || data.Manifest == null)
             {

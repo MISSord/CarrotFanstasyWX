@@ -27,6 +27,9 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("标准压缩=LZMA（最小，运行时需转换）；分块压缩=LZ4（推荐）；不压缩=体积最大")]
         public CompressionType Compression = CompressionType.ChunkBasedCompression;
 
+        [Tooltip("构建后端：SBP 支持代码化布局与 BuildCache；built-in 仅用于回退对比")]
+        public AbBuildBackend Backend = AbBuildBackend.ScriptableBuildPipeline;
+
         [Tooltip("勾选后每次打包自动取「输出目录里当前清单版本 + 1」")]
         public bool AutoManifestVersion = true;
 
@@ -81,6 +84,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 OutputRoot = this.OutputRoot,
                 BuildTarget = this.BuildTarget,
                 Compression = this.Compression,
+                Backend = this.Backend,
                 ManifestVersion = version,
                 ClearOutputFolder = this.ClearOutputFolder,
                 CopyToStreamingAssets = this.CopyToStreamingAssets,
@@ -231,7 +235,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 this.ResolveManifestVersion(),
                 this.AutoManifestVersion ? "（自动，不写入资产）" : "（手工）",
                 this.UseStepPipeline ? "步骤执行器" : "旧整体流程",
-                AssetBundlePackager.UseScriptableBuildPipeline ? "SBP" : "built-in",
+                this.Backend == AbBuildBackend.ScriptableBuildPipeline ? "SBP" : "built-in",
                 AbBuildStepCatalog.ForTarget(this.BuildTarget).Count,
                 outputPath,
                 upload);

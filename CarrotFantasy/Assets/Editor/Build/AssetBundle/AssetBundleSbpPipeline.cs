@@ -51,9 +51,11 @@ public static class AssetBundleSbpPipeline
         string outputPath,
         BuildTarget buildTarget,
         BuildAssetBundleOptions options,
-        out string error)
+        out string error,
+        out IBundleBuildResults results)
     {
         error = null;
+        results = null;
 
         if (!TryCollectFromAssetDatabase(out List<AssetBundleBuild> builds, out error))
         {
@@ -87,7 +89,7 @@ public static class AssetBundleSbpPipeline
                 Debug.Log(LogTag + " 强制重建：已关闭 SBP BuildCache");
             }
 
-            ReturnCode code = ContentPipeline.BuildAssetBundles(parameters, content, out _);
+            ReturnCode code = ContentPipeline.BuildAssetBundles(parameters, content, out IBundleBuildResults buildResults);
             if (code != ReturnCode.Success)
             {
                 error = "ContentPipeline.BuildAssetBundles 返回 " + code;
@@ -95,6 +97,7 @@ public static class AssetBundleSbpPipeline
             }
 
             LogBuildSummary(outputPath, builds.Count);
+            results = buildResults;
             return true;
         }
         catch (Exception e)

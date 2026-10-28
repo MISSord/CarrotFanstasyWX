@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Build.Pipeline.Interfaces;
 using UnityEngine;
 
 /// <summary>
@@ -69,6 +70,32 @@ public static class AssetBundlePackager
                                         bool clearFolders = false,
                                         bool copyToStreamingAssets = false)
     {
+        return BuildAssetBundles(
+            outputPath, buildTarget, compression, clearFolders, copyToStreamingAssets,
+            null, out _);
+    }
+
+    /// <summary>
+    /// 带「后端覆盖 + SBP 结果输出」的重载。
+    /// <para>
+    /// backend 为 null 时沿用全局开关（菜单 / EditorPrefs）；步骤执行器传 Profile 的后端。
+    /// SBP 构建成功时通过 <paramref name="sbpResults"/> 返回 IBundleBuildResults，
+    /// 供清单阶段读取 BundleInfos（Hash / Dependencies），不再依赖 AssetDatabase 的包图。
+    /// </para>
+    /// </summary>
+    public static bool BuildAssetBundles(string outputPath,
+                                        BuildTarget buildTarget,
+                                        BuildAssetBundleOptions compression,
+                                        bool clearFolders,
+                                        bool copyToStreamingAssets,
+                                        AbBuildBackend? backend,
+                                        out IBundleBuildResults sbpResults)
+    {
+        sbpResults = null;
+        bool useSbp = backend.HasValue
+            ? backend.Value == AbBuildBackend.ScriptableBuildPipeline
+            : UseScriptableBuildPipeline;
+
         try
         {
             if (!IsSupportedRuntimePlatform(buildTarget))
@@ -106,9 +133,10 @@ public static class AssetBundlePackager
                 Debug.Log("已创建输出目录: " + outputPath);
             }
 
-            if (UseScriptableBuildPipeline)
+            if (useSbp)
             {
-                if (!AssetBundleSbpPipeline.Build(outputPath, buildTarget, compression, out string sbpError))
+                if (!AssetBundleSbpPipeline.Build(
+                        outputPath, buildTarget, compression, out string sbpError, out sbpResults))
                 {
                     Debug.LogError(
                         "SBP 构建失败: " + sbpError
@@ -127,7 +155,7 @@ public static class AssetBundlePackager
             }
 
             Debug.Log($"AssetBundle 已生成。路径: {outputPath} 平台: {buildTarget} 后端: "
-                      + (UseScriptableBuildPipeline ? "SBP" : "built-in"));
+                      + (useSbp ? "SBP" : "built-in"));
 
             if (copyToStreamingAssets && !CopyToStreamingAssets(outputPath, buildTarget))
             {
@@ -571,7 +599,8 @@ public static class AssetBundlePackager
         string bundlePath,
         BuildTarget target,
         int versionNumber,
-        int compressedFormat)
+        int compressedFormat,
+        Func<string, string[]> sbpDependencyResolver = null)
     {
         // 清单 / 运行时都按小写包名找文件，这里把构建产物统一成小写，避免大小写敏感平台找不到。
         NormalizeBundleFileNames(bundlePath, target);
@@ -591,6 +620,11 @@ public static class AssetBundlePackager
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
         List<string> missingOnDisk = CollectRegisteredButMissingOnDisk(bundlePath);
+
+        // 阶段 A：依赖来源双算（AssetDatabase 为准，SBP 结果只用于对比报告）。
+        int dependencyDiffCount = 0;
+        var dependencyDiffSamples = new List<string>();
+        const int MaxDependencyDiffSamples = 10;
 
         try
         {
@@ -634,6 +668,24 @@ public static class AssetBundlePackager
                 // 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
                 info.Dependencies = CollectFlatDependencies(registeredName);
 
+                // 阶段 A：SBP 结果可用时再算一遍，只比较、不改变清单内容。
+                if (sbpDependencyResolver != null)
+                {
+                    string[] sbpDependencies = CollectFlatFromResolver(registeredName, sbpDependencyResolver);
+                    if (!SameBundleSet(info.Dependencies, sbpDependencies))
+                    {
+                        dependencyDiffCount++;
+                        if (dependencyDiffSamples.Count < MaxDependencyDiffSamples)
+                        {
+                            dependencyDiffSamples.Add(string.Format(
+                                "{0}: AssetDatabase=[{1}] SBP=[{2}]",
+                                bundleKey,
+                                string.Join(",", info.Dependencies),
+                                string.Join(",", sbpDependencies)));
+                        }
+                    }
+                }
+
                 generatedManifest.AssetBundles.Add(info);
             }
         }
@@ -641,6 +693,8 @@ public static class AssetBundlePackager
         {
             EditorUtility.ClearProgressBar();
         }
+
+        LogDependencySourceDiff(dependencyDiffCount, dependencyDiffSamples, sbpDependencyResolver != null);
 
         LogMissingOnDiskSummary(missingOnDisk);
 
@@ -729,6 +783,101 @@ public static class AssetBundlePackager
     /// 已在 AssetDatabase 登记且仍有关联资源，但输出目录找不到对应 AB 文件。
     /// 不含「无资源引用的历史包名」（已由 RemoveUnusedAssetBundleNames 清理）。
     /// </summary>
+    /// <summary>
+    /// 用「每个包的直接依赖」解析器递归展开成扁平集合（去重、排序）。
+    /// <para>阶段 A 用 SBP 的 BundleInfos 做对比；阶段 C 可直接作为清单依赖来源。</para>
+    /// </summary>
+    private static string[] CollectFlatFromResolver(string bundleName, Func<string, string[]> resolve)
+    {
+        if (resolve == null)
+        {
+            return Array.Empty<string>();
+        }
+
+        string self = NormalizeBundleName(bundleName);
+        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var stack = new Stack<string>();
+        visited.Add(bundleName);
+        stack.Push(bundleName);
+
+        while (stack.Count > 0)
+        {
+            string current = stack.Pop();
+            string[] direct = resolve(current);
+            if (direct == null)
+            {
+                continue;
+            }
+
+            for (int i = 0; i < direct.Length; i++)
+            {
+                string dependency = NormalizeBundleName(direct[i]);
+                if (string.IsNullOrEmpty(dependency)
+                    || string.Equals(dependency, self, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (!unique.Add(dependency))
+                {
+                    continue;
+                }
+
+                if (visited.Add(dependency))
+                {
+                    stack.Push(dependency);
+                }
+            }
+        }
+
+        var result = new List<string>(unique);
+        result.Sort(StringComparer.Ordinal);
+        return result.ToArray();
+    }
+
+    private static bool SameBundleSet(string[] a, string[] b)
+    {
+        string[] left = a ?? Array.Empty<string>();
+        string[] right = b ?? Array.Empty<string>();
+        if (left.Length != right.Length)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < left.Length; i++)
+        {
+            if (!string.Equals(left[i], right[i], StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static void LogDependencySourceDiff(int diffCount, List<string> samples, bool resolverUsed)
+    {
+        if (!resolverUsed)
+        {
+            return;
+        }
+
+        if (diffCount == 0)
+        {
+            Debug.Log("[AB Build] 依赖来源对比：AssetDatabase 与 SBP BundleInfos 完全一致。");
+            return;
+        }
+
+        string detail = samples != null && samples.Count > 0
+            ? "\n  " + string.Join("\n  ", samples)
+            : string.Empty;
+        Debug.LogWarning(string.Format(
+            "[AB Build] 依赖来源对比：{0} 个包的依赖不一致（清单仍以 AssetDatabase 为准）。{1}",
+            diffCount,
+            detail));
+    }
+
     /// <summary>
     /// 取某个包的直接 + 间接依赖（扁平、去重、排序）。
     /// <para>
