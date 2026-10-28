@@ -5,18 +5,23 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// 代码化布局（阶段 C 试点）：把「视图专属资源」并进视图包，其余资源回退 Meta 布局。
+/// 代码化布局（阶段 C 试点）：把「视图专属散图」并进视图包，其余资源回退 Meta 布局。
 /// <para>
-/// 试点只收编 <b>HelpPanel</b>：
+/// 试点只处理 <b>HelpPanel</b>：
 /// </para>
 /// <list type="bullet">
-///   <item><c>Assets/Game/UI/View/HelpPanel/**</c>（prefab、根目录图片、Images 图集与源图）</item>
-///   <item><c>Assets/Game/UI/Sprites/helppanel/**</c>（视图专属散图，原本每张一个包）</item>
+///   <item><c>Assets/Game/UI/Sprites/helppanel/**</c>（31 张视图散图，原本每张一个包）</item>
+///   <item>并入 <c>ui/view/helppanel_prefab</c>（prefab 已在该包）</item>
 /// </list>
-/// <para>合并后统一进 <c>ui/view/helppanel_prefab</c>，让 prefab 与图片同包，依赖归零。</para>
+/// <para>
+/// <b>刻意保留</b> <c>Assets/Game/UI/View/HelpPanel/Images/**</c> 在自己的
+/// <c>ui/view/helppanel/images_atlas</c> 包里：prefab 上的 18 个 UIImageLoader 记录的
+/// 是图集包名，AtlasLoader 只认名字含 images_atlas 的包；把它并进视图包会让
+/// 运行时按旧包名加载失败。
+/// </para>
 /// <para>
 /// 其余资源仍使用 <see cref="MetaLayout"/> 的结果；被收编的资源会从原包中移除，
-/// 因此原 <c>ui/sprites/helppanel/*</c> 的 25 个包会消失。
+/// 因此原 <c>ui/sprites/helppanel/*</c> 的 31 个包会消失。
 /// </para>
 /// </summary>
 public sealed class CodeLayout : IAssetBundleLayout
@@ -27,6 +32,9 @@ public sealed class CodeLayout : IAssetBundleLayout
         public string ViewRoot;
         public string SpritesRoot;
         public string BundleName;
+
+        /// <summary>这些目录下的资源不并入视图包（保持原图集包，供 AtlasLoader 使用）。</summary>
+        public string[] ExcludeRoots;
     }
 
     // 阶段 C 试点：只收编 HelpPanel；验证收益后再逐视图推广。
@@ -38,6 +46,7 @@ public sealed class CodeLayout : IAssetBundleLayout
             ViewRoot = "Assets/Game/UI/View/HelpPanel",
             SpritesRoot = "Assets/Game/UI/Sprites/helppanel",
             BundleName = "ui/view/helppanel_prefab",
+            ExcludeRoots = new[] { "Assets/Game/UI/View/HelpPanel/Images" },
         },
     };
 
@@ -68,7 +77,7 @@ public sealed class CodeLayout : IAssetBundleLayout
         }
 
         var movedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var viewBundles = new List<AssetBundleBuild>();
+        var viewAssets = new List<KeyValuePair<string, List<string>>>();
         var messages = new List<string>();
 
         for (int i = 0; i < PilotViews.Length; i++)
@@ -81,18 +90,12 @@ public sealed class CodeLayout : IAssetBundleLayout
                 continue;
             }
 
-            if (!TryCreateBuild(view.BundleName, assets, out AssetBundleBuild build, out string buildError))
-            {
-                error = buildError;
-                return false;
-            }
-
-            viewBundles.Add(build);
+            viewAssets.Add(new KeyValuePair<string, List<string>>(view.BundleName, assets));
             messages.Add(string.Format("{0}: {1} 个资源 → {2}", view.ViewName, assets.Count, view.BundleName));
         }
 
         // 从 Meta 结果里移除被收编的资源；变空的包直接丢弃。
-        var result = new List<AssetBundleBuild>(baseBuilds.Count + viewBundles.Count);
+        var result = new List<AssetBundleBuild>(baseBuilds.Count);
         int removedBundles = 0;
         for (int i = 0; i < baseBuilds.Count; i++)
         {
@@ -126,7 +129,44 @@ public sealed class CodeLayout : IAssetBundleLayout
             result.Add(build);
         }
 
-        result.AddRange(viewBundles);
+        // 把收编的资源合并进目标包：目标包已存在（如视图 prefab 包）则追加，否则新建。
+        for (int i = 0; i < viewAssets.Count; i++)
+        {
+            string bundleName = viewAssets[i].Key;
+            List<string> assets = viewAssets[i].Value;
+
+            int existingIndex = FindBundle(result, bundleName);
+            if (existingIndex >= 0)
+            {
+                var combined = new List<string>(result[existingIndex].assetNames);
+                for (int assetIndex = 0; assetIndex < assets.Count; assetIndex++)
+                {
+                    if (!combined.Contains(assets[assetIndex]))
+                    {
+                        combined.Add(assets[assetIndex]);
+                    }
+                }
+
+                if (!TryCreateBuild(bundleName, combined, out AssetBundleBuild merged, out string mergeError))
+                {
+                    error = mergeError;
+                    return false;
+                }
+
+                result[existingIndex] = merged;
+            }
+            else
+            {
+                if (!TryCreateBuild(bundleName, assets, out AssetBundleBuild build, out string buildError))
+                {
+                    error = buildError;
+                    return false;
+                }
+
+                result.Add(build);
+            }
+        }
+
         builds = result;
 
         var resultNames = new List<string>(result.Count);
@@ -138,19 +178,32 @@ public sealed class CodeLayout : IAssetBundleLayout
         LastBundleNames = resultNames;
 
         Debug.Log(string.Format(
-            "[CodeLayout] 试点收编完成：新增 {0} 个视图包，移除 {1} 个空包，其余 {2} 个包沿用 Meta 布局。\n  {3}",
-            viewBundles.Count,
+            "[CodeLayout] 试点收编完成：合并 {0} 个视图包，移除 {1} 个空包，最终 {2} 个包。\n  {3}",
+            viewAssets.Count,
             removedBundles,
-            result.Count - viewBundles.Count,
+            result.Count,
             string.Join("\n  ", messages)));
         return true;
+    }
+
+    private static int FindBundle(List<AssetBundleBuild> builds, string bundleName)
+    {
+        for (int i = 0; i < builds.Count; i++)
+        {
+            if (string.Equals(builds[i].assetBundleName, bundleName, StringComparison.OrdinalIgnoreCase))
+            {
+                return i;
+            }
+        }
+
+        return -1;
     }
 
     private static List<string> CollectAssets(ViewPackage view, HashSet<string> movedPaths)
     {
         var collected = new List<string>();
-        CollectFromFolder(view.ViewRoot, collected);
-        CollectFromFolder(view.SpritesRoot, collected);
+        CollectFromFolder(view.ViewRoot, view.ExcludeRoots, collected);
+        CollectFromFolder(view.SpritesRoot, null, collected);
 
         var unique = new List<string>(collected.Count);
         for (int i = 0; i < collected.Count; i++)
@@ -165,7 +218,7 @@ public sealed class CodeLayout : IAssetBundleLayout
         return unique;
     }
 
-    private static void CollectFromFolder(string folder, List<string> output)
+    private static void CollectFromFolder(string folder, string[] excludeRoots, List<string> output)
     {
         if (string.IsNullOrEmpty(folder) || !AssetDatabase.IsValidFolder(folder))
         {
@@ -183,8 +236,38 @@ public sealed class CodeLayout : IAssetBundleLayout
                 continue;
             }
 
+            if (IsUnderAny(path, excludeRoots))
+            {
+                continue;
+            }
+
             output.Add(path);
         }
+    }
+
+    private static bool IsUnderAny(string assetPath, string[] roots)
+    {
+        if (roots == null || roots.Length == 0)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < roots.Length; i++)
+        {
+            string root = roots[i];
+            if (string.IsNullOrEmpty(root))
+            {
+                continue;
+            }
+
+            if (string.Equals(assetPath, root, StringComparison.OrdinalIgnoreCase)
+                || assetPath.StartsWith(root + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool TryCreateBuild(
