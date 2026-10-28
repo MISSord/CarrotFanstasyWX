@@ -630,12 +630,9 @@ public static class AssetBundlePackager
                     Hash = MD5Checker.ComputeFileMD5(file),
                 };
 
-                HashSet<string> processedBundles = new HashSet<string>();
-                GenerateFlatDependencyList(registeredName, 0, processedBundles);
-
-                info.Dependencies = processedBundles
-                    .Select(NormalizeBundleName)
-                    .ToArray();
+                // GetAssetBundleDependencies(name, true) 本身已是递归的扁平结果，
+                // 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
+                info.Dependencies = CollectFlatDependencies(registeredName);
 
                 generatedManifest.AssetBundles.Add(info);
             }
@@ -732,6 +729,40 @@ public static class AssetBundlePackager
     /// 已在 AssetDatabase 登记且仍有关联资源，但输出目录找不到对应 AB 文件。
     /// 不含「无资源引用的历史包名」（已由 RemoveUnusedAssetBundleNames 清理）。
     /// </summary>
+    /// <summary>
+    /// 取某个包的直接 + 间接依赖（扁平、去重、排序）。
+    /// <para>
+    /// <c>GetAssetBundleDependencies(name, true)</c> 本身已是递归的扁平结果，
+    /// 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
+    /// </para>
+    /// </summary>
+    private static string[] CollectFlatDependencies(string bundleName)
+    {
+        string[] dependencies = AssetDatabase.GetAssetBundleDependencies(bundleName, true);
+        if (dependencies == null || dependencies.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        string self = NormalizeBundleName(bundleName);
+        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        for (int i = 0; i < dependencies.Length; i++)
+        {
+            string dependency = NormalizeBundleName(dependencies[i]);
+            if (string.IsNullOrEmpty(dependency)
+                || string.Equals(dependency, self, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            unique.Add(dependency);
+        }
+
+        var result = new List<string>(unique);
+        result.Sort(StringComparer.Ordinal);
+        return result.ToArray();
+    }
+
     private static List<string> CollectRegisteredButMissingOnDisk(string bundlePath)
     {
         var missing = new List<string>();
