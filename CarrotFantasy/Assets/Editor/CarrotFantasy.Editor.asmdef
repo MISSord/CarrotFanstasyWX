@@ -7,7 +7,8 @@
         "Unity.ThirdParty",
         "CfNet.Generated",
         "XLua.Runtime",
-        "Unity.ScriptableBuildPipeline.Editor"
+        "Unity.ScriptableBuildPipeline.Editor",
+        "Unity.ScriptableBuildPipeline"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
