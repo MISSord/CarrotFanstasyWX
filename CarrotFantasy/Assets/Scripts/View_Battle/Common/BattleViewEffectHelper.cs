@@ -46,7 +46,7 @@ namespace CarrotFantasy
             {
                 GameObject template;
                 if (!BattleViewPrefabPreloader.TryGetTemplate(
-                    FightViewPrefabAb.FightPartBundle,
+                    FightViewPrefabAb.DestoryEffectBundle,
                     FightViewPrefabAb.DestoryEffect,
                     out template))
                 {
@@ -79,7 +79,7 @@ namespace CarrotFantasy
             {
                 GameObject template;
                 if (!BattleViewPrefabPreloader.TryGetTemplate(
-                    FightViewPrefabAb.FightPartBundle,
+                    FightViewPrefabAb.BuildEffectBundle,
                     FightViewPrefabAb.BuildEffect,
                     out template))
                 {

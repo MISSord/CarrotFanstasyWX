@@ -100,8 +100,8 @@ namespace CarrotFantasy
             }
 
             int version = ++this.animatorRequestVersion;
-            string bundle = FightViewSpriteAb.MonsterAnimatorBundle(monster.curLevel);
-            string assetName = FightViewSpriteAb.MonsterAnimatorAssetName(monster.monsterId);
+            string bundle = FightViewSpriteAb.MonsterAnimatorBundle(monster.curLevel, monster.monsterId);
+            string assetName = FightViewSpriteAb.MonsterAnimatorAssetName(monster.curLevel, monster.monsterId);
 
             AssetBundleManager.Instance.LoadAsset(
                 bundle,
@@ -122,7 +122,7 @@ namespace CarrotFantasy
                     }
 
                     this.animator.runtimeAnimatorController = controller;
-                    this.animator.Play(monster.monsterId.ToString());
+                    this.animator.Play(assetName);
                 });
         }
 

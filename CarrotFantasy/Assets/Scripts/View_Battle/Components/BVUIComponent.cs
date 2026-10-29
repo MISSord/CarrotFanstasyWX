@@ -404,7 +404,7 @@ namespace CarrotFantasy
         {
             if (this.nodeCarrot == null)
             {
-                GameObject tplCarrot = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
+                GameObject tplCarrot = GetPrefabTemplate(FightViewPrefabAb.CarrotBundle, FightViewPrefabAb.Carrot);
                 if (tplCarrot == null)
                 {
                     return;

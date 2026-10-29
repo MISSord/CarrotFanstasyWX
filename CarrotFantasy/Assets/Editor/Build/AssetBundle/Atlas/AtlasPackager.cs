@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,7 @@ using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.U2D;
 
-/// <summary>图集打包逻辑，供 AtlasPackerWindow 窗口与 AB 构建流水线共用。</summary>
+/// <summary>图集打包逻辑，菜单 Tools/AssetBundle/图集打包 与 AB 构建流水线共用。</summary>
 public static class AtlasPackager
 {
     public const string UiViewRoot = "Assets/Game/UI/View";
@@ -45,13 +46,17 @@ public static class AtlasPackager
         public bool Packed;
     }
 
-    /// <summary>默认打包：UI/View（TargetFolder）+ UI/Images（EachSubfolder）。</summary>
+    /// <summary>
+    /// 默认打包：
+    /// UI/View 只处理名为 Images 的文件夹；UI/Images 每个目录一层一份图集。
+    /// 两处都只收当前层的图，不进子文件夹。
+    /// </summary>
     public static DefaultPackResult PackDefaultUiAtlases()
     {
         var result = new DefaultPackResult
         {
-            ViewResult = PackAtlasForTargetFolder(UiViewRoot, includeSubdirectories: true),
-            ImagesResult = PackAtlasForEachSubfolder(UiImagesRoot),
+            ViewResult = PackAtlasForViewImagesFolders(UiViewRoot, includeSubdirectories: true),
+            ImagesResult = PackAtlasForCurrentLayerFolders(UiImagesRoot, includeRoot: true),
         };
 
         AssetDatabase.SaveAssets();
@@ -59,7 +64,13 @@ public static class AtlasPackager
         return result;
     }
 
-    /// <summary>AB 构建前：View 走 TargetFolder 逻辑，Images 走 EachSubfolder 逻辑。</summary>
+    [MenuItem("Tools/AssetBundle/图集打包", false, 302)]
+    public static void PackFromMenu()
+    {
+        PackForAbBuild();
+    }
+
+    /// <summary>AB 构建前：View 只打 Images 文件夹，Images 根下一层一份图集。</summary>
     public static void PackForAbBuild()
     {
         Debug.Log("[AB Build] 开始打包 UI 图集…");
@@ -79,102 +90,65 @@ public static class AtlasPackager
         Debug.Log("[AB Build] UI 图集打包完成。");
     }
 
-    /// <summary>遍历目标文件夹，为包含 Images 子文件夹的路径打包图集（含 UI/Images 特殊规则）。</summary>
+    /// <summary>
+    /// 自定义目标：<c>UI/Images</c> 下一层一份图集；其它目录只打包名为 Images 的文件夹。
+    /// 图集只收当前层的图片。
+    /// </summary>
     public static PackResult PackAtlasForTargetFolder(string targetFolderPath, bool includeSubdirectories = true)
     {
-        var result = new PackResult();
         string normalizedTarget = NormalizeAssetPath(targetFolderPath);
         if (!AssetDatabase.IsValidFolder(normalizedTarget))
         {
             Debug.LogWarning("[AtlasPackager] 目标文件夹不存在: " + normalizedTarget);
-            return result;
+            return new PackResult();
         }
 
-        if (IsUiImagesRoot(normalizedTarget))
+        if (IsUiImagesRoot(normalizedTarget) || IsUiImagesChildFolder(normalizedTarget))
         {
-            return PackAtlasForUiImagesSubfolders(normalizedTarget);
+            return PackAtlasForCurrentLayerFolders(normalizedTarget, includeRoot: true);
         }
 
-        string absoluteTarget = ToAbsolutePath(normalizedTarget);
-        string[] allSubfolders = Directory.GetDirectories(
-            absoluteTarget,
-            "*",
-            includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
-
-        foreach (string folderPath in allSubfolders)
-        {
-            string assetFolderPath = ToAssetPath(folderPath);
-            if (IsUiImagesChildFolder(assetFolderPath) && HasImagesInFolder(assetFolderPath, SearchOption.TopDirectoryOnly))
-            {
-                result.ProcessedCount++;
-                if (PackImagesInFolder(assetFolderPath, DefaultAtlasName, SearchOption.TopDirectoryOnly))
-                {
-                    result.CreatedCount++;
-                }
-                else
-                {
-                    result.SkippedCount++;
-                }
-
-                continue;
-            }
-
-            string imageFolderPath = Path.Combine(assetFolderPath, "Images").Replace("\\", "/");
-            if (!AssetDatabase.IsValidFolder(imageFolderPath))
-            {
-                continue;
-            }
-
-            if (IsUiImagesRoot(imageFolderPath))
-            {
-                continue;
-            }
-
-            result.ProcessedCount++;
-            if (PackImagesInFolder(imageFolderPath, DefaultAtlasName))
-            {
-                result.CreatedCount++;
-            }
-            else
-            {
-                result.SkippedCount++;
-            }
-        }
-
-        return result;
+        return PackAtlasForViewImagesFolders(normalizedTarget, includeSubdirectories);
     }
 
-    public static PackResult PackAtlasForUiImagesSubfolders(string uiImagesRoot)
+    /// <summary>
+    /// UI/View：只处理名为 Images 的文件夹，当前层有图才打，不收子文件夹。
+    /// </summary>
+    public static PackResult PackAtlasForViewImagesFolders(string viewRoot, bool includeSubdirectories = true)
     {
         var result = new PackResult();
-        string normalizedRoot = NormalizeAssetPath(uiImagesRoot);
+        string normalizedRoot = NormalizeAssetPath(viewRoot);
         if (!AssetDatabase.IsValidFolder(normalizedRoot))
         {
-            Debug.LogWarning("[AtlasPackager] UI/Images 根目录不存在: " + normalizedRoot);
+            Debug.LogWarning("[AtlasPackager] 目标文件夹不存在: " + normalizedRoot);
             return result;
         }
 
-        string absoluteRoot = ToAbsolutePath(normalizedRoot);
-        string[] imageSubfolders = Directory.GetDirectories(absoluteRoot, "*", SearchOption.TopDirectoryOnly);
-        foreach (string folderPath in imageSubfolders)
+        List<string> folders = CollectAssetFolders(normalizedRoot, includeRoot: false, includeSubdirectories);
+        for (int i = 0; i < folders.Count; i++)
         {
-            string assetFolderPath = ToAssetPath(folderPath);
-            result.ProcessedCount++;
-            if (PackImagesInFolder(assetFolderPath, DefaultAtlasName, SearchOption.TopDirectoryOnly))
+            if (!IsImagesFolderName(folders[i]))
             {
-                result.CreatedCount++;
+                continue;
             }
-            else
-            {
-                result.SkippedCount++;
-            }
+
+            TryPackCurrentLayerFolder(folders[i], ref result);
         }
 
         return result;
     }
 
-    /// <summary>为目标文件夹下每个第一层子文件夹生成独立图集。</summary>
-    public static PackResult PackAtlasForEachSubfolder(string targetFolderPath)
+    /// <summary>UI/Images 根目录入口，行为与 <see cref="PackAtlasForCurrentLayerFolders"/> 相同。</summary>
+    public static PackResult PackAtlasForUiImagesSubfolders(string uiImagesRoot)
+    {
+        return PackAtlasForCurrentLayerFolders(uiImagesRoot, includeRoot: true);
+    }
+
+    /// <summary>
+    /// 每个文件夹一层一份图集：当前层有图才打，没有就不打，并删掉多余的旧图集。
+    /// 不把子文件夹里的图收进父图集。
+    /// </summary>
+    public static PackResult PackAtlasForCurrentLayerFolders(string targetFolderPath, bool includeRoot)
     {
         var result = new PackResult();
         string normalizedTarget = NormalizeAssetPath(targetFolderPath);
@@ -184,23 +158,19 @@ public static class AtlasPackager
             return result;
         }
 
-        string absoluteTarget = ToAbsolutePath(normalizedTarget);
-        string[] firstLevelSubfolders = Directory.GetDirectories(absoluteTarget, "*", SearchOption.TopDirectoryOnly);
-        foreach (string folderPath in firstLevelSubfolders)
+        List<string> folders = CollectAssetFolders(normalizedTarget, includeRoot, includeSubdirectories: true);
+        for (int i = 0; i < folders.Count; i++)
         {
-            string assetFolderPath = ToAssetPath(folderPath);
-            result.ProcessedCount++;
-            if (PackImagesInFolder(assetFolderPath, DefaultAtlasName))
-            {
-                result.CreatedCount++;
-            }
-            else
-            {
-                result.SkippedCount++;
-            }
+            TryPackCurrentLayerFolder(folders[i], ref result);
         }
 
         return result;
+    }
+
+    /// <summary>为目标文件夹下每个目录生成当前层图集（含子目录，但不把子目录的图打进父图集）。</summary>
+    public static PackResult PackAtlasForEachSubfolder(string targetFolderPath)
+    {
+        return PackAtlasForCurrentLayerFolders(targetFolderPath, includeRoot: false);
     }
 
     /// <summary>
@@ -229,16 +199,15 @@ public static class AtlasPackager
             return result;
         }
 
-        SearchOption searchOption = includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         string sourceFolder = result.RequestedFolder;
-        string[] imagePaths = GetImagePathsInFolder(sourceFolder, searchOption);
+        string[] imagePaths = GetImagePathsInFolder(sourceFolder, SearchOption.TopDirectoryOnly);
 
         if (imagePaths.Length == 0)
         {
             string imagesFolder = sourceFolder + "/Images";
             if (AssetDatabase.IsValidFolder(imagesFolder))
             {
-                string[] nestedImagePaths = GetImagePathsInFolder(imagesFolder, searchOption);
+                string[] nestedImagePaths = GetImagePathsInFolder(imagesFolder, SearchOption.TopDirectoryOnly);
                 if (nestedImagePaths.Length > 0)
                 {
                     sourceFolder = imagesFolder;
@@ -265,7 +234,7 @@ public static class AtlasPackager
     public static bool PackImagesInFolder(
         string folderPath,
         string atlasName,
-        SearchOption searchOption = SearchOption.AllDirectories)
+        SearchOption searchOption = SearchOption.TopDirectoryOnly)
     {
         string relativeFolderPath = NormalizeAssetPath(folderPath);
         if (!AssetDatabase.IsValidFolder(relativeFolderPath))
@@ -296,7 +265,7 @@ public static class AtlasPackager
         }
         else
         {
-            Object[] existingPackables = atlas.GetPackables();
+            UnityEngine.Object[] existingPackables = atlas.GetPackables();
             if (existingPackables != null && existingPackables.Length > 0)
             {
                 atlas.Remove(existingPackables);
@@ -344,6 +313,77 @@ public static class AtlasPackager
             filterMode = FilterMode.Bilinear,
         };
         atlas.SetTextureSettings(textureSettings);
+    }
+
+    /// <summary>当前层有图才打包；没有图则跳过，并删掉该层多余的 images_atlas。</summary>
+    static void TryPackCurrentLayerFolder(string folderPath, ref PackResult result)
+    {
+        result.ProcessedCount++;
+        if (!HasImagesInFolder(folderPath, SearchOption.TopDirectoryOnly))
+        {
+            if (TryDeleteOrphanAtlas(folderPath))
+            {
+                Debug.Log("[AtlasPackager] 当前层没有图片，已删除多余图集: " + GetAtlasAssetPath(folderPath));
+            }
+
+            result.SkippedCount++;
+            return;
+        }
+
+        if (PackImagesInFolder(folderPath, DefaultAtlasName, SearchOption.TopDirectoryOnly))
+        {
+            result.CreatedCount++;
+        }
+        else
+        {
+            result.SkippedCount++;
+        }
+    }
+
+    static List<string> CollectAssetFolders(string rootAssetPath, bool includeRoot, bool includeSubdirectories)
+    {
+        var folders = new List<string>();
+        if (includeRoot)
+        {
+            folders.Add(rootAssetPath);
+        }
+
+        string absoluteRoot = ToAbsolutePath(rootAssetPath);
+        if (!Directory.Exists(absoluteRoot))
+        {
+            return folders;
+        }
+
+        SearchOption searchOption = includeSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+        string[] directories = Directory.GetDirectories(absoluteRoot, "*", searchOption);
+        for (int i = 0; i < directories.Length; i++)
+        {
+            folders.Add(ToAssetPath(directories[i]));
+        }
+
+        return folders;
+    }
+
+    static bool IsImagesFolderName(string folderPath)
+    {
+        string name = Path.GetFileName(NormalizeAssetPath(folderPath));
+        return string.Equals(name, "Images", StringComparison.OrdinalIgnoreCase);
+    }
+
+    static string GetAtlasAssetPath(string folderPath)
+    {
+        return NormalizeAssetPath(folderPath) + "/" + DefaultAtlasName + ".spriteatlas";
+    }
+
+    static bool TryDeleteOrphanAtlas(string folderPath)
+    {
+        string atlasPath = GetAtlasAssetPath(folderPath);
+        if (string.IsNullOrEmpty(AssetDatabase.AssetPathToGUID(atlasPath)))
+        {
+            return false;
+        }
+
+        return AssetDatabase.DeleteAsset(atlasPath);
     }
 
     private static string NormalizeAssetPath(string path)

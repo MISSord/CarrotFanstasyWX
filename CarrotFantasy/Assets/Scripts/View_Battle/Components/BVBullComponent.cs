@@ -63,7 +63,7 @@ namespace CarrotFantasy
 
         private GameObject GetBulletPrefabTemplate(int towerId, int bulletLevelIndex)
         {
-            string bundleName = FightViewPrefabAb.FightPartBulletBundle;
+            string bundleName = FightViewPrefabAb.BulletBundle(towerId, bulletLevelIndex);
             string assetName = FightViewPrefabAb.BulletAssetName(towerId, bulletLevelIndex);
             GameObject tpl;
             if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))

@@ -48,7 +48,10 @@ namespace CarrotFantasy
             }
 
             return string.Equals(bundleName, FightViewPrefabAb.FightPartBundle, StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(bundleName, FightViewPrefabAb.FightViewBundle, StringComparison.OrdinalIgnoreCase);
+                   string.Equals(bundleName, FightViewPrefabAb.FightViewBundle, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(bundleName, FightViewPrefabAb.CarrotBundle, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(bundleName, FightViewPrefabAb.BuildEffectBundle, StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(bundleName, FightViewPrefabAb.DestoryEffectBundle, StringComparison.OrdinalIgnoreCase);
         }
 
         static string GetBundleNameFromTemplateKey(string templateKey)
@@ -218,12 +221,12 @@ namespace CarrotFantasy
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.MonsterPrefab);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.HpSlider);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DamageFloatText);
-            Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.BuildEffect);
-            Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.DestoryEffect);
+            Add(FightViewPrefabAb.BuildEffectBundle, FightViewPrefabAb.BuildEffect);
+            Add(FightViewPrefabAb.DestoryEffectBundle, FightViewPrefabAb.DestoryEffect);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeMap);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);
             Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.StartPoint);
-            Add(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.Carrot);
+            Add(FightViewPrefabAb.CarrotBundle, FightViewPrefabAb.Carrot);
 
             Add(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.TowerList);
             Add(FightViewPrefabAb.FightViewBundle, FightViewPrefabAb.BtnTowerBuild);
@@ -244,8 +247,8 @@ namespace CarrotFantasy
                     int towerId = towerComponent.canBuildTowerList[i];
                     for (int level = 1; level <= 3; level++)
                     {
-                        Add(FightViewPrefabAb.FightPartTowerBundle, FightViewPrefabAb.TowerAssetName(towerId, level));
-                        Add(FightViewPrefabAb.FightPartBulletBundle, FightViewPrefabAb.BulletAssetName(towerId, level));
+                        Add(FightViewPrefabAb.TowerBundle(towerId, level), FightViewPrefabAb.TowerAssetName(towerId, level));
+                        Add(FightViewPrefabAb.BulletBundle(towerId, level), FightViewPrefabAb.BulletAssetName(towerId, level));
                     }
                 }
             }

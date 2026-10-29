@@ -28,18 +28,18 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// 怪物动画控制器包：Animator/AnimatorController/Monster/{关卡} →
-        /// animator/animatorcontroller/monster/{关卡}_prefab（_prefab 是 Assets/Game 目录规则的统一后缀）。
+        /// 每个怪物独立文件夹后，包名与 PrefabABPathPostprocessor 一致：
+        /// Assets/Game/FightPart/Monster/Monster_{关卡}_{id}/ → fightpart/monster/monster_{关卡}_{id}_prefab
         /// </summary>
-        public static string MonsterAnimatorBundle(int bigLevel)
+        public static string MonsterAnimatorBundle(int bigLevel, int monsterId)
         {
-            return string.Format("animator/animatorcontroller/monster/{0}_prefab", bigLevel);
+            return string.Format("fightpart/monster/monster_{0}_{1}_prefab", bigLevel, monsterId);
         }
 
-        /// <summary>控制器资源名 = 怪物 id（控制器内状态名同样是 id）。</summary>
-        public static string MonsterAnimatorAssetName(int monsterId)
+        /// <summary>控制器资源名与文件夹名一致：Monster_{关卡}_{id}。</summary>
+        public static string MonsterAnimatorAssetName(int bigLevel, int monsterId)
         {
-            return monsterId.ToString();
+            return string.Format("Monster_{0}_{1}", bigLevel, monsterId);
         }
 
         public static string CarrotStateAsset(int stateIndex)

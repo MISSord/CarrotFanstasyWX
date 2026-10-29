@@ -64,7 +64,7 @@ namespace CarrotFantasy
 
         private GameObject GetTowerPrefabTemplate(int towerId, int towerLevelIndex)
         {
-            string bundleName = FightViewPrefabAb.FightPartTowerBundle;
+            string bundleName = FightViewPrefabAb.TowerBundle(towerId, towerLevelIndex);
             string assetName = FightViewPrefabAb.TowerAssetName(towerId, towerLevelIndex);
             GameObject tpl;
             if (BattleViewPrefabPreloader.TryGetTemplate(bundleName, assetName, out tpl))
