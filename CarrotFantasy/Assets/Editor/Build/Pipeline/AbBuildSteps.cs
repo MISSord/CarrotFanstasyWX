@@ -120,10 +120,6 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 return BuildStepResult.Failed("built-in 后端不支持 Code 布局（它只认 .meta 包名）");
             }
 
-            IAssetBundleLayout layout = ctx.Request.Layout == AbBundleLayoutMode.Code
-                ? (IAssetBundleLayout)new CodeLayout()
-                : MetaLayout.Instance;
-
             bool built = AssetBundlePackager.BuildAssetBundles(
                 ctx.PlatformPath,
                 ctx.Request.BuildTarget,
@@ -131,7 +127,6 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 clearFolders: false,
                 copyToStreamingAssets: false,
                 backend: ctx.Request.Backend,
-                layout: layout,
                 sbpResults: out IBundleBuildResults sbpResults);
 
             if (!built)
@@ -170,8 +165,8 @@ namespace CarrotFantasy.Editor.BuildPipeline
                         : null;
             }
 
-            // Code 布局下 .meta 里仍有被收编资源的旧包名，需要用布局实际产出的包名
-            // 来判断缺包、过滤依赖，否则会误报 missing 并把依赖指向不存在的包。
+            // Code 布局若把资源收进别的包，.meta 里会留下不再单独成包的旧包名。
+            // 这时用布局实际产出的包名判断缺包。
             HashSet<string> expectedBundleNames = null;
             if (ctx.Request.Layout == AbBundleLayoutMode.Code)
             {

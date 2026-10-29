@@ -61,7 +61,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         private static readonly string[] LayoutLabels =
         {
             "Meta（按资源 .meta 包名）",
-            "Code（代码规则，阶段 C 尚未实现）",
+            "Code（当前与 Meta 相同）",
         };
 
         public override void OnInspectorGUI()

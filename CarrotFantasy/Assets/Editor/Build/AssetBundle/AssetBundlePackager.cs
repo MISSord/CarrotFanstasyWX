@@ -72,7 +72,7 @@ public static class AssetBundlePackager
     {
         return BuildAssetBundles(
             outputPath, buildTarget, compression, clearFolders, copyToStreamingAssets,
-            null, null, out _);
+            null, out _);
     }
 
     /// <summary>
@@ -89,7 +89,6 @@ public static class AssetBundlePackager
                                         bool clearFolders,
                                         bool copyToStreamingAssets,
                                         AbBuildBackend? backend,
-                                        IAssetBundleLayout layout,
                                         out IBundleBuildResults sbpResults)
     {
         sbpResults = null;
@@ -137,7 +136,7 @@ public static class AssetBundlePackager
             if (useSbp)
             {
                 if (!AssetBundleSbpPipeline.Build(
-                        outputPath, buildTarget, compression, layout,
+                        outputPath, buildTarget, compression,
                         out string sbpError, out sbpResults))
                 {
                     Debug.LogError(
@@ -623,8 +622,8 @@ public static class AssetBundlePackager
 
         string[] bundleFiles = Directory.GetFiles(bundlePath, "*", SearchOption.AllDirectories);
 
-        // Code 布局下，.meta 里可能有已被收编、不再单独成包的旧包名，
-        // 不能再用 AssetDatabase 判断"缺包"，否则每次都会误报 32 个 missing。
+        // Code 布局若把资源收进别的包，.meta 里会留下不再单独成包的旧包名。
+        // 这时用布局实际产出的包名判断缺包，避免把已收编的包报成 missing。
         List<string> missingOnDisk = expectedBundleNames != null
             ? CollectMissingOnDisk(bundlePath, expectedBundleNames)
             : CollectRegisteredButMissingOnDisk(bundlePath);
@@ -685,9 +684,8 @@ public static class AssetBundlePackager
 
                 info.Dependencies = databaseDependencies;
 
-                // 阶段 A：SBP 结果可用时再算一遍。
-                // 两边各有盲区（SBP 漏 SpriteAtlas/变体关系，AssetDatabase 漏序列化隐式依赖），
-                // 过渡期清单依赖取并集，保证运行时预加载不漏；差异仍记日志供阶段 C 收敛。
+                // SBP 结果是剔除之后的依赖。AssetDatabase 仍按预制体上的序列化引用计算，
+                // 贴图和图集会被算进去；差异只打日志，清单以 SBP 为准。
                 if (sbpDependencyResolver != null)
                 {
                     string[] sbpDependencies = CollectFlatFromResolver(registeredName, sbpDependencyResolver);
@@ -719,8 +717,9 @@ public static class AssetBundlePackager
                         }
                     }
 
-                    // 并集：避免任一来源漏报导致运行时缺依赖。
-                    info.Dependencies = UnionSorted(info.Dependencies, sbpDependencies);
+                    // 清单记下 SBP 剔除之后的依赖。AssetDatabase 仍按预制体上的序列化引用计算，
+                    // 贴图/图集会被算进去；两边的差异只打日志，不再并回去。
+                    info.Dependencies = sbpDependencies;
                 }
 
                 generatedManifest.AssetBundles.Add(info);

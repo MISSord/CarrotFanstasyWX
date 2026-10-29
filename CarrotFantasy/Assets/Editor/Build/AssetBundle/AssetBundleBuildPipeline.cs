@@ -193,7 +193,6 @@ public static class AssetBundleBuildPipeline
             request.ClearOutputFolder,
             copyToStreamingAssets: false,
             backend: request.Backend,
-            layout: null,
             sbpResults: out _);
 
         if (!built)

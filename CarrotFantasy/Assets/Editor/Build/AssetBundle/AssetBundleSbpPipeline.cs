@@ -4,6 +4,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.Build.Pipeline;
 using UnityEditor.Build.Pipeline.Interfaces;
+using UnityEditor.Build.Pipeline.Tasks;
 using UnityEngine;
 
 // SBP 的 BundleBuildParameters.BundleCompression 在 2018.3+ 用的是运行时类型
@@ -23,20 +24,9 @@ using BuildCompression = UnityEngine.BuildCompression;
 ///   <item>配合 <c>BuildCache</c> 做增量构建（默认开启；强制重建会关闭）。</item>
 /// </list>
 ///
-/// <para><b>阶段 1（当前）</b>：从 AssetDatabase 收集包名，等价替换 built-in。
-/// 加载名用文件名（不含扩展名），与运行时短名一致。产物、清单、PackMerger 不变；
-/// 用菜单 <c>Tools/AssetBundle/构建后端</c> 可随时切回 built-in 对比。</para>
-///
-/// <para><b>阶段 2（下一步）</b>：把 <see cref="IAssetBundleLayout"/> 换成
-/// “代码定义布局” —— 用 <c>AssetDatabase.GetDependencies</c> 做依赖闭包，
-/// 把视图专属资源与 prefab 放进同一个包（视图包），依赖自然归零，
-/// 且不需要改 prefab、不需要重新导入。</para>
-///
-/// <para><b>阶段 3</b>：自定义 <see cref="IBuildTask"/> 做依赖审计与体积报告。</para>
-///
 /// <para>
-/// 注意：SBP 只是“打包布局可编程”，它**不能**在不改动资源内容的前提下
-/// 让 prefab 的序列化引用消失。真想断引用仍然要改资产（mutation / PrepareAssets）。
+/// 内容仍来自 meta 里已经登记的整包。打之前按资源类型分组，并记录直接依赖里
+/// 哪些已经有包名、哪些还没有。
 /// </para>
 /// </summary>
 public static class AssetBundleSbpPipeline
@@ -45,26 +35,25 @@ public static class AssetBundleSbpPipeline
 
     /// <summary>
     /// 用 SBP 构建 AB 到 <paramref name="outputPath"/>。
-    /// 包内容来自 AssetDatabase 已登记的 assetBundleName（阶段 1）。
+    /// 包内容来自 meta 已登记的整包。
     /// </summary>
     public static bool Build(
         string outputPath,
         BuildTarget buildTarget,
         BuildAssetBundleOptions options,
-        IAssetBundleLayout layout,
         out string error,
         out IBundleBuildResults results)
     {
         error = null;
         results = null;
 
-        layout = layout ?? MetaLayout.Instance;
-        if (!layout.TryCreate(buildTarget, out List<AssetBundleBuild> builds, out error))
+        if (!MetaLayout.Instance.TryCreate(buildTarget, out List<AssetBundleBuild> builds, out error))
         {
             return false;
         }
 
-        Debug.Log(LogTag + " 布局: " + layout.Name);
+        MetaBundleDependencyReport.Log(builds);
+        Debug.Log(LogTag + " 内容: Meta 整包");
 
         if (builds == null || builds.Count == 0)
         {
@@ -99,7 +88,10 @@ public static class AssetBundleSbpPipeline
                 Debug.Log(LogTag + " 使用 SBP BuildCache（增量）；需要全量请勾选「强制重新构建」");
             }
 
-            ReturnCode code = ContentPipeline.BuildAssetBundles(parameters, content, out IBundleBuildResults buildResults);
+            IList<IBuildTask> tasks = DefaultBuildTasks.Create(DefaultBuildTasks.Preset.AssetBundleCompatible);
+            tasks.Insert(FindStripInsertIndex(tasks), new StripExplicitBundleDependencies());
+
+            ReturnCode code = ContentPipeline.BuildAssetBundles(parameters, content, out IBundleBuildResults buildResults, tasks);
             if (code != ReturnCode.Success)
             {
                 error = "ContentPipeline.BuildAssetBundles 返回 " + code;
@@ -118,13 +110,25 @@ public static class AssetBundleSbpPipeline
         }
     }
 
-    /// <summary>
-    /// 阶段 1：把 AssetDatabase 里已登记的包名翻译成 SBP 的输入。
-    ///
-    /// 注意：这里不修改任何 .meta；包名仍由 PrefabABPathPostprocessor 维护。
-    /// 加载名用文件名（不含扩展名），与运行时 LoadAsset("Tower_4_3") / sprite.name 一致。
-    /// SBP 在 addressableNames 为空时会登记完整资产路径，运行时按短名加载会失败。
-    /// </summary>
+    static int FindStripInsertIndex(IList<IBuildTask> tasks)
+    {
+        int afterDependency = tasks.Count;
+        for (int i = 0; i < tasks.Count; i++)
+        {
+            if (tasks[i] is StripUnusedSpriteSources)
+            {
+                return i + 1;
+            }
+
+            if (tasks[i] is CalculateAssetDependencyData)
+            {
+                afterDependency = i + 1;
+            }
+        }
+
+        return afterDependency;
+    }
+
     private static BuildCompression ToBuildCompression(BuildAssetBundleOptions options)
     {
         if ((options & BuildAssetBundleOptions.UncompressedAssetBundle) != 0)

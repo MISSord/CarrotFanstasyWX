@@ -30,7 +30,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("构建后端：SBP 支持代码化布局与 BuildCache；built-in 仅用于回退对比")]
         public AbBuildBackend Backend = AbBuildBackend.ScriptableBuildPipeline;
 
-        [Tooltip("包布局：Meta 按资源 .meta 包名；Code 由规则决定（阶段 C，尚未实现）")]
+        [Tooltip("包布局：Meta 按资源 .meta 包名；Code 当前没有收编规则，结果与 Meta 相同")]
         public AbBundleLayoutMode Layout = AbBundleLayoutMode.Meta;
 
         [Tooltip("勾选后每次打包自动取「输出目录里当前清单版本 + 1」")]
