@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 212100395686540046}
   - component: {fileID: 7316549490959021344}
   - component: {fileID: 1411852042059187736}
+  - component: {fileID: 939340386912860042}
   m_Layer: 0
   m_Name: Item_1_0
   m_TagString: Untagged
@@ -106,8 +107,31 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1612009918556158}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1.5999999, y: 1.5500002, z: 0.19999999}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &939340386912860042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1612009918556158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/sprites/items/level_1/object01-hd_0
+  defaultAssetName: object01-hd_0
+  _lastRecordedSpriteInstanceId: 30970

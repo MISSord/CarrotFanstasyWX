@@ -82,6 +82,7 @@ GameObject:
   - component: {fileID: 4385491776647650}
   - component: {fileID: 212706605666909714}
   - component: {fileID: 95150996927247618}
+  - component: {fileID: 377559652758735457}
   m_Layer: 0
   m_Name: tower
   m_TagString: Untagged
@@ -178,6 +179,21 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &377559652758735457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1473427040241532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/images/tower/1/images_atlas
+  defaultAssetName: id1_22
+  _lastRecordedSpriteInstanceId: 30668
 --- !u!1 &1769572961809494
 GameObject:
   m_ObjectHideFlags: 0
@@ -188,6 +204,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4958921895928768}
   - component: {fileID: 212625315590139112}
+  - component: {fileID: 2372122309499288031}
   m_Layer: 0
   m_Name: towerSet
   m_TagString: Untagged
@@ -262,6 +279,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &2372122309499288031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1769572961809494}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/images/tower/1/images_atlas
+  defaultAssetName: id1_11
+  _lastRecordedSpriteInstanceId: 30644
 --- !u!1 &1776677616241780
 GameObject:
   m_ObjectHideFlags: 0
@@ -272,6 +304,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4434492308021494}
   - component: {fileID: 212070411409366422}
+  - component: {fileID: 243585614777075553}
   m_Layer: 0
   m_Name: attackRange
   m_TagString: Untagged
@@ -346,3 +379,18 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &243585614777075553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1776677616241780}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: attackrange
+  _lastRecordedSpriteInstanceId: 30500

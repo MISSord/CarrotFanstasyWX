@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 95309843391671964}
   - component: {fileID: 9198733223527286873}
   - component: {fileID: 8347311816706037841}
+  - component: {fileID: 5974554632280288499}
   m_Layer: 0
   m_Name: Item_3_2
   m_TagString: Item
@@ -89,7 +90,7 @@ SpriteRenderer:
   m_SpriteSortPoint: 0
 --- !u!95 &95309843391671964
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -103,6 +104,7 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
@@ -128,8 +130,31 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1230135043265202}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 1.24, y: 1.43, z: 0.2}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5974554632280288499
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1230135043265202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/sprites/items/level_3/item_9
+  defaultAssetName: item_9
+  _lastRecordedSpriteInstanceId: 29554

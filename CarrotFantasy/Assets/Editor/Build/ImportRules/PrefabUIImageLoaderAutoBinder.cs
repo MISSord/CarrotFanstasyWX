@@ -176,6 +176,7 @@ public static class PrefabUIImageLoaderAssetMenu
     private static void BatchProcessSelectedPrefabs()
     {
         CleanUnusedCanvasRendererInSelectedPrefabs();
+        BindMissingSpriteLoadersInSelectedPrefabs();
         RefreshSelectedPrefabs();
     }
 
@@ -228,6 +229,94 @@ public static class PrefabUIImageLoaderAssetMenu
     private static bool RefreshSelectedPrefabsValidate()
     {
         return HasValidPrefabSelection();
+    }
+
+    /// <summary>
+    /// 有 SpriteRenderer、没有 SpriteLoader 的对象补上 Loader，并从当前精灵提取 AB 路径。
+    /// </summary>
+    private static void BindMissingSpriteLoadersInSelectedPrefabs()
+    {
+        HashSet<string> prefabPaths = GetSelectedPrefabPaths();
+        if (prefabPaths.Count == 0)
+        {
+            return;
+        }
+
+        int changedPrefabCount = 0;
+        int addedLoaderCount = 0;
+        int extractedCount = 0;
+        foreach (string prefabPath in prefabPaths)
+        {
+            GameObject prefabRoot = PrefabUtility.LoadPrefabContents(prefabPath);
+            if (prefabRoot == null)
+            {
+                continue;
+            }
+
+            try
+            {
+                int added;
+                int extracted;
+                bool changed = BindMissingSpriteLoaders(prefabRoot, out added, out extracted);
+                if (changed)
+                {
+                    PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabPath);
+                    changedPrefabCount++;
+                    addedLoaderCount += added;
+                    extractedCount += extracted;
+                }
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(prefabRoot);
+            }
+        }
+
+        if (changedPrefabCount > 0)
+        {
+            Debug.Log($"SpriteLoader补齐完成，处理Prefab {prefabPaths.Count} 个，变更Prefab {changedPrefabCount} 个，新增组件 {addedLoaderCount} 个，提取路径 {extractedCount} 个。");
+        }
+    }
+
+    private static bool BindMissingSpriteLoaders(GameObject prefabRoot, out int addedCount, out int extractedCount)
+    {
+        addedCount = 0;
+        extractedCount = 0;
+        SpriteRenderer[] renderers = prefabRoot.GetComponentsInChildren<SpriteRenderer>(true);
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            SpriteRenderer renderer = renderers[i];
+            if (renderer == null || renderer.GetComponent<SpriteLoader>() != null)
+            {
+                continue;
+            }
+
+            SpriteLoader loader = renderer.gameObject.AddComponent<SpriteLoader>();
+            addedCount++;
+            loader.EditorRefreshBindingAndPath();
+            if (HasRecordedSpritePath(loader))
+            {
+                extractedCount++;
+            }
+        }
+
+        if (addedCount > 0)
+        {
+            EditorUtility.SetDirty(prefabRoot);
+        }
+
+        return addedCount > 0;
+    }
+
+    private static bool HasRecordedSpritePath(SpriteLoader loader)
+    {
+        SerializedObject serialized = new SerializedObject(loader);
+        SerializedProperty bundle = serialized.FindProperty("defaultBundleName");
+        SerializedProperty asset = serialized.FindProperty("defaultAssetName");
+        return bundle != null
+            && asset != null
+            && !string.IsNullOrEmpty(bundle.stringValue)
+            && !string.IsNullOrEmpty(asset.stringValue);
     }
 
     private static void CleanUnusedCanvasRendererInSelectedPrefabs()

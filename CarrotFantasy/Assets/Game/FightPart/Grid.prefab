@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 4167454127951524}
   - component: {fileID: 212234756529164006}
   - component: {fileID: 95005773528851302}
+  - component: {fileID: 644200430607367877}
   m_Layer: 0
   m_Name: LevelUpSignal
   m_TagString: Untagged
@@ -87,7 +88,7 @@ SpriteRenderer:
   m_SpriteSortPoint: 0
 --- !u!95 &95005773528851302
 Animator:
-  serializedVersion: 5
+  serializedVersion: 7
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -101,11 +102,27 @@ Animator:
   m_ApplyRootMotion: 0
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
   m_WarningMessage: 
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &644200430607367877
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1435911201845470}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: items02-hd_217
+  _lastRecordedSpriteInstanceId: 30544
 --- !u!1 &1706494964917342
 GameObject:
   m_ObjectHideFlags: 0
@@ -118,6 +135,7 @@ GameObject:
   - component: {fileID: 212370243794112050}
   - component: {fileID: 65739161253244818}
   - component: {fileID: 5352795226402209612}
+  - component: {fileID: 5235945016187369984}
   m_Layer: 0
   m_Name: Grid
   m_TagString: Untagged
@@ -201,9 +219,17 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1706494964917342}
   m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
   m_IsTrigger: 0
+  m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 2
+  serializedVersion: 3
   m_Size: {x: 0.71999997, y: 0.71999997, z: 0.19999999}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &5352795226402209612
@@ -218,3 +244,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ec0e00b23e5303e44966580b73f997cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &5235945016187369984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1706494964917342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: ui/view/normalmordel/images_atlas
+  defaultAssetName: grid
+  _lastRecordedSpriteInstanceId: 30532

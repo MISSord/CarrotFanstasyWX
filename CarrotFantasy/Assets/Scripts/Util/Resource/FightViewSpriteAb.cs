@@ -70,22 +70,22 @@ namespace CarrotFantasy
             return string.Format("ui/sprites/{0}", relPath.ToLowerInvariant());
         }
 
-        /// <summary>小地图 BG/Road 包（按 bigLevel 分目录）。</summary>
+        /// <summary>小地图 BG/Road 包：Assets/Game/UI/Sprites/GameMap/Level_{bigLevel}/。</summary>
         public static string MapSpriteBundle(int bigLevel, string assetName)
         {
-            return string.Format("ui/sprites/gamemap/{0}/{1}", bigLevel, assetName.ToLowerInvariant());
+            return string.Format("ui/sprites/gamemap/level_{0}/{1}", bigLevel, assetName.ToLowerInvariant());
         }
 
-        /// <summary>怪物头像资源名：{monsterId}-{idx}。带 bigLevel 区分不同大关同名怪物头像。</summary>
+        /// <summary>怪物头像资源名：{monsterId}-1。大关区分放在 Level_{bigLevel} 目录里。</summary>
         public static string MonsterPortraitAssetName(int bigLevel, int monsterId)
         {
             return string.Format("{0}-1", monsterId);
         }
 
-        /// <summary>怪物头像包：按 bigLevel 分层，ui/sprites/monster/{bigLevel}/{asset}。</summary>
+        /// <summary>怪物头像包：Assets/Game/UI/Sprites/Monster/Level_{bigLevel}/{asset}。</summary>
         public static string MonsterPortraitBundle(int bigLevel, string assetName)
         {
-            return string.Format("ui/sprites/monster/{0}/{1}", bigLevel, assetName.ToLowerInvariant());
+            return string.Format("ui/sprites/monster/level_{0}/{1}", bigLevel, assetName.ToLowerInvariant());
         }
 
         public static bool TryGetNormalMordel(string assetName, out UnityEngine.Sprite sprite)

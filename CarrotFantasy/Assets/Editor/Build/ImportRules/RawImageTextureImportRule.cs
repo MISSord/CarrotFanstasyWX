@@ -55,57 +55,5 @@ namespace CarrotFantasy.Editor
         {
             return string.IsNullOrEmpty(path) ? string.Empty : path.Replace('\\', '/');
         }
-
-        /// <summary>
-        /// 把已有的 RawImages 贴图按上面的规则重导一遍。
-        /// <para>
-        /// <see cref="OnPreprocessTexture"/> 只在导入时生效，磁盘上已有的 .meta 仍是 Sprite，
-        /// 需要手动触发一次；这个菜单就是干这个的。
-        /// </para>
-        /// </summary>
-        [MenuItem("Assets/重导入 RawImages（按 RawImage 规则）", false, 2003)]
-        public static void ReimportAll()
-        {
-            string root = Root.TrimEnd('/');
-            if (!AssetDatabase.IsValidFolder(root))
-            {
-                Debug.LogError("[RawImageTextureImportRule] 目录不存在: " + Root);
-                return;
-            }
-
-            string[] guids = AssetDatabase.FindAssets("t:Texture2D", new[] { root });
-            int converted = 0;
-
-            AssetDatabase.StartAssetEditing();
-            try
-            {
-                for (int i = 0; i < guids.Length; i++)
-                {
-                    string path = Normalize(AssetDatabase.GUIDToAssetPath(guids[i]));
-                    if (!path.StartsWith(Root, StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    TextureImporter importer = AssetImporter.GetAtPath(path) as TextureImporter;
-                    if (importer == null)
-                    {
-                        continue;
-                    }
-
-                    ApplyTextureSettings(importer);
-                    EditorUtility.SetDirty(importer);
-                    importer.SaveAndReimport();
-                    converted++;
-                }
-            }
-            finally
-            {
-                AssetDatabase.StopAssetEditing();
-            }
-
-            AssetDatabase.Refresh();
-            Debug.Log($"[RawImageTextureImportRule] 已按 Texture 重导 {converted} 张（目录 {Root}）");
-        }
     }
 }
