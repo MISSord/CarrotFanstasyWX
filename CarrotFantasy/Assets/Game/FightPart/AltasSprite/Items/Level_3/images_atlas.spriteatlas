@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: images_atlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 0
+      compressionQuality: 0
+      maxTextureSize: 0
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 0
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 0
+    platformSettings: []
+    packingSettings:
+      serializedVersion: 2
+      padding: 4
+      blockOffset: 0
+      allowAlphaSplitting: 0
+      enableRotation: 0
+      enableTightPacking: 1
+      enableAlphaDilation: 0
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 83d6f35a07166ac489012cc70783016a, type: 3}
+    - {fileID: 2800000, guid: e4159f964ff49cc4bb2e3344ee7c1563, type: 3}
+    - {fileID: 2800000, guid: 2dfa3313e70f9a44dbb358942f8088ad, type: 3}
+    - {fileID: 2800000, guid: 4249fdf44dfcda245877635a1bde8122, type: 3}
+    - {fileID: 2800000, guid: 00dd478a504c2bc4bb5f075a9de1025a, type: 3}
+    - {fileID: 2800000, guid: 8776de0c236bb274082e570d31e0756d, type: 3}
+    - {fileID: 2800000, guid: 4e12dc86ebfc6a143a0fec1759c36a61, type: 3}
+    - {fileID: 2800000, guid: cd0306a151d8b1140b2c7232bd44baf2, type: 3}
+    - {fileID: 2800000, guid: f3400784cc189b44aab0c636fd85eb77, type: 3}
+    - {fileID: 2800000, guid: 05bab789dd9727c43835d83075c696bd, type: 3}
+    - {fileID: 2800000, guid: 110f4e69411255343a49beae4e5cbe4b, type: 3}
+    - {fileID: 2800000, guid: 193fb78be51395e43814d9aa908c5831, type: 3}
+    - {fileID: 2800000, guid: c7db213c33337d941a05b139308ef3c3, type: 3}
+    - {fileID: 2800000, guid: 161410a7e14ba244b8b8e8ac7c6eddc7, type: 3}
+    - {fileID: 2800000, guid: 1a1fa7ddc8e86e64ba58dceaf0436a3b, type: 3}
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+    packedSpriteRenderDataKeys: []
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites: []
+  m_PackedSpriteNamesToIndex: []
+  m_RenderDataMap: {}
+  m_Tag: images_atlas
+  m_IsVariant: 0

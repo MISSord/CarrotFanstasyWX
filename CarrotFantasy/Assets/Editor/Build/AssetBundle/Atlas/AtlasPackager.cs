@@ -12,6 +12,7 @@ public static class AtlasPackager
 {
     public const string UiViewRoot = "Assets/Game/UI/View";
     public const string UiImagesRoot = "Assets/Game/UI/Images";
+    public const string AltasSpriteRoot = "Assets/Game/FightPart/AltasSprite";
     public const string DefaultAtlasName = "images_atlas";
 
     public struct PackResult
@@ -25,6 +26,7 @@ public static class AtlasPackager
     {
         public PackResult ViewResult;
         public PackResult ImagesResult;
+        public PackResult AltasSpriteResult;
     }
 
     /// <summary>单个文件夹的图集打包结果，供 Project 窗口右键菜单展示。</summary>
@@ -48,8 +50,8 @@ public static class AtlasPackager
 
     /// <summary>
     /// 默认打包：
-    /// UI/View 只处理名为 Images 的文件夹；UI/Images 每个目录一层一份图集。
-    /// 两处都只收当前层的图，不进子文件夹。
+    /// UI/View 只处理名为 Images 的文件夹；UI/Images 与 FightPart/AltasSprite 每个目录一层一份图集。
+    /// 都只收当前层的图，不进子文件夹。
     /// </summary>
     public static DefaultPackResult PackDefaultUiAtlases()
     {
@@ -57,6 +59,7 @@ public static class AtlasPackager
         {
             ViewResult = PackAtlasForViewImagesFolders(UiViewRoot, includeSubdirectories: true),
             ImagesResult = PackAtlasForCurrentLayerFolders(UiImagesRoot, includeRoot: true),
+            AltasSpriteResult = PackAtlasForCurrentLayerFolders(AltasSpriteRoot, includeRoot: true),
         };
 
         AssetDatabase.SaveAssets();
@@ -70,7 +73,7 @@ public static class AtlasPackager
         PackForAbBuild();
     }
 
-    /// <summary>AB 构建前：View 只打 Images 文件夹，Images 根下一层一份图集。</summary>
+    /// <summary>AB 构建前：View 只打 Images 文件夹；UI/Images 与 AltasSprite 每个目录一层一份图集。</summary>
     public static void PackForAbBuild()
     {
         Debug.Log("[AB Build] 开始打包 UI 图集…");
@@ -87,12 +90,17 @@ public static class AtlasPackager
             result.ImagesResult.ProcessedCount,
             result.ImagesResult.CreatedCount,
             result.ImagesResult.SkippedCount));
+        Debug.Log(string.Format(
+            "[AB Build] AltasSprite 图集：检查 {0} 个，创建/更新 {1} 个，跳过 {2} 个。",
+            result.AltasSpriteResult.ProcessedCount,
+            result.AltasSpriteResult.CreatedCount,
+            result.AltasSpriteResult.SkippedCount));
         Debug.Log("[AB Build] UI 图集打包完成。");
     }
 
     /// <summary>
-    /// 自定义目标：<c>UI/Images</c> 下一层一份图集；其它目录只打包名为 Images 的文件夹。
-    /// 图集只收当前层的图片。
+    /// 自定义目标：<c>UI/Images</c> 与 <c>FightPart/AltasSprite</c> 每个目录一层一份图集；
+    /// 其它目录只打包名为 Images 的文件夹。图集只收当前层的图片。
     /// </summary>
     public static PackResult PackAtlasForTargetFolder(string targetFolderPath, bool includeSubdirectories = true)
     {
@@ -103,7 +111,7 @@ public static class AtlasPackager
             return new PackResult();
         }
 
-        if (IsUiImagesRoot(normalizedTarget) || IsUiImagesChildFolder(normalizedTarget))
+        if (IsLayerAtlasRoot(normalizedTarget) || IsLayerAtlasChildFolder(normalizedTarget))
         {
             return PackAtlasForCurrentLayerFolders(normalizedTarget, includeRoot: true);
         }
@@ -440,16 +448,20 @@ public static class AtlasPackager
             .ToArray();
     }
 
-    private static bool IsUiImagesRoot(string folderPath)
+    static bool IsLayerAtlasRoot(string folderPath)
     {
         string normalizedPath = folderPath.ToLowerInvariant().Replace("\\", "/");
-        return normalizedPath.EndsWith("/ui/images");
+        return normalizedPath.EndsWith("/ui/images")
+            || normalizedPath.EndsWith("/fightpart/altassprite");
     }
 
-    private static bool IsUiImagesChildFolder(string folderPath)
+    static bool IsLayerAtlasChildFolder(string folderPath)
     {
         string normalizedPath = folderPath.ToLowerInvariant().Replace("\\", "/");
-        return normalizedPath.Contains("/ui/images/") && !normalizedPath.EndsWith("/ui/images");
+        bool underUiImages = normalizedPath.Contains("/ui/images/") && !normalizedPath.EndsWith("/ui/images");
+        bool underAltasSprite = normalizedPath.Contains("/fightpart/altassprite/")
+            && !normalizedPath.EndsWith("/fightpart/altassprite");
+        return underUiImages || underAltasSprite;
     }
 
     private static bool HasImagesInFolder(string folderPath, SearchOption searchOption)

@@ -71,7 +71,7 @@ namespace CarrotFantasy
             BattleUnit_Monster monster = (BattleUnit_Monster)this.unit;
             int bigLevel = monster.curLevel;
             string portraitAsset = FightViewSpriteAb.MonsterPortraitAssetName(bigLevel, monster.monsterId);
-            string portraitBundle = FightViewSpriteAb.MonsterPortraitBundle(bigLevel, portraitAsset);
+            string portraitBundle = FightViewSpriteAb.MonsterPortraitBundle(bigLevel);
             if (this.spriteLoader != null)
             {
                 this.spriteLoader.SetSprite(portraitBundle, portraitAsset);

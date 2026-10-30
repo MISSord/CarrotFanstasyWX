@@ -5,11 +5,6 @@ using UnityEditor;
 
 namespace CarrotFantasy
 {
-    /// <summary>
-    /// 绑定到 <see cref="SpriteRenderer"/>，负责世界空间精灵请求、替换与释放。
-    /// 图集走 <see cref="AtlasLoader"/>；普通 Sprite 走 <see cref="ImageLoader"/>。
-    /// rawimages 包（Texture）不允许经此组件加载。
-    /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(SpriteRenderer))]
     public class SpriteLoader : MonoBehaviour
@@ -153,7 +148,34 @@ namespace CarrotFantasy
                 return;
             }
 
-            SetSprite(defaultBundleName, defaultAssetName, defaultLoadPriority);
+            LoadByPath(defaultBundleName, defaultAssetName, defaultLoadPriority);
+        }
+
+        /// <summary>
+        /// 按包路径选择加载方式。路径最后一段是 <c>images_atlas</c> 走图集，其余走单图。
+        /// </summary>
+        void LoadByPath(string bundleName, string assetName, LoadPriority priority)
+        {
+            if (IsAtlasBundlePath(bundleName))
+            {
+                SetAtlasSprite(bundleName, assetName, priority);
+                return;
+            }
+
+            SetSprite(bundleName, assetName, priority);
+        }
+
+        static bool IsAtlasBundlePath(string bundleName)
+        {
+            if (string.IsNullOrEmpty(bundleName))
+            {
+                return false;
+            }
+
+            string normalized = bundleName.Replace('\\', '/').Trim().TrimEnd('/');
+            int slash = normalized.LastIndexOf('/');
+            string leaf = slash >= 0 ? normalized.Substring(slash + 1) : normalized;
+            return leaf.Equals("images_atlas", System.StringComparison.OrdinalIgnoreCase);
         }
 
         /// <summary>从图集取图；bundleName 为图集 AB 包名。引用由本组件自动 Release。</summary>
@@ -189,17 +211,18 @@ namespace CarrotFantasy
         }
 
         /// <summary>
-        /// 按 AB 路径加载 Sprite。图集包自动转 Atlas；rawimages 包为 Texture 专用，SpriteRenderer 应拒绝。
+        /// 按包路径加载。图集路径转 <see cref="SetAtlasSprite"/>，其余按单图加载。
+        /// rawimages 包是贴图，不能交给 SpriteRenderer。
         /// </summary>
         public void SetSprite(string bundleName, string assetName, LoadPriority priority = LoadPriority.Medium)
         {
-            EnsureRendererBinding();
-
-            if (AtlasLoader.Instance.IsAtlasBundle(bundleName))
+            if (IsAtlasBundlePath(bundleName))
             {
                 SetAtlasSprite(bundleName, assetName, priority);
                 return;
             }
+
+            EnsureRendererBinding();
 
             if (IsRawImageBundle(bundleName))
             {

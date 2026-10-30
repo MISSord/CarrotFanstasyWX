@@ -244,7 +244,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            mapBg.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel, bgAsset), bgAsset);
+            mapBg.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel), bgAsset);
             mapBg.sortingOrder = 0;
 
             string roadAsset = FightViewSpriteAb.MapRoadAssetName(bigLevel, level);
@@ -254,7 +254,7 @@ namespace CarrotFantasy
                 return;
             }
 
-            mapRoad.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel, roadAsset), roadAsset);
+            mapRoad.SetSprite(FightViewSpriteAb.MapSpriteBundle(bigLevel), roadAsset);
             mapRoad.sortingOrder = 1;
 
             GameObject tplTargetSignal = GetPrefabTemplate(FightViewPrefabAb.FightPartBundle, FightViewPrefabAb.NodeTargetSignal);

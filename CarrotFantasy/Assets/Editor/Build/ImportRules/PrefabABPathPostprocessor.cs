@@ -85,10 +85,11 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         bool isRawImage = path.Contains("UI/RawImage") && IsImageFilePath(path);
         bool isSpriteAtlas = path.EndsWith(".spriteatlas");
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
+        bool isImageInAltasSpriteFolder = IsImageInAltasSpriteFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
         bool isImageInSpritesFolder = IsImageInSpritesFolder(path);
         bool useGameFolderRule = UseGameFolderRule(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
+        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInAltasSpriteFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
     }
 
     private static string BuildAssetBundleName(string path)
@@ -122,7 +123,7 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return atlasBundleRoot + "/" + Path.GetFileNameWithoutExtension(path);
         }
 
-        if (IsImageInImagesFolder(path))
+        if (IsImageInImagesFolder(path) || IsImageInAltasSpriteFolder(path))
         {
             string atlasBundleRoot = normalizedBundleName;
             if (atlasBundleRoot.EndsWith("/images"))
@@ -190,6 +191,19 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
                && !normalizedPath.Contains("/ui/rawimages/");
     }
 
+    /// <summary>
+    /// FightPart/AltasSprite 与 UI/Images 一样：当前层图片打进该层 images_atlas，不各自成包。
+    /// </summary>
+    private static bool IsImageInAltasSpriteFolder(string path)
+    {
+        string normalizedPath = path.Replace('\\', '/');
+        bool isImage = normalizedPath.EndsWith(".png", System.StringComparison.OrdinalIgnoreCase)
+            || normalizedPath.EndsWith(".jpg", System.StringComparison.OrdinalIgnoreCase)
+            || normalizedPath.EndsWith(".jpeg", System.StringComparison.OrdinalIgnoreCase);
+        return isImage
+            && normalizedPath.IndexOf("/FightPart/AltasSprite/", System.StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     private static bool IsImageInRawImagesFolder(string path)
     {
         string normalizedPath = path.ToLower().Replace('\\', '/');
@@ -238,7 +252,7 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             return false;
 
         // Image folders have dedicated naming rules; never fall through to *_prefab.
-        if (IsImageInSpritesFolder(path) || IsImageInRawImagesFolder(path) || IsImageInImagesFolder(path))
+        if (IsImageInSpritesFolder(path) || IsImageInRawImagesFolder(path) || IsImageInImagesFolder(path) || IsImageInAltasSpriteFolder(path))
             return false;
 
         // Skip source/metadata files that should not participate in AB naming.

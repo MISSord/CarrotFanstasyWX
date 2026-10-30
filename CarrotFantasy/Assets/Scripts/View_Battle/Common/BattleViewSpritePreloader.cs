@@ -36,7 +36,10 @@ namespace CarrotFantasy
                 return true;
             }
 
-            return bundleName.StartsWith("ui/images/tower/", StringComparison.OrdinalIgnoreCase);
+            return bundleName.StartsWith("fightpart/altassprite/tower/", StringComparison.OrdinalIgnoreCase)
+                || bundleName.StartsWith("fightpart/altassprite/monster/", StringComparison.OrdinalIgnoreCase)
+                || bundleName.StartsWith("fightpart/altassprite/items/", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(bundleName, FightViewSpriteAb.EffectAtlas, StringComparison.OrdinalIgnoreCase);
         }
 
         public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)
@@ -183,9 +186,8 @@ namespace CarrotFantasy
                 for (int i = 0; i < towerComponent.canBuildTowerListLength; i++)
                 {
                     int towerId = towerComponent.canBuildTowerList[i];
-                    string towerBundle = FightViewSpriteAb.TowerAtlasBundle(towerId);
-                    Add(towerBundle, FightViewSpriteAb.TowerCanClick0);
-                    Add(towerBundle, FightViewSpriteAb.TowerCanClick1);
+                    Add(FightViewSpriteAb.NormalMordelAtlas, FightViewSpriteAb.TowerCanClickAsset(towerId, false));
+                    Add(FightViewSpriteAb.NormalMordelAtlas, FightViewSpriteAb.TowerCanClickAsset(towerId, true));
                 }
             }
 

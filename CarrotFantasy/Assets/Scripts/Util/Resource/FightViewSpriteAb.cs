@@ -6,7 +6,8 @@ namespace CarrotFantasy
     public static class FightViewSpriteAb
     {
         public const string NormalMordelAtlas = "ui/view/normalmordel/images_atlas";
-        public const string CarrotAtlas = "ui/images/carrot/images_atlas";
+        public const string CarrotAtlas = "fightpart/altassprite/carrot/images_atlas";
+        public const string EffectAtlas = "fightpart/altassprite/effect/images_atlas";
 
         public const string GridNormal = "grid";
         public const string GridStart = "startsprite";
@@ -19,21 +20,34 @@ namespace CarrotFantasy
         public const string PausePlaying = "pause_1";
         public const string PausePaused = "pause_3";
 
-        public const string TowerCanClick0 = "canclick0";
-        public const string TowerCanClick1 = "canclick1";
+        /// <summary>
+        /// 建造按钮精灵：<c>canclicktower_{塔id}_{0不可建|1可建}</c>，
+        /// 放在 <see cref="NormalMordelAtlas"/>。
+        /// </summary>
+        public static string TowerCanClickAsset(int towerId, bool canClick)
+        {
+            return string.Format("canclicktower_{0}_{1}", towerId, canClick ? 1 : 0);
+        }
 
+        /// <summary>塔/子弹帧图：FightPart/AltasSprite/Tower/{towerId}/images_atlas。</summary>
         public static string TowerAtlasBundle(int towerId)
         {
-            return string.Format("ui/images/tower/{0}/images_atlas", towerId);
+            return string.Format("fightpart/altassprite/tower/{0}/images_atlas", towerId);
+        }
+
+        /// <summary>道具图：FightPart/AltasSprite/Items/Level_{bigLevel}/images_atlas。</summary>
+        public static string ItemAtlasBundle(int bigLevel)
+        {
+            return string.Format("fightpart/altassprite/items/level_{0}/images_atlas", bigLevel);
         }
 
         /// <summary>
-        /// 每个怪物独立文件夹后，包名与 PrefabABPathPostprocessor 一致：
-        /// Assets/Game/FightPart/Monster/Monster_{关卡}_{id}/ → fightpart/monster/monster_{关卡}_{id}_prefab
+        /// Assets/Game/FightPart/FightPrefab/Monster/Monster_{关卡}_{id}/
+        /// → fightpart/fightprefab/monster/monster_{关卡}_{id}_prefab
         /// </summary>
         public static string MonsterAnimatorBundle(int bigLevel, int monsterId)
         {
-            return string.Format("fightpart/monster/monster_{0}_{1}_prefab", bigLevel, monsterId);
+            return string.Format("fightpart/fightprefab/monster/monster_{0}_{1}_prefab", bigLevel, monsterId);
         }
 
         /// <summary>控制器资源名与文件夹名一致：Monster_{关卡}_{id}。</summary>
@@ -70,10 +84,12 @@ namespace CarrotFantasy
             return string.Format("ui/sprites/{0}", relPath.ToLowerInvariant());
         }
 
-        /// <summary>小地图 BG/Road 包：Assets/Game/UI/Sprites/GameMap/Level_{bigLevel}/。</summary>
-        public static string MapSpriteBundle(int bigLevel, string assetName)
+        /// <summary>
+        /// 小地图底图和路径：FightPart/Sprites/GameMap/Level_{bigLevel}/ 整层一个包。
+        /// </summary>
+        public static string MapSpriteBundle(int bigLevel)
         {
-            return string.Format("ui/sprites/gamemap/level_{0}/{1}", bigLevel, assetName.ToLowerInvariant());
+            return string.Format("fightpart/sprites/gamemap/level_{0}_prefab", bigLevel);
         }
 
         /// <summary>怪物头像资源名：{monsterId}-1。大关区分放在 Level_{bigLevel} 目录里。</summary>
@@ -82,10 +98,10 @@ namespace CarrotFantasy
             return string.Format("{0}-1", monsterId);
         }
 
-        /// <summary>怪物头像包：Assets/Game/UI/Sprites/Monster/Level_{bigLevel}/{asset}。</summary>
-        public static string MonsterPortraitBundle(int bigLevel, string assetName)
+        /// <summary>怪物帧图集：FightPart/AltasSprite/Monster/Level_{bigLevel}/images_atlas。</summary>
+        public static string MonsterPortraitBundle(int bigLevel)
         {
-            return string.Format("ui/sprites/monster/level_{0}/{1}", bigLevel, assetName.ToLowerInvariant());
+            return string.Format("fightpart/altassprite/monster/level_{0}/images_atlas", bigLevel);
         }
 
         public static bool TryGetNormalMordel(string assetName, out UnityEngine.Sprite sprite)
@@ -101,8 +117,8 @@ namespace CarrotFantasy
         public static bool TryGetTowerButton(int towerId, bool canClick, out UnityEngine.Sprite sprite)
         {
             return BattleViewSpritePreloader.TryGetSprite(
-                TowerAtlasBundle(towerId),
-                canClick ? TowerCanClick1 : TowerCanClick0,
+                NormalMordelAtlas,
+                TowerCanClickAsset(towerId, canClick),
                 out sprite);
         }
     }
