@@ -120,6 +120,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: fightpart/altassprite/effect/images_atlas
+  defaultBundleName: fightpart/fightprefab/destoryeffect_prefab
   defaultAssetName: 1
   _lastRecordedSpriteInstanceId: 29556

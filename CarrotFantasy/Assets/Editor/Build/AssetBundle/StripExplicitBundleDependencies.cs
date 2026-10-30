@@ -12,7 +12,7 @@ using UnityEngine;
 /// <summary>
 /// 放在依赖计算之后、分包之前。
 /// 显式清单里的资源如果被另一个包的资源引用，把它从依赖列表里拿掉。
-/// 贴图和图集一律剔除，不论是否跨包。同一个包里的其它引用保留。
+/// 贴图和图集跨包引用会剔除。已经打进同一个包的帧图和图集保留，动画关键帧才有精灵。
 /// </summary>
 public sealed class StripExplicitBundleDependencies : IBuildTask
 {
@@ -121,6 +121,14 @@ public sealed class StripExplicitBundleDependencies : IBuildTask
     {
         if (IsTextureOrAtlas(referencedGuid))
         {
+            // 帧图和图集已经打进控制器同一个包时，引用必须留下，动画关键帧才有精灵。
+            if (guidToBundle.TryGetValue(referencedGuid, out string textureBundle)
+                && !string.IsNullOrEmpty(ownerBundle)
+                && string.Equals(ownerBundle, textureBundle, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             return true;
         }
 

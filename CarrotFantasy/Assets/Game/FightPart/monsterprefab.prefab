@@ -120,6 +120,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: fightpart/altassprite/monster/level_1/images_atlas
+  defaultBundleName: fightpart/fightprefab/monster/monster_1_1_prefab
   defaultAssetName: 1-1
   _lastRecordedSpriteInstanceId: 31002

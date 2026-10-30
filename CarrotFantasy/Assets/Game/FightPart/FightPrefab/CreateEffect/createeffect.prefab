@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4253597215609656}
   - component: {fileID: 212114373497565236}
   - component: {fileID: 95271558714450792}
-  - component: {fileID: 6737968775038486983}
+  - component: {fileID: -5285292181581856183}
   m_Layer: 0
   m_Name: createeffect
   m_TagString: Untagged
@@ -109,7 +109,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6737968775038486983
+--- !u!114 &-5285292181581856183
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -121,9 +121,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: fightpart/altassprite/effect/images_atlas
+  defaultBundleName: fightpart/fightprefab/createeffect_prefab
   defaultAssetName: items02-hd_116
-  _lastRecordedSpriteInstanceId: 30264
+  _lastRecordedSpriteInstanceId: 32298
 --- !u!1 &1819552006573870
 GameObject:
   m_ObjectHideFlags: 0
@@ -221,6 +221,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: fightpart/altassprite/effect/images_atlas
+  defaultBundleName: fightpart/fightprefab/createeffect_prefab
   defaultAssetName: items02-hd_0
-  _lastRecordedSpriteInstanceId: 30258
+  _lastRecordedSpriteInstanceId: 32300

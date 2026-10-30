@@ -84,12 +84,13 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         // 而「目录带包名」会让它下面所有资源隐式并入该包，造成重复打包。
         bool isRawImage = path.Contains("UI/RawImage") && IsImageFilePath(path);
         bool isSpriteAtlas = path.EndsWith(".spriteatlas");
+        bool isFightPrefabMate = IsFightPrefabBundleMate(path);
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
         bool isImageInAltasSpriteFolder = IsImageInAltasSpriteFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
         bool isImageInSpritesFolder = IsImageInSpritesFolder(path);
         bool useGameFolderRule = UseGameFolderRule(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isImageInImagesFolder || isImageInAltasSpriteFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
+        return isPrefab || isRawImage || isSpriteAtlas || isFightPrefabMate || isImageInImagesFolder || isImageInAltasSpriteFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
     }
 
     private static string BuildAssetBundleName(string path)
@@ -112,6 +113,13 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
 
         if (IsViewLikePrefab(path))
             return normalizedBundleName + "_prefab";
+
+        // FightPrefab 里的动画、图集和同目录控制器打进同一个 _prefab 包。
+        // 动画片段默认不分配包名，不写上的话打包时认不出它和帧图同包，关键帧会被剔掉。
+        if (IsFightPrefabBundleMate(path))
+        {
+            return normalizedBundleName + "_prefab";
+        }
 
         if (path.EndsWith(".spriteatlas"))
         {
@@ -194,6 +202,23 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
     /// <summary>
     /// FightPart/AltasSprite 与 UI/Images 一样：当前层图片打进该层 images_atlas，不各自成包。
     /// </summary>
+    static bool IsFightPrefabBundleMate(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        string normalized = path.Replace('\\', '/');
+        if (normalized.IndexOf("/FightPart/FightPrefab/", System.StringComparison.OrdinalIgnoreCase) < 0)
+        {
+            return false;
+        }
+
+        return normalized.EndsWith(".anim", System.StringComparison.OrdinalIgnoreCase)
+            || normalized.EndsWith(".spriteatlas", System.StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool IsImageInAltasSpriteFolder(string path)
     {
         string normalizedPath = path.Replace('\\', '/');

@@ -98,10 +98,10 @@ namespace CarrotFantasy
             return string.Format("{0}-1", monsterId);
         }
 
-        /// <summary>怪物帧图集：FightPart/AltasSprite/Monster/Level_{bigLevel}/images_atlas。</summary>
-        public static string MonsterPortraitBundle(int bigLevel)
+        /// <summary>怪物帧图和控制器在同一个包里。</summary>
+        public static string MonsterPortraitBundle(int bigLevel, int monsterId)
         {
-            return string.Format("fightpart/altassprite/monster/level_{0}/images_atlas", bigLevel);
+            return MonsterAnimatorBundle(bigLevel, monsterId);
         }
 
         public static bool TryGetNormalMordel(string assetName, out UnityEngine.Sprite sprite)
