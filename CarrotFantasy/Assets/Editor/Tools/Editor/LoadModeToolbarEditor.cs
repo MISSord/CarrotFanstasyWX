@@ -19,7 +19,6 @@ public enum GameLoadMode
 /// </summary>
 public class LoadModeToolbarEditor : EditorWindow
 {
-    private const string PREFS_KEY = "GameLoadMode";
     private GameLoadMode currentMode;
     private Vector2 scrollPosition;
 
@@ -34,7 +33,7 @@ public class LoadModeToolbarEditor : EditorWindow
     private void OnEnable()
     {
         // 加载保存的模式
-        currentMode = (GameLoadMode)EditorPrefs.GetInt(PREFS_KEY, 0);
+        currentMode = (GameLoadMode)EditorPrefs.GetInt(GameRuntimeInfo.LoadModePrefsKey, 0);
     }
 
     private void OnGUI()
@@ -197,7 +196,7 @@ public class LoadModeToolbarEditor : EditorWindow
     private void SetLoadMode(GameLoadMode newMode)
     {
         currentMode = newMode;
-        EditorPrefs.SetInt(PREFS_KEY, (int)newMode);
+        EditorPrefs.SetInt(GameRuntimeInfo.LoadModePrefsKey, (int)newMode);
 
         Debug.Log($"加载模式已切换为: {newMode} (值: {(int)newMode})");
 

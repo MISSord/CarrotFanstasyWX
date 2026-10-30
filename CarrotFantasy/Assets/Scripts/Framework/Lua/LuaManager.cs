@@ -685,13 +685,7 @@ namespace CarrotFantasy
 
         private static bool DetectProjectSourceMode()
         {
-#if UNITY_EDITOR
-            // Development = 0, DebugMode = 4：与 AssetBundleManager 的 LoadMode 语义一致
-            int mode = UnityEditor.EditorPrefs.GetInt("GameLoadMode", 0);
-            return mode == 0 || mode == 4;
-#else
-            return false;
-#endif
+            return GameRuntimeInfo.IsEditorDirectLoad;
         }
     }
 

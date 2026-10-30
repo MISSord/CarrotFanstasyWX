@@ -1,8 +1,5 @@
 using System.IO;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace CarrotFantasy
 {
@@ -24,7 +21,7 @@ namespace CarrotFantasy
             string assetName = Path.GetFileNameWithoutExtension(fileName);
 
 #if UNITY_EDITOR
-            if (ShouldUseEditorGameJsonFiles())
+            if (GameRuntimeInfo.IsEditorDirectLoad)
             {
                 return TryReadEditorLevelFile(fileName);
             }
@@ -45,7 +42,7 @@ namespace CarrotFantasy
         public static string LoadMapConfigJsonText()
         {
 #if UNITY_EDITOR
-            if (ShouldUseEditorGameJsonFiles())
+            if (GameRuntimeInfo.IsEditorDirectLoad)
             {
                 return TryReadEditorMapConfigFile();
             }
@@ -73,12 +70,6 @@ namespace CarrotFantasy
         }
 
 #if UNITY_EDITOR
-        static bool ShouldUseEditorGameJsonFiles()
-        {
-            var loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-            return loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode;
-        }
-
         static string TryReadEditorLevelFile(string fileName)
         {
             string path = Path.Combine(Application.dataPath, "Game", "Json", "Level", fileName);

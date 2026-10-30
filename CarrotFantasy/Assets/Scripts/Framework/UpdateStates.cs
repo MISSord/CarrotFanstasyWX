@@ -1,8 +1,5 @@
 using System;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace CarrotFantasy
 {
@@ -31,7 +28,7 @@ namespace CarrotFantasy
         public StepResult Tick(UpdateContext ctx)
         {
 #if UNITY_EDITOR
-            LoadMode loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
+            LoadMode loadMode = GameRuntimeInfo.CurrentLoadMode;
             Debug.Log("[UpdateFlow] Prepare: LoadMode=" + loadMode + "（菜单 Tools/编辑器/游戏加载模式设置）");
 
             if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)

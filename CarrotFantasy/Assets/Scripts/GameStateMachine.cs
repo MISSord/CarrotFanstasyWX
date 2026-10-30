@@ -1,8 +1,5 @@
 using CarrotFantasy;
 using System.Collections.Generic;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 using UnityEngine;
 
 // 状态机接口（GameState 枚举见 Scripts/Shared/GameState.cs）
@@ -38,10 +35,6 @@ public class GameStateMachine
     private GameContext gameContext;
     private GameMain curMain;
 
-#if UNITY_EDITOR
-    private LoadMode loadMode;
-#endif
-
     public void Init(GameMain main)
     {
         this.curMain = main;
@@ -59,9 +52,6 @@ public class GameStateMachine
         LubanConfigLoader.Reload();
         GameJsonLoader.Reload();
 
-#if UNITY_EDITOR
-        loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-#endif
         ChangeState(GameState.SelectGameMode);
     }
 

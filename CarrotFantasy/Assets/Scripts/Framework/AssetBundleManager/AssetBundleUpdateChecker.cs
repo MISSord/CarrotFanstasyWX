@@ -5,9 +5,6 @@ using System.IO;
 using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.Networking;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 /// <summary>
 /// 单个 AB 在清单中的元数据。
@@ -1328,7 +1325,7 @@ public class AssetBundleUpdateChecker
     /// <summary>Editor 测试模式：启动时预加载本地清单。</summary>
     public static bool TryApplyLocalManifestForStartup()
     {
-        LoadMode loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
+        LoadMode loadMode = GameRuntimeInfo.CurrentLoadMode;
         if (loadMode != LoadMode.Testing)
         {
             return false;

@@ -45,6 +45,14 @@ namespace CarrotFantasy
 #if UNITY_EDITOR
         private void OnValidate()
         {
+            // 播放中预制体来自 AB，贴图引用经常还是空的。
+            // 这时按「当前没有图就清空包名」会抹掉已序列化的 AB 字段，
+            // OnEnable 看到空字段就不再加载。Testing 模式因此不显示。
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+
             EditorRefreshBindingAndPath();
         }
 

@@ -3,9 +3,6 @@ using System.IO;
 using cfg;
 using SimpleJSON;
 using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace CarrotFantasy
 {
@@ -79,7 +76,7 @@ namespace CarrotFantasy
         static string TryLoadFromAssetBundle(string file)
         {
 #if UNITY_EDITOR
-            if (ShouldUseEditorAssetLoader())
+            if (GameRuntimeInfo.IsEditorDirectLoad)
             {
                 TextAsset asset = EditorAssetLoader.LoadAssetAtPath(
                     LubanConfigAbPaths.BundleName,
@@ -138,12 +135,5 @@ namespace CarrotFantasy
             configBundle = null;
         }
 
-#if UNITY_EDITOR
-        static bool ShouldUseEditorAssetLoader()
-        {
-            var loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-            return loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode;
-        }
-#endif
     }
 }

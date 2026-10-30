@@ -314,13 +314,7 @@ namespace CarrotFantasy
                 atlas.BundleName,
                 sprites =>
                 {
-                    bool destroyOnUnload = true;
-#if UNITY_EDITOR
-                    if (AssetBundleManager.Instance != null && AssetBundleManager.Instance.IsEditorDirectLoad)
-                    {
-                        destroyOnUnload = false;
-                    }
-#endif
+                    bool destroyOnUnload = GameRuntimeInfo.UsesAssetBundle;
                     OnAtlasLoadFinished(atlas, sprites, destroyOnUnload);
                 },
                 priority);
@@ -412,10 +406,12 @@ namespace CarrotFantasy
             {
                 foreach (KeyValuePair<string, Sprite> pair in atlas.Sprites)
                 {
-                    if (pair.Value != null)
+                    if (pair.Value == null || GameRuntimeInfo.IsPersistentEditorAsset(pair.Value))
                     {
-                        UnityEngine.Object.Destroy(pair.Value);
+                        continue;
                     }
+
+                    UnityEngine.Object.Destroy(pair.Value);
                 }
             }
 

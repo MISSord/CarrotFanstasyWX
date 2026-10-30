@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 using UnityEngine;
 
 // 加载优先级枚举
@@ -413,19 +410,12 @@ public class AssetBundleManager
     public System.Action<string> OnBundleLoadFailed;
 
 #if UNITY_EDITOR
-    private LoadMode loadMode;
     private List<AssetBaseLoadInfo> assetBaseLoadInfos = new List<AssetBaseLoadInfo>();
-
-    /// <summary>Development/Debug 直读 AssetDatabase，不经真实 AB。</summary>
-    public bool IsEditorDirectLoad =>
-        loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode;
 #endif
 
+    /// <summary>启动入口。加载模式由 <see cref="GameRuntimeInfo"/> 按需读取，这里不再缓存。</summary>
     public void Init()
     {
-#if UNITY_EDITOR
-        loadMode = (LoadMode)EditorPrefs.GetInt("GameLoadMode", 0);
-#endif
     }
 
     /// <summary>卸载内存中的 AB 包并清空清单（清除缓存时调用）。</summary>
@@ -541,7 +531,7 @@ public class AssetBundleManager
         }
 
 #if UNITY_EDITOR
-        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        if (GameRuntimeInfo.IsEditorDirectLoad)
         {
             AssetBaseLoadInfo info = new AssetBaseLoadInfo()
             {
@@ -564,7 +554,7 @@ public class AssetBundleManager
     public int LoadAsset(string bundleName, string assetName, Type assetType, AssetLoadCallback callback, LoadPriority priority = LoadPriority.Medium)
     {
 #if UNITY_EDITOR
-        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        if (GameRuntimeInfo.IsEditorDirectLoad)
         {
             AssetBaseLoadInfo info = new AssetBaseLoadInfo()
             {
@@ -598,7 +588,7 @@ public class AssetBundleManager
         }
 
 #if UNITY_EDITOR
-        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        if (GameRuntimeInfo.IsEditorDirectLoad)
         {
             onComplete?.Invoke(true);
             return;
@@ -697,7 +687,7 @@ public class AssetBundleManager
         }
 
 #if UNITY_EDITOR
-        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        if (GameRuntimeInfo.IsEditorDirectLoad)
         {
             onComplete?.Invoke(EditorAssetLoader.LoadAllAssetsFromBundle<T>(bundleName));
             return;
@@ -975,7 +965,7 @@ public class AssetBundleManager
         }
 
 #if UNITY_EDITOR
-        if (loadMode == LoadMode.Development || loadMode == LoadMode.DebugMode)
+        if (GameRuntimeInfo.IsEditorDirectLoad)
         {
             //目前暂不提供
             return;
@@ -1834,42 +1824,82 @@ public class AssetBundleManager
         LoadBundleWithDependencies(assetItem.bundleName, LoadPriority.Medium);
     }
 
+    /// <summary>
+    /// 短名 LoadAsset 失败时，按主资源文件名再找一次。
+    /// 不能退回「包内任意同类型」：fightpart 这类多预制体包会把第一个 GameObject
+    /// （例如 CoinCanvas）当成 nodeMap 交出去。
+    /// </summary>
     static UnityEngine.Object TryResolveTypedAsset(AssetBundle bundle, string assetName, Type expectedType)
     {
-        if (bundle == null || expectedType == null)
+        if (bundle == null || expectedType == null || string.IsNullOrEmpty(assetName))
         {
             return null;
         }
 
-        UnityEngine.Object[] allAssets = bundle.LoadAllAssets<UnityEngine.Object>();
-        for (int i = 0; i < allAssets.Length; i++)
+        string[] assetPaths = bundle.GetAllAssetNames();
+        for (int i = 0; i < assetPaths.Length; i++)
         {
-            UnityEngine.Object obj = allAssets[i];
-            if (obj != null && obj.name == assetName && expectedType.IsInstanceOfType(obj))
+            string assetPath = assetPaths[i];
+            if (!AssetFileNameEquals(assetPath, assetName))
             {
-                return obj;
+                continue;
+            }
+
+            UnityEngine.Object loaded = bundle.LoadAsset(assetPath, expectedType);
+            if (loaded != null)
+            {
+                return loaded;
             }
         }
 
-        for (int i = 0; i < allAssets.Length; i++)
+        // 子资源（贴图里的 Sprite）只按名字匹配，仍然不接受「任意同类型」。
+        bool allowSubAsset = !IsPrefabRootType(expectedType);
+        if (!allowSubAsset)
         {
-            UnityEngine.Object obj = allAssets[i];
-            if (obj != null && expectedType.IsInstanceOfType(obj))
-            {
-                return obj;
-            }
+            return null;
         }
 
+        UnityEngine.Object[] allAssets = bundle.LoadAllAssets(expectedType);
         for (int i = 0; i < allAssets.Length; i++)
         {
             UnityEngine.Object obj = allAssets[i];
-            if (obj != null && obj.name == assetName)
+            if (obj != null && string.Equals(obj.name, assetName, StringComparison.OrdinalIgnoreCase))
             {
                 return obj;
             }
         }
 
         return null;
+    }
+
+    static bool IsPrefabRootType(Type expectedType)
+    {
+        return expectedType == typeof(GameObject) || typeof(Component).IsAssignableFrom(expectedType);
+    }
+
+    static bool AssetFileNameEquals(string assetPath, string assetName)
+    {
+        if (string.IsNullOrEmpty(assetPath) || string.IsNullOrEmpty(assetName))
+        {
+            return false;
+        }
+
+        int slash = assetPath.LastIndexOf('/');
+        int backslash = assetPath.LastIndexOf('\\');
+        if (backslash > slash)
+        {
+            slash = backslash;
+        }
+
+        int start = slash >= 0 ? slash + 1 : 0;
+        int dot = assetPath.LastIndexOf('.');
+        int length = (dot > start ? dot : assetPath.Length) - start;
+        if (length != assetName.Length)
+        {
+            return false;
+        }
+
+        return string.Compare(assetPath, start, assetName, 0, length, StringComparison.OrdinalIgnoreCase) == 0;
     }
 
     // 将AB包加入加载队列
