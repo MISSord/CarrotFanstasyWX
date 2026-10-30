@@ -37,7 +37,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
             if (string.IsNullOrEmpty(ctx.PlatformPath))
             {
-                return BuildStepResult.Failed("平台输出目录未计算（检查 BuildAndManifestWithSteps）");
+                return BuildStepResult.Failed("平台输出目录未计算（检查 BuildAndManifest）");
             }
 
             return BuildStepResult.Success(ctx.PlatformPath);
@@ -136,7 +136,6 @@ namespace CarrotFantasy.Editor.BuildPipeline
 
             if (sbpResults != null)
             {
-                // 阶段 A：把 SBP 结果带进上下文，清单阶段用它做依赖双算对比。
                 ctx.Set(sbpResults);
             }
 
@@ -154,7 +153,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
                 return BuildStepResult.Failed("AB 输出目录不存在：" + ctx.PlatformPath);
             }
 
-            // 阶段 A：SBP 结果可用时，把 BundleInfos 的直接依赖传给清单阶段做双算对比。
+            // SBP 结果可用时，清单依赖用剔除之后的 BundleInfos，不再另算一套 AssetDatabase 依赖。
             IBundleBuildResults sbpResults = ctx.Get<IBundleBuildResults>();
             Func<string, string[]> dependencyResolver = null;
             if (sbpResults != null && sbpResults.BundleInfos != null)
@@ -312,7 +311,7 @@ namespace CarrotFantasy.Editor.BuildPipeline
         /// 通过 SFTP 把平台目录上传到云服务器（可选）。
         /// <para>
         /// 配置由 Profile 通过 <see cref="BuildContext"/> 注入（<see cref="AbUploadSettings"/>）；
-        /// 未注入或未启用时跳过，不影响命令行/旧窗口的现有行为。
+        /// 未注入或未启用时跳过，不影响命令行打包。
         /// 密码仍沿用本机 EditorPrefs（不进 Git）。
         /// </para>
         /// </summary>
@@ -371,16 +370,13 @@ namespace CarrotFantasy.Editor.BuildPipeline
             }
 
             AssetBundlePackager.ManifestBuildData data = ctx.Get<AssetBundlePackager.ManifestBuildData>();
-            int bundleCount = data != null && data.Manifest != null ? data.Manifest.AssetBundles.Count : 0;
-            int missingCount = data != null && data.MissingOnDisk != null ? data.MissingOnDisk.Count : 0;
+            int bundleCount = data != null && data.Manifest != null && data.Manifest.AssetBundles != null
+                ? data.Manifest.AssetBundles.Count
+                : 0;
 
             EditorUtility.DisplayDialog(
                 "成功",
-                string.Format(
-                    "清单已生成：{0} 个 AB 包（以输出目录实际文件为准）。\n" +
-                    "有资源登记但未构建出文件：{1} 个（详见 Console，多为空文件夹包名或需重新打 AB）。",
-                    bundleCount,
-                    missingCount),
+                "清单已生成：" + bundleCount + " 个 AB 包。",
                 "确定");
 
             return BuildStepResult.Success();

@@ -147,8 +147,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
             }
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("流程", EditorStyles.boldLabel);
-            this.DrawProperty("UseStepPipeline", "使用步骤执行器");
+            EditorGUILayout.LabelField("调试", EditorStyles.boldLabel);
             this.DrawProperty("DryRun", "仅试运行（不落盘）");
             this.DrawProperty("SkipSteps", "跳过步骤（调试）", true);
 

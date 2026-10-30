@@ -78,42 +78,14 @@ public static class AssetBundleBuildPipeline
         };
     }
 
-    private const string UseStepPipelinePrefKey = "AB_UseStepPipeline";
-
     /// <summary>
-    /// 是否用步骤执行器跑 <see cref="BuildAndManifest"/>（默认关闭）。
-    /// <para>
-    /// 命令行 <c>abBuild</c> 不读这个开关，固定走步骤表。Profile 用资产上自己的开关。
-    /// 菜单 <c>Tools/AssetBundle/构建流程</c> 只影响 <see cref="BuildAndManifest"/>。
-    /// </para>
-    /// </summary>
-    public static bool UseStepPipeline
-    {
-        get { return EditorPrefs.GetBool(UseStepPipelinePrefKey, false); }
-        set { EditorPrefs.SetBool(UseStepPipelinePrefKey, value); }
-    }
-
-    /// <summary>
-    /// 按 <see cref="UseStepPipeline"/> 走步骤执行器或旧流程。
-    /// 命令行打包请用 <see cref="BuildAndManifestWithSteps"/>。
-    /// </summary>
-    public static BuildResult BuildAndManifest(BuildRequest request)
-    {
-        return UseStepPipeline
-            ? BuildAndManifestWithSteps(request)
-            : RunLegacyFlow(request);
-    }
-
-    /// <summary>
-    /// 用步骤执行器跑完整流程。
+    /// 用步骤表跑完整流程。
     /// <para>
     /// 步骤列表见 <see cref="AbBuildStepCatalog.Desktop"/>：校验 → 图集/Lua → AB →
     /// 清单数据 → Pack 合并 → JSON → 签名 → version → 拷贝/配置 → 收尾。
-    /// 旧的整体流程保留在 <see cref="RunLegacyFlow"/>，可通过
-    /// <see cref="UseStepPipeline"/> 与步骤版做 A/B 对比。
     /// </para>
     /// </summary>
-    public static BuildResult BuildAndManifestWithSteps(
+    public static BuildResult BuildAndManifest(
         BuildRequest request,
         BuildExecutionOptions options = null,
         System.Action<BuildContext> configureContext = null)
@@ -138,116 +110,5 @@ public static class AssetBundleBuildPipeline
         result.Success = report.Success && result.Success;
         result.PlatformBundlePath = ctx.PlatformPath;
         return result;
-    }
-
-    /// <summary>改造前的整体流程（保持原样，作为基准实现与回退路径）。</summary>
-    internal static BuildResult RunLegacyFlow(BuildRequest request)
-    {
-        var result = new BuildResult();
-        if (string.IsNullOrEmpty(request.OutputRoot))
-        {
-            Debug.LogError("[AB Build] 输出根目录为空。");
-            return result;
-        }
-
-        AssetBundleBuildSettings.SetOutputRoot(request.OutputRoot);
-        AssetBundleBuildSettings.SetBuildTarget(request.BuildTarget);
-        AssetBundleBuildSettings.SetCompressionType(request.Compression);
-
-        // 平台输出目录：{OutputRoot}/{StandaloneWindows|Android|...}
-        // 注意：Win32/Win64 共用 StandaloneWindows，交替打包会互相覆盖。
-        string platformPath = Path.Combine(
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", request.OutputRoot)),
-            AssetBundlePackager.GetPlatformFolder(request.BuildTarget));
-        result.PlatformBundlePath = platformPath;
-
-        // —— 步骤 1：图集 ——
-        if (request.PackAtlasesBeforeBuild)
-        {
-            AtlasPackager.PackForAbBuild();
-        }
-
-        // —— 步骤 1.5：Lua 脚本包 ——
-        // 必须早于 AB 打包：lua_bundle.bytes 是 AB 的一个资产，漏打的话包里是旧脚本，
-        // 症状是「改了 Lua 没生效」，比打包失败难查得多，所以失败即中止整次打包。
-        if (!CarrotFantasy.Editor.LuaBundleBuilder.Build(out string luaSummary))
-        {
-            Debug.LogError("[AB Build] Lua Bundle 打包失败，已中止：\n" + luaSummary);
-            return result;
-        }
-
-        Debug.Log("[AB Build] " + luaSummary.Replace('\n', ' '));
-
-        // —— 步骤 2：打 AB ——
-        // ForceRebuild 只能附加，不能替换压缩选项。
-        BuildAssetBundleOptions options = AssetBundlePackager.GetCompressionOption(request.Compression);
-        if (request.ForceRebuild)
-        {
-            options |= BuildAssetBundleOptions.ForceRebuildAssetBundle;
-        }
-
-        bool built = AssetBundlePackager.BuildAssetBundles(
-            platformPath,
-            request.BuildTarget,
-            options,
-            request.ClearOutputFolder,
-            copyToStreamingAssets: false,
-            backend: request.Backend,
-            sbpResults: out _);
-
-        if (!built)
-        {
-            return result;
-        }
-
-        // —— 步骤 3+4：清单 + Pack 合并——
-        result.Manifest = AssetBundlePackager.GenerateManifest(
-            Path.GetFullPath(Path.Combine(Application.dataPath, "..", request.OutputRoot)),
-            request.BuildTarget,
-            request.ManifestVersion,
-            (int)request.Compression,
-            request.ShowManifestDialog);
-
-        if (result.Manifest == null)
-        {
-            return result;
-        }
-
-        // —— 步骤 5：可选内置包 + 运行时 CDN 配置 ——
-        if (request.CopyToStreamingAssets
-            && !AssetBundlePackager.CopyToStreamingAssets(platformPath, request.BuildTarget))
-        {
-            return result;
-        }
-
-        if (!AssetBundleBuildSettings.WriteRuntimeConfig(request.BuildTarget, request.RuntimeEnv))
-        {
-            Debug.LogError("[AB Build] 写入运行配置失败，已中止。");
-            return result;
-        }
-
-        result.Success = true;
-        return result;
-    }
-}
-
-/// <summary>打包流程相关菜单（步骤执行器开关）。</summary>
-public static class AssetBundleBuildPipelineMenu
-{
-    private const string TogglePath = "Tools/AssetBundle/构建流程/使用步骤执行器（实验）";
-
-    [MenuItem(TogglePath, true)]
-    private static bool ValidateToggle()
-    {
-        Menu.SetChecked(TogglePath, AssetBundleBuildPipeline.UseStepPipeline);
-        return true;
-    }
-
-    [MenuItem(TogglePath, false, 41)]
-    private static void Toggle()
-    {
-        AssetBundleBuildPipeline.UseStepPipeline = !AssetBundleBuildPipeline.UseStepPipeline;
-        Debug.Log("[AB Build] 步骤执行器已"
-                  + (AssetBundleBuildPipeline.UseStepPipeline ? "启用（下次打包走步骤列表）" : "关闭（回到旧的整体流程）"));
     }
 }

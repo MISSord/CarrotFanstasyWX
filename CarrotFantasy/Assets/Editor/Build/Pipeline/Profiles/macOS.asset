@@ -28,6 +28,5 @@ MonoBehaviour:
   ForceRebuild: 0
   PackAtlasesBeforeBuild: 1
   ShowManifestDialog: 1
-  UseStepPipeline: 1
   DryRun: 0
   SkipSteps: []

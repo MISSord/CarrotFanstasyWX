@@ -31,6 +31,5 @@ MonoBehaviour:
   UploadRemotePath: 
   UploadUsePrivateKey: 0
   UploadPrivateKeyPath: 
-  UseStepPipeline: 1
   DryRun: 0
   SkipSteps: []

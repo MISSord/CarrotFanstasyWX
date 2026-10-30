@@ -9,8 +9,7 @@ using UnityEngine;
 /// Editor 侧 AB 构建与清单生成。
 ///
 /// BuildAssetBundles：调用 Unity BuildPipeline，输出到平台目录。
-/// GenerateManifest：以「磁盘上实际存在的 AB 文件」为准写 custom_manifest.json，
-/// 再调用 PackMerger 生成 packs/*.zip 与 DownloadPacks。
+/// 清单由打包步骤分步完成：扫描落盘 AB 写 custom_manifest.json，再合并 packs/*.zip。
 ///
 /// 清单字段与运行时校验的对应关系：
 /// - Size / Hash：构建产物的字节大小与 MD5（下载后二次校验用）
@@ -485,102 +484,6 @@ public static class AssetBundlePackager
     }
 
     /// <summary>
-    /// 生成 custom_manifest.json。
-    ///
-    /// 流程：
-    /// 1. 扫描平台输出目录中的 AB 文件（跳过 .meta/.manifest/.json/.txt、平台总清单文件、packs/）
-    /// 2. 为每个文件写 BundleName / Size / MD5 / 扁平依赖
-    /// 3. 诊断「AssetDatabase 有登记但未落盘」的包（有缺失则中止，不写清单）
-    /// 4. PackMerger 合并 ZIP，填充 DownloadPacks
-    /// 5. 落盘 custom_manifest.json 与 version.txt
-    /// </summary>
-    public static CustomManifest GenerateManifest(
-        string bundleRootPath,
-        BuildTarget target,
-        int versionNumber = 1,
-        int compressedFormat = 0,
-        bool showSuccessDialog = true)
-    {
-        string bundlePath = Path.Combine(bundleRootPath, GetPlatformFolder(target));
-        if (!Directory.Exists(bundlePath))
-        {
-            const string missingMsg = "AB 包目录不存在！";
-            Debug.LogError("[AB Build] " + missingMsg + " path=" + bundlePath);
-            if (showSuccessDialog)
-            {
-                EditorUtility.DisplayDialog("错误", missingMsg, "确定");
-            }
-
-            return null;
-        }
-
-        ManifestBuildData data = BuildManifestData(bundlePath, target, versionNumber, compressedFormat);
-        if (data == null || data.Manifest == null)
-        {
-            return null;
-        }
-
-        if (data.MissingOnDisk != null && data.MissingOnDisk.Count > 0)
-        {
-            string missingMessage = data.MissingOnDisk.Count
-                + " 个已登记的包没有打出文件，已中止写清单。详见 Console。";
-            Debug.LogError("[AB Build] " + missingMessage);
-            if (showSuccessDialog)
-            {
-                EditorUtility.DisplayDialog("清单不完整", missingMessage, "确定");
-            }
-
-            return null;
-        }
-
-        // 合并 Pack 必须在写 JSON 之前，以便 DownloadPacks 一并序列化。
-        AssetBundlePackMerger.BuildPacks(data.Manifest, bundlePath);
-
-        if (!WriteManifestJson(data.Manifest, bundlePath, out string writeError))
-        {
-            Debug.LogError("[AB Build] " + writeError);
-            if (showSuccessDialog)
-            {
-                EditorUtility.DisplayDialog("写入清单失败", writeError, "确定");
-            }
-
-            return null;
-        }
-
-        if (!SignManifestFile(bundlePath, out string signError))
-        {
-            Debug.LogError("[AB Build] " + signError);
-            if (showSuccessDialog)
-            {
-                EditorUtility.DisplayDialog("清单签名失败", signError, "确定");
-            }
-
-            return null;
-        }
-
-        WriteVersionFile(data.Manifest, bundlePath);
-        AssetDatabase.Refresh();
-
-        if (showSuccessDialog)
-        {
-            EditorUtility.DisplayDialog(
-                "成功",
-                string.Format(
-                    "清单已生成：{0} 个 AB 包（以输出目录实际文件为准）。\n" +
-                    "有资源登记但未构建出文件：{1} 个（详见 Console，多为空文件夹包名或需重新打 AB）。",
-                    data.Manifest.AssetBundles.Count,
-                    data.MissingOnDisk.Count),
-                "确定");
-        }
-
-        Debug.Log(string.Format(
-            "[AB Build] custom_manifest.json 已生成：输出目录 {0} 个包，登记但未落盘 {1} 个。",
-            data.Manifest.AssetBundles.Count,
-            data.MissingOnDisk.Count));
-        return data.Manifest;
-    }
-
-    /// <summary>
     /// 清单数据 + 诊断信息。
     /// <para>拆步骤后由 GenerateManifestData / MergePacks / WriteManifestJson 等共享。</para>
     /// </summary>
@@ -628,13 +531,6 @@ public static class AssetBundlePackager
             ? CollectMissingOnDisk(bundlePath, expectedBundleNames)
             : CollectRegisteredButMissingOnDisk(bundlePath);
 
-        // 阶段 A：依赖来源双算（AssetDatabase 为准，SBP 结果只用于对比报告）。
-        int dependencyDiffCount = 0;
-        int dependencySbpOnlyTotal = 0;
-        int dependencyDbOnlyTotal = 0;
-        var dependencyDiffSamples = new List<string>();
-        const int MaxDependencyDiffSamples = 10;
-
         try
         {
             for (int i = 0; i < bundleFiles.Length; i++)
@@ -673,54 +569,16 @@ public static class AssetBundlePackager
                     Hash = MD5Checker.ComputeFileMD5(file),
                 };
 
-                // GetAssetBundleDependencies(name, true) 本身已是递归的扁平结果，
-                // 不要再对每个依赖递归一次（旧实现是 O(N×D²)，包多时清单阶段明显变慢）。
-                string[] databaseDependencies = CollectFlatDependencies(registeredName);
+                // SBP 依赖已经剔除跨包贴图。没有 SBP 结果时（built-in）才回退到 AssetDatabase。
+                string[] dependencies = sbpDependencyResolver != null
+                    ? CollectFlatFromResolver(registeredName, sbpDependencyResolver)
+                    : CollectFlatDependencies(registeredName);
                 if (expectedBundleNames != null)
                 {
-                    // 过滤掉布局里已不存在的旧包名（被视图包收编的单图包等）。
-                    databaseDependencies = FilterToExpected(databaseDependencies, expectedBundleNames);
+                    dependencies = FilterToExpected(dependencies, expectedBundleNames);
                 }
 
-                info.Dependencies = databaseDependencies;
-
-                // SBP 结果是剔除之后的依赖。AssetDatabase 仍按预制体上的序列化引用计算，
-                // 贴图和图集会被算进去；差异只打日志，清单以 SBP 为准。
-                if (sbpDependencyResolver != null)
-                {
-                    string[] sbpDependencies = CollectFlatFromResolver(registeredName, sbpDependencyResolver);
-                    if (expectedBundleNames != null)
-                    {
-                        sbpDependencies = FilterToExpected(sbpDependencies, expectedBundleNames);
-                    }
-                    if (!SameBundleSet(info.Dependencies, sbpDependencies))
-                    {
-                        DiffBundleSets(
-                            info.Dependencies,
-                            sbpDependencies,
-                            out List<string> dbOnly,
-                            out List<string> sbpOnly);
-
-                        dependencyDiffCount++;
-                        dependencyDbOnlyTotal += dbOnly.Count;
-                        dependencySbpOnlyTotal += sbpOnly.Count;
-
-                        if (dependencyDiffSamples.Count < MaxDependencyDiffSamples)
-                        {
-                            dependencyDiffSamples.Add(string.Format(
-                                "{0}\n    SBP 多 {1} 项{2}\n    DB  多 {3} 项{4}",
-                                bundleKey,
-                                sbpOnly.Count,
-                                FormatDependencySample(sbpOnly, 6),
-                                dbOnly.Count,
-                                FormatDependencySample(dbOnly, 6)));
-                        }
-                    }
-
-                    // 清单记下 SBP 剔除之后的依赖。AssetDatabase 仍按预制体上的序列化引用计算，
-                    // 贴图/图集会被算进去；两边的差异只打日志，不再并回去。
-                    info.Dependencies = sbpDependencies;
-                }
+                info.Dependencies = dependencies;
 
                 generatedManifest.AssetBundles.Add(info);
             }
@@ -729,13 +587,6 @@ public static class AssetBundlePackager
         {
             EditorUtility.ClearProgressBar();
         }
-
-        LogDependencySourceDiff(
-            dependencyDiffCount,
-            dependencySbpOnlyTotal,
-            dependencyDbOnlyTotal,
-            dependencyDiffSamples,
-            sbpDependencyResolver != null);
 
         LogMissingOnDiskSummary(missingOnDisk);
 
@@ -820,14 +671,8 @@ public static class AssetBundlePackager
         Directory.Delete(outputPath, true);
         return true;
     }
-    /// <summary>
-    /// 已在 AssetDatabase 登记且仍有关联资源，但输出目录找不到对应 AB 文件。
-    /// 不含「无资源引用的历史包名」（已由 RemoveUnusedAssetBundleNames 清理）。
-    /// </summary>
-    /// <summary>
-    /// 用「每个包的直接依赖」解析器递归展开成扁平集合（去重、排序）。
-    /// <para>阶段 A 用 SBP 的 BundleInfos 做对比；阶段 C 可直接作为清单依赖来源。</para>
-    /// </summary>
+
+    /// <summary>用「每个包的直接依赖」解析器递归展开成扁平集合（去重、排序）。</summary>
     private static string[] CollectFlatFromResolver(string bundleName, Func<string, string[]> resolve)
     {
         if (resolve == null)
@@ -877,56 +722,6 @@ public static class AssetBundlePackager
         return result.ToArray();
     }
 
-    private static bool SameBundleSet(string[] a, string[] b)
-    {
-        string[] left = a ?? Array.Empty<string>();
-        string[] right = b ?? Array.Empty<string>();
-        if (left.Length != right.Length)
-        {
-            return false;
-        }
-
-        for (int i = 0; i < left.Length; i++)
-        {
-            if (!string.Equals(left[i], right[i], StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static void LogDependencySourceDiff(
-        int diffCount,
-        int sbpOnlyTotal,
-        int dbOnlyTotal,
-        List<string> samples,
-        bool resolverUsed)
-    {
-        if (!resolverUsed)
-        {
-            return;
-        }
-
-        if (diffCount == 0)
-        {
-            Debug.Log("[AB Build] 依赖来源对比：AssetDatabase 与 SBP BundleInfos 完全一致。");
-            return;
-        }
-
-        string detail = samples != null && samples.Count > 0
-            ? "\n  " + string.Join("\n  ", samples)
-            : string.Empty;
-        Debug.LogWarning(string.Format(
-            "[AB Build] 依赖来源对比：{0} 个包的依赖不一致"
-            + "（SBP 多出 {1} 项，AssetDatabase 多出 {2} 项；清单已取两边并集）。{3}",
-            diffCount,
-            sbpOnlyTotal,
-            dbOnlyTotal,
-            detail));
-    }
-
     /// <summary>只保留布局里实际存在的包名。</summary>
     private static string[] FilterToExpected(string[] dependencies, ISet<string> expected)
     {
@@ -964,81 +759,6 @@ public static class AssetBundlePackager
         return missing;
     }
 
-    /// <summary>两个扁平依赖集合的并集（去重、排序）。</summary>
-    private static string[] UnionSorted(string[] left, string[] right)
-    {
-        var unique = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (left != null)
-        {
-            for (int i = 0; i < left.Length; i++)
-            {
-                unique.Add(left[i]);
-            }
-        }
-
-        if (right != null)
-        {
-            for (int i = 0; i < right.Length; i++)
-            {
-                unique.Add(right[i]);
-            }
-        }
-
-        var result = new List<string>(unique);
-        result.Sort(StringComparer.Ordinal);
-        return result.ToArray();
-    }
-
-    /// <summary>比较两个扁平依赖集合，分别得到「只有 DB 有」与「只有 SBP 有」。</summary>
-    private static void DiffBundleSets(
-        string[] databaseDependencies,
-        string[] sbpDependencies,
-        out List<string> dbOnly,
-        out List<string> sbpOnly)
-    {
-        var dbSet = new HashSet<string>(
-            databaseDependencies ?? Array.Empty<string>(),
-            StringComparer.OrdinalIgnoreCase);
-        var sbpSet = new HashSet<string>(
-            sbpDependencies ?? Array.Empty<string>(),
-            StringComparer.OrdinalIgnoreCase);
-
-        dbOnly = new List<string>();
-        sbpOnly = new List<string>();
-        foreach (string item in dbSet)
-        {
-            if (!sbpSet.Contains(item))
-            {
-                dbOnly.Add(item);
-            }
-        }
-
-        foreach (string item in sbpSet)
-        {
-            if (!dbSet.Contains(item))
-            {
-                sbpOnly.Add(item);
-            }
-        }
-
-        dbOnly.Sort(StringComparer.Ordinal);
-        sbpOnly.Sort(StringComparer.Ordinal);
-    }
-
-    private static string FormatDependencySample(List<string> items, int max)
-    {
-        if (items == null || items.Count == 0)
-        {
-            return string.Empty;
-        }
-
-        int count = Math.Min(max, items.Count);
-        string sample = string.Join(", ", items.GetRange(0, count));
-        return items.Count > count
-            ? "（如 " + sample + " …）"
-            : "（" + sample + "）";
-    }
-
     /// <summary>
     /// 取某个包的直接 + 间接依赖（扁平、去重、排序）。
     /// <para>
@@ -1073,6 +793,10 @@ public static class AssetBundlePackager
         return result.ToArray();
     }
 
+    /// <summary>
+    /// 已在 AssetDatabase 登记且仍有关联资源，但输出目录找不到对应 AB 文件。
+    /// 不含「无资源引用的历史包名」（已由 RemoveUnusedAssetBundleNames 清理）。
+    /// </summary>
     private static List<string> CollectRegisteredButMissingOnDisk(string bundlePath)
     {
         var missing = new List<string>();

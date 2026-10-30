@@ -332,7 +332,7 @@ public static class AssetBundleCloudUploader
         if (hasManifest && !hasSignature)
         {
             error = "清单缺少签名文件 " + ManifestSignature.SignatureFileName
-                    + "：客户端验签会失败。请先执行 AB 打包（GenerateManifest 会自动签名）。";
+                    + "：客户端验签会失败。请先执行 AB 打包（签名是清单步骤的一部分）。";
             return false;
         }
 

@@ -96,9 +96,9 @@ namespace CarrotFantasy.Editor.Batch
                 request.ManifestVersion = AssetBundleBuildSettings.SuggestNextManifestVersion(target);
                 request.RuntimeEnv = options.Env;
 
-                // 命令行固定走步骤表，不读本机 EditorPrefs 里的实验开关。
+                // 命令行和编辑器都走步骤表。
                 AssetBundleBuildPipeline.BuildResult buildResult =
-                    AssetBundleBuildPipeline.BuildAndManifestWithSteps(request);
+                    AssetBundleBuildPipeline.BuildAndManifest(request);
                 if (!buildResult.Success)
                 {
                     message = "AB 打包失败，请查看日志。";

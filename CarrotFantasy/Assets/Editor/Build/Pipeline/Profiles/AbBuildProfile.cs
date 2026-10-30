@@ -56,9 +56,6 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         [Tooltip("私钥文件绝对路径（仅勾选私钥登录时使用）")]
         public string UploadPrivateKeyPath = string.Empty;
 
-        [Tooltip("true = 走步骤执行器；false = 走旧的整体流程（A/B 对比用）")]
-        public bool UseStepPipeline = true;
-
         [Tooltip("只打印将执行的步骤，不真正打包")]
         public bool DryRun = false;
 
@@ -176,17 +173,6 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         {
             AssetBundleBuildPipeline.BuildRequest request = CreateRequest();
 
-            if (!this.UseStepPipeline)
-            {
-                if (this.EnableUpload)
-                {
-                    Debug.LogWarning("[AB Build] 已勾选云上传，但当前 UseStepPipeline=false（旧流程），上传步骤不会执行");
-                }
-
-                Debug.Log("[AB Build] Profile=" + this.name + " 使用旧整体流程执行");
-                return AssetBundleBuildPipeline.RunLegacyFlow(request);
-            }
-
             Debug.Log("[AB Build] Profile=" + this.name
                       + " 使用步骤执行器（" + AbBuildStepCatalog.ForTarget(this.BuildTarget).Count + " 步）");
 
@@ -197,7 +183,7 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 options.DryRun = false;
             }
 
-            return AssetBundleBuildPipeline.BuildAndManifestWithSteps(
+            return AssetBundleBuildPipeline.BuildAndManifest(
                 request,
                 options,
                 ctx => ctx.Set(this.CreateUploadSettings()));
@@ -206,16 +192,9 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
         /// <summary>只打印将执行的步骤（不落盘、不改任何配置）。</summary>
         public void DryRunOnce()
         {
-            if (!this.UseStepPipeline)
-            {
-                Debug.LogWarning("[AB Build] Profile=" + this.name
-                                 + " 当前 UseStepPipeline=false，DryRun 不起作用（旧流程不可拆步预览）");
-                return;
-            }
-
             BuildExecutionOptions options = CreateOptions();
             options.DryRun = true;
-            AssetBundleBuildPipeline.BuildAndManifestWithSteps(
+            AssetBundleBuildPipeline.BuildAndManifest(
                 CreateRequest(),
                 options,
                 ctx => ctx.Set(this.CreateUploadSettings()));
@@ -233,12 +212,11 @@ namespace CarrotFantasy.Editor.BuildPipeline.Profiles
                 : "未启用";
 
             return string.Format(
-                "平台：{0}（{1}）\n清单版本：{2}{3}\n流程：{4} / 后端：{5} / 步骤：{6}\n输出：{7}\n上传：{8}",
+                "平台：{0}（{1}）\n清单版本：{2}{3}\n后端：{4} / 步骤：{5}\n输出：{6}\n上传：{7}",
                 this.BuildTarget,
                 platformFolder,
                 this.ResolveManifestVersion(),
                 this.AutoManifestVersion ? "（自动，不写入资产）" : "（手工）",
-                this.UseStepPipeline ? "步骤执行器" : "旧整体流程",
                 this.Backend == AbBuildBackend.ScriptableBuildPipeline
                     ? "SBP/" + this.Layout
                     : "built-in/" + this.Layout,
