@@ -4,6 +4,8 @@
 /CarrotFantasy/[Oo]bj/
 /CarrotFantasy/[Bb]uild/
 /CarrotFantasy/[Bb]uilds/
+# 仓库根目录的 PC 播放器输出，和 Unity 工程里的 CarrotFantasy/Build 不是同一个目录。
+/Build/
 /CarrotFantasy/[Ll]ogs/
 /CarrotFantasy/[Uu]ser[Ss]ettings/
 /CarrotFantasy/[Mm]emoryCaptures/
