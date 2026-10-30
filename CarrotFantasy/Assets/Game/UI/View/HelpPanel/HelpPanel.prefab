@@ -91,7 +91,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_29
-  _lastRecordedSpriteInstanceId: 28878
+  _lastRecordedSpriteInstanceId: 48966
 --- !u!1 &1096053440259920
 GameObject:
   m_ObjectHideFlags: 0
@@ -240,7 +240,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_66
-  _lastRecordedSpriteInstanceId: 28894
+  _lastRecordedSpriteInstanceId: 48978
 --- !u!1 &1126502066027536
 GameObject:
   m_ObjectHideFlags: 0
@@ -428,7 +428,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_4
-  _lastRecordedSpriteInstanceId: 28888
+  _lastRecordedSpriteInstanceId: 48962
 --- !u!1 &1173817160087248
 GameObject:
   m_ObjectHideFlags: 0
@@ -520,7 +520,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_65
-  _lastRecordedSpriteInstanceId: 28892
+  _lastRecordedSpriteInstanceId: 48976
 --- !u!1 &1228428397461938
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,7 +669,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_33
-  _lastRecordedSpriteInstanceId: 28882
+  _lastRecordedSpriteInstanceId: 48968
 --- !u!1 &1249373743607816
 GameObject:
   m_ObjectHideFlags: 0
@@ -705,10 +705,10 @@ RectTransform:
   m_Father: {fileID: 224565254840281572}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 2650, y: -350}
-  m_SizeDelta: {x: 1400, y: 500}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222471970703001790
 CanvasRenderer:
@@ -759,7 +759,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/help_3-hd_2
   defaultAssetName: help_3-hd_2
-  _lastRecordedTextureInstanceId: 31946
+  _lastRecordedTextureInstanceId: 48362
 --- !u!1 &1310109745461166
 GameObject:
   m_ObjectHideFlags: 0
@@ -993,7 +993,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_1
-  _lastRecordedSpriteInstanceId: 28872
+  _lastRecordedSpriteInstanceId: 48956
 --- !u!1 &1341220002125472
 GameObject:
   m_ObjectHideFlags: 0
@@ -1009,7 +1009,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &224538155856256504
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1180,7 +1180,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_71
-  _lastRecordedSpriteInstanceId: 28898
+  _lastRecordedSpriteInstanceId: 48982
 --- !u!1 &1419372558023622
 GameObject:
   m_ObjectHideFlags: 0
@@ -1272,7 +1272,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_2
-  _lastRecordedSpriteInstanceId: 28876
+  _lastRecordedSpriteInstanceId: 48958
 --- !u!1 &1431538199427090
 GameObject:
   m_ObjectHideFlags: 0
@@ -1308,10 +1308,10 @@ RectTransform:
   m_Father: {fileID: 224565254840281572}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 850, y: -350}
-  m_SizeDelta: {x: 1400, y: 500}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222503463151508650
 CanvasRenderer:
@@ -1362,7 +1362,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/help_3-hd_6
   defaultAssetName: help_3-hd_6
-  _lastRecordedTextureInstanceId: 31962
+  _lastRecordedTextureInstanceId: 48370
 --- !u!1 &1436866944990142
 GameObject:
   m_ObjectHideFlags: 0
@@ -1454,7 +1454,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_50
-  _lastRecordedSpriteInstanceId: 28890
+  _lastRecordedSpriteInstanceId: 48974
 --- !u!1 &1471294299400624
 GameObject:
   m_ObjectHideFlags: 0
@@ -1546,7 +1546,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_3
-  _lastRecordedSpriteInstanceId: 28880
+  _lastRecordedSpriteInstanceId: 48960
 --- !u!1 &1480662271311996
 GameObject:
   m_ObjectHideFlags: 0
@@ -1638,7 +1638,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_73
-  _lastRecordedSpriteInstanceId: 28900
+  _lastRecordedSpriteInstanceId: 48984
 --- !u!1 &1604733542722492
 GameObject:
   m_ObjectHideFlags: 0
@@ -1665,7 +1665,7 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1604733542722492}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1674,10 +1674,10 @@ RectTransform:
   m_Father: {fileID: 224862192594068430}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 17, y: -580.00366}
-  m_SizeDelta: {x: 1635.7, y: 92.7}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 56}
+  m_SizeDelta: {x: 1635, y: 93}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222111009517111088
 CanvasRenderer:
@@ -1731,7 +1731,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_0
-  _lastRecordedSpriteInstanceId: 28870
+  _lastRecordedSpriteInstanceId: 48954
 --- !u!1 &1613552451863066
 GameObject:
   m_ObjectHideFlags: 0
@@ -1888,7 +1888,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_29
-  _lastRecordedSpriteInstanceId: 28878
+  _lastRecordedSpriteInstanceId: 48966
 --- !u!1 &1646537818593230
 GameObject:
   m_ObjectHideFlags: 0
@@ -2020,10 +2020,10 @@ RectTransform:
   m_Father: {fileID: 224565254840281572}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 4450, y: -350}
-  m_SizeDelta: {x: 1400, y: 500}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222696617106732076
 CanvasRenderer:
@@ -2074,7 +2074,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/help_3-hd_5
   defaultAssetName: help_3-hd_5
-  _lastRecordedTextureInstanceId: 31958
+  _lastRecordedTextureInstanceId: 48368
 --- !u!1 &1682778628637486
 GameObject:
   m_ObjectHideFlags: 0
@@ -2166,7 +2166,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_14
-  _lastRecordedSpriteInstanceId: 28874
+  _lastRecordedSpriteInstanceId: 48964
 --- !u!1 &1683178934928932
 GameObject:
   m_ObjectHideFlags: 0
@@ -2202,10 +2202,10 @@ RectTransform:
   m_Father: {fileID: 224565254840281572}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 6250, y: -350}
-  m_SizeDelta: {x: 1400, y: 500}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222972023208013292
 CanvasRenderer:
@@ -2256,7 +2256,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/help_3-hd_1
   defaultAssetName: help_3-hd_1
-  _lastRecordedTextureInstanceId: 31942
+  _lastRecordedTextureInstanceId: 48360
 --- !u!1 &1726779215702650
 GameObject:
   m_ObjectHideFlags: 0
@@ -2405,7 +2405,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_67
-  _lastRecordedSpriteInstanceId: 28896
+  _lastRecordedSpriteInstanceId: 48980
 --- !u!1 &1730390291549424
 GameObject:
   m_ObjectHideFlags: 0
@@ -2573,7 +2573,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &224862192594068430
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2686,7 +2686,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_3
-  _lastRecordedSpriteInstanceId: 28880
+  _lastRecordedSpriteInstanceId: 48960
 --- !u!1 &1910823000816676
 GameObject:
   m_ObjectHideFlags: 0
@@ -2778,7 +2778,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_39
-  _lastRecordedSpriteInstanceId: 28886
+  _lastRecordedSpriteInstanceId: 48972
 --- !u!1 &1911574850385776
 GameObject:
   m_ObjectHideFlags: 0
@@ -2867,7 +2867,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/help_3-hd_4
   defaultAssetName: help_3-hd_4
-  _lastRecordedTextureInstanceId: 31954
+  _lastRecordedTextureInstanceId: 48366
 --- !u!1 &1986800832740120
 GameObject:
   m_ObjectHideFlags: 0
@@ -2906,7 +2906,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
   m_AnchoredPosition: {x: 0, y: 56}
-  m_SizeDelta: {x: 1635.7, y: 93}
+  m_SizeDelta: {x: 1635, y: 93}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222849394547330786
 CanvasRenderer:
@@ -2960,7 +2960,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/helppanel/images_atlas
   defaultAssetName: help_1-hd_0
-  _lastRecordedSpriteInstanceId: 28870
+  _lastRecordedSpriteInstanceId: 48954
 --- !u!1 &1995230440788802
 GameObject:
   m_ObjectHideFlags: 0
@@ -3081,7 +3081,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/help_3-hd_0
   defaultAssetName: help_3-hd_0
-  _lastRecordedTextureInstanceId: 31938
+  _lastRecordedTextureInstanceId: 48358
 --- !u!1 &1073441487524267667
 GameObject:
   m_ObjectHideFlags: 0

@@ -88,7 +88,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/themescene2_1
   defaultAssetName: themescene2_1
-  _lastRecordedTextureInstanceId: 54688
+  _lastRecordedTextureInstanceId: 48300
 --- !u!1 &9098207798166842383
 GameObject:
   m_ObjectHideFlags: 0
@@ -424,9 +424,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00f1aa27af088ff4abb338b6bdfa6e8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultBundleName: ui/view/gameoption2/images_atlas
+  defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: items03-hd.pvr_0
-  _lastRecordedSpriteInstanceId: 54692
+  _lastRecordedSpriteInstanceId: 48992
 --- !u!1 &9098662794295679887
 GameObject:
   m_ObjectHideFlags: 0
@@ -518,7 +518,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_9
-  _lastRecordedSpriteInstanceId: 54694
+  _lastRecordedSpriteInstanceId: 49106
 --- !u!1 &9098697560849737987
 GameObject:
   m_ObjectHideFlags: 0
@@ -610,4 +610,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/view/gameoption/images_atlas
   defaultAssetName: themescene1-hd_10
-  _lastRecordedSpriteInstanceId: 54690
+  _lastRecordedSpriteInstanceId: 49108
