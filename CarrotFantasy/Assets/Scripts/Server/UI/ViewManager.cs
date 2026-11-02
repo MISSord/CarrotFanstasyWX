@@ -19,6 +19,27 @@ public class ViewManager
         get { return _instance; }
     }
 
+    /// <summary>是否已完成 <see cref="Init"/>（字典与 UI 根已就绪）。</summary>
+    public bool IsInitialized
+    {
+        get { return viewDic != null; }
+    }
+
+    /// <summary>
+    /// 确保 UI 骨架已初始化。启动画面需要在热更检查前打开，而业务 View 的注册
+    /// 仍在热更之后，所以允许提前建好 ViewManager；重复调用不会重建。
+    /// </summary>
+    public static ViewManager EnsureInitialized()
+    {
+        if (_instance == null || !_instance.IsInitialized)
+        {
+            new ViewManager();
+            _instance.Init();
+        }
+
+        return _instance;
+    }
+
     public ViewManager()
     {
         _instance = this;
@@ -198,6 +219,19 @@ public class ViewManager
     public void OpenView<T>() where T : BaseView
     {
         OpenView(typeof(T));
+    }
+
+    /// <summary>按类型取已注册的 View；未注册返回 false。</summary>
+    public bool TryGetView<T>(out T view) where T : BaseView
+    {
+        view = null;
+        if (viewTypeDic == null || !viewTypeDic.TryGetValue(typeof(T), out BaseView found))
+        {
+            return false;
+        }
+
+        view = found as T;
+        return view != null;
     }
 
     public void CloseView<T>() where T : BaseView

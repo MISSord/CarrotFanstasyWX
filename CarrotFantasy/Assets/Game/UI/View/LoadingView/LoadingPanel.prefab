@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3021306571434929658}
   - component: {fileID: 7217199203931643267}
   - component: {fileID: 6234531827530271146}
+  - component: {fileID: 2420740228359626186}
   m_Layer: 5
   m_Name: LoadingPanel
   m_TagString: Untagged
@@ -88,4 +89,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultBundleName: ui/rawimages/loadbg
   defaultAssetName: loadbg
-  _lastRecordedTextureInstanceId: 32014
+--- !u!114 &2420740228359626186
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3021306571434929663}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 110b7a889f12a064eb2672908c3b2f3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  uiEntries: []

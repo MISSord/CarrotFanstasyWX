@@ -28,6 +28,7 @@ namespace CarrotFantasy
             base.LoadModule();
             this.InitGlobalCanvas();
             this.InitAudioManager();
+            this.AddLoadingPanel();
         }
 
         /// <summary>清单就绪后再加载 Tip 等全局 AB UI（避免早于 SetAssetBundleItem）。</summary>
@@ -47,9 +48,18 @@ namespace CarrotFantasy
             this.AddTipPanel();
         }
 
+        /// <summary>注册切场景用的 LoadingPanel（场景切换期间由 SceneServer 开/关）。</summary>
         private void AddLoadingPanel()
         {
+            if (ViewManager.Instance == null)
+            {
+                return;
+            }
 
+            if (!ViewManager.Instance.TryGetView<LoadingView>(out LoadingView _))
+            {
+                new LoadingView().RegisterData();
+            }
         }
 
         public void ShowTip(String tip)
@@ -86,12 +96,23 @@ namespace CarrotFantasy
 
         public void ShowLoadingPanel()
         {
-            //this.loadingPanelObject.SetActive(true);
+            if (ViewManager.Instance == null
+                || !ViewManager.Instance.TryGetView<LoadingView>(out LoadingView _))
+            {
+                return;
+            }
+
+            ViewManager.Instance.OpenView<LoadingView>();
         }
 
         public void FadeLoadingPanel()
         {
-            //this.loadingPanelObject.SetActive(false);
+            if (ViewManager.Instance == null)
+            {
+                return;
+            }
+
+            ViewManager.Instance.CloseView<LoadingView>();
         }
 
         private void AddTipPanel()

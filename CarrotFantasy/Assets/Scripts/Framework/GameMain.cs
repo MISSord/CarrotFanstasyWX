@@ -55,9 +55,38 @@ namespace CarrotFantasy
 
         private void Start()
         {
+            // 热更检查/下载马上开始：先把入口背景打开，检查期间不再黑屏。
+            // 放在 updateFlow.Start() 之前，保证界面先于检查出现。
+            this.ShowStartLoadPanelBeforeUpdate();
+
             // 创建并启动状态机；之后由 Update 每帧 Tick，不再用协程编排更新流程。
             this.updateFlow = AotResourceUpdateRunner.CreateFlow(this);
             this.updateFlow.Start();
+        }
+
+        /// <summary>
+        /// 在资源/热更检查开始前打开 StartLoadPanel。
+        /// <para>
+        /// 正常流程里 ViewManager 与 StartLoadPanel 都要等热更完成后才初始化，
+        /// 这里提前建好 UI 骨架并注册启动面板；失败只记日志，不能阻断更新流程。
+        /// </para>
+        /// </summary>
+        private void ShowStartLoadPanelBeforeUpdate()
+        {
+            try
+            {
+                ViewManager viewManager = ViewManager.EnsureInitialized();
+                if (!viewManager.TryGetView<StartLoadPanel>(out StartLoadPanel _))
+                {
+                    new StartLoadPanel().RegisterData();
+                }
+
+                viewManager.OpenView<StartLoadPanel>();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("[GameMain] 提前打开 StartLoadPanel 失败，继续热更流程: " + e);
+            }
         }
 
         private void Update()

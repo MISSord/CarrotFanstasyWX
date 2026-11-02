@@ -25,8 +25,19 @@ namespace CarrotFantasy
             helpPanel = UseLuaHelpPanel ? (BaseView)new LuaHelpPanelView() : new HelpPanel();
             helpPanel.RegisterData();
 
-            startLoadPanel = new StartLoadPanel();
-            startLoadPanel.RegisterData();
+            // StartLoadPanel 可能在热更检查前就由 GameMain 提前注册并打开了，
+            // 这里优先复用，避免重复 RegisterView 报错。
+            startLoadPanel = null;
+            if (ViewManager.Instance != null)
+            {
+                ViewManager.Instance.TryGetView<StartLoadPanel>(out startLoadPanel);
+            }
+
+            if (startLoadPanel == null)
+            {
+                startLoadPanel = new StartLoadPanel();
+                startLoadPanel.RegisterData();
+            }
         }
 
     }

@@ -132,6 +132,9 @@ namespace CarrotFantasy
 
         IEnumerator LoadSceneRoutine(BaseSceneType sceneType, Dictionary<String, dynamic> param, Action<bool> onComplete)
         {
+            // 首次进 MainScene 时启动画面（StartLoadPanel）还在，不需要再盖一层 LoadingPanel；
+            // 只在从已有场景切走时显示。
+            bool showLoadingPanel = this.currentScene != null;
             try
             {
                 if (this.currentScene != null)
@@ -139,12 +142,32 @@ namespace CarrotFantasy
                     this.RemoveScene();
                 }
 
+                if (showLoadingPanel)
+                {
+                    // 必须放在 RemoveScene 之后：RemoveScene 会 CloseAllPanel，
+                    // 先开的话 LoadingPanel 会立刻被一起关掉。
+                    UIServer.Instance.ShowLoadingPanel();
+                }
+
                 bool success = false;
                 yield return this.LoadUnitySceneAndInitRoutine(sceneType, param, result => success = result);
+
+                // 场景对象与 UI 已就绪，先收掉 LoadingPanel，再通知调用方，避免切场景过程露底。
+                if (showLoadingPanel)
+                {
+                    UIServer.Instance.FadeLoadingPanel();
+                    showLoadingPanel = false;
+                }
+
                 onComplete?.Invoke(success);
             }
             finally
             {
+                if (showLoadingPanel)
+                {
+                    UIServer.Instance.FadeLoadingPanel();
+                }
+
                 this.isLoading = false;
                 this.loadRoutine = null;
             }
