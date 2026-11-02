@@ -42,7 +42,8 @@ namespace CarrotFantasy
             // 播放中预制体来自 AB，Sprite 引用经常还是空的。
             // 这时按「当前没有图就清空包名」会抹掉已序列化的 AB 字段，
             // OnEnable 看到空字段就不再加载。Testing 模式因此不显示。
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            // 导入过程中改预制体会让 PrefabImporter 两次导入结果不一致。
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isUpdating)
             {
                 return;
             }
@@ -52,8 +53,8 @@ namespace CarrotFantasy
 
         public bool EditorRefreshBindingAndPath()
         {
-            bool changed = EnsureRendererBinding();
-            changed |= TryAutoRecordPathFromCurrentSprite();
+            EnsureRendererBinding();
+            bool changed = TryAutoRecordPathFromCurrentSprite();
             if (changed)
             {
                 EditorUtility.SetDirty(this);
@@ -101,33 +102,20 @@ namespace CarrotFantasy
                 return false;
             }
 
-            // 图片移动目录后 GUID / Sprite 对象不变，InstanceID 命中不代表包名没变，
-            // 必须比对当前包名与资源名，否则旧 AB 路径不会被纠正。
-            int spriteId = source.GetInstanceID();
+            // InstanceID 每次导入都会变。只拿它做判断、并写回序列化字段，
+            // 会让 PrefabImporter 两次导入结果不一致。包名和资源名没变就不要改预制体。
             string assetName = source.name;
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
-            if (_lastRecordedSpriteInstanceId == spriteId
-                && string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
+            if (string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
                 && string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
             {
                 return false;
             }
 
-            bool changed = false;
-            if (!string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal))
-            {
-                defaultBundleName = newBundleName;
-                changed = true;
-            }
-
-            if (!string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
-            {
-                defaultAssetName = assetName;
-                changed = true;
-            }
-
-            _lastRecordedSpriteInstanceId = spriteId;
-            return changed;
+            defaultBundleName = newBundleName;
+            defaultAssetName = assetName;
+            _lastRecordedSpriteInstanceId = source.GetInstanceID();
+            return true;
         }
 #endif
 

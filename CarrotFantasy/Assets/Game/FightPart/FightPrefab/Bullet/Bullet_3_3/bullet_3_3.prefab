@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4481747683707504}
   - component: {fileID: 212615232984764642}
-  - component: {fileID: 95935002913284804}
   - component: {fileID: 4747136843535457310}
   m_Layer: 0
   m_Name: Bullect
@@ -93,7 +92,7 @@ Animator:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1233806731174938}
+  m_GameObject: {fileID: 1704685091954362}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
   m_Controller: {fileID: 22100000, guid: b4762058679d48d40aaf7f31d0f93f30, type: 2}
@@ -132,6 +131,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4720503877564372}
+  - component: {fileID: 95935002913284804}
   m_Layer: 0
   m_Name: bullet_3_3
   m_TagString: Untagged

@@ -45,7 +45,7 @@ namespace CarrotFantasy
             // 播放中预制体来自 AB，图集 Sprite 引用经常还是空的。
             // 这时按「当前没有图就清空包名」会抹掉已序列化的 AB 字段，
             // OnEnable 看到空字段就不再加载。Testing 模式因此整图空白。
-            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isUpdating)
             {
                 return;
             }
@@ -58,9 +58,8 @@ namespace CarrotFantasy
         /// </summary>
         public bool EditorRefreshBindingAndPath()
         {
-            bool changed = false;
-            changed |= EnsureGraphicBinding();
-            changed |= TryAutoRecordPathFromCurrentGraphic();
+            EnsureGraphicBinding();
+            bool changed = TryAutoRecordPathFromCurrentGraphic();
             if (changed)
             {
                 EditorUtility.SetDirty(this);
@@ -123,33 +122,18 @@ namespace CarrotFantasy
                 return ClearRecordedPath();
             }
 
-            // 注意：把图片移动到别的目录（GUID / Sprite 对象不变）只会换掉 importer 的包名，
-            // InstanceID 仍是旧值。所以不能只凭 InstanceID 命中就跳过，必须同时确认
-            // 当前包名、资源名与已记录的一致；否则移动过目录的图会永远保留旧 AB 路径。
-            int spriteId = sourceAsset.GetInstanceID();
+            // InstanceID 每次导入都会变。包名和资源名没变就不要写回预制体。
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
-            if (_lastRecordedSpriteInstanceId == spriteId
-                && string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
+            if (string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
                 && string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
             {
                 return false;
             }
 
-            bool changed = false;
-            if (!string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal))
-            {
-                defaultBundleName = newBundleName;
-                changed = true;
-            }
-
-            if (!string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
-            {
-                defaultAssetName = assetName;
-                changed = true;
-            }
-
-            _lastRecordedSpriteInstanceId = spriteId;
-            return changed;
+            defaultBundleName = newBundleName;
+            defaultAssetName = assetName;
+            _lastRecordedSpriteInstanceId = sourceAsset.GetInstanceID();
+            return true;
         }
 
         /// <summary>清空已记录的 AB 路径（该图不适合走 AB 加载）。返回是否发生过变更。</summary>
