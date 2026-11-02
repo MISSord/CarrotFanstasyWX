@@ -20,8 +20,6 @@ namespace CarrotFantasy
         private AssetBundleHandle<Sprite> _spriteHandle;
         private AtlasHandle _atlasHandle;
         private int _requestVersion;
-        [SerializeField, HideInInspector]
-        private int _lastRecordedSpriteInstanceId;
 
         private void Reset()
         {
@@ -68,12 +66,6 @@ namespace CarrotFantasy
             if (targetRenderer == null || targetRenderer.sprite == null)
             {
                 bool cleared = false;
-                if (_lastRecordedSpriteInstanceId != 0)
-                {
-                    _lastRecordedSpriteInstanceId = 0;
-                    cleared = true;
-                }
-
                 if (!string.IsNullOrEmpty(defaultBundleName))
                 {
                     defaultBundleName = string.Empty;
@@ -102,8 +94,9 @@ namespace CarrotFantasy
                 return false;
             }
 
-            // InstanceID 每次导入都会变。只拿它做判断、并写回序列化字段，
-            // 会让 PrefabImporter 两次导入结果不一致。包名和资源名没变就不要改预制体。
+            // InstanceID 每次导入都会变，绝对不能写进 prefab：否则 PrefabImporter
+            // 两次导入的 artifact 不一致，Console 会刷 "generated inconsistent result"。
+            // 这里只回填稳定的包名和资源名。
             string assetName = source.name;
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
             if (string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
@@ -114,7 +107,6 @@ namespace CarrotFantasy
 
             defaultBundleName = newBundleName;
             defaultAssetName = assetName;
-            _lastRecordedSpriteInstanceId = source.GetInstanceID();
             return true;
         }
 #endif

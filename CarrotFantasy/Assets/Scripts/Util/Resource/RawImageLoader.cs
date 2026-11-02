@@ -26,8 +26,6 @@ namespace CarrotFantasy
 
         private AssetBundleHandle<Texture> _textureHandle;
         private int _requestVersion = 0;
-        [SerializeField, HideInInspector]
-        private int _lastRecordedTextureInstanceId;
 
         private void Reset()
         {
@@ -82,12 +80,6 @@ namespace CarrotFantasy
             if (sourceAsset == null)
             {
                 bool cleared = false;
-                if (_lastRecordedTextureInstanceId != 0)
-                {
-                    _lastRecordedTextureInstanceId = 0;
-                    cleared = true;
-                }
-
                 if (!string.IsNullOrEmpty(defaultBundleName))
                 {
                     defaultBundleName = string.Empty;
@@ -124,7 +116,9 @@ namespace CarrotFantasy
                 return ClearRecordedPath();
             }
 
-            // InstanceID 每次导入都会变。包名和资源名没变就不要写回预制体。
+            // InstanceID 每次导入都会变，绝对不能写进 prefab：否则 PrefabImporter
+            // 两次导入的 artifact 不一致，Console 会刷 "generated inconsistent result"。
+            // 这里只回填稳定的包名和资源名。
             string newBundleName = importer.assetBundleName.ToLowerInvariant();
             if (string.Equals(defaultBundleName, newBundleName, System.StringComparison.Ordinal)
                 && string.Equals(defaultAssetName, assetName, System.StringComparison.Ordinal))
@@ -134,7 +128,6 @@ namespace CarrotFantasy
 
             defaultBundleName = newBundleName;
             defaultAssetName = assetName;
-            _lastRecordedTextureInstanceId = sourceAsset.GetInstanceID();
             return true;
         }
 
@@ -151,12 +144,6 @@ namespace CarrotFantasy
             if (!string.IsNullOrEmpty(defaultAssetName))
             {
                 defaultAssetName = string.Empty;
-                cleared = true;
-            }
-
-            if (_lastRecordedTextureInstanceId != 0)
-            {
-                _lastRecordedTextureInstanceId = 0;
                 cleared = true;
             }
 

@@ -67,6 +67,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7100000000000011}
   - component: {fileID: 7100000000000021}
+  - component: {fileID: 7495831150005242298}
   m_Layer: 0
   m_Name: Bullect_1
   m_TagString: Untagged
@@ -141,6 +142,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &7495831150005242298
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7100000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: fightpart/altassprite/bullet/bullet_1_3/images_atlas
+  defaultAssetName: id1_7
+  _lastRecordedSpriteInstanceId: 27344
 --- !u!1 &7100000000000002
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,6 +167,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7100000000000012}
   - component: {fileID: 7100000000000022}
+  - component: {fileID: 6544026016648543807}
   m_Layer: 0
   m_Name: Bullect_2
   m_TagString: Untagged
@@ -225,6 +242,21 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &6544026016648543807
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7100000000000002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: fightpart/altassprite/bullet/bullet_1_3/images_atlas
+  defaultAssetName: id1_9
+  _lastRecordedSpriteInstanceId: 27346
 --- !u!1 &7100000000000003
 GameObject:
   m_ObjectHideFlags: 0
@@ -235,6 +267,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7100000000000013}
   - component: {fileID: 7100000000000023}
+  - component: {fileID: 6327362668571807368}
   m_Layer: 0
   m_Name: Bullect_3
   m_TagString: Untagged
@@ -309,3 +342,18 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &6327362668571807368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7100000000000003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 855ecf9c816ff9e4aa1088fa678c5423, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultBundleName: fightpart/altassprite/bullet/bullet_1_3/images_atlas
+  defaultAssetName: id1_19
+  _lastRecordedSpriteInstanceId: 27348
