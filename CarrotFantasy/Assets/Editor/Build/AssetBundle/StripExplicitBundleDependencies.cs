@@ -12,7 +12,9 @@ using UnityEngine;
 /// <summary>
 /// 放在依赖计算之后、分包之前。
 /// 显式清单里的资源如果被另一个包的资源引用，把它从依赖列表里拿掉。
-/// 贴图和图集跨包引用会剔除。已经打进同一个包的帧图和图集保留，动画关键帧才有精灵。
+/// 贴图和图集跨包引用会剔除。已经打进同一个包的帧图和图集保留。
+/// 动画控制器、Override、片段和 Avatar 不能剔：实例化时 Animator 就要解析它们，
+/// 不像贴图可以之后再走 Loader。
 /// </summary>
 public sealed class StripExplicitBundleDependencies : IBuildTask
 {
@@ -32,6 +34,7 @@ public sealed class StripExplicitBundleDependencies : IBuildTask
     public ReturnCode Run()
     {
         TextureOrAtlasCache.Clear();
+        AnimatorAssetCache.Clear();
         var guidToBundle = new Dictionary<GUID, string>();
         foreach (KeyValuePair<string, List<GUID>> bundle in m_Content.BundleLayout)
         {
@@ -116,9 +119,17 @@ public sealed class StripExplicitBundleDependencies : IBuildTask
     }
 
     static readonly Dictionary<GUID, bool> TextureOrAtlasCache = new Dictionary<GUID, bool>();
+    static readonly Dictionary<GUID, bool> AnimatorAssetCache = new Dictionary<GUID, bool>();
 
     static bool ShouldStrip(string ownerBundle, GUID referencedGuid, Dictionary<GUID, string> guidToBundle)
     {
+        // Animator 在 Instantiate 时就要解析控制器和片段。
+        // 贴图可以运行时由 Loader 补，控制器缺了会直接变成 "not valid"。
+        if (IsAnimatorAsset(referencedGuid))
+        {
+            return false;
+        }
+
         if (IsTextureOrAtlas(referencedGuid))
         {
             // 帧图和图集已经打进控制器同一个包时，引用必须留下，动画关键帧才有精灵。
@@ -139,6 +150,27 @@ public sealed class StripExplicitBundleDependencies : IBuildTask
 
         return string.IsNullOrEmpty(ownerBundle)
             || !string.Equals(ownerBundle, referencedBundle, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// 控制器和片段必须随引用方一起进依赖图。
+    /// OverrideController 缺原控制器时 Unity 会判定 invalid，动画直接不播。
+    /// </summary>
+    static bool IsAnimatorAsset(GUID guid)
+    {
+        if (AnimatorAssetCache.TryGetValue(guid, out bool cached))
+        {
+            return cached;
+        }
+
+        string path = AssetDatabase.GUIDToAssetPath(guid);
+        Type mainType = string.IsNullOrEmpty(path) ? null : AssetDatabase.GetMainAssetTypeAtPath(path);
+        bool match = mainType != null
+            && (typeof(RuntimeAnimatorController).IsAssignableFrom(mainType)
+                || typeof(AnimationClip).IsAssignableFrom(mainType)
+                || typeof(Avatar).IsAssignableFrom(mainType));
+        AnimatorAssetCache[guid] = match;
+        return match;
     }
 
     /// <summary>贴图和图集各自有包，引用方不再带着它们。</summary>

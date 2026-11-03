@@ -1375,11 +1375,15 @@ public class AssetBundleUpdateChecker
         }
 
         result.hasChanges = result.bundlesToDownload.Count > 0;
+        string buildRoot = AssetBundlePathHelper.ResolveLocalFilePath(AssetBundlePathHelper.GetServerLoadUrl());
+        string persistentDir = AssetBundlePathHelper.GetPersistentDownloadDirectory();
         Debug.Log(string.Format(
-            "[Testing] 本地清单加载成功：共 {0} 个包，可用 {1} 个，缺失 {2} 个。",
+            "[Testing] 本地清单加载成功：共 {0} 个包，可用 {1} 个，缺失 {2} 个。\nBuild 输出: {3}\n下载缓存(测试模式不优先): {4}",
             manifest.AssetBundles.Count,
             result.upToDateBundles.Count,
-            result.bundlesToDownload.Count));
+            result.bundlesToDownload.Count,
+            buildRoot,
+            persistentDir));
         return true;
     }
 

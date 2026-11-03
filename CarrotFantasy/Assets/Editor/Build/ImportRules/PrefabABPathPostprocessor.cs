@@ -176,12 +176,13 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         bool isRawImage = path.Contains("UI/RawImage") && IsImageFilePath(path);
         bool isSpriteAtlas = path.EndsWith(".spriteatlas");
         bool isFightPrefabMate = IsFightPrefabBundleMate(path);
+        bool isSharedAnimatorAsset = IsSharedAnimatorAsset(path);
         bool isImageInImagesFolder = IsImageInImagesFolder(path);
         bool isImageInAltasSpriteFolder = IsImageInAltasSpriteFolder(path);
         bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
         bool isImageInSpritesFolder = IsImageInSpritesFolder(path);
         bool useGameFolderRule = UseGameFolderRule(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isFightPrefabMate || isImageInImagesFolder || isImageInAltasSpriteFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
+        return isPrefab || isRawImage || isSpriteAtlas || isFightPrefabMate || isSharedAnimatorAsset || isImageInImagesFolder || isImageInAltasSpriteFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
     }
 
     private static string BuildAssetBundleName(string path)
@@ -200,6 +201,9 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         string grouped = TryGetGroupedFightPartBundle(path);
         if (!string.IsNullOrEmpty(grouped))
             return grouped;
+
+        if (IsSharedAnimatorAsset(path))
+            return "animator/shared_prefab";
 
         string bundleName = GenerateBundleNameFromFolder(path);
         if (string.IsNullOrEmpty(bundleName))
@@ -312,7 +316,25 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         }
 
         return normalized.EndsWith(".anim", System.StringComparison.OrdinalIgnoreCase)
+            || normalized.EndsWith(".controller", System.StringComparison.OrdinalIgnoreCase)
+            || normalized.EndsWith(".overrideController", System.StringComparison.OrdinalIgnoreCase)
             || normalized.EndsWith(".spriteatlas", System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>Animator/Shared 下的控制器和片段打进同一个包，Override 才能解析到原控制器。</summary>
+    static bool IsSharedAnimatorAsset(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        string normalized = path.Replace('\\', '/');
+        if (normalized.IndexOf("/Game/Animator/", System.StringComparison.OrdinalIgnoreCase) < 0)
+            return false;
+
+        string extension = Path.GetExtension(normalized);
+        return extension.Equals(".anim", System.StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".controller", System.StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".overrideController", System.StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsImageInAltasSpriteFolder(string path)

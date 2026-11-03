@@ -86,7 +86,7 @@ public class LoadModeToolbarEditor : EditorWindow
         // 中文有字形所以显示正常，因此标签一律只用纯文本。
         DrawModeButton(GameLoadMode.Development, "开发模式", "启用所有调试工具和日志");
         DrawModeButton(GameLoadMode.Production, "生产模式", "优化性能，适合发布版本");
-        DrawModeButton(GameLoadMode.Testing, "测试模式", "Editor 下加载本地 AB 包，不走 AssetDatabase");
+        DrawModeButton(GameLoadMode.Testing, "测试模式", "Editor 下加载刚打的 Build 目录 AB，不走 AssetDatabase");
         DrawModeButton(GameLoadMode.Demo, "演示模式", "平衡性能和功能的演示版本");
         DrawModeButton(GameLoadMode.DebugMode, "调试模式", "详细的调试信息和日志");
 
@@ -146,7 +146,7 @@ public class LoadModeToolbarEditor : EditorWindow
         {
             GameLoadMode.Development => "开发环境，启用所有调试功能",
             GameLoadMode.Production => "生产环境，优化性能禁用调试",
-            GameLoadMode.Testing => "Editor 下走 AB 加载流程：优先 StreamingAssets/Build 本地包，不读 AssetDatabase",
+            GameLoadMode.Testing => "Editor 下走 AB：优先 Build/AssetBundles/{平台}，不读 AssetDatabase，也不优先用 PC 下载缓存",
             GameLoadMode.Demo => "演示环境，平衡性能功能",
             GameLoadMode.DebugMode => "调试环境，详细日志信息",
             _ => "未知模式"

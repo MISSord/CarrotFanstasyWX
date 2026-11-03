@@ -7,9 +7,10 @@ using UnityEngine;
 /// CDN 模板由 Editor 写入 StreamingAssets/ab_runtime_config.json。
 ///
 /// 加载优先级（GetRuntimeLoadPath）：
-/// 1. persistentDataPath/DownloadedAssetBundles/{bundle}
-/// 2. Editor：Build 输出（file:// CDN 模板指向的目录）
-/// 3. StreamingAssets/AssetBundles/{平台}/{bundle}
+/// 1. Editor 测试模式：Build 输出（刚打的包，避免 persistent 里旧下载挡住）
+/// 2. persistentDataPath/DownloadedAssetBundles/{bundle}
+/// 3. Editor 其它模式：Build 输出（file:// CDN 模板指向的目录）
+/// 4. StreamingAssets/AssetBundles/{平台}/{bundle}
 /// </summary>
 public static class AssetBundlePathHelper
 {
@@ -82,6 +83,19 @@ public static class AssetBundlePathHelper
 
         string fileName = GetBundleFileName(bundleName);
 
+#if UNITY_EDITOR
+        // 测试模式要验的是刚打出来的包。persistent 和 PC 端共用 LocalLow，
+        // 若仍优先旧下载，打包后进测试会继续播上一版。
+        if (PreferEditorBuildOutput())
+        {
+            string testingBuildPath = GetBuildOutputBundlePath(bundleName);
+            if (!string.IsNullOrEmpty(testingBuildPath) && File.Exists(testingBuildPath))
+            {
+                return testingBuildPath;
+            }
+        }
+#endif
+
         string persistentPath = GetLocalLZ4Path(fileName);
         if (File.Exists(persistentPath))
         {
@@ -145,6 +159,18 @@ public static class AssetBundlePathHelper
         Initialize();
 
         string fileName = GetBundleFileName(bundleName);
+
+#if UNITY_EDITOR
+        if (PreferEditorBuildOutput())
+        {
+            string testingBuildPath = GetBuildOutputBundlePath(bundleName);
+            if (!string.IsNullOrEmpty(testingBuildPath) && File.Exists(testingBuildPath))
+            {
+                return true;
+            }
+        }
+#endif
+
         if (File.Exists(GetLocalLZ4Path(fileName)))
         {
             return true;
@@ -181,6 +207,14 @@ public static class AssetBundlePathHelper
             GetRuntimePlatformFolder(),
             "custom_manifest.json");
     }
+
+#if UNITY_EDITOR
+    /// <summary>测试模式读刚打的 Build 目录，不读 PC/编辑器共用的下载缓存。</summary>
+    public static bool PreferEditorBuildOutput()
+    {
+        return GameRuntimeInfo.CurrentLoadMode == LoadMode.Testing;
+    }
+#endif
 
     /// <summary>解析 file:// URL 或普通路径为本地文件路径。</summary>
     public static string ResolveLocalFilePath(string pathOrUrl)
