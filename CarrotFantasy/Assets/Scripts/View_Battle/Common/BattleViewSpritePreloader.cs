@@ -39,7 +39,7 @@ namespace CarrotFantasy
             return bundleName.StartsWith("fightpart/altassprite/tower/", StringComparison.OrdinalIgnoreCase)
                 || bundleName.StartsWith("fightpart/altassprite/monster/", StringComparison.OrdinalIgnoreCase)
                 || bundleName.StartsWith("fightpart/altassprite/items/", StringComparison.OrdinalIgnoreCase)
-                || string.Equals(bundleName, FightViewSpriteAb.EffectAtlas, StringComparison.OrdinalIgnoreCase);
+                || bundleName.StartsWith(FightViewSpriteAb.EffectAtlasPrefix, StringComparison.OrdinalIgnoreCase);
         }
 
         public static void Run(BaseBattle battle, Action<bool> onComplete, float timeoutSeconds = BattleViewPreloadWait.DefaultTimeoutSeconds)

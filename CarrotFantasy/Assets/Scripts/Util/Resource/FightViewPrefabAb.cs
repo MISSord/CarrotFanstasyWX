@@ -5,7 +5,7 @@ namespace CarrotFantasy
     /// </summary>
     public static class FightViewPrefabAb
     {
-        public const string FightPartBundle = "fightpart_prefab";
+        public const string FightPartBundle = "fightpart/fightprefab/shared_prefab";
         public const string FightPartItemBundle = "fightpart/fightprefab/item_prefab";
         /// <summary>
         /// TowerList、BtnTowerBuild、HandleTowerCanvas、FightView 已放到 UI/View/NormalMordel，
@@ -13,37 +13,38 @@ namespace CarrotFantasy
         /// </summary>
         public const string FightViewBundle = UiViewAbPaths.NormalMordelPrefab;
         public const string CarrotBundle = "fightpart/fightprefab/carrot_prefab";
-        public const string BuildEffectBundle = "fightpart/fightprefab/buildeffect_prefab";
-        public const string DestoryEffectBundle = "fightpart/fightprefab/destoryeffect_prefab";
+        public const string BuildEffectBundle = "fightpart/fightprefab/effect_prefab";
+        public const string DestoryEffectBundle = "fightpart/fightprefab/effect_prefab";
 
         public static string TowerAssetName(int towerId, int levelIndex) => $"tower_{towerId}_{levelIndex}";
 
         /// <summary>
-        /// Assets/Game/FightPart/FightPrefab/Tower/Tower_{id}_{level}/
-        /// → fightpart/fightprefab/tower/tower_{id}_{level}_prefab
+        /// 同一座塔的三级预制体和动画打在一个包里。
+        /// Assets/Game/FightPart/FightPrefab/Tower/{id}/
+        /// → fightpart/fightprefab/tower/{id}_prefab
         /// </summary>
         public static string TowerBundle(int towerId, int levelIndex) =>
-            $"fightpart/fightprefab/tower/tower_{towerId}_{levelIndex}_prefab";
+            $"fightpart/fightprefab/tower/{towerId}_prefab";
 
         public static string ItemAssetName(int bigLevel, int itemId) => $"item_{bigLevel}_{itemId}";
 
         public static string BulletAssetName(int towerId, int levelIndex) => $"bullet_{towerId}_{levelIndex}";
 
         /// <summary>
-        /// Assets/Game/FightPart/FightPrefab/Bullet/Bullet_{id}_{level}/
-        /// → fightpart/fightprefab/bullet/bullet_{id}_{level}_prefab
+        /// 同一座塔的子弹预制体打在一个包里。
+        /// Assets/Game/FightPart/FightPrefab/Bullet/{id}/
+        /// → fightpart/fightprefab/bullet/{id}_prefab
         /// </summary>
         public static string BulletBundle(int towerId, int levelIndex) =>
-            $"fightpart/fightprefab/bullet/bullet_{towerId}_{levelIndex}_prefab";
+            $"fightpart/fightprefab/bullet/{towerId}_prefab";
 
         public static string EffectAssetName(int towerId) => $"bullecteffect{towerId}";
 
         /// <summary>
-        /// Assets/Game/FightPart/FightPrefab/Effect/BullectEffect{id}/
-        /// → fightpart/fightprefab/effect/bullecteffect{id}_prefab
+        /// 建造、销毁、受击、升级特效共用一个包。预制体文件名仍是 bullecteffect{id}。
         /// </summary>
         public static string EffectBundle(int towerId) =>
-            $"fightpart/fightprefab/effect/bullecteffect{towerId}_prefab";
+            "fightpart/fightprefab/effect_prefab";
 
         public const string BuildEffect = "buildeffect";
         public const string DestoryEffect = "destoryeffect";

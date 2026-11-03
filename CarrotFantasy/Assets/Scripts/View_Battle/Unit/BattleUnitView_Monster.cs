@@ -17,6 +17,8 @@ namespace CarrotFantasy
         private readonly MonsterBuffIconBar buffIconBar = new MonsterBuffIconBar();
         private SpriteRenderer spriteRender;
         private SpriteLoader spriteLoader;
+        private SpriteRenderer[] frameRenderers = System.Array.Empty<SpriteRenderer>();
+        private SpriteLoader[] frameLoaders = System.Array.Empty<SpriteLoader>();
         private Animator animator;
         private static readonly Color NormalSpriteTint = Color.white;
         private static readonly Color StunSpriteTint = new Color(0.72f, 0.72f, 0.78f, 1f);
@@ -27,13 +29,7 @@ namespace CarrotFantasy
         public override void InitTransform(Transform node)
         {
             base.InitTransform(node);
-            this.spriteRender = this.transform.GetComponent<SpriteRenderer>();
-            this.spriteLoader = this.transform.GetComponent<SpriteLoader>();
-            if (this.spriteLoader == null && this.spriteRender != null)
-            {
-                this.spriteLoader = this.transform.gameObject.AddComponent<SpriteLoader>();
-            }
-
+            this.CacheFrames();
             this.animator = this.transform.GetComponent<Animator>();
         }
 
@@ -70,15 +66,12 @@ namespace CarrotFantasy
             base.Init();
             BattleUnit_Monster monster = (BattleUnit_Monster)this.unit;
             int bigLevel = monster.curLevel;
-            string portraitAsset = FightViewSpriteAb.MonsterPortraitAssetName(bigLevel, monster.monsterId);
             string portraitBundle = FightViewSpriteAb.MonsterPortraitBundle(bigLevel, monster.monsterId);
-            if (this.spriteLoader != null)
+            for (int i = 0; i < this.frameLoaders.Length; i++)
             {
-                this.spriteLoader.SetSprite(portraitBundle, portraitAsset);
-            }
-            else if (this.spriteRender != null)
-            {
-                this.spriteRender.sprite = null;
+                this.frameLoaders[i].SetSprite(
+                    portraitBundle,
+                    FightViewSpriteAb.MonsterFrameAssetName(monster.monsterId, i + 1));
             }
 
             this.ApplyMonsterAnimator(monster);
@@ -226,14 +219,13 @@ namespace CarrotFantasy
 
         private void RefreshSpriteTint()
         {
-            if (this.spriteRender == null)
-            {
-                return;
-            }
-
-            this.spriteRender.color = this.buffIconBar.HasCategory(BuffCategory.Stun)
+            Color tint = this.buffIconBar.HasCategory(BuffCategory.Stun)
                 ? StunSpriteTint
                 : NormalSpriteTint;
+            for (int i = 0; i < this.frameRenderers.Length; i++)
+            {
+                this.frameRenderers[i].color = tint;
+            }
         }
 
         private void OnDamageNumber(int damage)
@@ -275,15 +267,48 @@ namespace CarrotFantasy
             this.buffIconBar.ClearAll();
             this.DetachHpBarFromWorldLayer();
             this.worldUiCached = null;
-            if (this.spriteLoader != null)
+            for (int i = 0; i < this.frameLoaders.Length; i++)
             {
-                this.spriteLoader.ReleaseCurrent();
+                this.frameLoaders[i].ReleaseCurrent();
             }
 
             base.ClearUnitInfo();
             this.animator = null;
             this.spriteRender = null;
             this.spriteLoader = null;
+            this.frameRenderers = System.Array.Empty<SpriteRenderer>();
+            this.frameLoaders = System.Array.Empty<SpriteLoader>();
+        }
+
+        private void CacheFrames()
+        {
+            int count = 0;
+            for (int i = 0; i < this.transform.childCount; i++)
+            {
+                if (this.transform.GetChild(i).name.StartsWith("Frame_"))
+                {
+                    count++;
+                }
+            }
+
+            this.frameRenderers = new SpriteRenderer[count];
+            this.frameLoaders = new SpriteLoader[count];
+            int index = 0;
+            for (int i = 0; i < this.transform.childCount; i++)
+            {
+                Transform child = this.transform.GetChild(i);
+                if (!child.name.StartsWith("Frame_"))
+                {
+                    continue;
+                }
+
+                this.frameRenderers[index] = child.GetComponent<SpriteRenderer>();
+                this.frameLoaders[index] = child.GetComponent<SpriteLoader>();
+                index++;
+            }
+
+            this.spriteRender = count > 0 ? this.frameRenderers[0] : null;
+            this.spriteLoader = count > 0 ? this.frameLoaders[0] : null;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -19,7 +20,95 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         if (importer == null)
             return;
 
-        importer.assetBundleName = BuildAssetBundleName(assetPath);
+        // 包名没变就不要写。导入一致性检查会跑两遍，
+        // 中间把同一个包名再赋一次，两次产物的哈希会对不上。
+        string bundleName = BuildAssetBundleName(assetPath);
+        if (!string.Equals(importer.assetBundleName, bundleName, System.StringComparison.Ordinal))
+            importer.assetBundleName = bundleName;
+    }
+
+    /// <summary>
+    /// 返回合包后的 AB 名。不在这些目录里的资源返回 null，继续走原来的按文件夹命名。
+    /// </summary>
+    static string TryGetGroupedFightPartBundle(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return null;
+
+        string normalized = path.Replace('\\', '/');
+        const string prefabMarker = "/FightPart/FightPrefab/";
+        int prefabIndex = normalized.IndexOf(prefabMarker, System.StringComparison.OrdinalIgnoreCase);
+        if (prefabIndex >= 0)
+        {
+            string tail = normalized.Substring(prefabIndex + prefabMarker.Length);
+            // 同一个包只对应一个文件夹。子文件夹可以，同级的 Tower_1_1 和 Tower_1_2 不行。
+            int towerId = ReadGroupId(tail, "Tower/");
+            if (towerId > 0)
+                return "fightpart/fightprefab/tower/" + towerId + "_prefab";
+
+            int bulletId = ReadGroupId(tail, "Bullet/");
+            if (bulletId > 0)
+                return "fightpart/fightprefab/bullet/" + bulletId + "_prefab";
+
+            int monsterLevel = ReadGroupId(tail, "Monster/Level_");
+            if (monsterLevel > 0)
+                return "fightpart/fightprefab/monster/level_" + monsterLevel + "_prefab";
+
+            if (tail.StartsWith("Effect/", System.StringComparison.OrdinalIgnoreCase))
+                return "fightpart/fightprefab/effect_prefab";
+
+            return null;
+        }
+
+        const string atlasMarker = "/FightPart/AltasSprite/";
+        int atlasIndex = normalized.IndexOf(atlasMarker, System.StringComparison.OrdinalIgnoreCase);
+        if (atlasIndex < 0)
+            return null;
+
+        bool isAtlasAsset = IsImageFilePath(path)
+            || normalized.EndsWith(".spriteatlas", System.StringComparison.OrdinalIgnoreCase);
+        if (!isAtlasAsset)
+            return null;
+
+        string atlasTail = normalized.Substring(atlasIndex + atlasMarker.Length);
+        int towerAtlasId = ReadGroupId(atlasTail, "Tower/");
+        if (towerAtlasId > 0)
+            return "fightpart/altassprite/tower/" + towerAtlasId + "/images_atlas";
+
+        int monsterLevelFolder = ReadGroupId(atlasTail, "Monster/Level_");
+        if (monsterLevelFolder > 0)
+            return "fightpart/altassprite/monster/level_" + monsterLevelFolder + "/images_atlas";
+
+        if (atlasTail.StartsWith("Effect/", System.StringComparison.OrdinalIgnoreCase))
+            return "fightpart/altassprite/effect/images_atlas";
+
+        if (atlasTail.StartsWith("Carrot/", System.StringComparison.OrdinalIgnoreCase))
+            return "fightpart/altassprite/carrot/images_atlas";
+
+        return null;
+    }
+
+    static int ReadGroupId(string tail, string prefix)
+    {
+        if (string.IsNullOrEmpty(tail) || !tail.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+            return -1;
+
+        int start = prefix.Length;
+        int end = start;
+        while (end < tail.Length && char.IsDigit(tail[end]))
+            end++;
+
+        if (end == start)
+            return -1;
+
+        if (end < tail.Length)
+        {
+            char next = tail[end];
+            if (next != '_' && next != '/' && next != '.')
+                return -1;
+        }
+
+        return int.Parse(tail.Substring(start, end - start));
     }
 
     private static string GenerateBundleNameFromFolder(string assetPath)
@@ -60,7 +149,9 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
                 AssetImporter importer = AssetImporter.GetAtPath(movedAsset);
                 if (importer != null)
                 {
-                    importer.assetBundleName = BuildAssetBundleName(movedAsset);
+                    string bundleName = BuildAssetBundleName(movedAsset);
+                    if (!string.Equals(importer.assetBundleName, bundleName, System.StringComparison.Ordinal))
+                        importer.assetBundleName = bundleName;
                 }
             }
         }
@@ -104,6 +195,11 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
 
         if (IsLubanConfigJson(path))
             return CarrotFantasy.LubanConfigAbPaths.BundleName;
+
+        // 战斗资源按「一起加载」合并，避免每级塔、每只怪物、每个特效各占一个小包。
+        string grouped = TryGetGroupedFightPartBundle(path);
+        if (!string.IsNullOrEmpty(grouped))
+            return grouped;
 
         string bundleName = GenerateBundleNameFromFolder(path);
         if (string.IsNullOrEmpty(bundleName))

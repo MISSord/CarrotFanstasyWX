@@ -92,22 +92,21 @@ namespace CarrotFantasy
 
             if (hp >= 10)
             {
-                this.animator.enabled = true;
-                this.animator.Play("Idle", 0, 0f);
+                this.sr.enabled = false;
                 if (this.spriteLoader != null)
                 {
                     this.spriteLoader.ReleaseCurrent();
                 }
-                else
-                {
-                    this.sr.sprite = null;
-                }
 
+                this.animator.enabled = true;
+                this.animator.Play("Idle", 0, 0f);
                 this.timeVal = 0f;
                 return;
             }
 
             this.animator.enabled = false;
+            this.SetAttackFramesEnabled(false);
+            this.sr.enabled = true;
             int spriteIndex = hp >= 7 ? 6 : (hp - 1);
             if (spriteIndex < 0)
             {
@@ -130,6 +129,24 @@ namespace CarrotFantasy
             }
         }
 
+        private void SetAttackFramesEnabled(bool enabled)
+        {
+            for (int i = 0; i < this.transform.childCount; i++)
+            {
+                Transform child = this.transform.GetChild(i);
+                if (!child.name.StartsWith("Frame_"))
+                {
+                    continue;
+                }
+
+                SpriteRenderer renderer = child.GetComponent<SpriteRenderer>();
+                if (renderer != null)
+                {
+                    renderer.enabled = enabled;
+                }
+            }
+        }
+
         public void Dispose()
         {
             if (this.dataComponent != null)
@@ -140,6 +157,21 @@ namespace CarrotFantasy
             if (this.spriteLoader != null)
             {
                 this.spriteLoader.ReleaseCurrent();
+            }
+
+            for (int i = 0; i < this.transform.childCount; i++)
+            {
+                Transform child = this.transform.GetChild(i);
+                if (!child.name.StartsWith("Frame_"))
+                {
+                    continue;
+                }
+
+                SpriteLoader loader = child.GetComponent<SpriteLoader>();
+                if (loader != null)
+                {
+                    loader.ReleaseCurrent();
+                }
             }
         }
     }

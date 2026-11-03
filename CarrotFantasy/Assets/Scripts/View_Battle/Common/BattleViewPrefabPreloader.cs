@@ -6,7 +6,7 @@ namespace CarrotFantasy
 {
     /// <summary>
     /// 战斗视图预制体异步预加载。
-    /// 公共包（fightpart_prefab、fightview）跨局保留；塔/子弹/道具按关加载并在离关时释放。
+    /// 公共包（fightpart/fightprefab/shared_prefab、fightview）跨局保留；塔/子弹/道具按关加载并在离关时释放。
     /// 模板经 <see cref="PrefabLoader"/> 的句柄持有，离关时 Release。
     /// </summary>
     public static class BattleViewPrefabPreloader
