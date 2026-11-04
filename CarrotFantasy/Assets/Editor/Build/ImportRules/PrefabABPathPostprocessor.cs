@@ -1,47 +1,133 @@
+using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
+/// <summary>
+/// 导入或移动 Assets 下资源时写入 assetBundleName。
+/// 目录本身绝不写包名，否则子资源会被两个包认领，还会留下清不掉的幽灵包名。
+/// 包名没变就不写，避免导入一致性检查跑两遍时产物哈希对不上。
+/// </summary>
 public class PrefabABPathPostprocessor : AssetPostprocessor
 {
-    /// <summary>Assign assetBundleName for prefab imports under certain UI/Model paths.</summary>
+    const string GameRoot = "Assets/Game";
+    const string LuaScriptBundleName = "lua_scripts";
+    const string SharedAnimatorBundle = "animator/shared_prefab";
+    const string ImagesAtlasSuffix = "/images_atlas";
+
+    static readonly string[] GameFolderExcludedExtensions =
+    {
+        ".meta", ".cs", ".lua", ".unity", ".anim",
+        ".asmdef", ".asmref", ".dll", ".pdb", ".mdb",
+    };
+
     void OnPreprocessAsset()
     {
-        if (!assetPath.StartsWith("Assets/"))
+        if (!assetPath.StartsWith("Assets/", StringComparison.Ordinal))
             return;
 
-        // 目录也会触发本回调。一旦给目录写了包名，会在 GetAllAssetBundleNames() 里
-        // 留下永远清不掉的幽灵包名（如 ui/rawimages_prefab），并可能让子资源被两个包认领。
-        if (AssetDatabase.IsValidFolder(assetPath))
-            return;
+        TryApplyBundleName(assetPath);
+    }
 
-        AssetImporter importer = AssetImporter.GetAtPath(assetPath);
-        if (importer == null)
-            return;
-
-        // 包名没变就不要写。导入一致性检查会跑两遍，
-        // 中间把同一个包名再赋一次，两次产物的哈希会对不上。
-        string bundleName = BuildAssetBundleName(assetPath);
-        if (!string.Equals(importer.assetBundleName, bundleName, System.StringComparison.Ordinal))
-            importer.assetBundleName = bundleName;
+    static void OnPostprocessAllAssets(
+        string[] importedAssets,
+        string[] deletedAssets,
+        string[] movedAssets,
+        string[] movedFromAssetPaths)
+    {
+        for (int i = 0; i < movedAssets.Length; i++)
+            TryApplyBundleName(movedAssets[i]);
     }
 
     /// <summary>
-    /// 返回合包后的 AB 名。不在这些目录里的资源返回 null，继续走原来的按文件夹命名。
+    /// 写入包名。返回是否改了 importer。
+    /// 解析结果为空也会写回去，用来清掉不再适用的旧包名。
     /// </summary>
-    static string TryGetGroupedFightPartBundle(string path)
+    static bool TryApplyBundleName(string path)
+    {
+        if (string.IsNullOrEmpty(path) || AssetDatabase.IsValidFolder(path))
+            return false;
+
+        AssetImporter importer = AssetImporter.GetAtPath(path);
+        if (importer == null)
+            return false;
+
+        string bundleName = ResolveBundleName(path);
+        if (string.Equals(importer.assetBundleName, bundleName, StringComparison.Ordinal))
+            return false;
+
+        importer.assetBundleName = bundleName;
+        return true;
+    }
+
+    /// <summary>
+    /// 按优先级解析包名。空字符串表示这个资源不进 AB。
+    /// 1. 固定名（Lua / Luban / 战斗合包 / 共享动画）
+    /// 2. 目录合包（预制体、控制器、片段 → *_prefab）
+    /// 3. 图集与散图
+    /// 4. Assets/Game 兜底 *_prefab
+    /// </summary>
+    static string ResolveBundleName(string path)
     {
         if (string.IsNullOrEmpty(path))
-            return null;
+            return string.Empty;
 
         string normalized = path.Replace('\\', '/');
-        const string prefabMarker = "/FightPart/FightPrefab/";
-        int prefabIndex = normalized.IndexOf(prefabMarker, System.StringComparison.OrdinalIgnoreCase);
+        string lower = normalized.ToLowerInvariant();
+        string extension = Path.GetExtension(lower);
+
+        if (lower.EndsWith("/lua_bundle.bytes", StringComparison.Ordinal))
+            return LuaScriptBundleName;
+
+        if (extension == ".json" && ContainsIgnoreCase(normalized, "/Config/Luban/"))
+            return CarrotFantasy.LubanConfigAbPaths.BundleName;
+
+        string grouped = TryGetGroupedFightPartBundle(normalized, extension);
+        if (grouped != null)
+            return grouped;
+
+        if (IsSharedAnimatorAsset(normalized, extension))
+            return SharedAnimatorBundle;
+
+        string folder = GetGameRelativeFolder(normalized);
+        if (string.IsNullOrEmpty(folder))
+            return string.Empty;
+
+        string folderLower = folder.ToLowerInvariant();
+
+        if (IsViewLikePrefab(normalized, extension) || IsFightPrefabBundleMate(normalized, extension))
+            return folderLower + "_prefab";
+
+        if (extension == ".spriteatlas")
+            return StripTrailingImagesFolder(folderLower) + "/" + Path.GetFileNameWithoutExtension(lower);
+
+        if (IsAtlasSourceImage(lower, extension))
+            return StripTrailingImagesFolder(folderLower) + ImagesAtlasSuffix;
+
+        if (IsPngJpg(extension) && lower.Contains("/ui/rawimages/"))
+            return "ui/rawimages/" + Path.GetFileNameWithoutExtension(lower);
+
+        if (IsPngJpg(extension) && lower.Contains("/ui/sprites/"))
+            return BuildUiSpritesBundleName(normalized);
+
+        // 父目录 .../monster 与子目录 .../monster/1 不能一个写文件一个写目录，统一加 _prefab。
+        if (UseGameFolderRule(normalized, lower, extension))
+            return folderLower + "_prefab";
+
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// 战斗资源按实际加载范围合包：同一塔/同一关/全部特效各一个包。
+    /// 子文件夹可以，同级的 Tower_1_1 和 Tower_1_2 不行。
+    /// </summary>
+    static string TryGetGroupedFightPartBundle(string normalized, string extension)
+    {
+        const string PrefabMarker = "/FightPart/FightPrefab/";
+        int prefabIndex = normalized.IndexOf(PrefabMarker, StringComparison.OrdinalIgnoreCase);
         if (prefabIndex >= 0)
         {
-            string tail = normalized.Substring(prefabIndex + prefabMarker.Length);
-            // 同一个包只对应一个文件夹。子文件夹可以，同级的 Tower_1_1 和 Tower_1_2 不行。
+            string tail = normalized.Substring(prefabIndex + PrefabMarker.Length);
             int towerId = ReadGroupId(tail, "Tower/");
             if (towerId > 0)
                 return "fightpart/fightprefab/tower/" + towerId + "_prefab";
@@ -54,43 +140,41 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             if (monsterLevel > 0)
                 return "fightpart/fightprefab/monster/level_" + monsterLevel + "_prefab";
 
-            if (tail.StartsWith("Effect/", System.StringComparison.OrdinalIgnoreCase))
+            if (tail.StartsWith("Effect/", StringComparison.OrdinalIgnoreCase))
                 return "fightpart/fightprefab/effect_prefab";
 
             return null;
         }
 
-        const string atlasMarker = "/FightPart/AltasSprite/";
-        int atlasIndex = normalized.IndexOf(atlasMarker, System.StringComparison.OrdinalIgnoreCase);
+        const string AtlasMarker = "/FightPart/AltasSprite/";
+        int atlasIndex = normalized.IndexOf(AtlasMarker, StringComparison.OrdinalIgnoreCase);
         if (atlasIndex < 0)
             return null;
 
-        bool isAtlasAsset = IsImageFilePath(path)
-            || normalized.EndsWith(".spriteatlas", System.StringComparison.OrdinalIgnoreCase);
-        if (!isAtlasAsset)
+        if (!IsAtlasPackable(extension))
             return null;
 
-        string atlasTail = normalized.Substring(atlasIndex + atlasMarker.Length);
+        string atlasTail = normalized.Substring(atlasIndex + AtlasMarker.Length);
         int towerAtlasId = ReadGroupId(atlasTail, "Tower/");
         if (towerAtlasId > 0)
-            return "fightpart/altassprite/tower/" + towerAtlasId + "/images_atlas";
+            return "fightpart/altassprite/tower/" + towerAtlasId + ImagesAtlasSuffix;
 
         int monsterLevelFolder = ReadGroupId(atlasTail, "Monster/Level_");
         if (monsterLevelFolder > 0)
-            return "fightpart/altassprite/monster/level_" + monsterLevelFolder + "/images_atlas";
+            return "fightpart/altassprite/monster/level_" + monsterLevelFolder + ImagesAtlasSuffix;
 
-        if (atlasTail.StartsWith("Effect/", System.StringComparison.OrdinalIgnoreCase))
-            return "fightpart/altassprite/effect/images_atlas";
+        if (atlasTail.StartsWith("Effect/", StringComparison.OrdinalIgnoreCase))
+            return "fightpart/altassprite/effect" + ImagesAtlasSuffix;
 
-        if (atlasTail.StartsWith("Carrot/", System.StringComparison.OrdinalIgnoreCase))
-            return "fightpart/altassprite/carrot/images_atlas";
+        if (atlasTail.StartsWith("Carrot/", StringComparison.OrdinalIgnoreCase))
+            return "fightpart/altassprite/carrot" + ImagesAtlasSuffix;
 
         return null;
     }
 
     static int ReadGroupId(string tail, string prefix)
     {
-        if (string.IsNullOrEmpty(tail) || !tail.StartsWith(prefix, System.StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrEmpty(tail) || !tail.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             return -1;
 
         int start = prefix.Length;
@@ -111,318 +195,144 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         return int.Parse(tail.Substring(start, end - start));
     }
 
-    private static string GenerateBundleNameFromFolder(string assetPath)
+    /// <summary>资源所在目录相对 Assets/Game。不在 Game 下时返回完整目录，供兜底规则使用。</summary>
+    static string GetGameRelativeFolder(string normalizedPath)
     {
-        string directory = Path.GetDirectoryName(assetPath);
-
+        string directory = Path.GetDirectoryName(normalizedPath);
         if (string.IsNullOrEmpty(directory))
             return null;
 
-        // 注意要用 GameRoot + "/" 做前缀：只写 StartsWith("Assets/Game/") 会漏掉
-        // 直接放在 Assets/Game 下的资源（如 URP 管线资产），拼出 assets/game_prefab 这种怪名字。
-        const string GameRoot = "Assets/Game";
         string relativePath = directory.Replace('\\', '/');
-        if (string.Equals(relativePath, GameRoot, System.StringComparison.OrdinalIgnoreCase))
-        {
-            relativePath = string.Empty;
-        }
-        else if (relativePath.StartsWith(GameRoot + "/", System.StringComparison.OrdinalIgnoreCase))
-        {
-            relativePath = relativePath.Substring(GameRoot.Length + 1);
-        }
+        if (string.Equals(relativePath, GameRoot, StringComparison.OrdinalIgnoreCase))
+            return "root_assets";
 
-        if (string.IsNullOrEmpty(relativePath))
-        {
-            relativePath = "root_assets";
-        }
+        if (relativePath.StartsWith(GameRoot + "/", StringComparison.OrdinalIgnoreCase))
+            return relativePath.Substring(GameRoot.Length + 1);
 
         return relativePath;
     }
 
-    /// <summary>Refresh bundle name when a prefab is moved on disk.</summary>
-    static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
+    static string StripTrailingImagesFolder(string folderLower)
     {
-        foreach (string movedAsset in movedAssets)
-        {
-            if (ShouldAssignAssetBundle(movedAsset))
-            {
-                AssetImporter importer = AssetImporter.GetAtPath(movedAsset);
-                if (importer != null)
-                {
-                    string bundleName = BuildAssetBundleName(movedAsset);
-                    if (!string.Equals(importer.assetBundleName, bundleName, System.StringComparison.Ordinal))
-                        importer.assetBundleName = bundleName;
-                }
-            }
-        }
+        const string ImagesFolder = "/images";
+        if (folderLower.EndsWith(ImagesFolder, StringComparison.Ordinal))
+            return folderLower.Substring(0, folderLower.Length - ImagesFolder.Length);
+
+        return folderLower;
     }
 
-    private static bool IsImageFilePath(string path)
+    /// <summary>Assets/Game/UI/Sprites/{rel}/name.png → ui/sprites/{rel}/name</summary>
+    static string BuildUiSpritesBundleName(string normalized)
     {
-        string lower = path.ToLowerInvariant();
-        return lower.EndsWith(".png") || lower.EndsWith(".jpg") || lower.EndsWith(".jpeg")
-            || lower.EndsWith(".tga") || lower.EndsWith(".psd");
+        const string Marker = "/UI/Sprites/";
+        int marker = normalized.IndexOf(Marker, StringComparison.OrdinalIgnoreCase);
+        string rel = marker >= 0
+            ? normalized.Substring(marker + Marker.Length)
+            : normalized;
+        rel = rel.ToLowerInvariant().Replace('\\', '/');
+
+        string imageName = Path.GetFileNameWithoutExtension(rel);
+        string dir = Path.GetDirectoryName(rel);
+        if (string.IsNullOrEmpty(dir))
+            return "ui/sprites/" + imageName;
+
+        return "ui/sprites/" + dir.Replace('\\', '/') + "/" + imageName;
     }
 
-    private static bool ShouldAssignAssetBundle(string path)
+    static bool IsViewLikePrefab(string normalized, string extension)
     {
-        if (string.IsNullOrEmpty(path))
+        if (extension != ".prefab")
             return false;
 
-        bool isPrefab = IsViewLikePrefab(path);
-        // 只对图片文件生效：这是旧的宽松路径判断（UI/RawImage 单数目录）。
-        // 若不限定扩展名，目录（如 UI/RawImages）也会被判成资源并写入包名，
-        // 而「目录带包名」会让它下面所有资源隐式并入该包，造成重复打包。
-        bool isRawImage = path.Contains("UI/RawImage") && IsImageFilePath(path);
-        bool isSpriteAtlas = path.EndsWith(".spriteatlas");
-        bool isFightPrefabMate = IsFightPrefabBundleMate(path);
-        bool isSharedAnimatorAsset = IsSharedAnimatorAsset(path);
-        bool isImageInImagesFolder = IsImageInImagesFolder(path);
-        bool isImageInAltasSpriteFolder = IsImageInAltasSpriteFolder(path);
-        bool isImageInRawImagesFolder = IsImageInRawImagesFolder(path);
-        bool isImageInSpritesFolder = IsImageInSpritesFolder(path);
-        bool useGameFolderRule = UseGameFolderRule(path);
-        return isPrefab || isRawImage || isSpriteAtlas || isFightPrefabMate || isSharedAnimatorAsset || isImageInImagesFolder || isImageInAltasSpriteFolder || isImageInRawImagesFolder || isImageInSpritesFolder || IsLubanConfigJson(path) || useGameFolderRule;
+        return normalized.IndexOf("UI/View", StringComparison.Ordinal) >= 0
+            || normalized.IndexOf("UI/FightPart", StringComparison.Ordinal) >= 0
+            || normalized.IndexOf("Models", StringComparison.Ordinal) >= 0;
     }
 
-    private static string BuildAssetBundleName(string path)
+    static bool IsFightPrefabBundleMate(string normalized, string extension)
     {
-        if (!ShouldAssignAssetBundle(path))
-            return string.Empty;
-
-        // Lua 脚本单独成包：改得最频繁、体积又小，热更时只下这几百 KB，不必动整个 AB。
-        if (IsLuaScriptAsset(path))
-            return LuaScriptBundleName;
-
-        if (IsLubanConfigJson(path))
-            return CarrotFantasy.LubanConfigAbPaths.BundleName;
-
-        // 战斗资源按「一起加载」合并，避免每级塔、每只怪物、每个特效各占一个小包。
-        string grouped = TryGetGroupedFightPartBundle(path);
-        if (!string.IsNullOrEmpty(grouped))
-            return grouped;
-
-        if (IsSharedAnimatorAsset(path))
-            return "animator/shared_prefab";
-
-        string bundleName = GenerateBundleNameFromFolder(path);
-        if (string.IsNullOrEmpty(bundleName))
-            return string.Empty;
-
-        string normalizedBundleName = bundleName.ToLower().Replace('\\', '/');
-
-        if (IsViewLikePrefab(path))
-            return normalizedBundleName + "_prefab";
-
-        // FightPrefab 里的动画、图集和同目录控制器打进同一个 _prefab 包。
-        // 动画片段默认不分配包名，不写上的话打包时认不出它和帧图同包，关键帧会被剔掉。
-        if (IsFightPrefabBundleMate(path))
-        {
-            return normalizedBundleName + "_prefab";
-        }
-
-        if (path.EndsWith(".spriteatlas"))
-        {
-            string atlasBundleRoot = normalizedBundleName;
-            if (atlasBundleRoot.EndsWith("/images"))
-            {
-                atlasBundleRoot = atlasBundleRoot.Substring(0, atlasBundleRoot.Length - "/images".Length);
-            }
-            return atlasBundleRoot + "/" + Path.GetFileNameWithoutExtension(path);
-        }
-
-        if (IsImageInImagesFolder(path) || IsImageInAltasSpriteFolder(path))
-        {
-            string atlasBundleRoot = normalizedBundleName;
-            if (atlasBundleRoot.EndsWith("/images"))
-            {
-                atlasBundleRoot = atlasBundleRoot.Substring(0, atlasBundleRoot.Length - "/images".Length);
-            }
-            return atlasBundleRoot + "/images_atlas";
-        }
-
-        if (IsImageInRawImagesFolder(path))
-        {
-            string imageName = Path.GetFileNameWithoutExtension(path).ToLower();
-            return "ui/rawimages/" + imageName;
-        }
-
-        if (IsImageInSpritesFolder(path))
-        {
-            // Assets/Game/UI/Sprites/{relPath}/name.png -> ui/sprites/{relPath}/name
-            string normalizedPath = path.Replace('\\', '/');
-            int marker = normalizedPath.IndexOf("/UI/Sprites/", System.StringComparison.OrdinalIgnoreCase);
-            string rel = marker >= 0
-                ? normalizedPath.Substring(marker + "/UI/Sprites/".Length)
-                : normalizedPath;
-            rel = rel.ToLowerInvariant();
-            string imageName = Path.GetFileNameWithoutExtension(rel);
-            string dir = Path.GetDirectoryName(rel)?.Replace('\\', '/') ?? string.Empty;
-            return string.IsNullOrEmpty(dir) ? "ui/sprites/" + imageName : "ui/sprites/" + dir + "/" + imageName;
-        }
-
-        // 动画控制器也走下面的 _prefab 约定：若直接返回 normalizedBundleName，
-        // 父目录会得到 .../monster，子目录得到 .../monster/1，
-        // Unity 无法同时在 .../monster 写文件又在 .../monster/ 写目录 → 打包失败。
-        // 加 _prefab 后缀后：.../monster_prefab（文件）与 .../monster/1_prefab（文件）不再冲突。
-        if (UseGameFolderRule(path))
-            return normalizedBundleName + "_prefab";
-
-        string name = normalizedBundleName + "/" + Path.GetFileNameWithoutExtension(path);
-        return name + "_prefab";
-    }
-
-    /// <summary>Lua Bundle 产物归属的 AB 包名；与 LuaBundleReader.BundleName 对应。</summary>
-    private const string LuaScriptBundleName = "lua_scripts";
-
-    /// <summary>
-    /// 只有打包产物 lua_bundle.bytes 进 AB。
-    /// 源码 *.lua 不被 Unity 导入（无 .meta、无资产），因此不会命中这里。
-    /// </summary>
-    private static bool IsLuaScriptAsset(string path)
-    {
-        if (string.IsNullOrEmpty(path))
+        if (normalized.IndexOf("/FightPart/FightPrefab/", StringComparison.OrdinalIgnoreCase) < 0)
             return false;
 
-        string normalizedPath = path.Replace('\\', '/').ToLowerInvariant();
-        return normalizedPath.EndsWith("/lua_bundle.bytes", System.StringComparison.Ordinal);
+        return extension == ".anim"
+            || extension == ".controller"
+            || extension == ".overridecontroller"
+            || extension == ".spriteatlas";
     }
 
-    private static bool IsImageInImagesFolder(string path)
+    static bool IsSharedAnimatorAsset(string normalized, string extension)
     {
-        string normalizedPath = path.ToLower().Replace('\\', '/');
-        bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
-        // Atlas source images only; never treat ui/sprites or ui/rawimages as atlas inputs.
-        return isImage
-               && normalizedPath.Contains("/images/")
-               && !normalizedPath.Contains("/ui/sprites/")
-               && !normalizedPath.Contains("/ui/rawimages/");
+        if (normalized.IndexOf("/Game/Animator/", StringComparison.OrdinalIgnoreCase) < 0)
+            return false;
+
+        return extension == ".anim"
+            || extension == ".controller"
+            || extension == ".overridecontroller";
     }
 
-    /// <summary>
-    /// FightPart/AltasSprite 与 UI/Images 一样：当前层图片打进该层 images_atlas，不各自成包。
-    /// </summary>
-    static bool IsFightPrefabBundleMate(string path)
+    /// <summary>图集源图：当前层 png 打进该层 images_atlas，不各自成包。UI 散图目录除外。</summary>
+    static bool IsAtlasSourceImage(string lower, string extension)
     {
-        if (string.IsNullOrEmpty(path))
-        {
+        if (!IsPngJpg(extension))
             return false;
-        }
 
-        string normalized = path.Replace('\\', '/');
-        if (normalized.IndexOf("/FightPart/FightPrefab/", System.StringComparison.OrdinalIgnoreCase) < 0)
-        {
+        if (lower.Contains("/ui/sprites/") || lower.Contains("/ui/rawimages/"))
             return false;
-        }
 
-        return normalized.EndsWith(".anim", System.StringComparison.OrdinalIgnoreCase)
-            || normalized.EndsWith(".controller", System.StringComparison.OrdinalIgnoreCase)
-            || normalized.EndsWith(".overrideController", System.StringComparison.OrdinalIgnoreCase)
-            || normalized.EndsWith(".spriteatlas", System.StringComparison.OrdinalIgnoreCase);
+        return lower.Contains("/images/")
+            || lower.IndexOf("/fightpart/altassprite/", StringComparison.Ordinal) >= 0;
     }
 
-    /// <summary>Animator/Shared 下的控制器和片段打进同一个包，Override 才能解析到原控制器。</summary>
-    static bool IsSharedAnimatorAsset(string path)
+    static bool UseGameFolderRule(string normalized, string lower, string extension)
     {
-        if (string.IsNullOrEmpty(path))
-            return false;
-
-        string normalized = path.Replace('\\', '/');
-        if (normalized.IndexOf("/Game/Animator/", System.StringComparison.OrdinalIgnoreCase) < 0)
-            return false;
-
-        string extension = Path.GetExtension(normalized);
-        return extension.Equals(".anim", System.StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".controller", System.StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".overrideController", System.StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsImageInAltasSpriteFolder(string path)
-    {
-        string normalizedPath = path.Replace('\\', '/');
-        bool isImage = normalizedPath.EndsWith(".png", System.StringComparison.OrdinalIgnoreCase)
-            || normalizedPath.EndsWith(".jpg", System.StringComparison.OrdinalIgnoreCase)
-            || normalizedPath.EndsWith(".jpeg", System.StringComparison.OrdinalIgnoreCase);
-        return isImage
-            && normalizedPath.IndexOf("/FightPart/AltasSprite/", System.StringComparison.OrdinalIgnoreCase) >= 0;
-    }
-
-    private static bool IsImageInRawImagesFolder(string path)
-    {
-        string normalizedPath = path.ToLower().Replace('\\', '/');
-        bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
-        return isImage && normalizedPath.Contains("/ui/rawimages/");
-    }
-
-    private static bool IsImageInSpritesFolder(string path)
-    {
-        string normalizedPath = path.ToLower().Replace('\\', '/');
-        bool isImage = normalizedPath.EndsWith(".png") || normalizedPath.EndsWith(".jpg") || normalizedPath.EndsWith(".jpeg");
-        return isImage && normalizedPath.Contains("/ui/sprites/");
-    }
-
-    private static bool IsViewLikePrefab(string path)
-    {
-        if (!path.EndsWith(".prefab"))
-            return false;
-
-        return path.Contains("UI/View") || path.Contains("UI/FightPart") || path.Contains("Models");
-    }
-
-    private static bool IsLubanConfigJson(string path)
-    {
-        if (string.IsNullOrEmpty(path) || !path.EndsWith(".json", System.StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        string normalizedPath = path.Replace('\\', '/');
-        return normalizedPath.IndexOf("/Config/Luban/", System.StringComparison.OrdinalIgnoreCase) >= 0;
-    }
-
-    private static bool UseGameFolderRule(string path)
-    {
-        if (string.IsNullOrEmpty(path))
-            return false;
-
-        if (IsLubanConfigJson(path))
-            return false;
-
-        string normalizedPath = path.ToLower().Replace('\\', '/');
-        if (!normalizedPath.StartsWith("assets/game/"))
-            return false;
-
-        string extension = Path.GetExtension(normalizedPath);
         if (string.IsNullOrEmpty(extension))
             return false;
 
-        // Image folders have dedicated naming rules; never fall through to *_prefab.
-        if (IsImageInSpritesFolder(path) || IsImageInRawImagesFolder(path) || IsImageInImagesFolder(path) || IsImageInAltasSpriteFolder(path))
+        if (!lower.StartsWith("assets/game/", StringComparison.Ordinal))
             return false;
 
-        // Skip source/metadata files that should not participate in AB naming.
-        // .unity 必须排除：场景要留在 Build Settings 里由 SceneManager.LoadScene 加载，
-        // 一旦被绑进 AB，既会与 Build Settings 冲突，AB 里的场景也永远加载不到。
-        return extension != ".meta" &&
-               extension != ".cs" &&
-               extension != ".lua" &&
-               extension != ".unity" &&
-               extension != ".anim" &&
-               extension != ".asmdef" &&
-               extension != ".asmref" &&
-               extension != ".dll" &&
-               extension != ".pdb" &&
-               extension != ".mdb";
+        if (extension == ".json" && ContainsIgnoreCase(normalized, "/Config/Luban/"))
+            return false;
+
+        if (IsAtlasSourceImage(lower, extension)
+            || (IsPngJpg(extension) && (lower.Contains("/ui/sprites/") || lower.Contains("/ui/rawimages/"))))
+            return false;
+
+        for (int i = 0; i < GameFolderExcludedExtensions.Length; i++)
+        {
+            if (extension == GameFolderExcludedExtensions[i])
+                return false;
+        }
+
+        return true;
     }
+
+    static bool IsAtlasPackable(string extension)
+    {
+        return IsPngJpg(extension)
+            || extension == ".tga"
+            || extension == ".psd"
+            || extension == ".spriteatlas";
+    }
+
+    static bool IsPngJpg(string extension)
+    {
+        return extension == ".png" || extension == ".jpg" || extension == ".jpeg";
+    }
+
+    static bool ContainsIgnoreCase(string value, string fragment)
+    {
+        return value.IndexOf(fragment, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     /// <summary>
-    /// 按当前规则重新分配 Assets/Game 下所有资源的 AB 包名。
-    /// <para>
-    /// 规则改动后（例如把 .controller 纳入打包），已导入资源的 .meta 里仍是旧包名；
-    /// 逐个目录手动 Reimport 容易漏，这个菜单一次性重算。
-    /// </para>
+    /// 按当前规则重算 Assets/Game 下所有资源的包名。
+    /// 规则改过之后 .meta 里可能还是旧名，这个菜单一次改完，并清掉目录上误写的包名。
     /// </summary>
     [MenuItem("Tools/AssetBundle/重新分配所有资源包名", false, 302)]
     public static void ReassignAllBundleNames()
     {
-        string[] guids = AssetDatabase.FindAssets("t:Object", new[] { "Assets/Game" });
+        string[] guids = AssetDatabase.FindAssets("t:Object", new[] { GameRoot });
         int scanned = 0;
         int changed = 0;
 
@@ -432,23 +342,17 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             for (int i = 0; i < guids.Length; i++)
             {
                 string path = AssetDatabase.GUIDToAssetPath(guids[i]).Replace('\\', '/');
-                if (string.IsNullOrEmpty(path) || AssetDatabase.IsValidFolder(path) || !ShouldAssignAssetBundle(path))
-                {
+                if (string.IsNullOrEmpty(path) || AssetDatabase.IsValidFolder(path))
                     continue;
-                }
-
-                AssetImporter importer = AssetImporter.GetAtPath(path);
-                if (importer == null)
-                {
-                    continue;
-                }
 
                 scanned++;
-                string bundleName = BuildAssetBundleName(path);
-                if (string.Equals(importer.assetBundleName, bundleName, System.StringComparison.Ordinal))
-                {
+                AssetImporter importer = AssetImporter.GetAtPath(path);
+                if (importer == null)
                     continue;
-                }
+
+                string bundleName = ResolveBundleName(path);
+                if (string.Equals(importer.assetBundleName, bundleName, StringComparison.Ordinal))
+                    continue;
 
                 importer.assetBundleName = bundleName;
                 EditorUtility.SetDirty(importer);
@@ -460,10 +364,8 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
             AssetDatabase.StopAssetEditing();
         }
 
-        // 目录本身绝不能有包名：会把它下面所有资源隐式并入该包，造成重复打包。
-        // 这里顺手清掉历史误写（旧规则把 UI/RawImages 这类目录也判成了 rawimage）。
         int clearedFolders = 0;
-        string[] folders = Directory.GetDirectories("Assets/Game", "*", SearchOption.AllDirectories);
+        string[] folders = Directory.GetDirectories(GameRoot, "*", SearchOption.AllDirectories);
         AssetDatabase.StartAssetEditing();
         try
         {
@@ -472,9 +374,7 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
                 string folder = folders[i].Replace('\\', '/');
                 AssetImporter folderImporter = AssetImporter.GetAtPath(folder);
                 if (folderImporter == null || string.IsNullOrEmpty(folderImporter.assetBundleName))
-                {
                     continue;
-                }
 
                 folderImporter.assetBundleName = string.Empty;
                 EditorUtility.SetDirty(folderImporter);
@@ -487,6 +387,6 @@ public class PrefabABPathPostprocessor : AssetPostprocessor
         }
 
         AssetDatabase.Refresh();
-        Debug.Log($"[AB] 重新分配包名：扫描 {scanned} 个资源，更新 {changed} 个，清理目录包名 {clearedFolders} 个");
+        Debug.Log("[AB] 重新分配包名：扫描 " + scanned + " 个资源，更新 " + changed + " 个，清理目录包名 " + clearedFolders + " 个");
     }
 }
